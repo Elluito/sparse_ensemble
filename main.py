@@ -1,5 +1,7 @@
 import sys
 import pickle
+from typing import List
+import pandas as pd
 
 sys.path.append('csgmcmc')
 from csgmcmc.models import *
@@ -25,57 +27,206 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib.ticker import PercentFormatter
 import sklearn as sk
-from sklearn.manifold import MDS,TSNE
+from sklearn.manifold import MDS, TSNE
+from collections import defaultdict
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import time
+
+
+# function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=("black", "white"),
+                     threshold=None, **textkw):
+    """
+    A function to annotate a heatmap.
+
+    Parameters
+    ----------
+    im
+        The AxesImage to be labeled.
+    data
+        Data used to annotate.  If None, the image's data is used.  Optional.
+    valfmt
+        The format of the annotations inside the heatmap.  This should either
+        use the string format method, e.g. "$ {x:.2f}", or be a
+        `matplotlib.ticker.Formatter`.  Optional.
+    textcolors
+        A pair of colors.  The first is used for values below a threshold,
+        the second for those above.  Optional.
+    threshold
+        Value in data units according to which the colors from textcolors are
+        applied.  If None (the default) uses the middle of the colormap as
+        separation.  Optional.
+    **kwargs
+        All other arguments are forwarded to each call to `text` used to create
+        the text labels.
+    """
+
+    if not isinstance(data, (list, np.ndarray)):
+        data = im.get_array()
+
+    # Normalize the threshold to the images color range.
+    if threshold is not None:
+        threshold = im.norm(threshold)
+    else:
+        threshold = im.norm(data.max()) / 2.
+
+    # Set default alignment to center, but allow it to be
+    # overwritten by textkw.
+    kw = dict(horizontalalignment="center",
+              verticalalignment="center")
+    kw.update(textkw)
+
+    # Get the formatter in case a string is supplied
+    if isinstance(valfmt, str):
+        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
+
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    texts = []
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
+            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            texts.append(text)
+
+    return texts
 
 
 def load_model(net, path):
     net.load_state_dict(torch.load(path))
 
-def get_layer_dict(model):
-    iter_1 = model1.named_modules()
-    layer_dict = []
 
+def get_layer_dict(model):
+    iter_1 = model.named_modules()
+    layer_dict = []
 
     for name, m in iter_1:
         with torch.no_grad():
-            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m,nn.BatchNorm2d) and not \
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
                     isinstance(m, nn.BatchNorm3d):
-                    layer_dict.append((name,torch.flatten(m).cpu().detach()))
+                layer_dict.append((name, torch.flatten(m.weight.data).cpu().detach()))
+                # if "shortcut" in name:
+                #     print(f"{name}:{m.weight.data}")
+                # if not isinstance(m, nn.Conv2d):
+                #     print(f"{name}:{m.weight.data}")
 
     return layer_dict
 
 
+def save_onnx(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    batch = next(iter(testloader))
+    input_names = ['Image']
+    output_names = ['y_hat']
+    torch.onnx.export(net, batch[0], 'onnx_models/onnx_models_resnet18.onnx', input_names=input_names,
+                      output_names=output_names)
+
 
 def models_inspection(population):
-
+    total_params = count_parameters(population[0])
     layers_of_models = [get_layer_dict(mod) for mod in population]
-    sparsity = lambda w: np.sum(w == -1) / len(w)
+    sparsity = lambda w: torch.count_nonzero(w == 0) / w.nelement()
+    zero_number = lambda w: torch.count_nonzero(w == 0) / total_params
     tsne = []
     mds = []
     MDS_embeddings = MDS(n_components=2)
     tsne_embeddings = TSNE(n_components=2)
-    for i,layer in enumerate(layers_of_models):
-        names,weigths = list(*layer)
-        sparsities = list(map(sparsity,weigths))
-        plt.bar(x = sparsities,tick_label = names)
+    plt.figure(figsize=(10, 15), dpi=80)
+    points = defaultdict(list)
+
+    for i, layer in enumerate(layers_of_models):
+        names, weigths = zip(*layer)
+        sparsities = list(map(zero_number, weigths))
+        plt.bar(x=np.arange(0, len(sparsities), 1), height=sparsities, tick_label=names)
+        plt.xticks(rotation=-45)
+        plt.ylabel("Percentage of total parameters", fontsize=20)
+        plt.title("Number of zero weights", fontsize=20)
         plt.savefig("data/figures/bar_plot_model_{}.png".format(i))
         plt.close()
-
-        fig, ax = plt.subplots()
         for element in layer:
-            #MDS.append("Model {} {}".format(i,element[0]),MDS_embeddings.fit_transform(element[1]))
-            embedding = tsne_embeddings.fit_transform(element[1])
-            ax.scatter(embedding)
-            label ="M:{}L:{}".format(i,element[0])
-            ax.annotate(label, (embedding[0], embedding[1]))
-        plt.savefig("data/figures/layer_projection_tsne.png")
-        plt.close()
+            # MDS.append("Model {} {}".format(i,element[0]),MDS_embeddings.fit_transform(element[1]))
+            # embedding = MDS_embeddings.fit_transform(element[1].reshape(1,-1))
+            label = "M:{}L:{}".format(i, element[0])
+            points[element[0]].append((label, element[1]))
+
+    fig, ax = plt.subplots()
+    for layer_name, plotting_stuf in points.items():
+        point_names, tensors = zip(*plotting_stuf)
+        tensors = torch.stack(tensors)
+        embeddings = tsne_embeddings.fit_transform(tensors)
+        ax.scatter(embeddings[0], embeddings[1], label=layer_name)
+        # ax.annotate(point_names[k], (emb[0], emb[1]))
+    plt.ylabel("D1", fontsize=20)
+    plt.xlabel("D2", fontsize=20)
+    plt.title("T-SNE", fontsize=20)
+    ax.legend()
+    # plt.show()
+    plt.savefig("data/figures/layer_projection_tsne.png")
+    plt.close()
+
+    fig, ax = plt.subplots()
+    list_of_names = list(points.keys())
+    for layer_name, plotting_stuf in points.items():
+        point_names, tensors = zip(*plotting_stuf)
+        tensors = torch.stack(tensors)
+        embeddings = MDS_embeddings.fit_transform(tensors)
+        ax.scatter(embeddings[:, 0], embeddings[:, 1], label=layer_name)
+        # ax.annotate(point_names[k], (emb[0], emb[1]))
+    plt.ylabel("D1", fontsize=20)
+    plt.xlabel("D2", fontsize=20)
+    plt.title("MDS", fontsize=20)
+    ax.legend()
+    # plt.show()
+    plt.savefig("data/figures/layer_projection_MDS.png")
+    plt.close()
 
 
+def plot_pareto(df, title: str):
+    # define aesthetics for plot
+    color1 = 'steelblue'
+    color2 = 'red'
+    line_size = 4
+    fig, ax = plt.subplots()
+    ax.bar(df.index, df['count'], color=color1)
 
+    # add cumulative percentage line to plot
+    ax2 = ax.twinx()
+    ax2.plot(df.index, df['cumperc'], color=color2, marker="D", ms=line_size)
+    ax2.yaxis.set_major_formatter(PercentFormatter())
 
+    # specify axis colors
+    ax.tick_params(axis='y', colors=color1)
+    ax2.tick_params(axis='y', colors=color2)
 
+    ax.tick_params(axis="x", labelrotation=90)
+    ax2.tick_params(axis="x", labelrotation=90)
+    plt.title(title, fontsize=20)
+    # display Pareto chart
+    plt.show()
 
 
 def weight_inspection(cfg, cutoff):
@@ -83,19 +234,34 @@ def weight_inspection(cfg, cutoff):
     This function inspects statistics about the weights of the pruned models
     :return:
     """
-    performances = np.load("data/performances_{}.npy".format(cfg.noise))
-    with open("data/population_models_{}.pkl".format(cfg.noise), "rb") as f:
+    performances = np.load("data/population_data/performances_{}.npy".format(cfg.noise))
+    with open("data/population_data/population_models_{}.pkl".format(cfg.noise), "rb") as f:
         pop = pickle.load(f)
     sorted_indx = np.argsort(performances)
     sorted_models = [pop[i] for i in sorted_indx]
 
-    above_cutoff_index= np.where(performances[sorted_indx] >= cutoff)[0]
+    above_cutoff_index = np.where(performances[sorted_indx] >= cutoff)[0]
     underneath_cutoff_index = np.where(performances[sorted_indx] < cutoff)[0]
-    measure_overlap(sorted_models[0],sorted_models[1])
-    models_inspection(sorted_models[:5])
+    # measure_overlap(sorted_models[0],sorted_models[1])
 
+    # models_inspection(sorted_models[:5])
+    total_params = count_parameters(pop[0])
+    zero_number = lambda w: torch.count_nonzero(w == 0)
+    number_param = lambda w: w.nelement()
+    layer = get_layer_dict(pop[0])
+    names, weights = zip(*layer)
+    elements = list(map(number_param, weights))
+
+    sparsities = list(map(zero_number, weights))
+    weights = list(map(lambda w: w.numpy(), weights))
+    sparsities = list(map(lambda w: w.numpy(), sparsities))
+    # elements =list(map(lambda w: w.numpy(),elements))
+    df = pd.DataFrame({'count': elements})
+    df.index = names
+    df = df.sort_values(by='count', ascending=False)
+    df['cumperc'] = df['count'].cumsum() / df['count'].sum() * 100
+    plot_pareto(df, "Number of 0 parameters")
     # Go trough all the above_cutoff_index
-
 
 
 def add_geometric_gaussian_noise_to_weights(m):
@@ -112,7 +278,7 @@ def add_gaussian_noise_to_weights(m):
             m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=0.01).to(m.weight.device))
 
 
-def test(net, use_cuda, testloader):
+def test(net, use_cuda, testloader, one_batch=False):
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -135,7 +301,8 @@ def test(net, use_cuda, testloader):
             if batch_idx % 100 == 0:
                 print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
                       % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
-
+            if one_batch:
+                return 100. * correct.item() / total
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
         test_loss / len(testloader), correct, total,
         100. * correct.item() / total))
@@ -151,11 +318,23 @@ def weigths_to_prune(model):
     return modules
 
 
-def remove_reparametrization(model):
-    for m in model.modules():
+def get_weights_of_layer_name(model, layer_name):
+    for name, m in model.named_modules():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d):
-            prune.remove(m, "weight")
+            if name == layer_name:
+                return (m, "weight")
+
+
+def remove_reparametrization(model, name_module=""):
+    for name, m in model.named_modules():
+        if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
+                m, nn.BatchNorm3d):
+            if name == "":
+                prune.remove(m, "weight")
+            if name == name_module:
+                prune.remove(m, "weight")
+                break
 
 
 def count_parameters(model):
@@ -182,13 +361,151 @@ def get_proba_function(C, N):
     return function
 
 
+################################# Layer importance experiments
+def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"):
+    layers = get_layer_dict(model)
+    layers.reverse()
+    layer_names, weights = zip(*layers)
+
+    # layer_names = list(layer_names)
+    # weights = list(weights)
+    # layer_names.reverse()
+    # weights.reverse()
+    prunings_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    prunings_percentages.reverse()
+    matrix = np.zeros((len(layers), len(prunings_percentages)))
+
+    if type_exp == "a":
+        for i, layer_tuple in enumerate(layers):
+            for j, pruning_percentage in enumerate(prunings_percentages):
+                current_model = copy.deepcopy(model)
+                name, _ = layer_tuple
+                weights = [get_weights_of_layer_name(current_model, layer_name=name)]
+                prune.global_unstructured(
+                    weights,
+                    pruning_method=prune.L1Unstructured,
+                    amount=pruning_percentage
+                )
+                remove_reparametrization(current_model, name_module=name)
+                accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader, one_batch=True))
+                # matrix[i, j] = (i+j)/(len(layers)+len(prunings_percentages))
+                matrix[i, j] = accuracy
+        # matrix = np.random.randn(len(layers),len(prunings_percentages))
+
+        ax = plt.subplot()
+        im = ax.imshow(matrix, aspect=0.5)
+        # plt.imshow(matrix)
+        # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
+        # cax = plt.axes([0.85, 0.1, 0.075, 0.8])
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.yticks(ticks=range(0, len(layer_names)), labels=layer_names)
+        plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
+        # ax.set_xticklabels(labels=layer_names,rotation=-45)
+        # ax.set_yticklabels(labels=prunings_percentages)
+        plt.colorbar(im)
+        plt.gcf().set_size_inches(5, 5)
+        texts = annotate_heatmap(im, valfmt="{x:.1f}")
+        plt.tight_layout()
+        result = time.localtime(time.time())
+        plt.savefig(f"data/figures/layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        percent_index = matrix.argmax(axis=1)
+        best_percentage_for_layers = {}
+        for i, name in enumerate(layer_names):
+            best_percentage_for_layers[name] = percent_index[i]
+        print(f"Best percentage by layer {best_percentage_for_layers}")
+        with open(f"data/best_per_layer_{cfg.architecture}.pkl", "wb") as f:
+            pickle.dump(best_percentage_for_layers, f)
+
+    if type_exp == "b":
+        # Organise the layers to accumulate with the number of weights
+        # with open(f"data/best_per_layer_{cfg.architecture}.pkl", "rb") as f:
+        #     prune_rate_per_layer = pickle.load(f)
+        #
+        count = lambda w: w.nelement()
+        number_of_elements = list(map(count, weights))
+        sorted_by_n = np.argsort(number_of_elements)
+        sorted_layer_names = [layers[g] for g in sorted_by_n]
+        # sorted_layer_names
+        # Then im going to prune all the layers up to layer i with the pruning rate obtained from the type a experiment.
+        for i, layer_tuple in enumerate(sorted_layer_names):
+            for j, pruning_percentage in enumerate(prunings_percentages):
+                current_model = copy.deepcopy(model)
+
+                sub_layers = sorted_layer_names[:i + 1]
+
+                weights = [get_weights_of_layer_name(current_model, layer_name=n) for n, w in sub_layers]
+                # name, _ = layer_tuple
+                # weights = get_weights_of_layer_name(current_model, layer_name=name)
+                prune.global_unstructured(
+                    weights,
+                    pruning_method=prune.L1Unstructured,
+                    amount=pruning_percentage
+                )
+                for n, w in sub_layers:
+                    remove_reparametrization(current_model, name_module=n)
+                accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader, one_batch=True))
+                # matrix[i, j] = (i+j)/(len(sorted_layer_names)+len(prunings_percentages))
+                matrix[i, j] = accuracy
+
+        ax = plt.subplot()
+        im = ax.imshow(matrix, aspect=0.5)
+        # plt.imshow(matrix)
+        # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
+        # cax = plt.axes([0.85, 0.1, 0.075, 0.8])
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes("right", size="5%", pad=0.05)
+        layer_names_by_n, _ = zip(*sorted_layer_names)
+        plt.yticks(ticks=range(0, len(layer_names_by_n)), labels=layer_names_by_n)
+        plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
+        # ax.set_xticklabels(labels=layer_names,rotation=-45)
+        # ax.set_yticklabels(labels=prunings_percentages)
+        plt.colorbar(im)
+        plt.gcf().set_size_inches(5, 5)
+        texts = annotate_heatmap(im, valfmt="{x:.1f}")
+        plt.tight_layout()
+        result = time.localtime(time.time())
+        plt.savefig(f"data/figures/cumsum_layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        # Now I'm going to do something similar to the above but just prune with the optimal rate
+
+
+def run_layer_experiment(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    layer_importance_experiments(cfg,net,use_cuda,testloader,type_exp="a")
+    layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="b")
+
+
+############################################
 def main(cfg: omegaconf.DictConfig):
     print("torch version: {}".format(torch.__version__))
 
     data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                "University of Leeds\PhD\Datasets\CIFAR10"
     use_cuda = torch.cuda.is_available()
-    net = ResNet18()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
     # transform_train = transforms.Compose([
     #     transforms.RandomCrop(32, padding=4),
     #     transforms.RandomHorizontalFlip(),
@@ -244,8 +561,8 @@ def main(cfg: omegaconf.DictConfig):
     proba_function = get_proba_function(cfg.amount, count_parameters(net))
     ranked_index = np.flip(np.argsort(performance))
     performance = np.array(performance)
-    np.save("data/performances_{}.npy".format(cfg.noise), performance)
-    with open("data/population_models_{}.pkl".format(cfg.noise), "wb") as f:
+    np.save("data/population_data/performances_{}.npy".format(cfg.noise), performance)
+    with open("data/population_data/population_models_{}.pkl".format(cfg.noise), "wb") as f:
         pickle.dump(pop, f)
 
     cutoff = original_performance - 2
@@ -289,8 +606,10 @@ def plot(cfg):
 if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 10,
+        "architecture": "resnet18",
         "noise": "geogaussian",
         "amount": 0.5
     })
-
-    weight_inspection(cfg,90)
+    run_layer_experiment(cfg)
+    # weight_inspection(cfg, 90)
+    # save_onnx(cfg)
