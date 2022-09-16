@@ -3,6 +3,7 @@ import pickle
 from typing import List
 import pandas as pd
 import datetime as date
+#jsys.path.append('csgmcmc')
 from csgmcmc.models import *
 import omegaconf
 import copy
@@ -19,7 +20,6 @@ import scipy
 import os
 import argparse
 import scipy.optimize as optimize
-from models import *
 from torch.autograd import Variable
 import numpy as np
 import random
@@ -33,8 +33,6 @@ from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
-
-sys.path.append('csgmcmc')
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
