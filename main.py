@@ -2,8 +2,7 @@ import sys
 import pickle
 from typing import List
 import pandas as pd
-
-sys.path.append('csgmcmc')
+import datetime as date
 from csgmcmc.models import *
 import omegaconf
 import copy
@@ -35,8 +34,11 @@ from collections import defaultdict
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
 
+sys.path.append('csgmcmc')
 
-# function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html#sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
+
+# function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
+# #sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=("black", "white"),
                      threshold=None, **textkw):
@@ -142,7 +144,7 @@ def save_onnx(cfg):
     batch = next(iter(testloader))
     input_names = ['Image']
     output_names = ['y_hat']
-    torch.onnx.export(net, batch[0], 'onnx_models/onnx_models_resnet18.onnx', input_names=input_names,
+    torch.onnx.export(net, batch[0], f'onnx_models/onnx_models_{cfg.architecture}.onnx', input_names=input_names,
                       output_names=output_names)
 
 
@@ -375,6 +377,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
     prunings_percentages.reverse()
     matrix = np.zeros((len(layers), len(prunings_percentages)))
 
+    print("\n######################### EXPERIMENT B ##################################\n")
     if type_exp == "a":
         for i, layer_tuple in enumerate(layers):
             for j, pruning_percentage in enumerate(prunings_percentages):
@@ -390,6 +393,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader, one_batch=True))
                 # matrix[i, j] = (i+j)/(len(layers)+len(prunings_percentages))
                 matrix[i, j] = accuracy
+                print(f"\n{np.matrix(matrix)}")
         # matrix = np.random.randn(len(layers),len(prunings_percentages))
 
         ax = plt.subplot()
@@ -422,6 +426,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         # with open(f"data/best_per_layer_{cfg.architecture}.pkl", "rb") as f:
         #     prune_rate_per_layer = pickle.load(f)
         #
+        print("\n######################### EXPERIMENT B##################################\n")
         count = lambda w: w.nelement()
         number_of_elements = list(map(count, weights))
         sorted_by_n = np.argsort(number_of_elements)
@@ -447,6 +452,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader, one_batch=True))
                 # matrix[i, j] = (i+j)/(len(sorted_layer_names)+len(prunings_percentages))
                 matrix[i, j] = accuracy
+                print(f"\n{np.matrix(matrix)}")
 
         ax = plt.subplot()
         im = ax.imshow(matrix, aspect=0.5)
@@ -488,11 +494,23 @@ def run_layer_experiment(cfg):
 
     # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
-
+    if cfg.use_wandb:
+        # os.environ["WANDB_START_METHOD"] = "thread"
+        # now = date.datetime.now().strftime("%M:%S")
+        # wandb.init(
+        #     entity="luis_alfredo",
+        #     config=OmegaConf.to_container(cfg, resolve=True),
+        #     project="sparse_ensemble",
+        #     name="layer_importance_{}".format(now),
+        #     reinit=True,
+        #     save_code=True,
+        # )
+        pass
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
-    layer_importance_experiments(cfg,net,use_cuda,testloader,type_exp="a")
+
+    layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="a")
     layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="b")
 
 
@@ -608,7 +626,8 @@ if __name__ == '__main__':
         "population": 10,
         "architecture": "resnet18",
         "noise": "geogaussian",
-        "amount": 0.5
+        "amount": 0.5,
+        "use_wandb": True
     })
     run_layer_experiment(cfg)
     # weight_inspection(cfg, 90)
