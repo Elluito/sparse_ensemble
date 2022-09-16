@@ -389,9 +389,9 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                     amount=pruning_percentage
                 )
                 remove_reparametrization(current_model, name_module=name)
-                # accuracy = int(test(current_model, use_cuda=use_cuda, testloader=test_loader))
-                matrix[i, j] = int((i+j))
-                # matrix[i, j] = accuracy
+                accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader))
+                # matrix[i, j] = int((i+j))
+                matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
         # matrix = np.random.randn(len(layers),len(prunings_percentages))
 
@@ -449,9 +449,9 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 )
                 for n, w in sub_layers:
                     remove_reparametrization(current_model, name_module=n)
-                # accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader))
-                matrix[i, j] = int((i+j))
-                # matrix[i, j] = accuracy
+                accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader))
+                # matrix[i, j] = int((i+j))
+                matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
 
         ax = plt.subplot()
