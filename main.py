@@ -91,7 +91,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
             kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
-            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            text = im.axes.text(j, i, valfmt(int(data[i, j]), None), **kw)
             texts.append(text)
 
     return texts
@@ -389,8 +389,8 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                     amount=pruning_percentage
                 )
                 remove_reparametrization(current_model, name_module=name)
-                # accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader))
-                matrix[i, j] = (i+j)/(len(layers)+len(prunings_percentages))
+                # accuracy = int(test(current_model, use_cuda=use_cuda, testloader=test_loader))
+                matrix[i, j] = int((i+j))
                 # matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
         # matrix = np.random.randn(len(layers),len(prunings_percentages))
@@ -408,10 +408,11 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         # ax.set_yticklabels(labels=prunings_percentages)
         plt.colorbar(im)
         plt.gcf().set_size_inches(5, 5)
-        texts = annotate_heatmap(im, valfmt="{x:d}")
+        texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
         plt.savefig(f"data/figures/layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.close()
         percent_index = matrix.argmax(axis=1)
         best_percentage_for_layers = {}
         for i, name in enumerate(layer_names):
@@ -449,7 +450,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 for n, w in sub_layers:
                     remove_reparametrization(current_model, name_module=n)
                 # accuracy = float(test(current_model, use_cuda=use_cuda, testloader=test_loader))
-                matrix[i, j] = (i+j)/(len(sorted_layer_names)+len(prunings_percentages))
+                matrix[i, j] = int((i+j))
                 # matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
 
@@ -467,10 +468,12 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         # ax.set_yticklabels(labels=prunings_percentages)
         plt.colorbar(im)
         plt.gcf().set_size_inches(5, 5)
-        texts = annotate_heatmap(im, valfmt="{x:d}")
+        texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
         plt.savefig(f"data/figures/cumsum_layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.close()
+
         # Now I'm going to do something similar to the above but just prune with the optimal rate
 
 
