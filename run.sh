@@ -28,13 +28,3 @@ which python
 python main.py
 #python src/main.py --input graph/karate-mirrored.edgelist --output emb/karate-mirrored.emb
 
-
-
-
-
-
-
-
-
-
-ma
