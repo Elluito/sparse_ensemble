@@ -388,7 +388,7 @@ def calibrate(trial: optuna.trial.Trial) -> float:
     vector_original = nn.utils.parameters_to_vector(pruned_original.parameters())
     binary_vector_original = vector_original == 0
     average_loss = 0
-    for i in range(100):
+    for i in range(10):
         add_noise_model = copy.deepcopy(net)
         mul_noise_model = copy.deepcopy(net)
         add_noise_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma_add))
@@ -436,7 +436,7 @@ def noise_calibration(cfg: omegaconf.DictConfig):
     )
 
     study = optuna.create_study(direction="minimize", pruner=pruner)
-    study.optimize(calibrate, n_trials=1500)
+    study.optimize(calibrate, n_trials=500)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
