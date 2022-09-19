@@ -3,7 +3,8 @@ import pickle
 from typing import List
 import pandas as pd
 import datetime as date
-#jsys.path.append('csgmcmc')
+import optuna
+# sys.path.append('csgmcmc')
 from csgmcmc.models import *
 import omegaconf
 import copy
@@ -26,6 +27,8 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 import matplotlib
+from functools import partial
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter
@@ -265,18 +268,18 @@ def weight_inspection(cfg, cutoff):
     # Go trough all the above_cutoff_index
 
 
-def add_geometric_gaussian_noise_to_weights(m):
+def add_geometric_gaussian_noise_to_weights(m, sigma=0.2):
     with torch.no_grad():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d):
-            m.weight.multiply_(torch.normal(mean=torch.ones_like(m.weight), std=0.2).to(m.weight.device))
+            m.weight.multiply_(torch.normal(mean=torch.ones_like(m.weight), std=sigma).to(m.weight.device))
 
 
-def add_gaussian_noise_to_weights(m):
+def add_gaussian_noise_to_weights(m, sigma=0.01):
     with torch.no_grad():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d):
-            m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=0.01).to(m.weight.device))
+            m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
 
 def test(net, use_cuda, testloader, one_batch=False):
@@ -362,7 +365,102 @@ def get_proba_function(C, N):
     return function
 
 
-################################# Layer importance experiments
+################################# Noise calibration with optuna @##################################
+def calibrate(trial: optuna.trial.Trial) -> float:
+    # in theory cfg is available everywhere because it is define on the if name ==__main__ section
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    sigma_add = trial.suggest_float("sigma_add", 0.0001, 0.1)
+    sigma_mul = trial.suggest_float("sigma_mul", 0.1, 1)
+
+    # Prune original
+    pruned_original = copy.deepcopy(net)
+    weights_prune = weigths_to_prune(pruned_original)
+    prune.global_unstructured(
+        weights_prune,
+        pruning_method=prune.L1Unstructured,
+        amount=cfg.amount
+    )
+    remove_reparametrization(model=pruned_original)
+    vector_original = nn.utils.parameters_to_vector(pruned_original.parameters())
+    binary_vector_original = vector_original == 0
+    average_loss = 0
+    for i in range(100):
+        add_noise_model = copy.deepcopy(net)
+        mul_noise_model = copy.deepcopy(net)
+        add_noise_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma_add))
+        mul_noise_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma_mul))
+
+        # Pruning of the  noisy models
+        # Additive
+        weights_prune = weigths_to_prune(add_noise_model)
+        prune.global_unstructured(
+            weights_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=cfg.amount
+        )
+        remove_reparametrization(model=add_noise_model)
+        # Geometric
+        weights_prune = weigths_to_prune(mul_noise_model)
+        prune.global_unstructured(
+            weights_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=cfg.amount
+        )
+        remove_reparametrization(model=mul_noise_model)
+        #
+        vector_added_noise = nn.utils.parameters_to_vector(add_noise_model.parameters())
+        binary_vector_add_noise = vector_added_noise == 0
+        vector_mul_noise = nn.utils.parameters_to_vector(mul_noise_model.parameters())
+        binary_vector_mul_noise = vector_mul_noise == 0
+
+        different_add_noise = torch.bitwise_xor(binary_vector_original, binary_vector_add_noise).sum()
+
+        different_mul_noise = torch.bitwise_xor(binary_vector_original, binary_vector_mul_noise).sum()
+        # I use the sum because I don't care where (in the vector) each noise changes specifically
+        loss = ((different_add_noise - different_mul_noise) ** 2).item()
+        average_loss = average_loss + (loss - average_loss) / (i + 1)
+    return average_loss
+
+
+def noise_calibration(cfg: omegaconf.DictConfig):
+    # distributions = {
+    #     "sigma_add": optuna.distributions.FloatDistribution(0.0001, 0.1, log=True),
+    #     "sigma_mul": optuna.distributions.FloatDistribution(0.1, 1, log=True),
+    # }
+    pruner: optuna.pruners.BasePruner = (
+        optuna.pruners.MedianPruner()
+    )
+
+    study = optuna.create_study(direction="minimize", pruner=pruner)
+    study.optimize(calibrate, n_trials=1500)
+
+    print("Number of finished trials: {}".format(len(study.trials)))
+
+    print("\n Best trial:")
+    trial = study.best_trial
+
+    print("  Value: {}".format(trial.value))
+
+    print("  Params: ")
+    for key, value in trial.params.items():
+        print("    {}: {}".format(key, value))
+
+    fig1 = optuna.visualization.plot_optimization_history(study)
+    fig2 = optuna.plot_intermediate_values(study)
+    fig3 = optuna.plot_param_importances(study)
+    fig4 = optuna.contour_plot(study, params=["sigma_add", "sigma_mul"])
+
+    fig1.savefig("data/figures/opt_history.png")
+    fig2.savefig("data/figures/intermediate_values.png")
+    fig3.savefig("data/figures/para_importances.png")
+    fig4.savefig("data/figures/contour_plot.png")
+
+
+################################# Layer importance experiments ######################################
 def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"):
     layers = get_layer_dict(model)
     layers.reverse()
@@ -631,6 +729,7 @@ if __name__ == '__main__':
         "amount": 0.5,
         "use_wandb": True
     })
-    run_layer_experiment(cfg)
+    noise_calibration(cfg)
+    # run_layer_experiment(cfg)
     # weight_inspection(cfg, 90)
     # save_onnx(cfg)
