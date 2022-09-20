@@ -12,19 +12,21 @@
 #$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=8G
+#$ -l h_vmem=3G
 #$ -pe smp 3
-
 # Send emails when job starts and ends
 #$ -m e
-
-# Now run the job
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+# Now run the job 
+module load intel openmpi
 module add anaconda
 module add cuda/11.1.1
 conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py
+mpirun -np 3 python main.py
 #python src/main.py --input graph/karate-mirrored.edgelist --output emb/karate-mirrored.emb
 

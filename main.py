@@ -436,7 +436,7 @@ def noise_calibration(cfg: omegaconf.DictConfig):
     )
 
     study = optuna.create_study(direction="minimize", pruner=pruner)
-    study.optimize(calibrate, n_trials=500)
+    study.optimize(calibrate, n_trials=100)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
