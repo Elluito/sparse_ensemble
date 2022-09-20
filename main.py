@@ -334,7 +334,7 @@ def remove_reparametrization(model, name_module=""):
     for name, m in model.named_modules():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d):
-            if name == "":
+            if name_module == "":
                 prune.remove(m, "weight")
             if name == name_module:
                 prune.remove(m, "weight")
