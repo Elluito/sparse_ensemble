@@ -422,7 +422,7 @@ def calibrate(trial: optuna.trial.Trial) -> float:
         different_mul_noise = torch.bitwise_xor(binary_vector_original, binary_vector_mul_noise).sum()
         # I use the sum because I don't care where (in the vector) each noise changes specifically
         loss = ((different_add_noise - different_mul_noise) ** 2).item()
-   #     average_loss = average_loss + (loss - average_loss) / (i + 1)
+        #     average_loss = average_loss + (loss - average_loss) / (i + 1)
         average_loss.append(loss)
 
     return np.mean(average_loss)
@@ -437,8 +437,8 @@ def noise_calibration(cfg: omegaconf.DictConfig):
         optuna.pruners.MedianPruner()
     )
 
-    study = optuna.create_study(direction="minimize", pruner=pruner,study_name="noise-calibration",
-                                storage="sqlite:///noise_cal_database.dep",load_if_exists=True)
+    study = optuna.create_study(direction="minimize", pruner=pruner, study_name="noise-calibration",
+                                storage="sqlite:///noise_cal_database.dep", load_if_exists=True)
     study.optimize(calibrate, n_trials=200)
 
     print("Number of finished trials: {}".format(len(study.trials)))
@@ -464,6 +464,59 @@ def noise_calibration(cfg: omegaconf.DictConfig):
 
 
 ################################# Layer importance experiments ######################################
+def plot_layer_experiments(model, exp_type="a"):
+    layers = get_layer_dict(model)
+    layers.reverse()
+    layer_names, weights = zip(*layers)
+
+    # layer_names = list(layer_names)
+    # weights = list(weights)
+    # layer_names.reverse()
+    # weights.reverse()
+    prunings_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    prunings_percentages.reverse()
+
+    if exp_type == "a":
+        matrix = np.load("data/layer_exp_A.npy")
+        ax = plt.subplot()
+        im = ax.imshow(matrix, aspect=0.5)
+        plt.yticks(ticks=range(0, len(layer_names)), labels=layer_names)
+        plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
+        plt.xlabel("Pruning Rate", fontsize=15)
+        plt.ylabel("Layer by depth (ascending order)", fontsize=12)
+        cbar = plt.colorbar(im)
+        cbar.ax.set_ylabel('ACCURACY', rotation=270, labelpad=8.5)
+        plt.gcf().set_size_inches(5.1, 5.1)
+        texts = annotate_heatmap(im, valfmt="{x}")
+        plt.tight_layout()
+        result = time.localtime(time.time())
+        plt.savefig(f"data/figures/layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.close()
+    if exp_type == "b":
+        matrix = np.loadtxt("data/layer_exp_B.npy")
+        count = lambda w: w.nelement()
+        number_of_elements = list(map(count, weights))
+        sorted_by_n = np.argsort(number_of_elements)
+        sorted_layer_names = [layers[g] for g in sorted_by_n]
+        layer_names_by_n, _ = zip(*sorted_layer_names)
+        ax = plt.subplot()
+        im = ax.imshow(matrix, aspect=0.5)
+        plt.yticks(ticks=range(0, len(layer_names_by_n)), labels=layer_names_by_n)
+        plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
+        plt.xlabel("Pruning Rate", fontsize=15)
+        plt.ylabel("Layer by # parameters \n (descending order)", fontsize=12)
+        cbar = plt.colorbar(im)
+        cbar.ax.set_ylabel('ACCURACY', rotation=270, labelpad=8.5)
+        # cbar.ax.tick_params(labelsize=7)
+
+        plt.gcf().set_size_inches(5.5, 5)
+        texts = annotate_heatmap(im, valfmt="{x}")
+        plt.tight_layout()
+        result = time.localtime(time.time())
+        plt.savefig(f"data/figures/cumsum.layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.close()
+
+
 def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"):
     layers = get_layer_dict(model)
     layers.reverse()
@@ -477,8 +530,8 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
     prunings_percentages.reverse()
     matrix = np.zeros((len(layers), len(prunings_percentages)))
 
-    print("\n######################### EXPERIMENT B ##################################\n")
     if type_exp == "a":
+        print("\n######################### EXPERIMENT A ##################################\n")
         for i, layer_tuple in enumerate(layers):
             for j, pruning_percentage in enumerate(prunings_percentages):
                 current_model = copy.deepcopy(model)
@@ -494,21 +547,17 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 # matrix[i, j] = int((i+j))
                 matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
+        np.save("data/layer_exp_A.npy",matrix)
         # matrix = np.random.randn(len(layers),len(prunings_percentages))
-
         ax = plt.subplot()
         im = ax.imshow(matrix, aspect=0.5)
-        # plt.imshow(matrix)
-        # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
-        # cax = plt.axes([0.85, 0.1, 0.075, 0.8])
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.yticks(ticks=range(0, len(layer_names)), labels=layer_names)
         plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
-        # ax.set_xticklabels(labels=layer_names,rotation=-45)
-        # ax.set_yticklabels(labels=prunings_percentages)
-        plt.colorbar(im)
-        plt.gcf().set_size_inches(5, 5)
+        plt.xlabel("Pruning Rate", fontsize=15)
+        plt.ylabel("Layer by depth (ascending order)", fontsize=12)
+        cbar = plt.colorbar(im)
+        cbar.ax.set_ylabel('ACCURACY', rotation=270, labelpad=8.5)
+        plt.gcf().set_size_inches(5.1, 5.1)
         texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
@@ -517,7 +566,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         percent_index = matrix.argmax(axis=1)
         best_percentage_for_layers = {}
         for i, name in enumerate(layer_names):
-            best_percentage_for_layers[name] = percent_index[i]
+            best_percentage_for_layers[name] = prunings_percentages[percent_index[i]]
         print(f"Best percentage by layer {best_percentage_for_layers}")
         with open(f"data/best_per_layer_{cfg.architecture}.pkl", "wb") as f:
             pickle.dump(best_percentage_for_layers, f)
@@ -527,10 +576,11 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         # with open(f"data/best_per_layer_{cfg.architecture}.pkl", "rb") as f:
         #     prune_rate_per_layer = pickle.load(f)
         #
-        print("\n######################### EXPERIMENT B##################################\n")
+        print("\n######################### EXPERIMENT B ##################################\n")
         count = lambda w: w.nelement()
         number_of_elements = list(map(count, weights))
         sorted_by_n = np.argsort(number_of_elements)
+
         sorted_layer_names = [layers[g] for g in sorted_by_n]
         # sorted_layer_names
         # Then im going to prune all the layers up to layer i with the pruning rate obtained from the type a experiment.
@@ -538,8 +588,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
             for j, pruning_percentage in enumerate(prunings_percentages):
                 current_model = copy.deepcopy(model)
 
-                sub_layers = sorted_layer_names[:i + 1]
-
+                sub_layers = sorted_layer_names[i:]
                 weights = [get_weights_of_layer_name(current_model, layer_name=n) for n, w in sub_layers]
                 # name, _ = layer_tuple
                 # weights = get_weights_of_layer_name(current_model, layer_name=name)
@@ -554,28 +603,29 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 # matrix[i, j] = int((i+j))
                 matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
-
+        np.save("data/layer_exp_B.npy",matrix)
+        count = lambda w: w.nelement()
+        number_of_elements = list(map(count, weights))
+        sorted_by_n = np.argsort(number_of_elements)
+        sorted_layer_names = [layers[g] for g in sorted_by_n]
+        layer_names_by_n, _ = zip(*sorted_layer_names)
         ax = plt.subplot()
         im = ax.imshow(matrix, aspect=0.5)
-        # plt.imshow(matrix)
-        # plt.subplots_adjust(bottom=0.1, right=0.8, top=0.9)
-        # cax = plt.axes([0.85, 0.1, 0.075, 0.8])
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("right", size="5%", pad=0.05)
-        layer_names_by_n, _ = zip(*sorted_layer_names)
         plt.yticks(ticks=range(0, len(layer_names_by_n)), labels=layer_names_by_n)
         plt.xticks(ticks=range(0, len(prunings_percentages)), labels=prunings_percentages)
-        # ax.set_xticklabels(labels=layer_names,rotation=-45)
-        # ax.set_yticklabels(labels=prunings_percentages)
-        plt.colorbar(im)
-        plt.gcf().set_size_inches(5, 5)
+        plt.xlabel("Pruning Rate", fontsize=15)
+        plt.ylabel("Layer by # parameters \n (descending order)", fontsize=12)
+        cbar = plt.colorbar(im)
+        cbar.ax.set_ylabel('ACCURACY', rotation=270, labelpad=8.5)
+        # cbar.ax.tick_params(labelsize=7)
+
+        plt.gcf().set_size_inches(5.5, 5)
         texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
-        plt.savefig(f"data/figures/cumsum_layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.savefig(f"data/figures/cumsum.layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
         plt.close()
-
-        # Now I'm going to do something similar to the above but just prune with the optimal rate
+    #     # Now I'm going to do something similar to the above but just prune with the optimal rate
 
 
 def run_layer_experiment(cfg):
@@ -613,8 +663,11 @@ def run_layer_experiment(cfg):
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
 
+    # plot_layer_experiments(net, exp_type="a")
     layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="a")
+    plot_layer_experiments(net, exp_type="a")
     layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="b")
+    plot_layer_experiments(net, exp_type="b")
 
 
 ############################################
@@ -732,7 +785,9 @@ if __name__ == '__main__':
         "amount": 0.5,
         "use_wandb": True
     })
-    noise_calibration(cfg)
-    # run_layer_experiment(cfg)
+    # noise_calibration(cfg)
+    # plot_layer_experiments("a")
+    # plot_layer_experiments("b")
+    run_layer_experiment(cfg)
     # weight_inspection(cfg, 90)
     # save_onnx(cfg)
