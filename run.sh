@@ -27,6 +27,5 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-mpirun -np 3 python main.py
-#python src/main.py --input graph/karate-mirrored.edgelist --output emb/karate-mirrored.emb
+python main.py && python main.py && python main.py
 
