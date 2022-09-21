@@ -422,8 +422,10 @@ def calibrate(trial: optuna.trial.Trial) -> float:
         different_mul_noise = torch.bitwise_xor(binary_vector_original, binary_vector_mul_noise).sum()
         # I use the sum because I don't care where (in the vector) each noise changes specifically
         loss = ((different_add_noise - different_mul_noise) ** 2).item()
-        average_loss = average_loss + (loss - average_loss) / (i + 1)
-    return average_loss
+   #     average_loss = average_loss + (loss - average_loss) / (i + 1)
+        average_loss.append(loss)
+
+    return np.mean(average_loss)
 
 
 def noise_calibration(cfg: omegaconf.DictConfig):
