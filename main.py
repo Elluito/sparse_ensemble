@@ -719,9 +719,9 @@ def main(cfg: omegaconf.DictConfig):
     for n in range(N):
         current_model = copy.deepcopy(net)
         if cfg.noise == "gaussian":
-            current_model.apply(add_gaussian_noise_to_weights)
+            current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
         elif cfg.noise == "geogaussian":
-            current_model.apply(add_geometric_gaussian_noise_to_weights)
+            current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
 
         prune.global_unstructured(
             weigths_to_prune(current_model),
@@ -755,11 +755,13 @@ def main(cfg: omegaconf.DictConfig):
         else:
             plt.scatter(i, element, c="b", marker="x")
     plt.legend()
-    plt.show()
+    plt.tight_layout()
+    plt.savefig(f"data/figures/comparison_{cfg.noise}.pdf")
+    
 
 
 def plot(cfg):
-    performance = np.load("data/performances_{}.npy".format(cfg.noise))
+    performance = np.load("data/population_data/performances_{}.npy".format(cfg.noise))
     ranked_index = np.flip(np.argsort(performance))
     cutoff = 92
     plt.figure()
@@ -778,16 +780,34 @@ def plot(cfg):
 
 
 if __name__ == '__main__':
-    cfg = omegaconf.DictConfig({
+    print("GEOMETRIC GAUSSIAN NOISE")
+    cfg_geo = omegaconf.DictConfig({
         "population": 10,
         "architecture": "resnet18",
         "noise": "geogaussian",
+        "sigma": 0.613063102589359,
         "amount": 0.5,
         "use_wandb": True
     })
+    print(cfg_geo)
+    print("\n")
+    main(cfg_geo)
+    print("GAUSSIAN NOISE")
+    cfg_add = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "noise": "gaussian",
+        "sigma": 0.0021419609859022197,
+        "amount": 0.5,
+        "use_wandb": True
+    })
+    print(cfg_add)
+    print("\n")
+    main(cfg_add)
     # noise_calibration(cfg)
     # plot_layer_experiments("a")
     # plot_layer_experiments("b")
-    run_layer_experiment(cfg)
+    #run_layer_experiment(cfg)
+
     # weight_inspection(cfg, 90)
     # save_onnx(cfg)
