@@ -366,14 +366,14 @@ def get_proba_function(C, N):
 
 
 ################################# Noise calibration with optuna @##################################
-def calibrate(trial: optuna.trial.Trial) -> float:
+def calibrate(trial: optuna.trial.Trial) -> ndarray:
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = None
     if cfg.architecture == "resnet18":
         net = ResNet18()
-
-    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
-    sigma_add = trial.suggest_float("sigma_add", 0.0001, 0.1)
+        load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    # sigma_add = trial.suggest_float("sigma_add", 0.0001, 0.1)
+    sigma_add = cfg.sigma
     sigma_mul = trial.suggest_float("sigma_mul", 0.1, 1)
 
     # Prune original
@@ -420,10 +420,14 @@ def calibrate(trial: optuna.trial.Trial) -> float:
         different_add_noise = torch.bitwise_xor(binary_vector_original, binary_vector_add_noise).sum()
 
         different_mul_noise = torch.bitwise_xor(binary_vector_original, binary_vector_mul_noise).sum()
+        print(f"Number of changes by gaussian {different_add_noise}")
+        print(f"Number of changes by geometric gaussian {different_mul_noise}")
         # I use the sum because I don't care where (in the vector) each noise changes specifically
         loss = ((different_add_noise - different_mul_noise) ** 2).item()
         #     average_loss = average_loss + (loss - average_loss) / (i + 1)
         average_loss.append(loss)
+    print(f"Number of changes by gaussian {different_add_noise}")
+    print(f"Number of changes by geometric gaussian {different_mul_noise}")
 
     return np.mean(average_loss)
 
@@ -439,7 +443,7 @@ def noise_calibration(cfg: omegaconf.DictConfig):
 
     study = optuna.create_study(direction="minimize", pruner=pruner, study_name="noise-calibration",
                                 storage="sqlite:///noise_cal_database.dep", load_if_exists=True)
-    study.optimize(calibrate, n_trials=200)
+    study.optimize(calibrate, n_trials=500)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -452,15 +456,15 @@ def noise_calibration(cfg: omegaconf.DictConfig):
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
 
-    fig1 = optuna.visualization.plot_optimization_history(study)
-    fig2 = optuna.plot_intermediate_values(study)
-    fig3 = optuna.plot_param_importances(study)
-    fig4 = optuna.contour_plot(study, params=["sigma_add", "sigma_mul"])
-
-    fig1.savefig("data/figures/opt_history.png")
-    fig2.savefig("data/figures/intermediate_values.png")
-    fig3.savefig("data/figures/para_importances.png")
-    fig4.savefig("data/figures/contour_plot.png")
+    # fig1 = optuna.visualization.plot_optimization_history(study)
+    # fig2 = optuna.plot_intermediate_values(study)
+    # fig3 = optuna.plot_param_importances(study)
+    # fig4 = optuna.contour_plot(study, params=["sigma_add", "sigma_mul"])
+    #
+    # fig1.savefig("data/figures/opt_history.png")
+    # fig2.savefig("data/figures/intermediate_values.png")
+    # fig3.savefig("data/figures/para_importances.png")
+    # fig4.savefig("data/figures/contour_plot.png")
 
 
 ################################# Layer importance experiments ######################################
@@ -469,8 +473,8 @@ def plot_layer_experiments(model, exp_type="a"):
     layers.reverse()
     layer_names, weights = zip(*layers)
 
-    # layer_names = list(layer_names)
-    # weights = list(weights)
+    layer_names = list(layer_names)
+    weights = list(weights)
     # layer_names.reverse()
     # weights.reverse()
     prunings_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
@@ -493,7 +497,7 @@ def plot_layer_experiments(model, exp_type="a"):
         plt.savefig(f"data/figures/layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
         plt.close()
     if exp_type == "b":
-        matrix = np.loadtxt("data/layer_exp_B.npy")
+        matrix = np.loadtxt("data/layer_exp_B.txt")
         count = lambda w: w.nelement()
         number_of_elements = list(map(count, weights))
         sorted_by_n = np.argsort(number_of_elements)
@@ -664,9 +668,9 @@ def run_layer_experiment(cfg):
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
 
     # plot_layer_experiments(net, exp_type="a")
-    layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="a")
-    plot_layer_experiments(net, exp_type="a")
-    layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="b")
+    # layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="a")
+    # plot_layer_experiments(net, exp_type="a")
+    # layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="b")
     plot_layer_experiments(net, exp_type="b")
 
 
@@ -743,10 +747,15 @@ def main(cfg: omegaconf.DictConfig):
 
     plt.figure()
     plt.axhline(y=original_performance, color="k", linestyle="-", label="Dense performance")
-    plt.axhline(y=cutoff, color="r", linestyle="--", label="cut of value")
+    plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
     plt.xlabel("Ranking index", fontsize=20)
     plt.ylabel("Accuracy", fontsize=20)
-    plt.title("CIFAR10", fontsize=20)
+    if cfg.noise == "geogaussian":
+        plt.title("CIFAR10 Geometric Gaussian Noise", fontsize=20)
+
+    if cfg.noise == "gaussian noise":
+        plt.title("CIFAR10 Additive Gaussian Noise", fontsize=20)
+
     first = 0
     for i, element in enumerate(performance[ranked_index]):
         if element == pruned_original_performance and first == 0:
@@ -756,7 +765,8 @@ def main(cfg: omegaconf.DictConfig):
             plt.scatter(i, element, c="b", marker="x")
     plt.legend()
     plt.tight_layout()
-    plt.savefig(f"data/figures/comparison_{cfg.noise}.pdf")
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/comparison_{cfg.noise}_{}.pdf")
     
 
 
@@ -766,7 +776,7 @@ def plot(cfg):
     cutoff = 92
     plt.figure()
     plt.axhline(y=94.87, color="k", linestyle="-", label="Dense performance")
-    plt.axhline(y=cutoff, color="r", linestyle="--", label="cut-off value")
+    plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
     plt.xlabel("Ranking index", fontsize=20)
     plt.ylabel("Accuracy", fontsize=20)
     maximum = np.max(performance)
@@ -775,25 +785,30 @@ def plot(cfg):
             plt.scatter(i, element, c="g", marker="o", label="original model pruned")
         else:
             plt.scatter(i, element, c="b", marker="x")
+    if cfg.noise == "geogaussian":
+        plt.title("CIFAR10 Geometric Gaussian Noise", fontsize=20)
+
+    if cfg.noise == "gaussian noise":
+        plt.title("CIFAR10 Additive Gaussian Noise", fontsize=20)
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    print("GEOMETRIC GAUSSIAN NOISE")
-    cfg_geo = omegaconf.DictConfig({
-        "population": 10,
-        "architecture": "resnet18",
-        "noise": "geogaussian",
-        "sigma": 0.613063102589359,
-        "amount": 0.5,
-        "use_wandb": True
-    })
-    print(cfg_geo)
-    print("\n")
-    main(cfg_geo)
-    print("GAUSSIAN NOISE")
-    cfg_add = omegaconf.DictConfig({
+    # print("GEOMETRIC GAUSSIAN NOISE")
+    # cfg_geo = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "architecture": "resnet18",
+    #     "noise": "geogaussian",
+    #     "sigma": 0.613063102589359,
+    #     "amount": 0.5,
+    #     "use_wandb": True
+    # })
+    # print(cfg_geo)
+    # print("\n")
+    # main(cfg_geo)
+    # print("GAUSSIAN NOISE")
+    cfg= omegaconf.DictConfig({
         "population": 10,
         "architecture": "resnet18",
         "noise": "gaussian",
@@ -801,10 +816,10 @@ if __name__ == '__main__':
         "amount": 0.5,
         "use_wandb": True
     })
-    print(cfg_add)
-    print("\n")
-    main(cfg_add)
-    # noise_calibration(cfg)
+    # print(cfg_add)
+    # print("\n")
+    # main(cfg_add)
+    noise_calibration(cfg)
     # plot_layer_experiments("a")
     # plot_layer_experiments("b")
     #run_layer_experiment(cfg)
