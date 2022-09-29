@@ -366,7 +366,7 @@ def get_proba_function(C, N):
 
 
 ################################# Noise calibration with optuna @##################################
-def calibrate(trial: optuna.trial.Trial) -> ndarray:
+def calibrate(trial: optuna.trial.Trial) -> np.ndarray:
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = None
     if cfg.architecture == "resnet18":
@@ -766,7 +766,7 @@ def main(cfg: omegaconf.DictConfig):
     plt.legend()
     plt.tight_layout()
     result = time.localtime(time.time())
-    plt.savefig(f"data/figures/comparison_{cfg.noise}_{}.pdf")
+    plt.savefig(f"data/figures/comparison_{cfg.noise}_{result.tm_hour}-{result.tm_min}.pdf")
     
 
 
