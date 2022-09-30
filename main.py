@@ -31,7 +31,7 @@ from functools import partial
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.ticker import PercentFormatter
+from matplotlib.ticker import PercentFormatter,FormatStrFormatter
 import sklearn as sk
 from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
@@ -365,7 +365,137 @@ def get_proba_function(C, N):
     return function
 
 
-################################# Noise calibration with optuna @##################################
+############################### 27 of september oxperiments ###################################################
+def heatmap1_exp(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    N = cfg.population
+    pop = []
+    performance = []
+    original_performance = test(net, use_cuda, testloader)
+    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    pruning_percentages.reverse()
+    sigmas = None
+    if cfg.noise == "gaussian":
+        sigmas = np.linspace(0.001, 0.01, 10)
+    if cfg.noise == "geogaussian":
+        sigmas = np.linspace(0.1, 0.7, 10)
+    matrix_mean_decrease = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_ranking = np.zeros((len(sigmas), len(pruning_percentages)))
+    deterministic_pruning_acc = []
+    for i, pruning_percentage in enumerate(pruning_percentages):
+
+        # Here I just prune once for the deterministic pruning
+
+        pruned_original = copy.deepcopy(net)
+        weights_to_prune = weigths_to_prune(pruned_original)
+        prune.global_unstructured(
+            weights_to_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=pruning_percentage
+        )
+        remove_reparametrization(pruned_original)
+        print("performance of pruned original")
+        pruned_original_performance = test(pruned_original, use_cuda, testloader)
+
+        for j, sigma in enumerate(sigmas):
+            performance_diff = []
+            performances = [pruned_original_performance]
+            for n in range(N):
+                current_model = copy.deepcopy(net)
+                if cfg.noise == "gaussian":
+
+                    current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
+                elif cfg.noise == "geogaussian":
+
+                    current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
+
+                prune.global_unstructured(
+                    weigths_to_prune(current_model),
+                    pruning_method=prune.L1Unstructured,
+                    amount=pruning_percentage)
+                remove_reparametrization(current_model)
+                print("Performance for model {}".format(n))
+                current_model.cpu()
+                current_model_acc = test(current_model, use_cuda, testloader)
+                performances.append(current_model_acc)
+                performance_diff.append((original_performance - current_model_acc) / original_performance)
+
+            sorted_performances = sorted(performances)
+            sorted_performances.reverse()
+            rank_original_model = sorted_performances.index(pruned_original_performance)
+            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            matrix_ranking[j, i] = rank_original_model
+            # matrix_mean_decrease[j, i] = i+j
+            # matrix_ranking[j, i] = i-j
+
+    df_ranking = pd.DataFrame(matrix_ranking,columns=pruning_percentages)
+    df_mean_decrease = pd.DataFrame(matrix_ranking,columns=pruning_percentages)
+    df_ranking.index = sigmas
+    df_mean_decrease.index = sigmas
+    df_ranking.to_csv("data/ranking_matrix.csv")
+    df_mean_decrease.to_csv("data/mean_decrease_matrix.csv")
+    ####################################  mean decrease heatmap #################################
+    fig,ax = plt.subplots(figsize=(5.1,5.1))
+    im = ax.imshow(matrix_mean_decrease, aspect=0.5)
+    ax.set_yticklabels(sigmas, minor=False)
+    ax.set_xticklabels(pruning_percentages,minor=False, rotation=-90)
+    # plt.yticks(ticks=pruning_percentages)
+    # plt.xticks(ticks=sigmas)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Mean decrease in performance', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    # texts = annotate_heatmap(im, valfmt="{x}%")
+    plt.title("Decrease in original performance",fontsize=15)
+    plt.tight_layout()
+    result = time.localtime(time.time())
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2f'))
+    plt.savefig(f"data/figures/meanDecrease_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.close()
+    ####################################  ranking of original pruned model heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_ranking, aspect=0.5)
+    ax.set_yticklabels(sigmas, minor=False)
+    ax.set_xticklabels(pruning_percentages,minor=False)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Rank', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    plt.title("Rank of deterministic")
+    # texts = annotate_heatmap(im, valfmt="{x}%")
+    plt.tight_layout()
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/ranking_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.close()
+
+
+################################# Noise calibration with optuna ##################################
 def calibrate(trial: optuna.trial.Trial) -> np.ndarray:
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = None
@@ -551,7 +681,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 # matrix[i, j] = int((i+j))
                 matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
-        np.save("data/layer_exp_A.npy",matrix)
+        np.save("data/layer_exp_A.npy", matrix)
         # matrix = np.random.randn(len(layers),len(prunings_percentages))
         ax = plt.subplot()
         im = ax.imshow(matrix, aspect=0.5)
@@ -607,7 +737,7 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
                 # matrix[i, j] = int((i+j))
                 matrix[i, j] = accuracy
                 print(f"\n{np.matrix(matrix)}")
-        np.save("data/layer_exp_B.npy",matrix)
+        np.save("data/layer_exp_B.npy", matrix)
         count = lambda w: w.nelement()
         number_of_elements = list(map(count, weights))
         sorted_by_n = np.argsort(number_of_elements)
@@ -712,7 +842,6 @@ def main(cfg: omegaconf.DictConfig):
         weights_to_prune,
         pruning_method=prune.L1Unstructured,
         amount=cfg.amount
-
     )
     remove_reparametrization(pruned_original)
     print("performance of pruned original")
@@ -767,7 +896,6 @@ def main(cfg: omegaconf.DictConfig):
     plt.tight_layout()
     result = time.localtime(time.time())
     plt.savefig(f"data/figures/comparison_{cfg.noise}_{result.tm_hour}-{result.tm_min}.pdf")
-    
 
 
 def plot(cfg):
@@ -808,7 +936,7 @@ if __name__ == '__main__':
     # print("\n")
     # main(cfg_geo)
     # print("GAUSSIAN NOISE")
-    cfg= omegaconf.DictConfig({
+    cfg = omegaconf.DictConfig({
         "population": 10,
         "architecture": "resnet18",
         "noise": "gaussian",
@@ -818,11 +946,22 @@ if __name__ == '__main__':
     })
     # print(cfg_add)
     # print("\n")
+    heatmap1_exp(cfg)
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "noise": "geogaussian",
+        "sigma": 0.0021419609859022197,
+        "amount": 0.5,
+        "use_wandb": True
+    })
+    heatmap1_exp(cfg)
+
     # main(cfg_add)
-    noise_calibration(cfg)
+    # noise_calibration(cfg)
     # plot_layer_experiments("a")
     # plot_layer_experiments("b")
-    #run_layer_experiment(cfg)
+    # run_layer_experiment(cfg)
 
     # weight_inspection(cfg, 90)
     # save_onnx(cfg)
