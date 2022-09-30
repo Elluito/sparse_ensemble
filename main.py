@@ -448,6 +448,10 @@ def heatmap1_exp(cfg):
             rank_original_model = sorted_performances.index(pruned_original_performance)
             matrix_mean_decrease[j, i] = np.mean(performance_diff)
             matrix_ranking[j, i] = rank_original_model
+            print("Matrix Mean Decrease")
+            print(np.matrix(matrix_mean_decrease))
+            print("Matrix Ranking")
+            print(np.matrix(matrix_ranking))
             # matrix_mean_decrease[j, i] = i+j
             # matrix_ranking[j, i] = i-j
 
