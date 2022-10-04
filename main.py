@@ -31,7 +31,7 @@ from functools import partial
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.ticker import PercentFormatter,FormatStrFormatter
+from matplotlib.ticker import PercentFormatter, FormatStrFormatter
 import sklearn as sk
 from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
@@ -43,7 +43,7 @@ import time
 # #sphx-glr-gallery-images-contours-and-fields-image-annotated-heatmap-py
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=("black", "white"),
-                     threshold=None, **textkw):
+                     threshold=None, convert_to_int=True, percentage=False, **textkw):
     """
     A function to annotate a heatmap.
 
@@ -93,9 +93,19 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     texts = []
     for i in range(data.shape[0]):
         for j in range(data.shape[1]):
-            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
-            text = im.axes.text(j, i, valfmt(int(data[i, j]), None), **kw)
-            texts.append(text)
+            if convert_to_int:
+                kw.update(color=textcolors[int(im.norm(data[i, j]) < threshold)])
+                text = im.axes.text(j, i, valfmt(int(data[i, j]), None), **kw)
+                texts.append(text)
+            else:
+                if percentage:
+                    kw.update(color=textcolors[int(im.norm(data[i, j]) < threshold)])
+                    text = im.axes.text(j, i, valfmt(format_percentages(data[i, j]), None), **kw)
+                    texts.append(text)
+                else:
+                    kw.update(color=textcolors[int(im.norm(data[i, j]) < threshold)])
+                    text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+                    texts.append(text)
 
     return texts
 
@@ -455,17 +465,17 @@ def heatmap1_exp(cfg):
             # matrix_mean_decrease[j, i] = i+j
             # matrix_ranking[j, i] = i-j
 
-    df_ranking = pd.DataFrame(matrix_ranking,columns=pruning_percentages)
-    df_mean_decrease = pd.DataFrame(matrix_ranking,columns=pruning_percentages)
+    df_ranking = pd.DataFrame(matrix_ranking, columns=pruning_percentages)
+    df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
     df_ranking.index = sigmas
     df_mean_decrease.index = sigmas
-    df_ranking.to_csv("data/ranking_matrix.csv")
-    df_mean_decrease.to_csv("data/mean_decrease_matrix.csv")
+    df_ranking.to_csv(f"data/ranking_matrix_{cfg.noise}.csv")
+    df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
     ####################################  mean decrease heatmap #################################
-    fig,ax = plt.subplots(figsize=(5.1,5.1))
-    im = ax.imshow(matrix_mean_decrease, aspect=0.5)
-    ax.set_yticklabels(sigmas, minor=False)
-    ax.set_xticklabels(pruning_percentages,minor=False, rotation=-90)
+    fig, ax = plt.subplots(figsize=(5.1, 5.1))
+    im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
+    ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    ax.set_yticklabels(pruning_percentages, minor=False, )
     # plt.yticks(ticks=pruning_percentages)
     # plt.xticks(ticks=sigmas)
     plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
@@ -473,8 +483,8 @@ def heatmap1_exp(cfg):
     cbar = plt.colorbar(im)
     cbar.ax.set_ylabel('Mean decrease in performance', rotation=270, labelpad=8.5)
     # plt.gcf().set_size_inches(5.1, 5.1)
-    # texts = annotate_heatmap(im, valfmt="{x}%")
-    plt.title("Decrease in original performance",fontsize=15)
+    # texts = annotate_heatmap(im, valfmt="{x}")
+    plt.title("Decrease in original performance", fontsize=15)
     plt.tight_layout()
     result = time.localtime(time.time())
     # ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2f'))
@@ -482,20 +492,233 @@ def heatmap1_exp(cfg):
     plt.close()
     ####################################  ranking of original pruned model heatmap #################################
     ax = plt.subplot()
-    im = ax.imshow(matrix_ranking, aspect=0.5)
-    ax.set_yticklabels(sigmas, minor=False)
-    ax.set_xticklabels(pruning_percentages,minor=False)
+    im = ax.imshow(matrix_ranking.transpose(), aspect=0.5)
+    ax.set_xticklabels(sigmas, minor=False)
+    ax.set_yticklabels(pruning_percentages, minor=False)
     plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
     plt.ylabel("Pruning Rate", fontsize=12)
     cbar = plt.colorbar(im)
     cbar.ax.set_ylabel('Rank', rotation=270, labelpad=8.5)
     # plt.gcf().set_size_inches(5.1, 5.1)
     plt.title("Rank of deterministic")
-    # texts = annotate_heatmap(im, valfmt="{x}%")
+    texts = annotate_heatmap(im, valfmt="{x}")
     plt.tight_layout()
     # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     result = time.localtime(time.time())
     plt.savefig(f"data/figures/ranking_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.close()
+def copy_buffers(from_net:nn.Module, to_net:nn.Module):
+    iter_1 = to_net.named_modules()
+
+    for name, m in iter_1:
+        with torch.no_grad():
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                    isinstance(m, nn.BatchNorm3d):
+                weight_mask = dict(dict(from_net.named_modules())[name].named_buffers())["weight_mask"]
+                m.weight.data.mul_(weight_mask)
+
+def heatmap2_mean_decrease_maskTransfer_exp(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    N = cfg.population
+    pop = []
+    performance = []
+    number_of_populations = 3
+    original_performance = test(net, use_cuda, testloader)
+    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    pruning_percentages.reverse()
+    sigmas = None
+    if cfg.noise == "gaussian":
+        sigmas = np.linspace(0.001, 0.01, 10)
+    if cfg.noise == "geogaussian":
+        sigmas = np.linspace(0.1, 0.7, 10)
+    matrix_mean_decrease = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_ranking = np.zeros((len(sigmas), len(pruning_percentages)))
+    deterministic_pruning_acc = []
+    for i, pruning_percentage in enumerate(pruning_percentages):
+
+        # Here I just prune once for the deterministic pruning
+
+        pruned_original = copy.deepcopy(net)
+        weights_to_prune = weigths_to_prune(pruned_original)
+        prune.global_unstructured(
+            weights_to_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=pruning_percentage
+        )
+        remove_reparametrization(pruned_original)
+        print("performance of pruned original")
+        pruned_original_performance = test(pruned_original, use_cuda, testloader)
+
+        for j, sigma in enumerate(sigmas):
+            # mean_index = []
+            # for k in range(number_of_populations):
+                pruned_original = copy.deepcopy(net)
+
+                performance_diff = []
+                # performances = [pruned_original_performance]
+                # Loop over the  population
+                for n in range(N):
+                    current_model = copy.deepcopy(net)
+                    if cfg.noise == "gaussian":
+
+                        current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
+                    elif cfg.noise == "geogaussian":
+
+                        current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
+
+                    prune.global_unstructured(
+                        weigths_to_prune(current_model),
+                        pruning_method=prune.L1Unstructured,
+                        amount=pruning_percentage)
+                    copy_buffers(current_model,pruned_original)
+                    # remove_reparametrization(current_model)
+
+                    print("Performance for model {}".format(n))
+
+
+                    current_model_acc = test(pruned_original, use_cuda, testloader)
+                    performance_diff.append((current_model_acc-pruned_original_performance)/pruned_original_performance)
+                    # current_model.cpu()
+                    # performances.append(current_model_acc)
+                #
+
+                # sorted_performances = sorted(performances)
+                # sorted_performances.reverse()
+                # rank_original_model = sorted_performances.index(pruned_original_performance)
+                # mean_index.append(rank_original_model)
+                matrix_mean_decrease[j, i] = np.mean(performance_diff)
+                # matrix_ranking[j, i] = np.mean(mean_index)
+                print("Matrix Mean Decrease")
+                print(np.matrix(matrix_mean_decrease))
+                # print("Matrix Ranking")
+                # print(np.matrix(matrix_ranking))
+            # matrix_mean_decrease[j, i] = i+j
+            # matrix_ranking[j, i] = i-j
+
+    df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/buffer_transfer_meanDecrease_matrix_{cfg.noise}_pop_{cfg.population}.csv")
+    # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
+    ####################################  mean decrease heatmap #################################
+    sigmas = list(map(format_sigmas, sigmas))
+    ####################################  ranking of original pruned model heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
+    # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    # ax.set_yticklabels(pruning_percentages, minor=False)
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Mean decrease', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    plt.title("Mask transfer: {}".format(cfg.noise))
+    texts = annotate_heatmap(im, valfmt="{x}")
+    plt.tight_layout()
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.png")
+    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.pdf")
+    plt.close()
+def format_sigmas(sigma):
+    string = "{:1.3f}".format(sigma)
+    return string
+
+
+def format_percentages(value):
+    string = "{:10.1f}%".format(value)
+    return string
+
+
+def plot_heatmaps(cfg):
+    sigmas = None
+    if cfg.noise == "gaussian":
+        matrix_mean_decrease = np.loadtxt("data/mean_matrix_gaussian.txt") * 100
+        matrix_ranking = np.loadtxt("data/ranking_matrix_gaussian.txt")
+        sigmas = np.linspace(0.001, 0.01, 10)
+    if cfg.noise == "geogaussian":
+        matrix_mean_decrease = np.loadtxt("data/mean_matrix_geogaussian.txt") * 100
+        matrix_ranking = np.loadtxt("data/ranking_matrix_geogaussian.txt")
+        sigmas = np.linspace(0.1, 0.7, 10)
+
+    df_mean_decrease = pd.read_csv(f"data/ranking_matrix.csv", header=0, index_col=0)
+    # sigmas = list(df_mean_decrease.index)
+    sigmas = list(map(format_sigmas, sigmas))
+    pruning_percentages = df_mean_decrease.columns
+
+    # df_ranking = pd.DataFrame(matrix_ranking, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_ranking, columns=pruning_percentages)
+    # df_ranking.index = sigmas
+    # df_mean_decrease.index = sigmas
+    # df_ranking.to_csv(f"data/ranking_matrix_{cfg.noise}.csv")
+    # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
+    ####################################  mean decrease heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
+    # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas,rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    # ax.set_yticklabels(pruning_percentages, minor=False)
+    # plt.yticks(ticks=pruning_percentages)
+    # plt.xticks(ticks=sigmas)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Mean decrease in performance', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    texts = annotate_heatmap(im, valfmt="{x:0.1f}",convert_to_int=False)
+    plt.title("Decrease in original performance", fontsize=15)
+    plt.tight_layout()
+    result = time.localtime(time.time())
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2f'))
+    plt.savefig(f"data/figures/meanDecrease_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.png")
+    plt.close()
+    ####################################  ranking of original pruned model heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_ranking.transpose(), aspect=0.5)
+    # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    # ax.set_yticklabels(pruning_percentages, minor=False)
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas,rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Rank', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    plt.title("Rank of deterministic")
+    texts = annotate_heatmap(im, valfmt="{x}")
+    plt.tight_layout()
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/ranking_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.png")
     plt.close()
 
 
@@ -941,7 +1164,7 @@ if __name__ == '__main__':
     # main(cfg_geo)
     # print("GAUSSIAN NOISE")
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 3,
         "architecture": "resnet18",
         "noise": "gaussian",
         "sigma": 0.0021419609859022197,
@@ -950,18 +1173,19 @@ if __name__ == '__main__':
     })
     # print(cfg_add)
     # print("\n")
-    heatmap1_exp(cfg)
+    # plot_heatmaps(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp(cfg)
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 3,
         "architecture": "resnet18",
         "noise": "geogaussian",
         "sigma": 0.0021419609859022197,
         "amount": 0.5,
         "use_wandb": True
     })
-    heatmap1_exp(cfg)
-
-    # main(cfg_add)
+    # plot_heatmaps(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp(cfg)
+    # main(cfg)
     # noise_calibration(cfg)
     # plot_layer_experiments("a")
     # plot_layer_experiments("b")
