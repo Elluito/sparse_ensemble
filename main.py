@@ -30,6 +30,8 @@ import matplotlib
 from functools import partial
 import glob
 
+from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.metrics import Accuracy, Loss
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
@@ -38,6 +40,8 @@ from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
+from torch.utils.data import DataLoader, random_split, Dataset
+import logging
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -1163,6 +1167,37 @@ def plot(cfg):
     plt.show()
 
 
+def run_traditional_training(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
+    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+
+    train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs)
+    test(net, use_cuda, testloader)
+
+
 def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
     model.cuda()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
@@ -1216,7 +1251,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
         return score
 
     # Force filename to model.pt to ease the rerun of the notebook
-    disk_saver = DiskSaver(dirname="models/")
+    disk_saver = DiskSaver(dirname="trained_models/")
     best_model_handler = Checkpoint(to_save={f'{save_name}': model},
                                     save_handler=disk_saver,
                                     filename_pattern="{name}.{ext}",
@@ -1224,7 +1259,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
     evaluator.add_event_handler(Events.COMPLETED, best_model_handler)
 
     # Add early stopping
-    es_patience = 3
+    es_patience = 10
     es_handler = EarlyStopping(patience=es_patience, score_function=default_score_fn, trainer=trainer)
     evaluator.add_event_handler(Events.COMPLETED, es_handler)
     setup_logger(es_handler.logger)
@@ -1245,6 +1280,13 @@ def get_stochastic_pruning_results_on(cfg):
 
 
 if __name__ == '__main__':
+    cfg_training = omegaconf.DictConfig({
+        "architecture": "resnet18",
+        "batch_size": 128,
+        "epochs": 100
+    })
+    run_traditional_training(cfg_training)
+
     # print("GEOMETRIC GAUSSIAN NOISE")
     # cfg_geo = omegaconf.DictConfig({
     #     "population": 10,
@@ -1258,31 +1300,29 @@ if __name__ == '__main__':
     # print("\n")
     # main(cfg_geo)
     # print("GAUSSIAN NOISE")
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "architecture": "resnet18",
-        "model": "0",
-        "noise": "gaussian",
-        "sigma": 0.0021419609859022197,
-        "amount": 0.5,
-        "use_wandb": True
-    })
-    # print(cfg_add)
-    # print("\n")
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "architecture": "resnet18",
+    #     "model": "0",
+    #     "noise": "gaussian",
+    #     "sigma": 0.0021419609859022197,
+    #     "amount": 0.5,
+    #     "use_wandb": True
+    # })
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    heatmap1_exp(cfg)
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "model": "0",
-        "architecture": "resnet18",
-        "noise": "geogaussian",
-        "sigma": 0.0021419609859022197,
-        "amount": 0.5,
-        "use_wandb": True
-    })
-    heatmap1_exp(cfg)
+    # heatmap1_exp(cfg)
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "model": "0",
+    #     "architecture": "resnet18",
+    #     "noise": "geogaussian",
+    #     "sigma": 0.0021419609859022197,
+    #     "amount": 0.5,
+    #     "use_wandb": True
+    # })
+    # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg, plot_index=0)
