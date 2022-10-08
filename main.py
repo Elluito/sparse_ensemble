@@ -42,6 +42,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import time
 from torch.utils.data import DataLoader, random_split, Dataset
 import logging
+import torchvision as tv
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -1173,7 +1174,7 @@ def run_traditional_training(cfg):
     use_cuda = torch.cuda.is_available()
     net = None
     if cfg.architecture == "resnet18":
-        net = ResNet18()
+        net = tv.models.resnet18(weights="IMAGENET1K_V1")
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -1251,7 +1252,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
         return score
 
     # Force filename to model.pt to ease the rerun of the notebook
-    disk_saver = DiskSaver(dirname="trained_models/",require_empty=False)
+    disk_saver = DiskSaver(dirname="trained_models/cifar10",require_empty=False)
     best_model_handler = Checkpoint(to_save={f'{save_name}': model},
                                     save_handler=disk_saver,
                                     filename_pattern="{name}.{ext}",
