@@ -1251,7 +1251,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
         return score
 
     # Force filename to model.pt to ease the rerun of the notebook
-    disk_saver = DiskSaver(dirname="trained_models/")
+    disk_saver = DiskSaver(dirname="trained_models/",require_empty=False)
     best_model_handler = Checkpoint(to_save={f'{save_name}': model},
                                     save_handler=disk_saver,
                                     filename_pattern="{name}.{ext}",
