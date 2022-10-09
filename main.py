@@ -1174,7 +1174,10 @@ def run_traditional_training(cfg):
     use_cuda = torch.cuda.is_available()
     net = None
     if cfg.architecture == "resnet18":
+
+        from torchvision.models import resnet18, ResNet18_Weights
         net = tv.models.resnet18(weights="IMAGENET1K_V1")
+        net.fc= nn.Linear(512,10)
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -1201,11 +1204,11 @@ def run_traditional_training(cfg):
 
 def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
     model.cuda()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.001)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01,momemtum=0.9)
     criterion = nn.CrossEntropyLoss()
     from torch.optim.lr_scheduler import ExponentialLR
 
-    lr_scheduler = ExponentialLR(optimizer, gamma=0.975)
+    lr_scheduler = ExponentialLR(optimizer, gamma=0.90)
 
     trainer = create_supervised_trainer(model, optimizer, criterion, device="cuda")
     val_metrics = {
@@ -1235,8 +1238,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
     print("\nFine tuning has began\n")
 
     # Setup engine &  logger
-    def setup_logger(logger):
-        handler = logging.StreamHandler()
+    def setup_logger(logger): handler = logging.StreamHandler()
         formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
@@ -1252,7 +1254,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
         return score
 
     # Force filename to model.pt to ease the rerun of the notebook
-    disk_saver = DiskSaver(dirname="trained_models/cifar10",require_empty=False)
+    disk_saver = DiskSaver(dirname="trained_models",require_empty=False)
     best_model_handler = Checkpoint(to_save={f'{save_name}': model},
                                     save_handler=disk_saver,
                                     filename_pattern="{name}.{ext}",
