@@ -1238,7 +1238,8 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
     print("\nFine tuning has began\n")
 
     # Setup engine &  logger
-    def setup_logger(logger): handler = logging.StreamHandler()
+    def setup_logger(logger):
+        handler = logging.StreamHandler()
         formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
