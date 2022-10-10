@@ -667,6 +667,317 @@ def heatmap2_mean_decrease_maskTransfer_exp(cfg):
     plt.close()
 
 
+def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    N = cfg.population
+    pop = []
+    performance = []
+    number_of_populations = 3
+    original_performance = test(net, use_cuda, testloader)
+    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    pruning_percentages.reverse()
+    sigmas = None
+    if cfg.noise == "gaussian":
+        sigmas = np.linspace(0.001, 0.01, 10)
+    if cfg.noise == "geogaussian":
+        sigmas = np.linspace(0.1, 0.7, 10)
+    matrix_mean_decrease = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_ranking = np.zeros((len(sigmas), len(pruning_percentages)))
+    deterministic_pruning_acc = []
+    for i, pruning_percentage in enumerate(pruning_percentages):
+
+        # Here I just prune once for the deterministic pruning
+
+        pruned_original = copy.deepcopy(net)
+        weights_to_prune = weigths_to_prune(pruned_original)
+        prune.global_unstructured(
+            weights_to_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=pruning_percentage
+        )
+        remove_reparametrization(pruned_original)
+        print("performance of pruned original")
+        pruned_original_performance = test(pruned_original, use_cuda, testloader)
+
+        for j, sigma in enumerate(sigmas):
+            # mean_index = []
+            # for k in range(number_of_populations):
+            pruned_original = copy.deepcopy(net)
+
+            performance_diff = []
+            # performances = [pruned_original_performance]
+            # Loop over the  population
+            for n in range(N):
+                current_model = copy.deepcopy(net)
+                if cfg.noise == "gaussian":
+
+                    current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
+                elif cfg.noise == "geogaussian":
+
+                    current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
+
+                prune.global_unstructured(
+                    weigths_to_prune(current_model),
+                    pruning_method=prune.L1Unstructured,
+                    amount=pruning_percentage)
+                copy_buffers(from_net=current_model, to_net=pruned_original)
+
+                # remove_reparametrization(current_model)
+
+                print("Performance for model {}".format(n))
+
+                original_transfer_mask_model_acc = test(pruned_original, use_cuda, testloader)
+                stochastic_model_performance = test(current_model,use_cuda,testloader)
+                performance_diff.append(original_transfer_mask_model_acc-stochastic_model_performance)
+                # current_model.cpu()
+                # performances.append(current_model_acc)
+            #
+
+            # sorted_performances = sorted(performances)
+            # sorted_performances.reverse()
+            # rank_original_model = sorted_performances.index(pruned_original_performance)
+            # mean_index.append(rank_original_model)
+            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            # matrix_ranking[j, i] = np.mean(mean_index)
+            print("Matrix Mean Decrease")
+            print(np.matrix(matrix_mean_decrease))
+            # print("Matrix Ranking")
+            # print(np.matrix(matrix_ranking))
+        # matrix_mean_decrease[j, i] = i+j
+        # matrix_ranking[j, i] = i-j
+
+    df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/bufferTransfer_V_stochasticPruned_meandiff__matrix_{cfg.noise}_pop"
+                            f"_{cfg.population}.csv")
+    # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
+    ####################################  mean decrease heatmap #################################
+    sigmas = list(map(format_sigmas, sigmas))
+    ####################################  ranking of original pruned model heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
+    # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    # ax.set_yticklabels(pruning_percentages, minor=False)
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Mean decrease', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    plt.title("Mask Transfer V Stochastic pruned: {}".format(cfg.noise))
+    texts = annotate_heatmap(im, valfmt="{x}")
+    plt.tight_layout()
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.png")
+    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.pdf")
+    plt.close()
+
+def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18":
+        net = ResNet18()
+    # transform_train = transforms.Compose([
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.ToTensor(),
+    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    # ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+
+    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    N = cfg.population
+    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    pruning_percentages.reverse()
+    sigmas = None
+    if cfg.noise == "gaussian":
+        sigmas = np.linspace(0.001, 0.01, 10)
+    if cfg.noise == "geogaussian":
+        sigmas = np.linspace(0.1, 0.7, 10)
+    matrix_diff = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_stochastic = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_deterministic = np.zeros((len(sigmas), len(pruning_percentages)))
+    deterministic_pruning_acc = []
+    random_net_1 = ResNet18()
+    for i, pruning_percentage in enumerate(pruning_percentages):
+
+        # Here I just prune once for the deterministic pruning
+
+        pruned_original = copy.deepcopy(net)
+        weights_to_prune = weigths_to_prune(pruned_original)
+        prune.global_unstructured(
+            weights_to_prune,
+            pruning_method=prune.L1Unstructured,
+            amount=pruning_percentage
+        )
+        # remove_reparametrization(pruned_original)
+        deterministic_net = copy.deepcopy(random_net_1)
+        copy_buffers(from_net=pruned_original,to_net=deterministic_net)
+        for j, sigma in enumerate(sigmas):
+            # mean_index = []
+            # for k in range(number_of_populations):
+
+            performance_diff = []
+            stochastic_performance = []
+            deterministic_net_performance = []
+            # performances = [pruned_original_performance]
+            # Loop over the  population
+            for n in range(N):
+                stochastic_random_net = copy.deepcopy(random_net_1)
+
+                current_model = copy.deepcopy(net)
+                if cfg.noise == "gaussian":
+
+                    current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
+                elif cfg.noise == "geogaussian":
+
+                    current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
+
+                prune.global_unstructured(
+                    weigths_to_prune(current_model),
+                    pruning_method=prune.L1Unstructured,
+                    amount=pruning_percentage)
+                copy_buffers(from_net=current_model,to_net=stochastic_random_net)
+
+                # remove_reparametrization(current_model)
+
+                print("Performance for model {}".format(n))
+
+                stochastic_random_net_acc = test(stochastic_random_net, use_cuda, testloader)
+                deterministic_net_acc = test(deterministic_net,use_cuda,testloader)
+
+                performance_diff.append(deterministic_net_acc-stochastic_random_net_acc)
+                stochastic_performance.append(stochastic_random_net_acc)
+                deterministic_net_performance.append(deterministic_net_acc)
+
+
+
+                # current_model.cpu()
+                # performances.append(current_model_acc)
+            #
+
+            # sorted_performances = sorted(performances)
+            # sorted_performances.reverse()
+            # rank_original_model = sorted_performances.index(pruned_original_performance)
+            # mean_index.append(rank_original_model)
+            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            matrix_stochastic[j, i] = np.mean(stochastic_performance)
+            matrix_deterministic[j, i] = np.mean(deterministic_net_performance)
+
+            # matrix_ranking[j, i] = np.mean(mean_index)
+            print("Matrix Diff deterministic vs stochastic (det-stho)")
+            print(np.matrix(matrix_diff))
+            print("Matrix mean stochastic performance")
+            print(np.matrix(matrix_stochastic))
+            print("Matrix mean deterministic performance")
+            print(np.matrix(matrix_deterministic))
+
+            # print("Matrix Ranking")
+            # print(np.matrix(matrix_ranking))
+        # matrix_mean_decrease[j, i] = i+j
+        # matrix_ranking[j, i] = i-j
+
+    df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/random_stochastic_V_deterministic_diff_matrix_{cfg.noise}_pop_{cfg.population}.csv")
+
+    df_mean_decrease = pd.DataFrame(matrix_stochastic, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/random_stochastic_performance_matrix_{cfg.noise}_pop_{cfg.population}.csv")
+
+    df_mean_decrease = pd.DataFrame(matrix_deterministic, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/random_deterministic_performance_matrix_{cfg.noise}_pop_{cfg.population}.csv")
+    # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
+    ####################################  mean decrease heatmap #################################
+    sigmas = list(map(format_sigmas, sigmas))
+    ####################################  ranking of original pruned model heatmap #################################
+    ax = plt.subplot()
+    im = ax.imshow(matrix_diff.transpose(), aspect=0.5)
+    # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    # ax.set_yticklabels(pruning_percentages, minor=False)
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    plt.ylabel("Pruning Rate", fontsize=12)
+    cbar = plt.colorbar(im)
+    cbar.ax.set_ylabel('Difference in performance', rotation=270, labelpad=8.5)
+    # plt.gcf().set_size_inches(5.1, 5.1)
+    plt.title("Stochastic V deterministic Mask: {}".format(cfg.noise))
+    texts = annotate_heatmap(im, valfmt="{x:1.2f}")
+    plt.tight_layout()
+    # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    result = time.localtime(time.time())
+    plt.savefig(f"data/figures/diff_bufferTransfer_det_V_stochastic_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.pdf")
+    plt.close()
+    ######################################
+    # ax = plt.subplot()
+    # im = ax.imshow(matrix_diff.transpose(), aspect=0.5)
+    # # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
+    # # ax.set_yticklabels(pruning_percentages, minor=False)
+    # plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
+    # plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
+    # plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
+    # plt.ylabel("Pruning Rate", fontsize=12)
+    # cbar = plt.colorbar(im)
+    # cbar.ax.set_ylabel('Difference in performance', rotation=270, labelpad=8.5)
+    # # plt.gcf().set_size_inches(5.1, 5.1)
+    # plt.title("Stochastic V deterministic Mask: {}".format(cfg.noise))
+    # texts = annotate_heatmap(im, valfmt="{x:1.2f}")
+    # plt.tight_layout()
+    # # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+    # result = time.localtime(time.time())
+    # plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+    #             f"-{result.tm_min}.pdf")
+    # plt.close()
+
 def format_sigmas(sigma):
     string = "{:1.3f}".format(sigma)
     return string
@@ -1201,19 +1512,19 @@ def run_traditional_training(cfg):
 
     test(net, use_cuda, testloader)
     train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs, learning_rate=cfg.lr,
-          is_cyclic=cfg.cyclic_lr,lr_peak_epoch=cfg.lr_peak_epoch)
+          is_cyclic=cfg.cyclic_lr, lr_peak_epoch=cfg.lr_peak_epoch)
     test(net, use_cuda, testloader)
 
 
 def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learning_rate, is_cyclic=False,
-          lr_peak_epoch=5):
+          lr_peak_epoch=5, weight_decay=5e-4,momentum=0.9):
     model.cuda()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
     from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
     iters_per_epoch = len(train_loader)
     lr_schedule = np.interp(np.arange((epochs + 1) * iters_per_epoch),
-                            [0, lr_peak_epoch* iters_per_epoch, epochs * iters_per_epoch],
+                            [0, lr_peak_epoch * iters_per_epoch, epochs * iters_per_epoch],
                             [0, 1, 0])
     if is_cyclic:
         lr_scheduler = LambdaLR(optimizer, lr_schedule.__getitem__)
@@ -1294,15 +1605,17 @@ def get_stochastic_pruning_results_on(cfg):
 
 
 if __name__ == '__main__':
-    cfg_training = omegaconf.DictConfig({
-        "architecture": "resnet18",
-        "batch_size": 512,
-        "lr": 0.5,
-        "cyclic_lr": True,
-        "lr_peak_epoch": 5,
-        "epochs": 24
-    })
-    run_traditional_training(cfg_training)
+    # cfg_training = omegaconf.DictConfig({
+    #     "architecture": "resnet18",
+    #     "batch_size": 512,
+    #     "lr": 0.5,
+    #     "momentum":0.9,
+    #     "weight_decay": 5e-4,
+    #     "cyclic_lr": True,
+    #     "lr_peak_epoch": 5,
+    #     "epochs": 24
+    # })
+    # run_traditional_training(cfg_training)
 
     # print("GEOMETRIC GAUSSIAN NOISE")
     # cfg_geo = omegaconf.DictConfig({
@@ -1317,28 +1630,30 @@ if __name__ == '__main__':
     # print("\n")
     # main(cfg_geo)
     # print("GAUSSIAN NOISE")
-    # cfg = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "architecture": "resnet18",
-    #     "model": "0",
-    #     "noise": "gaussian",
-    #     "sigma": 0.0021419609859022197,
-    #     "amount": 0.5,
-    #     "use_wandb": True
-    # })
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "model": "0",
+        "noise": "gaussian",
+        "sigma": 0.0021419609859022197,
+        "amount": 0.5,
+        "use_wandb": True
+    })
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
-    heatmap2_mean_decrease_maskTransfer_exp(cfg)
+    # heatmap2_mean_decrease_maskTransfer_exp(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
     # heatmap1_exp(cfg)
-    # cfg = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "model": "0",
-    #     "architecture": "resnet18",
-    #     "noise": "geogaussian",
-    #     "sigma": 0.0021419609859022197,
-    #     "amount": 0.5,
-    #     "use_wandb": True
-    # })
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "model": "0",
+        "architecture": "resnet18",
+        "noise": "geogaussian",
+        "sigma": 0.0021419609859022197,
+        "amount": 0.5,
+        "use_wandb": True
+    })
+    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
     # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
