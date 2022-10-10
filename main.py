@@ -32,6 +32,7 @@ import glob
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
@@ -609,7 +610,8 @@ def heatmap2_mean_decrease_maskTransfer_exp(cfg):
                     weigths_to_prune(current_model),
                     pruning_method=prune.L1Unstructured,
                     amount=pruning_percentage)
-                copy_buffers(current_model, pruned_original)
+                copy_buffers(from_net=current_model, to_net=pruned_original)
+
                 # remove_reparametrization(current_model)
 
                 print("Performance for model {}".format(n))
@@ -1174,10 +1176,9 @@ def run_traditional_training(cfg):
     use_cuda = torch.cuda.is_available()
     net = None
     if cfg.architecture == "resnet18":
-
         from torchvision.models import resnet18, ResNet18_Weights
-        net = tv.models.resnet18(weights="IMAGENET1K_V1")
-        net.fc= nn.Linear(512,10)
+        net = tv.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+        net.fc = nn.Linear(512, 10)
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -1193,22 +1194,31 @@ def run_traditional_training(cfg):
     trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
     cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
-    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=3)
+    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=3)
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
 
-    train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs)
+    test(net, use_cuda, testloader)
+    train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs, learning_rate=cfg.lr,
+          is_cyclic=cfg.cyclic_lr,lr_peak_epoch=cfg.lr_peak_epoch)
     test(net, use_cuda, testloader)
 
 
-def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
+def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learning_rate, is_cyclic=False,
+          lr_peak_epoch=5):
     model.cuda()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01,momemtum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     criterion = nn.CrossEntropyLoss()
-    from torch.optim.lr_scheduler import ExponentialLR
-
-    lr_scheduler = ExponentialLR(optimizer, gamma=0.90)
+    from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
+    iters_per_epoch = len(train_loader)
+    lr_schedule = np.interp(np.arange((epochs + 1) * iters_per_epoch),
+                            [0, lr_peak_epoch* iters_per_epoch, epochs * iters_per_epoch],
+                            [0, 1, 0])
+    if is_cyclic:
+        lr_scheduler = LambdaLR(optimizer, lr_schedule.__getitem__)
+    else:
+        lr_scheduler = ExponentialLR(optimizer, gamma=0.90)
 
     trainer = create_supervised_trainer(model, optimizer, criterion, device="cuda")
     val_metrics = {
@@ -1255,7 +1265,7 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs):
         return score
 
     # Force filename to model.pt to ease the rerun of the notebook
-    disk_saver = DiskSaver(dirname="trained_models",require_empty=False)
+    disk_saver = DiskSaver(dirname="trained_models", require_empty=False)
     best_model_handler = Checkpoint(to_save={f'{save_name}': model},
                                     save_handler=disk_saver,
                                     filename_pattern="{name}.{ext}",
@@ -1286,8 +1296,11 @@ def get_stochastic_pruning_results_on(cfg):
 if __name__ == '__main__':
     cfg_training = omegaconf.DictConfig({
         "architecture": "resnet18",
-        "batch_size": 128,
-        "epochs": 100
+        "batch_size": 512,
+        "lr": 0.5,
+        "cyclic_lr": True,
+        "lr_peak_epoch": 5,
+        "epochs": 24
     })
     run_traditional_training(cfg_training)
 
@@ -1315,7 +1328,7 @@ if __name__ == '__main__':
     # })
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
-    # heatmap2_mean_decrease_maskTransfer_exp(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # heatmap1_exp(cfg)
     # cfg = omegaconf.DictConfig({
     #     "population": 10,
