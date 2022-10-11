@@ -690,7 +690,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pop = []
