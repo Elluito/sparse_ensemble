@@ -1642,7 +1642,7 @@ if __name__ == '__main__':
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
     # heatmap1_exp(cfg)
     cfg = omegaconf.DictConfig({
         "population": 10,
@@ -1653,7 +1653,7 @@ if __name__ == '__main__':
         "amount": 0.5,
         "use_wandb": True
     })
-    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
     # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
