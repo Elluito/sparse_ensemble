@@ -16,8 +16,8 @@
 #$ -pe smp 3
 # Send emails when job starts and ends
 #$ -m e
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
+export OMP_NUM_THREADS=3
+export MKL_NUM_THREADS=3
 export OPENBLAS_NUM_THREADS=1
 # Now run the job 
 module load intel openmpi

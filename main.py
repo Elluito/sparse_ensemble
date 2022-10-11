@@ -835,7 +835,6 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     matrix_diff = np.zeros((len(sigmas), len(pruning_percentages)))
     matrix_stochastic = np.zeros((len(sigmas), len(pruning_percentages)))
     matrix_deterministic = np.zeros((len(sigmas), len(pruning_percentages)))
-    deterministic_pruning_acc = []
     random_net_1 = ResNet18()
     for i, pruning_percentage in enumerate(pruning_percentages):
 
@@ -854,12 +853,11 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
         for j, sigma in enumerate(sigmas):
             # mean_index = []
             # for k in range(number_of_populations):
-
             performance_diff = []
             stochastic_performance = []
             deterministic_net_performance = []
-            # performances = [pruned_original_performance]
-            # Loop over the  population
+            # # performances = [pruned_original_performance]
+            # # Loop over the  population
             for n in range(N):
                 stochastic_random_net = copy.deepcopy(random_net_1)
 
@@ -888,17 +886,11 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
                 stochastic_performance.append(stochastic_random_net_acc)
                 deterministic_net_performance.append(deterministic_net_acc)
 
-
-
-                # current_model.cpu()
-                # performances.append(current_model_acc)
-            #
-
             # sorted_performances = sorted(performances)
             # sorted_performances.reverse()
             # rank_original_model = sorted_performances.index(pruned_original_performance)
             # mean_index.append(rank_original_model)
-            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            matrix_diff[j, i] = np.mean(performance_diff)
             matrix_stochastic[j, i] = np.mean(stochastic_performance)
             matrix_deterministic[j, i] = np.mean(deterministic_net_performance)
 
@@ -1517,7 +1509,8 @@ def run_traditional_training(cfg):
 def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learning_rate, is_cyclic=False,
           lr_peak_epoch=5, weight_decay=5e-4,momentum=0.9):
     model.cuda()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay,
+                                nesterov=True)
     criterion = nn.CrossEntropyLoss()
     from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
     iters_per_epoch = len(train_loader)
