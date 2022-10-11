@@ -796,8 +796,6 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     result = time.localtime(time.time())
     plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
-                f"-{result.tm_min}.png")
-    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
                 f"-{result.tm_min}.pdf")
     plt.close()
 
@@ -824,7 +822,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
@@ -1642,7 +1640,7 @@ if __name__ == '__main__':
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
     # heatmap1_exp(cfg)
     cfg = omegaconf.DictConfig({
         "population": 10,
@@ -1653,7 +1651,7 @@ if __name__ == '__main__':
         "amount": 0.5,
         "use_wandb": True
     })
-    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
     # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
