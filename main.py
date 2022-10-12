@@ -690,7 +690,8 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                             num_workers=cfg.num_workers)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pop = []
@@ -704,23 +705,23 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
         sigmas = np.linspace(0.001, 0.01, 10)
     if cfg.noise == "geogaussian":
         sigmas = np.linspace(0.1, 0.7, 10)
-    matrix_mean_decrease = np.zeros((len(sigmas), len(pruning_percentages)))
-    matrix_ranking = np.zeros((len(sigmas), len(pruning_percentages)))
-    deterministic_pruning_acc = []
+    matrix_diff = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_stochastic_acc =np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_transfer_mask_acc =np.zeros((len(sigmas), len(pruning_percentages)))
     for i, pruning_percentage in enumerate(pruning_percentages):
 
         # Here I just prune once for the deterministic pruning
 
-        pruned_original = copy.deepcopy(net)
-        weights_to_prune = weigths_to_prune(pruned_original)
-        prune.global_unstructured(
-            weights_to_prune,
-            pruning_method=prune.L1Unstructured,
-            amount=pruning_percentage
-        )
-        remove_reparametrization(pruned_original)
-        print("performance of pruned original")
-        pruned_original_performance = test(pruned_original, use_cuda, testloader)
+        # pruned_original = copy.deepcopy(net)
+        # weights_to_prune = weigths_to_prune(pruned_original)
+        # prune.global_unstructured(
+        #     weights_to_prune,
+        #     pruning_method=prune.L1Unstructured,
+        #     amount=pruning_percentage
+        # )
+        # remove_reparametrization(pruned_original)
+        # print("performance of pruned original")
+        # pruned_original_performance = test(pruned_original, use_cuda, testloader)
 
         for j, sigma in enumerate(sigmas):
             # mean_index = []
@@ -728,6 +729,9 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
             pruned_original = copy.deepcopy(net)
 
             performance_diff = []
+            stochastic_performance = []
+            transfer_mask_performance = []
+
             # performances = [pruned_original_performance]
             # Loop over the  population
             for n in range(N):
@@ -750,8 +754,10 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
                 print("Performance for model {}".format(n))
 
                 original_transfer_mask_model_acc = test(pruned_original, use_cuda, testloader)
-                stochastic_model_performance = test(current_model,use_cuda,testloader)
-                performance_diff.append(original_transfer_mask_model_acc-stochastic_model_performance)
+                stochastic_model_performance = test(current_model, use_cuda, testloader)
+                performance_diff.append(original_transfer_mask_model_acc - stochastic_model_performance)
+                stochastic_performance.append(stochastic_model_performance)
+                transfer_mask_performance.append(original_transfer_mask_model_acc)
                 # current_model.cpu()
                 # performances.append(current_model_acc)
             #
@@ -760,27 +766,33 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
             # sorted_performances.reverse()
             # rank_original_model = sorted_performances.index(pruned_original_performance)
             # mean_index.append(rank_original_model)
-            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            matrix_diff[j, i] = np.mean(performance_diff)
+            matrix_transfer_mask_acc[j,i] = np.mean(transfer_mask_performance)
+            matrix_stochastic_acc[j,i] = np.mean(stochastic_performance)
             # matrix_ranking[j, i] = np.mean(mean_index)
-            print("Matrix Mean Decrease")
-            print(np.matrix(matrix_mean_decrease))
+            print("Matrix Diff")
+            print(np.matrix(matrix_diff))
+            print("Matrix stochastic performance")
+            print(np.matrix(matrix_stochastic_acc))
+            print("Matrix mask transfer")
+            print(np.matrix(matrix_transfer_mask_acc))
             # print("Matrix Ranking")
             # print(np.matrix(matrix_ranking))
-        # matrix_mean_decrease[j, i] = i+j
+        # matrix_diff[j, i] = i+j
         # matrix_ranking[j, i] = i-j
 
-    df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
-    # df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
+    df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
     df_mean_decrease.index = sigmas
     # df_mean_decrease.index = sigmas
-    df_mean_decrease.to_csv(f"data/bufferTransfer_V_stochasticPruned_meandiff__matrix_{cfg.noise}_pop"
+    df_mean_decrease.to_csv(f"data/bufferTransfer_V_stochasticPruned_diff_matrix_{cfg.noise}_pop"
                             f"_{cfg.population}.csv")
     # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
     ####################################  mean decrease heatmap #################################
     sigmas = list(map(format_sigmas, sigmas))
     ####################################  ranking of original pruned model heatmap #################################
     ax = plt.subplot()
-    im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
+    im = ax.imshow(matrix_diff.transpose(), aspect=0.5)
     # ax.set_xticklabels(sigmas, minor=False, rotation=-90)
     # ax.set_yticklabels(pruning_percentages, minor=False)
     plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
@@ -797,6 +809,8 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     result = time.localtime(time.time())
     plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
                 f"-{result.tm_min}.pdf")
+    plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.png")
     plt.close()
 
 def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
@@ -822,7 +836,8 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=512, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                             num_workers=cfg.num_workers)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
@@ -849,7 +864,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
         )
         # remove_reparametrization(pruned_original)
         deterministic_net = copy.deepcopy(random_net_1)
-        copy_buffers(from_net=pruned_original,to_net=deterministic_net)
+        copy_buffers(from_net=pruned_original, to_net=deterministic_net)
         for j, sigma in enumerate(sigmas):
             # mean_index = []
             # for k in range(number_of_populations):
@@ -873,16 +888,16 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
                     weigths_to_prune(current_model),
                     pruning_method=prune.L1Unstructured,
                     amount=pruning_percentage)
-                copy_buffers(from_net=current_model,to_net=stochastic_random_net)
+                copy_buffers(from_net=current_model, to_net=stochastic_random_net)
 
                 # remove_reparametrization(current_model)
 
                 print("Performance for model {}".format(n))
 
                 stochastic_random_net_acc = test(stochastic_random_net, use_cuda, testloader)
-                deterministic_net_acc = test(deterministic_net,use_cuda,testloader)
+                deterministic_net_acc = test(deterministic_net, use_cuda, testloader)
 
-                performance_diff.append(deterministic_net_acc-stochastic_random_net_acc)
+                performance_diff.append(deterministic_net_acc - stochastic_random_net_acc)
                 stochastic_performance.append(stochastic_random_net_acc)
                 deterministic_net_performance.append(deterministic_net_acc)
 
@@ -946,6 +961,8 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     result = time.localtime(time.time())
     plt.savefig(f"data/figures/diff_bufferTransfer_det_V_stochastic_{cfg.noise}Noise_{result.tm_hour}"
                 f"-{result.tm_min}.pdf")
+    plt.savefig(f"data/figures/diff_bufferTransfer_det_V_stochastic_{cfg.noise}Noise_{result.tm_hour}"
+                f"-{result.tm_min}.png")
     plt.close()
     ######################################
     # ax = plt.subplot()
@@ -1471,17 +1488,101 @@ def plot(cfg):
     plt.show()
 
 
+def manual_train(model: nn.Module, train_loader, val_loader, save_name, epochs, learning_rate, is_cyclic=False,
+                 cosine_schedule=False,
+                 lr_peak_epoch=5, weight_decay=1e-4, momentum=0.9, grad_clip=0.1, optim="sgd", solution_accuracy=0):
+    model.cuda()
+    if optim == "sgd":
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay,
+                                    nesterov=True)
+    elif optim == "adam":
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+
+    criterion = nn.CrossEntropyLoss()
+    from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
+    iters_per_epoch = len(train_loader)
+    lr_scheduler = np.interp(np.arange((epochs + 1) * iters_per_epoch),
+                             [0, lr_peak_epoch * iters_per_epoch, epochs * iters_per_epoch],
+                             [0, 1, 0])
+    if is_cyclic:
+        # lr_scheduler = LambdaLR(optimizer, lr_schedule.__getitem__)
+        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, learning_rate, epochs=epochs,
+                                                           steps_per_epoch=len(train_loader))
+
+    elif cosine_schedule:
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    else:
+
+        lr_scheduler = ExponentialLR(optimizer, gamma=0.90)
+
+    # trainer = create_supervised_trainer(model, optimizer, criterion, device="cuda")
+    val_metrics = {
+        "accuracy": Accuracy(),
+        "nll": Loss(criterion)
+    }
+    accuracy = Accuracy()
+
+    if solution_accuracy:
+        best_accuracy = solution_accuracy
+    else:
+        best_accuracy = 0
+    for epoch in range(epochs):
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data, target = data.cuda(), target.cuda()
+            optimizer.zero_grad()
+            # first forward-backward step
+            predictions = model(data)
+            # enable_bn(model)
+            loss = criterion(predictions, target)
+            loss.backward()
+            accuracy.update((predictions, target))
+            if grad_clip:
+                nn.utils.clip_grad_value_(model.parameters(), grad_clip)
+
+            optimizer.step()
+            lr_scheduler.step()
+            # smooth_CE(model(data), target).backward()
+            # optimizer.second_step(zero_grad=True)
+            # if mask:
+            #     mask.apply_mask()
+            #     one_forward_backward_pass = mask.inference_FLOPs * 3
+            #     train_flops += one_forward_backward_pass * 2
+            # # L2 Regularization
+            #
+            # # Exp avg collection
+            # _loss_collector.add_value(loss.item())
+            #
+            # pbar.update(1)
+            # global_step += 1
+
+            if batch_idx % 10 == 0:
+                acc = accuracy.compute()
+                print(f"Training Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                      f" {loss.item():.2f}")
+
+        print("Validation results")
+        performance = test(model, use_cuda=True, testloader=val_loader)
+        msg_performance = f"{performance:.2f}".replace(".", ",")
+        if performance > best_accuracy:
+            torch.save(model.state_dict(), f"trained_models/{save_name}_val_accuracy={msg_performance}.pt")
+
+
 def run_traditional_training(cfg):
     data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                "University of Leeds\PhD\Datasets\CIFAR10"
     use_cuda = torch.cuda.is_available()
     net = None
     if cfg.architecture == "resnet18":
-        from torchvision.models import resnet18, ResNet18_Weights
-        net = tv.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-        net.fc = nn.Linear(512, 10)
+        if cfg.solution:
+            net = tv.models.resnet18()
+            net.fc = nn.Linear(512, 10)
+            load_model(net, cfg.solution)
+        else:
+            from torchvision.models import resnet18, ResNet18_Weights
+            net = tv.models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+            net.fc = nn.Linear(512, 10)
     transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
+        transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -1495,22 +1596,31 @@ def run_traditional_training(cfg):
     trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
     cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=1)
-    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=1)
+    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+                                              num_workers=cfg.num_workers)
+    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+                                             num_workers=cfg.num_workers)
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                             num_workers=cfg.num_workers)
 
-    test(net, use_cuda, testloader)
-    train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs, learning_rate=cfg.lr,
-          is_cyclic=cfg.cyclic_lr, lr_peak_epoch=cfg.lr_peak_epoch)
+    pre_train_perf = test(net, use_cuda, testloader)
+    manual_train(net, trainloader, val_loader, save_name=f"traditional_trained_cylic_{cfg.cyclic_lr}_cosine_"
+                                                         f"{cfg.cosineschedule}_optim_{cfg.optim}",
+                 epochs=cfg.epochs,
+                 learning_rate=cfg.lr,
+                 is_cyclic=cfg.cyclic_lr, cosine_schedule=cfg.cosine_schedule, lr_peak_epoch=cfg.lr_peak_epoch,
+                 optim=cfg.optim, solution_accuracy=pre_train_perf if cfg.solution else 0)
+    print("TEST SET RESULTS")
     test(net, use_cuda, testloader)
 
 
 def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learning_rate, is_cyclic=False,
-          lr_peak_epoch=5, weight_decay=5e-4,momentum=0.9):
+          cosine_schedule=False, lr_peak_epoch=5, weight_decay=1e-4, momentum=0.9):
     model.cuda()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay,
                                 nesterov=True)
+    # optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate,weight_decay=weight_decay)
     criterion = nn.CrossEntropyLoss()
     from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
     iters_per_epoch = len(train_loader)
@@ -1518,7 +1628,9 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learnin
                             [0, lr_peak_epoch * iters_per_epoch, epochs * iters_per_epoch],
                             [0, 1, 0])
     if is_cyclic:
-        lr_scheduler = LambdaLR(optimizer, lr_schedule.__getitem__)
+        # lr_scheduler = LambdaLR(optimizer, lr_schedule.__getitem__)
+        lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, learning_rate, epochs=epochs,
+                                                           steps_per_epoch=len(train_loader))
     else:
         lr_scheduler = ExponentialLR(optimizer, gamma=0.90)
 
@@ -1596,17 +1708,21 @@ def get_stochastic_pruning_results_on(cfg):
 
 
 if __name__ == '__main__':
-    # cfg_training = omegaconf.DictConfig({
-    #     "architecture": "resnet18",
-    #     "batch_size": 512,
-    #     "lr": 0.5,
-    #     "momentum":0.9,
-    #     "weight_decay": 5e-4,
-    #     "cyclic_lr": True,
-    #     "lr_peak_epoch": 5,
-    #     "epochs": 24
-    # })
-    # run_traditional_training(cfg_training)
+    cfg_training = omegaconf.DictConfig({
+        "architecture": "resnet18",
+        "batch_size": 512,
+        "lr": 0.001,
+        "momentum": 0.9,
+        "weight_decay": 1e-4,
+        "cyclic_lr": True,
+        "lr_peak_epoch": 5,
+        "optim": "adam",
+        "solution": "trained_models/traditional_trained_val_accuracy=91,86.pt",
+        "num_workers": 1,
+        "cosine_schedule": False,
+        "epochs": 24
+    })
+    run_traditional_training(cfg_training)
 
     # print("GEOMETRIC GAUSSIAN NOISE")
     # cfg_geo = omegaconf.DictConfig({
@@ -1629,12 +1745,14 @@ if __name__ == '__main__':
         "sigma": 0.0021419609859022197,
         "amount": 0.5,
         "batch_size":512,
+        "num_workers":1,
         "use_wandb": True
     })
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
+
     # heatmap1_exp(cfg)
     cfg = omegaconf.DictConfig({
         "population": 10,
@@ -1644,9 +1762,10 @@ if __name__ == '__main__':
         "sigma": 0.0021419609859022197,
         "amount": 0.5,
         "batch_size":512,
-        "use_wandb": True
+        "num_workers":1,
+        "use_wandb": False
     })
-    heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)
+    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
     # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
