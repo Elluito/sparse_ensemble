@@ -690,7 +690,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False, num_workers=1)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pop = []
@@ -822,7 +822,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=512, shuffle=False, num_workers=1)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
     pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
@@ -1495,10 +1495,10 @@ def run_traditional_training(cfg):
     trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
     cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=3)
-    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=3)
+    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True, num_workers=1)
+    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True, num_workers=1)
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=3)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
 
     test(net, use_cuda, testloader)
     train(net, trainloader, val_loader, save_name="traditional_trained", epochs=cfg.epochs, learning_rate=cfg.lr,
@@ -1628,6 +1628,7 @@ if __name__ == '__main__':
         "noise": "gaussian",
         "sigma": 0.0021419609859022197,
         "amount": 0.5,
+        "batch_size":512,
         "use_wandb": True
     })
     # plot_heatmaps(cfg)
@@ -1642,6 +1643,7 @@ if __name__ == '__main__':
         "noise": "geogaussian",
         "sigma": 0.0021419609859022197,
         "amount": 0.5,
+        "batch_size":512,
         "use_wandb": True
     })
     heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg)

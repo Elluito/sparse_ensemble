@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 48:00:00)
-#$ -l h_rt=05:00:00
+#$ -l h_rt=08:00:00
 
 # ASk for some GPU
 #$ -l coproc_p100=1
@@ -27,5 +27,5 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-mpirun -np 3 python main.py #&& python main.py && python main.py
+python main.py #&& python main.py && python main.py
 
