@@ -327,6 +327,7 @@ def test(net, use_cuda, testloader, one_batch=False):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
         test_loss / len(testloader), correct, total,
         100. * correct.item() / total))
+    net.cpu()
     return 100. * correct.item() / total
 
 
@@ -694,20 +695,17 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
                                              num_workers=cfg.num_workers)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
-    pop = []
-    performance = []
-    number_of_populations = 3
-    original_performance = test(net, use_cuda, testloader)
-    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-    pruning_percentages.reverse()
+    pruning_percentages = [0.95,0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    # pruning_percentages.reverse()
+
     sigmas = None
     if cfg.noise == "gaussian":
         sigmas = np.linspace(0.001, 0.01, 10)
     if cfg.noise == "geogaussian":
         sigmas = np.linspace(0.1, 0.7, 10)
     matrix_diff = np.zeros((len(sigmas), len(pruning_percentages)))
-    matrix_stochastic_acc =np.zeros((len(sigmas), len(pruning_percentages)))
-    matrix_transfer_mask_acc =np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_stochastic_acc = np.zeros((len(sigmas), len(pruning_percentages)))
+    matrix_transfer_mask_acc = np.zeros((len(sigmas), len(pruning_percentages)))
     for i, pruning_percentage in enumerate(pruning_percentages):
 
         # Here I just prune once for the deterministic pruning
@@ -780,14 +778,28 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
             # print(np.matrix(matrix_ranking))
         # matrix_diff[j, i] = i+j
         # matrix_ranking[j, i] = i-j
-
+    # This is the difference between the stochastic pruned model and the mask transfer on to the original one
     df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
     # df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
     df_mean_decrease.index = sigmas
     # df_mean_decrease.index = sigmas
     df_mean_decrease.to_csv(f"data/bufferTransfer_V_stochasticPruned_diff_matrix_{cfg.noise}_pop"
                             f"_{cfg.population}.csv")
+    #  This is the performance of the stochastic pruned model
+    df_mean_decrease = pd.DataFrame(matrix_stochastic_acc, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/stochastic_comparison_stochastic_performance_matrix_{cfg.noise}_pop"
+                            f"_{cfg.population}.csv")
     # df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}.csv")
+    #  This is the performance of the mask transfer model
+    df_mean_decrease = pd.DataFrame(matrix_transfer_mask_acc, columns=pruning_percentages)
+    # df_mean_decrease = pd.DataFrame(matrix_diff, columns=pruning_percentages)
+    df_mean_decrease.index = sigmas
+    # df_mean_decrease.index = sigmas
+    df_mean_decrease.to_csv(f"data/stochastic_comparison_maskTransfer_performance_matrix_{cfg.noise}_pop"
+                            f"_{cfg.population}.csv")
     ####################################  mean decrease heatmap #################################
     sigmas = list(map(format_sigmas, sigmas))
     ####################################  ranking of original pruned model heatmap #################################
@@ -1708,34 +1720,24 @@ def get_stochastic_pruning_results_on(cfg):
 
 
 if __name__ == '__main__':
-    cfg_training = omegaconf.DictConfig({
-        "architecture": "resnet18",
-        "batch_size": 512,
-        "lr": 0.001,
-        "momentum": 0.9,
-        "weight_decay": 1e-4,
-        "cyclic_lr": True,
-        "lr_peak_epoch": 5,
-        "optim": "adam",
-        "solution": "trained_models/traditional_trained_val_accuracy=91,86.pt",
-        "num_workers": 1,
-        "cosine_schedule": False,
-        "epochs": 24
-    })
-    run_traditional_training(cfg_training)
+    # cfg_training = omegaconf.DictConfig({
+    #     "architecture": "resnet18",
+    #     "batch_size": 512,
+    #     "lr": 0.001,
+    #     "momentum": 0.9,
+    #     "weight_decay": 1e-4,
+    #     "cyclic_lr": True,
+    #     "lr_peak_epoch": 5,
+    #     "optim": "adam",
+    #     "solution": "trained_models/traditional_trained_val_accuracy=91,86.pt",
+    #     "num_workers": 1,
+    #     "cosine_schedule": False,
+    #     "epochs": 24
+    # })
+    # run_traditional_training(cfg_training)
 
     # print("GEOMETRIC GAUSSIAN NOISE")
-    # cfg_geo = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "architecture": "resnet18",
-    #     "noise": "geogaussian",
-    #     "sigma": 0.613063102589359,
-    #     "amount": 0.5,
-    #     "use_wandb": True
-    # })
-    # print(cfg_geo)
-    # print("\n")
-    # main(cfg_geo)
+
     # print("GAUSSIAN NOISE")
     cfg = omegaconf.DictConfig({
         "population": 10,
@@ -1754,18 +1756,18 @@ if __name__ == '__main__':
     heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
 
     # heatmap1_exp(cfg)
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "model": "0",
-        "architecture": "resnet18",
-        "noise": "geogaussian",
-        "sigma": 0.0021419609859022197,
-        "amount": 0.5,
-        "batch_size":512,
-        "num_workers":1,
-        "use_wandb": False
-    })
-    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "model": "0",
+    #     "architecture": "resnet18",
+    #     "noise": "geogaussian",
+    #     "sigma": 0.0021419609859022197,
+    #     "amount": 0.5,
+    #     "batch_size":512,
+    #     "num_workers":1,
+    #     "use_wandb": False
+    # })
+    # heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
     # heatmap1_exp(cfg)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
     # plot_heatmaps(cfg)
