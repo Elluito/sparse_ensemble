@@ -44,6 +44,8 @@ import time
 from torch.utils.data import DataLoader, random_split, Dataset
 import logging
 import torchvision as tv
+from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
+from itertools import chain, combinations
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -117,8 +119,24 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
+def all_subsets(ss):
+    return chain(*map(lambda x: combinations(ss, x), range(0, len(ss) + 1)))
+
+
+def strip_prefix(net_state_dict: dict):
+    new_dict = {}
+    for k, v in net_state_dict.items():
+        new_key = k.replace("module.", "")
+        new_dict[new_key] = v
+    return new_dict
+
+
 def load_model(net, path):
-    net.load_state_dict(torch.load(path))
+    state_dict = torch.load(path)
+    if "net" in state_dict.keys():
+        net.load_state_dict(strip_prefix(state_dict["net"]))
+    else:
+        net.load_state_dict(torch.load(path))
 
 
 def get_layer_dict(model):
@@ -363,6 +381,10 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
+def count_zero_parameters(model):
+    return sum((p == 0).sum() for p in model.parameters() if p.requires_grad)
+
+
 def get_proba_function(C, N):
     """
     :param C: pruning rate
@@ -385,38 +407,20 @@ def get_proba_function(C, N):
 
 ############################### 27 of september experiments ###################################################
 def heatmap1_exp(cfg):
-    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    # data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+    #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
     use_cuda = torch.cuda.is_available()
     net = None
     if cfg.architecture == "resnet18":
         net = ResNet18()
-    # transform_train = transforms.Compose([
-    #     transforms.RandomCrop(32, padding=4),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    # ])
 
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-
-    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
-    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
-
-    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
-
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
     # for filename in glob.glob("trained_models/cifar10/*.pt"):
 
-    load_model(net, f"trained_models/cifar10/cifar_csghmc_{cfg.model}.pt")
+    load_model(net, cfg.solution)
     # model_index= filename[filename.index(".")-1]
-    model_index = cfg.model
     N = cfg.population
-    pop = []
-    performance = []
+    number_populations = 3
     original_performance = test(net, use_cuda, testloader)
     pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
     pruning_percentages.reverse()
@@ -446,49 +450,54 @@ def heatmap1_exp(cfg):
         for j, sigma in enumerate(sigmas):
             performance_diff = []
             performances = [pruned_original_performance]
-            for n in range(N):
-                current_model = copy.deepcopy(net)
-                if cfg.noise == "gaussian":
+            ranks_pruned_model = []
+            for _ in range(number_populations):
 
-                    current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
-                elif cfg.noise == "geogaussian":
+                for n in range(N):
+                    current_model = copy.deepcopy(net)
+                    if cfg.noise == "gaussian":
 
-                    current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
+                        current_model.apply(partial(add_gaussian_noise_to_weights, sigma=sigma))
+                    elif cfg.noise == "geogaussian":
 
-                prune.global_unstructured(weigths_to_prune(current_model),
-                                          pruning_method=prune.L1Unstructured,
-                                          amount=pruning_percentage)
+                        current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
 
-                remove_reparametrization(current_model)
-                print("Performance for model {}".format(n))
-                current_model.cpu()
-                current_model_acc = test(current_model, use_cuda, testloader)
-                performances.append(current_model_acc)
-                performance_diff.append((original_performance - current_model_acc) / original_performance)
+                    prune.global_unstructured(weigths_to_prune(current_model),
+                                              pruning_method=prune.L1Unstructured,
+                                              amount=pruning_percentage)
+
+                    remove_reparametrization(current_model)
+                    print("Performance for model {}".format(n))
+                    current_model_acc = test(current_model, use_cuda, testloader)
+                    performances.append(current_model_acc)
+                    performance_diff.append((original_performance - current_model_acc) / original_performance)
 
                 sorted_performances = sorted(performances)
                 sorted_performances.reverse()
                 rank_original_model = sorted_performances.index(pruned_original_performance)
-                matrix_mean_decrease[j, i] = np.mean(performance_diff)
-                matrix_ranking[j, i] = rank_original_model
-                print("Matrix Mean Decrease")
-                print(np.matrix(matrix_mean_decrease))
-                print("Matrix Ranking")
-                print(np.matrix(matrix_ranking))
-                # matrix_mean_decrease[j, i] = i+j
-                # matrix_ranking[j, i] = i-j
+                ranks_pruned_model.append(rank_original_model)
+
+            matrix_mean_decrease[j, i] = np.mean(performance_diff)
+            matrix_ranking[j, i] = np.mean(ranks_pruned_model)
+            print("Matrix Mean Decrease")
+            print(np.matrix(matrix_mean_decrease))
+            print("Matrix Ranking")
+            print(np.matrix(matrix_ranking))
+            # matrix_mean_decrease[j, i] = i+j
+        # matrix_ranking[j, i] = i-j
 
     df_ranking = pd.DataFrame(matrix_ranking, columns=pruning_percentages)
     df_mean_decrease = pd.DataFrame(matrix_mean_decrease, columns=pruning_percentages)
     df_ranking.index = sigmas
     df_mean_decrease.index = sigmas
-    df_ranking.to_csv(f"data/ranking_matrix_{cfg.noise}_model{model_index}.csv")
-    df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}_model{model_index}.csv")
+    df_ranking.to_csv(f"data/ranking_matrix_{cfg.noise}_traditional_train.csv")
+    df_mean_decrease.to_csv(f"data/mean_decrease_matrix_{cfg.noise}_traditional_train.csv")
     ####################################  mean decrease heatmap #################################
+    sigmas = list(map(format_sigmas, sigmas))
     fig, ax = plt.subplots(figsize=(5.1, 5.1))
     im = ax.imshow(matrix_mean_decrease.transpose(), aspect=0.5)
-    ax.set_xticklabels(sigmas, minor=False, rotation=-90)
-    ax.set_yticklabels(pruning_percentages, minor=False, )
+    plt.xticks(ticks=range(0, len(sigmas)), labels=sigmas, rotation=45)
+    plt.yticks(ticks=range(0, len(pruning_percentages)), labels=pruning_percentages)
     # plt.yticks(ticks=pruning_percentages)
     # plt.xticks(ticks=sigmas)
     plt.xlabel(r"$\sigma_{{}}$".format(cfg.noise), fontsize=15)
@@ -496,13 +505,15 @@ def heatmap1_exp(cfg):
     cbar = plt.colorbar(im)
     cbar.ax.set_ylabel('Mean decrease in performance', rotation=270, labelpad=8.5)
     # plt.gcf().set_size_inches(5.1, 5.1)
-    # texts = annotate_heatmap(im, valfmt="{x}")
-    plt.title(f"Decrease in performance model {model_index}", fontsize=15)
+    texts = annotate_heatmap(im, valfmt="{x}")
+    plt.title(f"Decrease in performance model", fontsize=15)
     plt.tight_layout()
     result = time.localtime(time.time())
     # ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2f'))
-    plt.savefig(f"data/figures/meanDecrease_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}_model"
-                f"{model_index}.pdf")
+    plt.savefig(
+        f"data/figures/meanDecrease_pruning_V_{cfg.noise}Noise_traditional_train_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.savefig(
+        f"data/figures/meanDecrease_pruning_V_{cfg.noise}Noise_traditional_train_{result.tm_hour}-{result.tm_min}.png")
     plt.close()
     ####################################  ranking of original pruned model heatmap #################################
     ax = plt.subplot()
@@ -514,13 +525,15 @@ def heatmap1_exp(cfg):
     cbar = plt.colorbar(im)
     cbar.ax.set_ylabel('Rank', rotation=270, labelpad=8.5)
     # plt.gcf().set_size_inches(5.1, 5.1)
-    plt.title(f"Rank of det model {model_index}")
+    plt.title(f"Rank of det model")
     texts = annotate_heatmap(im, valfmt="{x}")
     plt.tight_layout()
     # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     result = time.localtime(time.time())
     plt.savefig(
-        f"data/figures/ranking_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}_model{model_index}.pdf")
+        f"data/figures/ranking_pruning_V_{cfg.noise}Noise_traditional_train_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.savefig(
+        f"data/figures/ranking_pruning_V_{cfg.noise}Noise_traditional_train_{result.tm_hour}-{result.tm_min}.png")
     plt.close()
 
 
@@ -695,7 +708,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
                                              num_workers=cfg.num_workers)
     load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
     N = cfg.population
-    pruning_percentages = [0.95,0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+    pruning_percentages = [0.95, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
     # pruning_percentages.reverse()
 
     sigmas = None
@@ -765,8 +778,8 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
             # rank_original_model = sorted_performances.index(pruned_original_performance)
             # mean_index.append(rank_original_model)
             matrix_diff[j, i] = np.mean(performance_diff)
-            matrix_transfer_mask_acc[j,i] = np.mean(transfer_mask_performance)
-            matrix_stochastic_acc[j,i] = np.mean(stochastic_performance)
+            matrix_transfer_mask_acc[j, i] = np.mean(transfer_mask_performance)
+            matrix_stochastic_acc[j, i] = np.mean(stochastic_performance)
             # matrix_ranking[j, i] = np.mean(mean_index)
             print("Matrix Diff")
             print(np.matrix(matrix_diff))
@@ -824,6 +837,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
     plt.savefig(f"data/figures/meanDecrease_bufferTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
                 f"-{result.tm_min}.png")
     plt.close()
+
 
 def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
@@ -997,6 +1011,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
     #             f"-{result.tm_min}.pdf")
     # plt.close()
 
+
 def format_sigmas(sigma):
     string = "{:1.3f}".format(sigma)
     return string
@@ -1010,8 +1025,8 @@ def format_percentages(value):
 def plot_heatmaps(cfg, plot_index=1):
     sigmas = None
     if cfg.noise == "gaussian":
-        matrix_mean_decrease = np.loadtxt("data/mean_decrease_mask_transfer_gaussian.txt") * 100
-        matrix_ranking = np.loadtxt("data/ranking_matrix_gaussian.txt")
+        matrix_mean_decrease = np.loadtxt("data/mean_decrease_matrix_gaussian_traditional_average.txt") * 100
+        matrix_ranking = np.loadtxt("data/ranking_matrix_gaussian_traditional_average.txt")
         sigmas = np.linspace(0.001, 0.01, 10)
     if cfg.noise == "geogaussian":
         matrix_mean_decrease = np.loadtxt("data/mean_decrease_mask_transfer_geogaussian.txt") * 100
@@ -1048,8 +1063,10 @@ def plot_heatmaps(cfg, plot_index=1):
         plt.tight_layout()
         result = time.localtime(time.time())
         # ax.yaxis.set_major_formatter(FormatStrFormatter('%1.2f'))
-        plt.savefig(f"data/figures/meanDecrease_maskTransfer_pruning_V_{cfg.noise}Noise_{result.tm_hour}"
+        plt.savefig(f"data/figures/meanDecrease_traditional_original_V_stochastic_{cfg.noise}Noise_{result.tm_hour}"
                     f"-{result.tm_min}.png")
+        plt.savefig(f"data/figures/meanDecrease_traditional_original_V_stochastic_{cfg.noise}Noise_{result.tm_hour}"
+                    f"-{result.tm_min}.pdf")
         plt.close()
     ####################################  ranking of original pruned model heatmap #################################
     if plot_index > 0:
@@ -1069,7 +1086,10 @@ def plot_heatmaps(cfg, plot_index=1):
         plt.tight_layout()
         # ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         result = time.localtime(time.time())
-        plt.savefig(f"data/figures/ranking_pruning_V_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.png")
+        plt.savefig(
+            f"data/figures/ranking_traditional_original_V_stochastic_{cfg.noise}Noise_{result.tm_hour}-{result.tm_min}.png")
+        plt.savefig(f"data/figures/ranking_traditional_original_V_stochastic_{cfg.noise}Noise_{result.tm_hour}-"
+                    f"{result.tm_min}.png")
         plt.close()
 
 
@@ -1225,7 +1245,11 @@ def plot_layer_experiments(model, exp_type="a"):
         texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
-        plt.savefig(f"data/figures/cumsum.layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        # data / figures / cumsum.layer_V_prune_traditional_pruned_
+        # {result.tm_hour} - {result.tm_min}.pdf
+        # data / figures / cumsum.layer_V_prune_
+        # {result.tm_hour} - {result.tm_min}.pdf
+        plt.savefig(f"data / figures / cumsum.layer_V_prune_traditional_pruned_{result.tm_hour} - {result.tm_min}.pdf")
         plt.close()
 
 
@@ -1273,14 +1297,14 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
-        plt.savefig(f"data/figures/layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.savefig(f"data/figures/traditional_trained_layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
         plt.close()
         percent_index = matrix.argmax(axis=1)
         best_percentage_for_layers = {}
         for i, name in enumerate(layer_names):
             best_percentage_for_layers[name] = prunings_percentages[percent_index[i]]
         print(f"Best percentage by layer {best_percentage_for_layers}")
-        with open(f"data/best_per_layer_{cfg.architecture}.pkl", "wb") as f:
+        with open(f"data/best_per_layer_{cfg.architecture}_traditional_solution.pkl", "wb") as f:
             pickle.dump(best_percentage_for_layers, f)
 
     if type_exp == "b":
@@ -1292,7 +1316,6 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         count = lambda w: w.nelement()
         number_of_elements = list(map(count, weights))
         sorted_by_n = np.argsort(number_of_elements)
-
         sorted_layer_names = [layers[g] for g in sorted_by_n]
         # sorted_layer_names
         # Then im going to prune all the layers up to layer i with the pruning rate obtained from the type a experiment.
@@ -1335,30 +1358,18 @@ def layer_importance_experiments(cfg, model, use_cuda, test_loader, type_exp="a"
         texts = annotate_heatmap(im, valfmt="{x}")
         plt.tight_layout()
         result = time.localtime(time.time())
-        plt.savefig(f"data/figures/cumsum.layer_V_prune_{result.tm_hour}-{result.tm_min}.pdf")
+        plt.savefig(f"data/figures/cumsum.layer_V_prune_traditional_pruned_{result.tm_hour}-{result.tm_min}.pdf")
         plt.close()
     #     # Now I'm going to do something similar to the above but just prune with the optimal rate
 
 
 def run_layer_experiment(cfg):
-    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
     use_cuda = torch.cuda.is_available()
-    net = ResNet18()
-    # transform_train = transforms.Compose([
-    #     transforms.RandomCrop(32, padding=4),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    # ])
-
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
-
-    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
-    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    if cfg.architecture == "resnet18" and "csghmc" in cfg.solution:
+        net = ResNet18()
+    else:
+        from alternate_models import ResNet18
+        net = ResNet18()
     if cfg.use_wandb:
         # os.environ["WANDB_START_METHOD"] = "thread"
         # now = date.datetime.now().strftime("%M:%S")
@@ -1371,9 +1382,8 @@ def run_layer_experiment(cfg):
         #     save_code=True,
         # )
         pass
-    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
-    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    load_model(net, cfg.solution)
 
     # plot_layer_experiments(net, exp_type="a")
     # layer_importance_experiments(cfg, net, use_cuda, testloader, type_exp="a")
@@ -1382,37 +1392,232 @@ def run_layer_experiment(cfg):
     plot_layer_experiments(net, exp_type="b")
 
 
-############################################
-def main(cfg: omegaconf.DictConfig):
-    print("torch version: {}".format(torch.__version__))
+def get_best_pruning_strategy(cfg: omegaconf.DictConfig):
+    pruner: optuna.pruners.BasePruner = (
+        optuna.pruners.MedianPruner()
+    )
+    ####################### This section does compute all layer combinations of the small layers that ResNet18 has.j
+    # net = None
+    # if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+    #     net = ResNet18()
+    # else:
+    #     from alternate_models.resnet import ResNet18
+    #     net = ResNet18()
+    # load_model(net, cfg.solution)
+    # layers = get_layer_dict(net)
+    # layers.reverse()
+    # layer_names, weights = zip(*layers)
+    # # fifth element
+    # up_until = 4
+    # count = lambda w: w.nelement()
+    # number_of_elements = list(map(count, weights))
+    # sorted_by_n = np.argsort(number_of_elements)
+    # sorted_layer_names = [layers[g] for g in sorted_by_n]
+    # high_pruned = sorted_layer_names[:up_until + 1]
+    # important_layer = "layer3.1.conv1"
+    # not_high_pruned = dict(set(sorted_layer_names).difference(set(high_pruned)))
+    # del not_high_pruned[important_layer]
+    # all_groups = all_subsets(list(not_high_pruned.keys()))
+    # with open(f"data/groups_small_layers_{cfg.architecture}.plk", "wb") as f:
+    #     pickle.dump(tuple(all_groups), f)
 
-    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    with open(f"data/groups_small_layers_{cfg.architecture}.plk", "rb") as f:
+        all_groups = pickle.load(f)
+    ################################################################
+
+    study = optuna.create_study(directions=["maximize", "maximize"], pruner=pruner, study_name="Smart pruned")
+    study.optimize(partial(optim_function_intelligent_pruning, cfg=cfg), n_trials=100)
+
+    print("Number of finished trials: {}".format(len(study.trials)))
+
+    print("\n Best trial:")
+    trials = study.best_trials
+    with open(f"data/best_trials_smart_pruning_{cfg.architecture}.plk", "wb") as f:
+        pickle.dump(trials, f)
+
+    print(f"Number of trials on the Pareto front: {len(study.best_trials)}")
+
+    trial_with_highest_accuracy = max(study.best_trials, key=lambda t: t.values[0])
+    print(f"Trial with highest accuracy: ")
+    print(f"\tnumber: {trial_with_highest_accuracy.number}")
+    print(f"\tparams: {trial_with_highest_accuracy.params}")
+    print(f"\tvalues: {trial_with_highest_accuracy.values}")
+    trial_with_highest_sparsity = max(study.best_trials, key=lambda t: t.values[1])
+    print(f"Trial with highest sparsity: ")
+    print(f"\tnumber: {trial_with_highest_sparsity.number}")
+    print(f"\tparams: {trial_with_highest_sparsity.params}")
+    print(f"\tvalues: {trial_with_highest_sparsity.values}")
+
+    optuna.visualization.plot_pareto_front(study, target_names=["Accuracy", "Compression ratio"])
+
+
+def get_intelligent_pruned_network(cfg):
     use_cuda = torch.cuda.is_available()
     net = None
-    if cfg.architecture == "resnet18":
+    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
         net = ResNet18()
-    # transform_train = transforms.Compose([
-    #     transforms.RandomCrop(32, padding=4),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    # ])
+    else:
+        from alternate_models.resnet import ResNet
+        net = ResNet18()
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    load_model(net, cfg.solution)
+    layers = get_layer_dict(net)
+    layers.reverse()
+    layer_names, weights = zip(*layers)
+    pr = 0.9
+    # fifth element
+    up_until = 4
+    count = lambda w: w.nelement()
+    number_of_elements = list(map(count, weights))
+    sorted_by_n = np.argsort(number_of_elements)
+    sorted_layer_names = [layers[g] for g in sorted_by_n]
+    # I reverse the layer in order to get the layers with the majority of the parameters first.
+    sorted_layer_names.reverse()
+
+    base_model = copy.deepcopy(net)
+    high_pruned = sorted_layer_names[:up_until + 1]
+    weights = [get_weights_of_layer_name(base_model, layer_name=n) for n, w in high_pruned]
+    prune.global_unstructured(
+        weights,
+        pruning_method=prune.L1Unstructured,
+        amount=pr
+    )
+
+    for n, w in high_pruned:
+        remove_reparametrization(base_model, name_module=n)
+    print("pruning the following layers with {} pruning rate".format(pr))
+    for name in high_pruned:
+        print(f"\t{name}")
+    base_model_accuracy = test(base_model, use_cuda, testloader)
+    print(f"Accuracy of the base model: {base_model_accuracy}")
+    print(f"Base model has compression ratio of {count_zero_parameters(base_model) / count_parameters(base_model)}")
+    print("Now i'm going to prune all the other layers combined")
+    important_layer = "layer3.1.conv1"
+    not_high_pruned = dict(set(sorted_layer_names).difference(set(high_pruned)))
+    del not_high_pruned[important_layer]
+    pruning_rates = [0.4]
+    for pr in pruning_rates:
+        full_model = copy.deepcopy(base_model)
+        weights = [get_weights_of_layer_name(full_model, layer_name=n) for n, w in not_high_pruned.items()]
+        prune.global_unstructured(
+            weights,
+            pruning_method=prune.L1Unstructured,
+            amount=pr
+        )
+        print(f"Pruning rate {pr} for layers {not_high_pruned}")
+        test_acc = test(full_model, use_cuda, testloader)
+        for n, w in not_high_pruned.items():
+            remove_reparametrization(full_model, name_module=n)
+        if pr == 0.4:
+            torch.save(full_model.state_dict(), "trained_models/cifar10/smart_pruned.pth")
+        print("Test performance for the previous pruned model")
+        print(f"{test_acc}")
+        print(f"Model has compression ratio of {count_zero_parameters(full_model) / count_parameters(full_model)}")
+
+
+def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
+    # Pruning rate large layers
+    pruning_large_layers = trial.suggest_float("Pr_big_layers", 0.8, 0.99)
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+        net = ResNet18()
+    else:
+        from alternate_models.resnet import ResNet18
+        net = ResNet18()
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    load_model(net, cfg.solution)
+    n = cfg.population
+    layers = get_layer_dict(net)
+    layers.reverse()
+    layer_names, weights = zip(*layers)
+    # fifth element
+    up_until = 4
+    count = lambda w: w.nelement()
+    number_of_elements = list(map(count, weights))
+    sorted_by_n = np.argsort(number_of_elements)
+    sorted_layer_names = [layers[g] for g in sorted_by_n]
+    sorted_layer_names.reverse()
+    base_model = copy.deepcopy(net)
+    high_pruned = sorted_layer_names[:up_until + 1]
+    weights = [get_weights_of_layer_name(base_model, layer_name=n) for n, w in high_pruned]
+    prune.global_unstructured(
+        weights,
+        pruning_method=prune.L1Unstructured,
+        amount=pruning_large_layers
+    )
+    for n, w in high_pruned:
+        remove_reparametrization(base_model, name_module=n)
+    # # Now I need to select how many layers of the other layers I'm going to group to prune
+    # important_layer = "layer3.1.conv1"
+    # not_high_pruned =dict( set(sorted_layer_names).difference(set(high_pruned)))
+    # del not_high_pruned[important_layer]
+    # all_groups = all_subsets(list(not_high_pruned.values()))
+    with open(f"data/groups_small_layers_{cfg.architecture}.plk", "rb") as f:
+        all_groups = pickle.load(f)
+    # Layers Im going to acctually prune
+    index = trial.suggest_int("all_groups index", 0, len(all_groups))
+    layers_to_prune = all_groups[index]
+    pr_for_this = trial.suggest_float("Pr_small_layers", 0.2, 0.7)
+    weights = [get_weights_of_layer_name(base_model, layer_name=n) for n in layers_to_prune]
+    prune.global_unstructured(
+        weights,
+        pruning_method=prune.L1Unstructured,
+        amount=pr_for_this
+    )
+    for n in layers_to_prune:
+        remove_reparametrization(base_model, name_module=n)
+    test_accuracy = test(base_model, use_cuda, testloader)
+
+    return test_accuracy, count_zero_parameters(base_model) / count_parameters(base_model)
+
+
+######################################################################################################
+def get_cifar_datasets(cfg):
+    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
 
-    # trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
-    # trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+    cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
+    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+                                              num_workers=cfg.num_workers)
+    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+                                             num_workers=cfg.num_workers)
     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=1)
-    load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                             num_workers=cfg.num_workers)
+    return trainloader, val_loader, testloader
+
+
+def main(cfg: omegaconf.DictConfig):
+    print("torch version: {}".format(torch.__version__))
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+        net = ResNet18()
+    else:
+        from alternate_models.resnet import ResNet18
+        net = ResNet18()
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    state_dict = torch.load(cfg.solution)
+    load_model(net, cfg.solution)
     N = cfg.population
     pop = []
-    performance = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
     original_performance = test(net, use_cuda, testloader)
     pruned_original = copy.deepcopy(net)
     weights_to_prune = weigths_to_prune(pruned_original)
@@ -1422,10 +1627,11 @@ def main(cfg: omegaconf.DictConfig):
         amount=cfg.amount
     )
     remove_reparametrization(pruned_original)
-    print("performance of pruned original")
+    print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, testloader)
     pop.append(pruned_original)
-    performance.append(pruned_original_performance)
+    pruned_performance.append(pruned_original_performance)
+    stochastic_dense_performances.append(original_performance)
     # pp = pprint.PrettyPrinter(ident=4)
     for n in range(N):
         current_model = copy.deepcopy(net)
@@ -1433,47 +1639,74 @@ def main(cfg: omegaconf.DictConfig):
             current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
         elif cfg.noise == "geogaussian":
             current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+        print("Stochastic dense performance")
+        StoDense_performance = test(current_model, use_cuda, testloader)
 
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
         prune.global_unstructured(
             weigths_to_prune(current_model),
             pruning_method=prune.L1Unstructured,
             amount=cfg.amount)
         remove_reparametrization(current_model)
         print("Performance for model {}".format(n))
+        stochastic_pruned_performance = test(current_model, use_cuda, testloader)
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         current_model.cpu()
         pop.append(current_model)
-        performance.append(test(current_model, use_cuda, testloader))
-    proba_function = get_proba_function(cfg.amount, count_parameters(net))
-    ranked_index = np.flip(np.argsort(performance))
-    performance = np.array(performance)
-    np.save("data/population_data/performances_{}.npy".format(cfg.noise), performance)
-    with open("data/population_data/population_models_{}.pkl".format(cfg.noise), "wb") as f:
-        pickle.dump(pop, f)
-
+    # proba_function = get_proba_function(cfg.amount, count_parameters(net))
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+    pruned_performance = np.array(pruned_performance)
+    stochastic_dense_performances = np.array(stochastic_dense_performances)
+    np.save("data/population_data/performances_{}.npy".format(cfg.noise), pruned_performance)
+    for i, model in enumerate(pop):
+        with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
+            pickle.dump(model, f)
+    del pop
     cutoff = original_performance - 2
 
-    plt.figure()
-    plt.axhline(y=original_performance, color="k", linestyle="-", label="Dense performance")
+    fig = plt.figure()
+    plt.axhline(y=original_performance, color="k", linestyle="-", label="Original dense pruned_performance")
     plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
     plt.xlabel("Ranking index", fontsize=20)
     plt.ylabel("Accuracy", fontsize=20)
     if cfg.noise == "geogaussian":
         plt.title("CIFAR10 Geometric Gaussian Noise", fontsize=20)
 
-    if cfg.noise == "gaussian noise":
+    if cfg.noise == "gaussian":
         plt.title("CIFAR10 Additive Gaussian Noise", fontsize=20)
 
-    first = 0
-    for i, element in enumerate(performance[ranked_index]):
-        if element == pruned_original_performance and first == 0:
-            plt.scatter(i, element, c="g", marker="o", label="original model pruned")
-            first = 1
+    stochastic_models_points_dense = []
+    stochastic_models_points_pruned = []
+    p1 = None
+    for i, element in enumerate(pruned_performance[ranked_index]):
+        if i == index_of_pruned_original:
+            p1 = plt.scatter(i, element, c="g", marker="o")
         else:
-            plt.scatter(i, element, c="b", marker="x")
-    plt.legend()
+            pruned_point = plt.scatter(i, element, c="b", marker="x")
+            stochastic_models_points_pruned.append(pruned_point)
+    for i, element in enumerate(stochastic_dense_performances[ranked_index]):
+        if i == index_of_pruned_original:
+            continue
+            # plt.scatter(i, element, c="y", marker="o", label="original model performance")
+        else:
+            dense_point = plt.scatter(i, element, c="c", marker="1")
+            stochastic_models_points_dense.append(dense_point)
+
+    plt.legend([tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense), p1],
+               ['Pruned stochastic', 'Dense stochastic', "original model pruned"],
+               scatterpoints=1,
+               numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
     plt.tight_layout()
     result = time.localtime(time.time())
-    plt.savefig(f"data/figures/comparison_{cfg.noise}_{result.tm_hour}-{result.tm_min}.pdf")
+    plt.savefig(
+        f"data/figures/comparison_{cfg.noise}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop_{cfg.population}_{result.tm_hour}"
+        f"-{result.tm_min}.pdf")
+    plt.savefig(f"data/figures/comparison_{cfg.noise}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop_{cfg.population}"
+                f"_{result.tm_hour}"
+                f"-{result.tm_min}.png")
 
 
 def plot(cfg):
@@ -1494,7 +1727,7 @@ def plot(cfg):
     if cfg.noise == "geogaussian":
         plt.title("CIFAR10 Geometric Gaussian Noise", fontsize=20)
 
-    if cfg.noise == "gaussian noise":
+    if cfg.noise == "gaussian":
         plt.title("CIFAR10 Additive Gaussian Noise", fontsize=20)
     plt.legend()
     plt.show()
@@ -1719,6 +1952,321 @@ def get_stochastic_pruning_results_on(cfg):
     pass
 
 
+############################### Experiments 25 of October # ############################################################
+
+def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+        net = ResNet18()
+    else:
+        from alternate_models.resnet import ResNet18
+        net = ResNet18()
+
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    load_model(net, cfg.solution)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    deterministic_with_stochastic_mask_performance = []
+    stochastic_with_deterministic_mask_performance = []
+
+    original_performance = test(net, use_cuda, testloader)
+    pruned_original = copy.deepcopy(net)
+    weights_to_prune = weigths_to_prune(pruned_original)
+    prune.global_unstructured(
+        weights_to_prune,
+        pruning_method=prune.L1Unstructured,
+        amount=cfg.amount
+    )
+    # remove_reparametrization(pruned_original)
+    print("pruned_performance of pruned original")
+    pruned_original_performance = test(pruned_original, use_cuda, testloader)
+    pop.append(pruned_original)
+    pruned_performance.append(pruned_original_performance)
+    labels = ["pruned original"]
+    stochastic_dense_performances.append(original_performance)
+    for n in range(N):
+        current_model = copy.deepcopy(net)
+        sto_mask_transfer_model = copy.deepcopy(net)
+        if cfg.noise == "gaussian":
+            current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
+        elif cfg.noise == "geogaussian":
+            current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+        det_mask_transfer_model = copy.deepcopy(current_model)
+        copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
+        stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        StoDense_performance = test(current_model, use_cuda, testloader)
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+        prune.global_unstructured(
+            weigths_to_prune(current_model),
+            pruning_method=prune.L1Unstructured,
+            amount=cfg.amount)
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model)
+        print("Performance for model {}".format(n))
+
+        stochastic_pruned_performance = test(current_model, use_cuda, testloader)
+        deterministic_with_stochastic_mask_performance.append(test(sto_mask_transfer_model, use_cuda, testloader))
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+        current_model.cpu()
+        pop.append(current_model)
+    # len(pruned performance)-1 because the first one is the pruned original
+    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
+    labels.extend(["sto mask transfer"] * len(deterministic_with_stochastic_mask_performance))
+    pruned_performance.extend(deterministic_with_stochastic_mask_performance)
+    stochastic_dense_performances.extend([1] * len(deterministic_with_stochastic_mask_performance))
+    # Deterministic mask transfer to stochastic model
+    labels.extend(["det mask transfer"] * len(stochastic_with_deterministic_mask_performance))
+    pruned_performance.extend(stochastic_with_deterministic_mask_performance)
+    stochastic_dense_performances.extend([1] * len(stochastic_with_deterministic_mask_performance))
+
+    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # index 0 of pruned_performance.
+    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+                                                   f"{len(labels)}!={len(pruned_performance)}"
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+
+    pruned_performance = np.array(pruned_performance)
+    stochastic_dense_performances = np.array(stochastic_dense_performances)
+    result = time.localtime(time.time())
+    np.save("data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise,result.tm_hour,result.tm_min),
+            pruned_performance)
+    for i, model in enumerate(pop):
+        with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
+            pickle.dump(model, f)
+    del pop
+    cutoff = original_performance - 2
+
+    fig = plt.figure()
+    plt.axhline(y=original_performance, color="k", linestyle="-", label="Original dense pruned_performance")
+    plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
+    plt.xlabel("Ranking index", fontsize=20)
+    plt.ylabel("Accuracy", fontsize=20)
+    sigma = format_sigmas(cfg.sigma)
+    pr = format_percentages(cfg.amount)
+    if cfg.noise == "geogaussian":
+        plt.title(f"CIFAR10 Geometric Gaussian Noise $\sigma={sigma},pr={pr}$", fontsize=10)
+
+    if cfg.noise == "gaussian":
+        plt.title(f"CIFAR10 Additive Gaussian Noise $\sigma={sigma},pr={pr}$", fontsize=10)
+
+    stochastic_models_points_dense = []
+    stochastic_models_points_pruned = []
+    transfer_mask_models_points = []
+    stochastic_with_deterministic_mask_models_points = []
+
+    p1 = None
+
+    for i, element in enumerate(pruned_performance[ranked_index]):
+        if i == index_of_pruned_original:
+            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+                                                           f"in list {element} VS pruned performance:" \
+                                                           f" {pruned_original_performance}"
+            p1 = plt.scatter(i, element, c="g", marker="o")
+        else:
+            if labels[ranked_index[i]] == "sto mask transfer":
+                sto_transfer_point = plt.scatter(i, element, c="tab:orange", marker="P")
+                transfer_mask_models_points.append(sto_transfer_point)
+            elif labels[ranked_index[i]] == "det mask transfer":
+                det_transfer_point = plt.scatter(i, element, c="tab:olive", marker="X")
+                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+            else:
+                pruned_point = plt.scatter(i, element, c="b", marker="x")
+                stochastic_models_points_pruned.append(pruned_point)
+    for i, element in enumerate(stochastic_dense_performances[ranked_index]):
+        if i == index_of_pruned_original or element == 1:
+            continue
+            # plt.scatter(i, element, c="y", marker="o", label="original model performance")
+        else:
+            dense_point = plt.scatter(i, element, c="c", marker="1")
+            stochastic_models_points_dense.append(dense_point)
+
+    plt.legend([tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense), p1,
+                tuple(transfer_mask_models_points), tuple(stochastic_with_deterministic_mask_models_points)],
+               ['Pruned stochastic', 'Dense stochastic', "Original model pruned", "stochastic mask " + r"$\rightarrow$"
+                + " original weights", "deterministic mask" + r"$\rightarrow$" + "stochastic weights"],
+               scatterpoints=1,
+               numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+    plt.tight_layout()
+    plt.savefig(
+        f"data/figures/transfers_comparison_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}"
+        f"_t_{result.tm_hour}"
+        f"-{result.tm_min}.pdf")
+    plt.savefig(f"data/figures/transfers_comparison_{cfg.noise}_sigma_{cfg.sigma}_pr_{cfg.amount}_batchSize"
+                f"_{cfg.batch_size}_pop"
+                f"_{cfg.population}"
+                f"_t_{result.tm_hour}"
+                f"-{result.tm_min}.png")
+
+
+def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
+    use_cuda = torch.cuda.is_available()
+    net = None
+    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+        net = ResNet18()
+    else:
+        from alternate_models.resnet import ResNet18
+        net = ResNet18()
+
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    load_model(net, cfg.solution)
+    N = cfg.population
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    sto_mask_to_ori_weights_deltas = []
+    ori_mask_to_sto_weights_deltas = []
+
+    original_with_stochastic_mask_performance = []
+    stochastic_with_deterministic_mask_performance = []
+
+    original_performance = test(net, use_cuda, testloader)
+    pruned_original = copy.deepcopy(net)
+    weights_to_prune = weigths_to_prune(pruned_original)
+    prune.global_unstructured(
+        weights_to_prune,
+        pruning_method=prune.L1Unstructured,
+        amount=cfg.amount
+    )
+    # remove_reparametrization(pruned_original)
+    print("pruned_performance of pruned original")
+    pruned_original_performance = test(pruned_original, use_cuda, testloader)
+    pruned_performance.append(pruned_original_performance)
+    labels = ["pruned original"]
+    stochastic_dense_performances.append(original_performance)
+    for n in range(N):
+        current_model = copy.deepcopy(net)
+        sto_mask_transfer_model = copy.deepcopy(net)
+        if cfg.noise == "gaussian":
+            current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
+        elif cfg.noise == "geogaussian":
+            current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+        det_mask_transfer_model = copy.deepcopy(current_model)
+        copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
+        stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        StoDense_performance = test(current_model, use_cuda, testloader)
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+        prune.global_unstructured(
+            weigths_to_prune(current_model),
+            pruning_method=prune.L1Unstructured,
+            amount=cfg.amount)
+        # Here is where I transfer the mask from the prunec stochastic model to the
+        # original weights and put it in the ranking
+        copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model)
+        print("Performance for model {}".format(n))
+
+        stochastic_pruned_performance = test(current_model, use_cuda, testloader)
+        original_with_sto_mask = test(sto_mask_transfer_model, use_cuda, testloader)
+        original_with_stochastic_mask_performance.append(original_with_sto_mask)
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(original_performance-stochastic_pruned_performance)
+        sto_mask_to_ori_weights_deltas.append(original_performance - original_with_sto_mask)
+        ori_mask_to_sto_weights_deltas.append(original_performance-det_mask_transfer_model_performance)
+    # len(pruned performance)-1 because the first one is the pruned original
+    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
+    labels.extend(["sto mask transfer"] * len(original_with_stochastic_mask_performance))
+    pruned_performance.extend(original_with_stochastic_mask_performance)
+    stochastic_dense_performances.extend([1] * len(original_with_stochastic_mask_performance))
+    # Deterministic mask transfer to stochastic model
+    labels.extend(["det mask transfer"] * len(stochastic_with_deterministic_mask_performance))
+    pruned_performance.extend(stochastic_with_deterministic_mask_performance)
+    stochastic_dense_performances.extend([1] * len(stochastic_with_deterministic_mask_performance))
+
+    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # index 0 of pruned_performance.
+    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+                                                   f"{len(labels)}!={len(pruned_performance)}"
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+
+    pruned_performance = np.array(pruned_performance)
+    stochastic_dense_performances = np.array(stochastic_dense_performances)
+    result = time.localtime(time.time())
+    np.save(
+        "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+        pruned_performance)
+    with open("data/population_data/labels_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min), "wb") as f:
+        pickle.dump(labels, f)
+    np.save(
+        "data/population_data/_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+        labels)
+    sto_mask_to_ori_weights_deltas = []
+    ori_mask_to_sto_weights_deltas = []
+
+    np.save(
+        "data/population_data/deltas_{}_sto_mask_to_ori_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.noise,cfg.population, result.tm_hour,
+                                                                          result.tm_min),
+        sto_mask_to_ori_weights_deltas
+        )
+
+    np.save(
+        "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas _N_{}_t_{}-{}.npy".format(cfg.noise,
+                                                                                               cfg.population, result.tm_hour,
+                                                                                                result.tm_min),
+        np.array(ori_mask_to_sto_weights_deltas)
+    )
+
+
+def sigma_sweeps_transfer_mask_rank_experiments():
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "model": "5",
+        "noise": "gaussian",
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.001,
+        "amount": 0.8,
+        "batch_size": 512,
+        "num_workers": 1,
+        "use_wandb": True
+    })
+    sigmas = np.linspace(start=0.001, stop=0.005, num=10)
+    pruning_rates = [0.5,0.6,0.8,0.83,0.85,0.87,0.9,0.95]
+    for sig in sigmas:
+        for pr in pruning_rates:
+
+            cfg.sigma = float(sig)
+            cfg.pr = pr
+            transfer_mask_rank_experiments(cfg)
+
+
+def population_sweeps_transfer_mask_rank_experiments():
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "model": "5",
+        "noise": "gaussian",
+        "sigma": 0.0021419609859022197,
+        # "sigma": 0.001,
+        "amount": 0.8,
+        "batch_size": 512,
+        "num_workers": 1,
+        "use_wandb": True
+    })
+    Ns = [10,50,100]
+    for pop in Ns:
+        cfg.population = pop
+        transfer_mask_rank_experiments(cfg)
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
     #     "architecture": "resnet18",
@@ -1739,21 +2287,33 @@ if __name__ == '__main__':
     # print("GEOMETRIC GAUSSIAN NOISE")
 
     # print("GAUSSIAN NOISE")
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "architecture": "resnet18",
-        "model": "0",
-        "noise": "gaussian",
-        "sigma": 0.0021419609859022197,
-        "amount": 0.5,
-        "batch_size":512,
-        "num_workers":1,
-        "use_wandb": True
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "architecture": "resnet18",
+    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     "model": "5",
+    #     "noise": "gaussian",
+    #     # "sigma": 0.0021419609859022197,
+    #     "sigma": 0.001,
+    #     "amount": 0.90,
+    #     "batch_size": 512,
+    #     "num_workers": 1,
+    #     "use_wandb": True
+    # })
+    population_sweeps_transfer_mask_rank_experiments()
+    # run_layer_experiment(cfg)
+    # get_intelligent_pruned_network(cfg)
+    # get_best_pruning_strategy(cfg)
+    # heatmap1_exp(cfg)
+    # pruning_rates = [0.95,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
+    # for pr in pruning_rates:
+    #     cfg.amount = pr
+    #     main(cfg)
+    # main(cfg)
     # plot_heatmaps(cfg)
     # plot_heatmaps(cfg,plot_index=0)
     # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
+    # heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
 
     # heatmap1_exp(cfg)
     # cfg = omegaconf.DictConfig({
@@ -1777,6 +2337,3 @@ if __name__ == '__main__':
     # plot_layer_experiments("a")
     # plot_layer_experiments("b")
     # run_layer_experiment(cfg)
-
-    # weight_inspection(cfg, 90)
-    # save_onnx(cfg)
