@@ -2205,16 +2205,11 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         pruned_performance)
     with open("data/population_data/labels_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min), "wb") as f:
         pickle.dump(labels, f)
-    np.save(
-        "data/population_data/_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
-        labels)
-    sto_mask_to_ori_weights_deltas = []
-    ori_mask_to_sto_weights_deltas = []
 
     np.save(
         "data/population_data/deltas_{}_sto_mask_to_ori_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.noise,cfg.population, result.tm_hour,
                                                                           result.tm_min),
-        sto_mask_to_ori_weights_deltas
+        np.array(sto_mask_to_ori_weights_deltas)
         )
 
     np.save(
@@ -2266,7 +2261,7 @@ def population_sweeps_transfer_mask_rank_experiments():
     Ns = [10,50,100]
     for pop in Ns:
         cfg.population = pop
-        transfer_mask_rank_experiments(cfg)
+        transfer_mask_rank_experiments_no_plot(cfg)
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
     #     "architecture": "resnet18",
