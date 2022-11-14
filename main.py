@@ -2258,7 +2258,7 @@ def population_sweeps_transfer_mask_rank_experiments():
         "num_workers": 1,
         "use_wandb": True
     })
-    Ns = [10,50,100]
+    Ns = [1000]
     for pop in Ns:
         cfg.population = pop
         transfer_mask_rank_experiments_no_plot(cfg)
