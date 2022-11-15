@@ -2042,9 +2042,9 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
     result = time.localtime(time.time())
     np.save("data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise,result.tm_hour,result.tm_min),
             pruned_performance)
-    for i, model in enumerate(pop):
-        with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
-            pickle.dump(model, f)
+    # for i, model in enumerate(pop):
+    #     with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
+    #         pickle.dump(model, f)
     del pop
     cutoff = original_performance - 2
 
@@ -2213,7 +2213,7 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         )
 
     np.save(
-        "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas _N_{}_t_{}-{}.npy".format(cfg.noise,
+        "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.nois,
                                                                                                cfg.population, result.tm_hour,
                                                                                                 result.tm_min),
         np.array(ori_mask_to_sto_weights_deltas)
