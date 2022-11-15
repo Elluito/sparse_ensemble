@@ -2295,7 +2295,7 @@ if __name__ == '__main__':
     #     "num_workers": 1,
     #     "use_wandb": True
     # })
-    population_sweeps_transfer_mask_rank_experiments()
+    sigma_sweeps_transfer_mask_rank_experiments()
     # sigma_sweeps_transfer_mask_rank_experiments()
     # run_layer_experiment(cfg)
     # get_intelligent_pruned_network(cfg)
