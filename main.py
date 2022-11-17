@@ -29,7 +29,6 @@ import platform
 import matplotlib
 from functools import partial
 import glob
-
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
 
@@ -46,6 +45,7 @@ import logging
 import torchvision as tv
 from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from itertools import chain, combinations
+import seaborn as sns
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -2040,8 +2040,9 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
     pruned_performance = np.array(pruned_performance)
     stochastic_dense_performances = np.array(stochastic_dense_performances)
     result = time.localtime(time.time())
-    np.save("data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise,result.tm_hour,result.tm_min),
-            pruned_performance)
+    np.save(
+        "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+        pruned_performance)
     # for i, model in enumerate(pop):
     #     with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
     #         pickle.dump(model, f)
@@ -2125,7 +2126,6 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     load_model(net, cfg.solution)
     N = cfg.population
     pruned_performance = []
-    stochastic_dense_performances = []
     stochastic_deltas = []
     sto_mask_to_ori_weights_deltas = []
     ori_mask_to_sto_weights_deltas = []
@@ -2145,8 +2145,6 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, testloader)
     pruned_performance.append(pruned_original_performance)
-    labels = ["pruned original"]
-    stochastic_dense_performances.append(original_performance)
     for n in range(N):
         current_model = copy.deepcopy(net)
         sto_mask_transfer_model = copy.deepcopy(net)
@@ -2158,10 +2156,6 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        print("Stochastic dense performance")
-        StoDense_performance = test(current_model, use_cuda, testloader)
-        # Dense stochastic performance
-        stochastic_dense_performances.append(StoDense_performance)
         prune.global_unstructured(
             weigths_to_prune(current_model),
             pruning_method=prune.L1Unstructured,
@@ -2171,53 +2165,58 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model)
         print("Performance for model {}".format(n))
-
         stochastic_pruned_performance = test(current_model, use_cuda, testloader)
         original_with_sto_mask = test(sto_mask_transfer_model, use_cuda, testloader)
         original_with_stochastic_mask_performance.append(original_with_sto_mask)
         pruned_performance.append(stochastic_pruned_performance)
-        stochastic_deltas.append(original_performance-stochastic_pruned_performance)
+        stochastic_deltas.append(original_performance - stochastic_pruned_performance)
         sto_mask_to_ori_weights_deltas.append(original_performance - original_with_sto_mask)
-        ori_mask_to_sto_weights_deltas.append(original_performance-det_mask_transfer_model_performance)
+        ori_mask_to_sto_weights_deltas.append(original_performance - det_mask_transfer_model_performance)
     # len(pruned performance)-1 because the first one is the pruned original
-    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
-    labels.extend(["sto mask transfer"] * len(original_with_stochastic_mask_performance))
-    pruned_performance.extend(original_with_stochastic_mask_performance)
-    stochastic_dense_performances.extend([1] * len(original_with_stochastic_mask_performance))
     # Deterministic mask transfer to stochastic model
-    labels.extend(["det mask transfer"] * len(stochastic_with_deterministic_mask_performance))
-    pruned_performance.extend(stochastic_with_deterministic_mask_performance)
-    stochastic_dense_performances.extend([1] * len(stochastic_with_deterministic_mask_performance))
 
     # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
     # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
     # index 0 of pruned_performance.
-    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
-                                                   f"{len(labels)}!={len(pruned_performance)}"
-    ranked_index = np.flip(np.argsort(pruned_performance))
-    index_of_pruned_original = list(ranked_index).index(0)
-
-    pruned_performance = np.array(pruned_performance)
-    stochastic_dense_performances = np.array(stochastic_dense_performances)
     result = time.localtime(time.time())
-    np.save(
-        "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
-        pruned_performance)
-    with open("data/population_data/labels_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min), "wb") as f:
-        pickle.dump(labels, f)
-
-    np.save(
-        "data/population_data/deltas_{}_sto_mask_to_ori_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.noise,cfg.population, result.tm_hour,
-                                                                          result.tm_min),
-        np.array(sto_mask_to_ori_weights_deltas)
-        )
-
-    np.save(
-        "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.nois,
-                                                                                               cfg.population, result.tm_hour,
-                                                                                                result.tm_min),
-        np.array(ori_mask_to_sto_weights_deltas)
-    )
+    # np.save(
+    #     "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+    #     pruned_performance)
+    # with open("data/population_data/labels_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+    #           "wb") as f:
+    #     pickle.dump(labels, f)
+    #
+    # np.save(
+    #     "data/population_data/deltas_{}_sto_mask_to_ori_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.noise,
+    #                                                                                             cfg.population,
+    #                                                                                             result.tm_hour,
+    #                                                                                             result.tm_min),
+    #     np.array(sto_mask_to_ori_weights_deltas)
+    # )
+    #
+    # np.save(
+    #     "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.nois,
+    #                                                                                             cfg.population,
+    #                                                                                             result.tm_hour,
+    #                                                                                             result.tm_min),
+    #     np.array(ori_mask_to_sto_weights_deltas)
+    # )
+    #
+    epsilon = []
+    labels = []
+    epsilon.extend(stochastic_deltas)
+    labels.extend(["stochastic pruning"] * len(stochastic_deltas))
+    epsilon.extend(sto_mask_to_ori_weights_deltas)
+    labels.extend(["Sto. mask original weights"] * len(sto_mask_to_ori_weights_deltas))
+    epsilon.extend(ori_mask_to_sto_weights_deltas)
+    labels.extend(["Det. mask sto. weights"] * len(ori_mask_to_sto_weights_deltas))
+    df_sigmas = [format_sigmas(cfg.sigma)] * len(labels)
+    df_N = [cfg.population] * len(labels)
+    df_pr = [cfg.amount] * len(labels)
+    results = {"Epsilon": epsilon, "Population": df_N, "Type": labels, "Pruning Rate": df_pr, "sigma": df_sigmas}
+    df = pd.DataFrame(results)
+    # df = df.append(results,ignore_index=True)
+    return df
 
 
 def sigma_sweeps_transfer_mask_rank_experiments():
@@ -2235,18 +2234,114 @@ def sigma_sweeps_transfer_mask_rank_experiments():
         "use_wandb": True
     })
     sigmas = np.linspace(start=0.001, stop=0.005, num=10)
-    pruning_rates = [0.5,0.6,0.8,0.83,0.85,0.87,0.9,0.95]
+    pruning_rates = [0.5, 0.6, 0.8, 0.83, 0.85, 0.87, 0.9, 0.95]
     for sig in sigmas:
         for pr in pruning_rates:
-
             cfg.sigma = float(sig)
-            cfg.pr = pr
+            cfg.amount = pr
+
             transfer_mask_rank_experiments(cfg)
+
+
+def example_plot(ax, fontsize=12, hide_labels=False):
+    pc = ax.pcolormesh(np.random.randn(30, 30), vmin=-2.5, vmax=2.5)
+    if not hide_labels:
+        ax.set_xlabel('x-label', fontsize=fontsize)
+        ax.set_ylabel('y-label', fontsize=fontsize)
+        ax.set_title('Title', fontsize=fontsize)
+    return pc
+
+
+def statistics_of_epsilon_for_stochastic_pruning(filepath):
+    # use_cuda = torch.cuda.is_available()
+    # net = None
+    # if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
+    #     net = ResNet18()
+    # else:
+    #     from alternate_models.resnet import ResNet18
+    #
+    #     net = ResNet18()
+    #
+    # _, _, testloader = get_cifar_datasets(cfg)
+    # load_model(net, cfg.solution)
+    # original_performance = test(net, use_cuda, testloader)
+    # ###### For N = 10 #####
+    # all_10_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
+    # labels10 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
+    # deltas_det_to_sto10 = np.load(
+    #     "data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas _N_100_t_20-34.npy")
+    # N = len(deltas_det_to_sto10)
+    # stochastic_deltas10 = []
+    # for i, label in enumerate(labels10):
+    #
+    #     if label == "stochastic pruned":
+    #         stochastic_deltas10.append(original_performance - all_performances10[i])
+    #         if len(stochastic_deltas10) == N:
+    #             break
+    # ######## For N = 50 #######
+    # all50_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
+    # labels50 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
+    # deltas_det_to_sto50 = np.load(
+    #     "data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas _N_100_t_20-34.npy")
+    # N = len(deltas_det_to_sto50)
+    # stochastic_deltas50 = []
+    # for i, label in enumerate(labels50):
+    #
+    #     if label == "stochastic pruned":
+    #         stochastic_deltas50.append(original_performance - all_performances50[i])
+    #         if len(stochastic_deltas50) == N:
+    #             break
+    #
+    # #### For N = 100###########
+    # all100_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
+    # labels100 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
+    # deltas_det_to_sto100 = np.load("data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas "
+    #                                "_N_100_t_20-34.npy")
+    #
+    # N = len(deltas_det_to_sto100)
+    # stochastic_deltas100 = []
+    # for i, label in enumerate(labels100):
+    #
+    #     if label == "stochastic pruned":
+    #         stochastic_deltas100.append(original_performance - all100_performances[i])
+    #         if len(stochastic_deltas100) == N:
+    #             break
+    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    # num_col = len(df["Pruning Rate"].unique())
+    # num_row = len(df[sigma"].unique())
+    num_col = 3
+    num_row = 3
+    fig = plt.figure(constrained_layout=True, figsize=(10, 10))
+    subfigs = fig.subfigures(num_row, 1, wspace=0.07)
+    for i, subfig in enumerate(subfigs):
+        axes = subfig.subplots(1, num_col, sharey=True)
+        string_formatted = ""
+        fig.suptitle(r"$\sigma={}$".format(df["sigma"].unique()[i]))
+        # subfig.suptitle(r"$\sigma={}$".format(0.00214))
+        for j, ax in enumerate(axes):
+            ax.set_title(f'Pruning Rate={df["Pruning Rate"].unique()[j]}', fontsize=12)
+            # ax.set_title(f'Pruning Rate=0.8', fontsize=12)
+            sns.boxplot(ax=ax, data=df, x='Population', y='Epsilon', hue="Type")
+    plt.savefig("test.png")
+    # ########## For N = 1000 ###########
+    # all1000_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
+    # labels1000 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
+    # deltas_det_to_sto1000 = np.load("data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas "
+    #                                "_N_1000_t_20-34.npy")
+    #
+    # N = len(deltas_det_to_sto1000)
+    # stochastic_deltas1000 = []
+    # for i, label in enumerate(labels1000):
+    #
+    #     if label == "stochastic pruned":
+    #         stochastic_deltas1000.append(original_performance - all1000_performances[i])
+    #         if len(stochastic_deltas1000) == N:
+    #             break
 
 
 def population_sweeps_transfer_mask_rank_experiments():
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 3,
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "model": "5",
@@ -2258,10 +2353,26 @@ def population_sweeps_transfer_mask_rank_experiments():
         "num_workers": 1,
         "use_wandb": True
     })
-    Ns = [1000]
+    Ns = [10,50,100]
+    sigmas = np.linspace(start=0.001, stop=0.005, num=3)
+    # sigmas = [0.0021419609859022197]
+    pruning_rates = [0.5,0.8,0.9]
+    df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
+    result = time.localtime(time.time())
+    file_path = f"data/epsilon_experiments_t_{result.tm_hour}-{result.tm_min}"
     for pop in Ns:
-        cfg.population = pop
-        transfer_mask_rank_experiments_no_plot(cfg)
+        for sig in sigmas:
+            for pr in pruning_rates:
+                cfg.population = pop
+                cfg.sigma = sig
+                cfg.amount = pr
+                df_result = transfer_mask_rank_experiments_no_plot(cfg)
+                df = df.append(df_result)
+                df_result.to_csv(file_path+f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
+    df.to_csv(file_path+"_full.csv", sep=",", index=False)
+    return file_path
+
+
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
     #     "architecture": "resnet18",
@@ -2295,8 +2406,8 @@ if __name__ == '__main__':
     #     "num_workers": 1,
     #     "use_wandb": True
     # })
-    sigma_sweeps_transfer_mask_rank_experiments()
-    # sigma_sweeps_transfer_mask_rank_experiments()
+    file_path = population_sweeps_transfer_mask_rank_experiments()
+    # statistics_of_epsilon_for_stochastic_pruning("data/epsilon_experiments_t_0-59.csv")
     # run_layer_experiment(cfg)
     # get_intelligent_pruned_network(cfg)
     # get_best_pruning_strategy(cfg)
