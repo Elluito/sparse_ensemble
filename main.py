@@ -2364,7 +2364,7 @@ def population_sweeps_transfer_mask_rank_experiments():
         for sig in sigmas:
             for pr in pruning_rates:
                 cfg.population = pop
-                cfg.sigma = sig
+                cfg.sigma = float(sig)
                 cfg.amount = pr
                 df_result = transfer_mask_rank_experiments_no_plot(cfg)
                 df = df.append(df_result)
