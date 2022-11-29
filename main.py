@@ -281,9 +281,6 @@ def weight_inspection(cfg, cutoff):
 
     above_cutoff_index = np.where(performances[sorted_indx] >= cutoff)[0]
     underneath_cutoff_index = np.where(performances[sorted_indx] < cutoff)[0]
-    # measure_overlap(sorted_models[0],sorted_models[1])
-
-    # models_inspection(sorted_models[:5])
     total_params = count_parameters(pop[0])
     zero_number = lambda w: torch.count_nonzero(w == 0)
     number_param = lambda w: w.nelement()
@@ -303,6 +300,7 @@ def weight_inspection(cfg, cutoff):
     # Go trough all the above_cutoff_index
 
 
+######################### Noise adding functions #################################################################
 def add_geometric_gaussian_noise_to_weights(m, sigma=0.2):
     with torch.no_grad():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
@@ -317,7 +315,10 @@ def add_gaussian_noise_to_weights(m, sigma=0.01):
             m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
 
-def test(net, use_cuda, testloader, one_batch=False):
+##################################################################################################################
+
+##################################################################################################################
+def test(net, use_cuda, testloader, one_batch=False, verbose=2):
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -338,13 +339,15 @@ def test(net, use_cuda, testloader, one_batch=False):
             correct += predicted.eq(targets.data).cpu().sum()
 
             if batch_idx % 100 == 0:
-                print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
-                      % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
             if one_batch:
                 return 100. * correct.item() / total
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss / len(testloader), correct, total,
-        100. * correct.item() / total))
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
     net.cpu()
     return 100. * correct.item() / total
 
@@ -2252,77 +2255,278 @@ def example_plot(ax, fontsize=12, hide_labels=False):
     return pc
 
 
-def statistics_of_epsilon_for_stochastic_pruning(filepath):
-    # use_cuda = torch.cuda.is_available()
-    # net = None
-    # if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
-    #     net = ResNet18()
-    # else:
-    #     from alternate_models.resnet import ResNet18
-    #
-    #     net = ResNet18()
-    #
-    # _, _, testloader = get_cifar_datasets(cfg)
-    # load_model(net, cfg.solution)
-    # original_performance = test(net, use_cuda, testloader)
-    # ###### For N = 10 #####
-    # all_10_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
-    # labels10 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
-    # deltas_det_to_sto10 = np.load(
-    #     "data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas _N_100_t_20-34.npy")
-    # N = len(deltas_det_to_sto10)
-    # stochastic_deltas10 = []
-    # for i, label in enumerate(labels10):
-    #
-    #     if label == "stochastic pruned":
-    #         stochastic_deltas10.append(original_performance - all_performances10[i])
-    #         if len(stochastic_deltas10) == N:
-    #             break
-    # ######## For N = 50 #######
-    # all50_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
-    # labels50 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
-    # deltas_det_to_sto50 = np.load(
-    #     "data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas _N_100_t_20-34.npy")
-    # N = len(deltas_det_to_sto50)
-    # stochastic_deltas50 = []
-    # for i, label in enumerate(labels50):
-    #
-    #     if label == "stochastic pruned":
-    #         stochastic_deltas50.append(original_performance - all_performances50[i])
-    #         if len(stochastic_deltas50) == N:
-    #             break
-    #
-    # #### For N = 100###########
-    # all100_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
-    # labels100 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
-    # deltas_det_to_sto100 = np.load("data/population_data/deltas_gaussian_det_mask_to_sto_weights_deltas "
-    #                                "_N_100_t_20-34.npy")
-    #
-    # N = len(deltas_det_to_sto100)
-    # stochastic_deltas100 = []
-    # for i, label in enumerate(labels100):
-    #
-    #     if label == "stochastic pruned":
-    #         stochastic_deltas100.append(original_performance - all100_performances[i])
-    #         if len(stochastic_deltas100) == N:
-    #             break
+def single_statistics_of_epsilon_for_stochastic_pruning(filepath):
     df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
     # num_col = len(df["Pruning Rate"].unique())
     # num_row = len(df[sigma"].unique())
-    num_col = 3
-    num_row = 3
-    fig = plt.figure(constrained_layout=True, figsize=(10, 10))
-    subfigs = fig.subfigures(num_row, 1, wspace=0.07)
-    for i, subfig in enumerate(subfigs):
-        axes = subfig.subplots(1, num_col, sharey=True)
-        string_formatted = ""
-        fig.suptitle(r"$\sigma={}$".format(df["sigma"].unique()[i]))
-        # subfig.suptitle(r"$\sigma={}$".format(0.00214))
-        for j, ax in enumerate(axes):
-            ax.set_title(f'Pruning Rate={df["Pruning Rate"].unique()[j]}', fontsize=12)
-            # ax.set_title(f'Pruning Rate=0.8', fontsize=12)
-            sns.boxplot(ax=ax, data=df, x='Population', y='Epsilon', hue="Type")
-    plt.savefig("test.png")
+    # num_col = 3
+    # num_row = 3
+    # fig = plt.figure(figsize=(16, 10))
+    # subfigs = fig.subfigures(num_row, 1, wspace=0.07)
+    grped_bplot = sns.catplot(x='Population',
+                              y='Epsilon',
+                              hue="Type",
+                              kind="box",
+                              legend=False,
+                              height=6,
+                              aspect=1.3,
+                              data=df)  # .set(title="Title")
+    # make grouped stripplot
+    grped_bplot = sns.stripplot(x='Population',
+                                y='Epsilon',
+                                hue='Type',
+                                jitter=True,
+                                dodge=True,
+                                marker='o',
+                                edgecolor="gray",
+                                linewidth=1,
+                                # palette="set2",
+                                alpha=0.5,
+                                data=df)
+    # how to remove redundant legends in Python
+    # Let us first get legend information from the plot object
+    handles, labels = grped_bplot.get_legend_handles_labels()
+    # grped_bplot.set_title("The title")
+    plt.title("Pruning Rate 0.9" + r" $\sigma=0.001$", fontsize=12)
+    # specify just one legend
+    l = plt.legend(handles[:3], labels[:3])
+    plt.savefig("grouped_boxplot_with_jittered_data_points_Seaborn_Python2.png", bbox_inches="tight")
+
+
+def get_model(cfg: omegaconf.DictConfig):
+    net = None
+    if cfg.architecture == "resnet18":
+        if not cfg.solution:
+            if "csgmcmc" == cfg.type:
+                net = ResNet18()
+                return net
+            if "alternative" == cfg.type:
+                from alternate_models.resnet import ResNet18
+                net = ResNet18()
+                return net
+        else:
+            if "csgmcmc" == cfg.type:
+                net = ResNet18()
+            if "alternative" == cfg.type:
+                from alternate_models.resnet import ResNet18
+                net = ResNet18()
+            load_model(net, cfg.solution)
+            return net
+    else:
+        raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
+
+
+def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
+    net = get_model(cfg)
+    names, weights = zip(*get_layer_dict(net))
+    average_magnitude = lambda w: torch.abs(w).mean()
+    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
+    number_param = lambda w: w.nelement()
+    elements = np.array(list(map(number_param, weights)))
+    ratios = average_magnitudes_by_layer / cfg.sigma
+    sorted_idexes_by_size = np.flip(np.argsort(elements))
+    weights_by_size = [weights[i].flatten().detach().numpy() for i in sorted_idexes_by_size]
+    names_by_size = [names[i] for i in sorted_idexes_by_size]
+    n = []
+    we = []
+    for j, w in enumerate(weights_by_size):
+        we.extend(w)
+        n.extend([names_by_size[j]]* w.nelement())
+    df = pd.DataFrame(data={"x": we, "g": n})
+    df.to_csv(
+        "data/weights_by_size.csv",sep=",",index=False
+    )
+    df = pd.from_csv("data/weights_by_size.csv",header=0,sep=",")
+    sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+
+    # Create the data
+    # rs = np.random.RandomState(1979)
+    # x = rs.randn(500)
+    # g = np.tile(list("ABCDEFGHIJ"), 50)
+    # df = pd.DataFrame(dict(x=x, g=g))
+    # m = df.g.map(ord)
+    # df["x"] += m
+    # Initialize the FacetGrid object
+    pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
+    g = sns.FacetGrid(df, row="g", hue="g", aspect=15, height=.5, palette=pal)
+
+    # Draw the densities in a few steps
+    g.map(sns.kdeplot, "x",
+          bw_adjust=.5, clip_on=False,
+          fill=True, alpha=1, linewidth=1.5)
+    g.map(sns.kdeplot, "x", clip_on=False, color="w", lw=2, bw_adjust=.5)
+
+    # passing color=None to refline() uses the hue mapping
+    g.refline(y=0, linewidth=2, linestyle="-", color=None, clip_on=False)
+
+    # Define and use a simple function to label the plot in axes coordinates
+    def label(x, color, label):
+        ax = plt.gca()
+        ax.text(0, .2, label, fontweight="bold", color=color,
+                ha="left", va="center", transform=ax.transAxes)
+
+    g.map(label, "x")
+
+    # Set the subplots to overlap
+    g.figure.subplots_adjust(hspace=-.25)
+
+    # Remove axes details that don't play well with overlap
+    g.set_titles("")
+    g.set(yticks=[], ylabel="")
+    g.despine(bottom=True, left=True)
+
+    ################################################## Here is one way to do
+    # it################################################
+    # sorted_idexes_by_size = sorted_idexes_by_ratios[-4:]
+
+    # y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
+    # title = r"$\sigma = {}$".format(cfg.sigma)
+    #
+    # fig = plt.figure()  # Create matplotlib figure
+    #
+    # ax = fig.add_subplot(111)  # Create matplotlib axes
+    # ax2 = ax.twinx()  # Create another axes that shares the same x-axis as ax.
+    #
+    # width = 0.4
+    #
+    # df = pd.DataFrame(data= {"ratios":ratios[sorted_idexes_by_ratios].transpose(),"elements":elements[
+    #     sorted_idexes_by_ratios].transpose()})
+    #
+    # df.ratios.plot(kind='bar', color='red', ax=ax, width=width, position=1)
+    # df.elements.plot(kind='bar', color='blue', ax=ax2, width=width, position=0)
+    #
+    # ax.set_ylabel(y_axes_label)
+    # ax2.set_ylabel('Number of parameters')
+    # ax.set_xticklabels([names[i] for i in sorted_idexes_by_ratios],rotation=90)
+    # ax2.set_xticklabels([names[i] for i in sorted_idexes_by_ratios],rotation=90)
+    #
+    # ax.tick_params(axis='y', colors="red")
+    # ax2.tick_params(axis='y', colors="blue")
+    # plt.title(title)
+    # plt.tight_layout()
+    plt.savefig("data/figures/sigma_{}_V_original_weights_ridgeplot.png".format(cfg.sigma))
+    plt.close()
+
+
+def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.DictConfig):
+    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    epsilons = []
+    pruning_rates = []
+    num_col = len(df["Pruning Rate"].unique())
+    num_row = len(df["sigma"].unique())
+    minimun_overall = df["Epsilon"].min()
+    print("The minimun epsilon is {} with the following charactersitics".format(minimun_overall))
+    print(df[df["Epsilon"] == minimun_overall])
+    for pr in df["Pruning Rate"].unique():
+        current_df = df[df["Pruning Rate"] == pr]
+        best_epsilon = current_df.minimun()
+        best_epsilon_info = current_df[current_df["Epsilon"] == best_epsilon]
+        print("For pruning rate {}  the best epsilon is {} obtained with the following parameters \n {}".format(pr,
+                                                                                                                best_epsilon,
+                                                                                                                best_epsilon_info))
+        epsilons.append(best_epsilon)
+        pruning_rates.append(pr)
+    plt.plot(epsilons, pruning_rates)
+    plt.ylabel(r"$\epsilon\mid_{\sigma_{best}}$")
+    plt.xlabel("Pruning rate")
+    plt.savefig("data/figures/best_epsilon.png")
+
+
+def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.DictConfig):
+    use_cuda = torch.cuda.is_available()
+
+    net = get_model(cfg)
+
+    _, _, testloader = get_cifar_datasets(cfg)
+
+    original_performance = test(net, use_cuda, testloader)
+
+    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    num_col = len(df["Pruning Rate"].unique())
+    num_row = len(df["sigma"].unique())
+    # num_col = 3
+    # num_row = 3
+    # For each num_row is going to be one plot with num_col subplots for each pruning rate
+    for i in range(num_row):
+        current_sigma = df["sigma"].unique()[i]
+        fig, axs = plt.subplots(1, num_col, figsize=(17, 10), layout="constrained")
+        plt.suptitle(r"$\sigma={}$".format(current_sigma), fontsize=20)
+        for j, axj in enumerate(axs.flat):
+            current_pr = df["Pruning Rate"].unique()[j]
+
+            # axj = fig.add_subplot(1, num_col, j+1,)
+            current_df = df[df["sigma"] == current_sigma]
+            current_df = current_df[current_df["Pruning Rate"] == current_pr]
+
+            pruned_original = copy.deepcopy(net)
+            weights_to_prune = weigths_to_prune(pruned_original)
+            prune.global_unstructured(
+                weights_to_prune,
+                pruning_method=prune.L1Unstructured,
+                amount=float(current_pr)
+            )
+            remove_reparametrization(pruned_original)
+            pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
+            delta_pruned_original_performance = original_performance - pruned_original_performance
+            g = sns.boxplot(x='Population',
+                            y='Epsilon',
+                            hue="Type",
+                            data=current_df,
+                            ax=axj
+                            )
+            g.axhline(delta_pruned_original_performance, c="purple", label="Deterministic Pruning")
+            g = sns.stripplot(x='Population',
+                              y='Epsilon',
+                              hue='Type',
+                              jitter=True,
+                              dodge=True,
+                              marker='o',
+                              edgecolor="gray",
+                              linewidth=1,
+                              # palette="set2",
+                              alpha=0.5,
+                              data=current_df,
+                              ax=axj)
+            axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=10)
+            handles, labels = g.get_legend_handles_labels()
+            l = axj.legend(handles[:4], labels[:4])
+        plt.savefig("data/epsilon_allN_all_pr_sigma={}.png".format(current_sigma), bbox_inches="tight")
+
+    # subfigs = fig.subfigures(num_row, 1)
+    # for i, subfig in enumerate(subfigs):
+    #     axes = subfig.subplots(1, num_col, sharey=True)
+    #     string_formatted = ""
+    #     current_sigma = df["sigma"].unique()[i]
+    #     subfig.suptitle(r"$\sigma={}$".format(df["sigma"].unique()[i]))
+    #     # subfig.suptitle(r"$\sigma={}$".format(0.00214))
+    #     for j, ax in enumerate(axes):
+    #         current_pr = df["Pruning Rate"].unique()[j]
+    #         ax.set_title(f'Pruning Rate={df["Pruning Rate"].unique()[j]}', fontsize=12)
+    #         # ax.set_title(f'Pruning Rate=0.8', fontsize=12)
+    #         current_df = df[df["sigma"] == current_sigma]
+    #         current_df = current_df[current_df["Pruning Rate"] == current_pr]
+    #         sns.boxplot(ax=ax, data=current_df, x='Population', y='Epsilon', hue="Type")
+    #
+    #         # sns.catplot(ax=ax,x='Population',
+    #         #             y='Epsilon',
+    #         #             hue="Type",
+    #         #             kind="box",
+    #         #             legend=False,
+    #         #             # height=6,
+    #         #             # aspect=1.3,
+    #         #             data=current_df)  # .set(title="Title")
+    #         # # make grouped stripplot
+    #         # sns.stripplot(ax=ax,x='Population',
+    #         #               y='Epsilon',
+    #         #               hue='Type',
+    #         #               jitter=True,
+    #         #               dodge=True,
+    #         #               marker='o',
+    #         #               # palette="Set2",
+    #         #               alpha=0.5,
+    #         #               data=current_df)
+    #
+    # plt.savefig("test.png")
     # ########## For N = 1000 ###########
     # all1000_performances = np.load("data/population_data/performances_gaussian_transfer_t_20-34-.npy")
     # labels1000 = np.load("data/population_data/labels_gaussian_transfer_t_20-34.npy")
@@ -2339,7 +2543,43 @@ def statistics_of_epsilon_for_stochastic_pruning(filepath):
     #             break
 
 
-def population_sweeps_transfer_mask_rank_experiments():
+def test_figure():
+    exercise = sns.load_dataset("exercise")
+    fig = plt.figure()
+
+    ax1 = fig.add_subplot(121)
+    g = sns.boxplot(x="time", y="pulse", hue="kind", data=exercise, ax=ax1)  # pass ax1
+    g = sns.stripplot(x="time", y="pulse", hue="kind",
+                      jitter=True,
+                      dodge=True,
+                      marker='o',
+                      edgecolor="gray",
+                      linewidth=1,
+                      # palette="set2",
+                      alpha=0.5,
+                      data=exercise, ax=ax1)  # pass ax1
+
+    ax2 = fig.add_subplot(122)
+    g = sns.boxplot(x="time", y="pulse", hue="kind", data=exercise, ax=ax2)  # pass ax2
+    g = sns.stripplot(x="time",
+                      y="pulse", hue="kind",
+                      jitter=True,
+                      dodge=True,
+                      marker='o',
+                      edgecolor="gray",
+                      linewidth=1,
+                      # palette="set2",
+                      alpha=0.5,
+                      data=exercise,
+                      ax=ax2)  # pass ax1
+
+    plt.close(2)
+    plt.close(3)
+    plt.tight_layout()
+    plt.savefig("test.png")
+
+
+def population_sweeps_transfer_mask_rank_experiments(identifier=""):
     cfg = omegaconf.DictConfig({
         "population": 3,
         "architecture": "resnet18",
@@ -2353,13 +2593,13 @@ def population_sweeps_transfer_mask_rank_experiments():
         "num_workers": 1,
         "use_wandb": True
     })
-    Ns = [10,50,100]
+    Ns = [10, 50, 100]
     sigmas = np.linspace(start=0.001, stop=0.005, num=3)
     # sigmas = [0.0021419609859022197]
-    pruning_rates = [0.5,0.8,0.9]
+    pruning_rates = [0.5, 0.8, 0.9]
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
     result = time.localtime(time.time())
-    file_path = f"data/epsilon_experiments_t_{result.tm_hour}-{result.tm_min}"
+    file_path = f"data/epsilon_experiments_{identifier}_t_{result.tm_hour}-{result.tm_min}"
     for pop in Ns:
         for sig in sigmas:
             for pr in pruning_rates:
@@ -2368,8 +2608,8 @@ def population_sweeps_transfer_mask_rank_experiments():
                 cfg.amount = pr
                 df_result = transfer_mask_rank_experiments_no_plot(cfg)
                 df = df.append(df_result)
-                df_result.to_csv(file_path+f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
-    df.to_csv(file_path+"_full.csv", sep=",", index=False)
+                df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
+    df.to_csv(file_path + "_full.csv", sep=",", index=False)
     return file_path
 
 
@@ -2393,20 +2633,35 @@ if __name__ == '__main__':
     # print("GEOMETRIC GAUSSIAN NOISE")
 
     # print("GAUSSIAN NOISE")
-    # cfg = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "architecture": "resnet18",
-    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #     "model": "5",
-    #     "noise": "gaussian",
-    #     # "sigma": 0.0021419609859022197,
-    #     "sigma": 0.001,
-    #     "amount": 0.90,
-    #     "batch_size": 512,
-    #     "num_workers": 1,
-    #     "use_wandb": True
-    # })
-    file_path = population_sweeps_transfer_mask_rank_experiments()
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "model": "5",
+        "noise": "gaussian",
+        "type": "alternative",
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.001,
+        "amount": 0.90,
+        "batch_size": 512,
+        "num_workers": 1,
+        "use_wandb": True
+    })
+    check_sigma_normalization_againts_weights(cfg)
+    # fp = "data/epsilon_experiments_t_1-33_full.csv"
+    # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
+    # sigmas = [0.001,0.002,0.005]
+    # for sig in sigmas:
+    #     cfg.sigma = sig
+    #     check_sigma_normalization_againts_weights(cfg)
+
+    # file_path = population_sweeps_transfer_mask_rank_experiments()
+    # fp = "data/epsilon_experiments_all_N_sig_0.001_pr_0.9.csv"
+    # df1 = pd.read_csv("data/epsilon_experiments_t_1-33pop_10_sig_0.001_pr_0.8.csv",sep=",",header=0)
+    # df1 = df1.append(pd.read_csv("data/epsilon_experiments_t_1-33pop_50_sig_0.001_pr_0.8.csv",sep=",",header=0))
+    # df1 = df1.append(pd.read_csv("data/epsilon_experiments_t_1-33pop_100_sig_0.001_pr_0.8.csv",sep=",",header=0))
+    # df1.to_csv(fp,sep=",", index=False)
+    # single_statistics_of_epsilon_for_stochastic_pruning(fp)
     # statistics_of_epsilon_for_stochastic_pruning("data/epsilon_experiments_t_0-59.csv")
     # run_layer_experiment(cfg)
     # get_intelligent_pruned_network(cfg)
