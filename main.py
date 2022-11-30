@@ -31,6 +31,7 @@ from functools import partial
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
+import array as pyarr
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -2316,37 +2317,15 @@ def get_model(cfg: omegaconf.DictConfig):
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
 
-def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
-    net = get_model(cfg)
-    names, weights = zip(*get_layer_dict(net))
-    average_magnitude = lambda w: torch.abs(w).mean()
-    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
-    number_param = lambda w: w.nelement()
-    elements = np.array(list(map(number_param, weights)))
-    ratios = average_magnitudes_by_layer / cfg.sigma
-    sorted_idexes_by_size = np.flip(np.argsort(elements))
-    weights_by_size = [weights[i].flatten().detach().numpy() for i in sorted_idexes_by_size]
-    names_by_size = [names[i] for i in sorted_idexes_by_size]
-    n = []
-    we = []
-    for j, w in enumerate(weights_by_size):
-        we.extend(w)
-        n.extend([names_by_size[j]]* w.nelement())
-    df = pd.DataFrame(data={"x": we, "g": n})
-    df.to_csv(
-        "data/weights_by_size.csv",sep=",",index=False
-    )
-    df = pd.from_csv("data/weights_by_size.csv",header=0,sep=",")
+def plot_ridge_plot(df: pd.DataFrame, path: str):
+    """
+    Simple wrapper for plotting a ridge plot
+    :param df: DataFrame that contains the numerical value "x" and the categorical  value "g" for the ridgeplot
+    :param path: path where the plot is going to be saved
+    :return:
+    """
     sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
 
-    # Create the data
-    # rs = np.random.RandomState(1979)
-    # x = rs.randn(500)
-    # g = np.tile(list("ABCDEFGHIJ"), 50)
-    # df = pd.DataFrame(dict(x=x, g=g))
-    # m = df.g.map(ord)
-    # df["x"] += m
-    # Initialize the FacetGrid object
     pal = sns.cubehelix_palette(10, rot=-.25, light=.7)
     g = sns.FacetGrid(df, row="g", hue="g", aspect=15, height=.5, palette=pal)
 
@@ -2374,38 +2353,102 @@ def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     g.set_titles("")
     g.set(yticks=[], ylabel="")
     g.despine(bottom=True, left=True)
-
-    ################################################## Here is one way to do
-    # it################################################
-    # sorted_idexes_by_size = sorted_idexes_by_ratios[-4:]
-
-    # y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
-    # title = r"$\sigma = {}$".format(cfg.sigma)
-    #
-    # fig = plt.figure()  # Create matplotlib figure
-    #
-    # ax = fig.add_subplot(111)  # Create matplotlib axes
-    # ax2 = ax.twinx()  # Create another axes that shares the same x-axis as ax.
-    #
-    # width = 0.4
-    #
-    # df = pd.DataFrame(data= {"ratios":ratios[sorted_idexes_by_ratios].transpose(),"elements":elements[
-    #     sorted_idexes_by_ratios].transpose()})
-    #
-    # df.ratios.plot(kind='bar', color='red', ax=ax, width=width, position=1)
-    # df.elements.plot(kind='bar', color='blue', ax=ax2, width=width, position=0)
-    #
-    # ax.set_ylabel(y_axes_label)
-    # ax2.set_ylabel('Number of parameters')
-    # ax.set_xticklabels([names[i] for i in sorted_idexes_by_ratios],rotation=90)
-    # ax2.set_xticklabels([names[i] for i in sorted_idexes_by_ratios],rotation=90)
-    #
-    # ax.tick_params(axis='y', colors="red")
-    # ax2.tick_params(axis='y', colors="blue")
-    # plt.title(title)
-    # plt.tight_layout()
-    plt.savefig("data/figures/sigma_{}_V_original_weights_ridgeplot.png".format(cfg.sigma))
+    plt.savefig(path)
     plt.close()
+
+
+def plot_double_barplot(df: pd.DataFrame, ylabel1, ylabel2, title, path: str, xtick_labels: List[str], color1="blue",
+                        color2="red",logy1=False,logy2=False):
+
+    fig = plt.figure()  # Create matplotlib figure
+
+    ax = fig.add_subplot(111)  # Create matplotlib axes
+    ax2 = ax.twinx()  # Create another axes that shares the same x-axis as ax.
+    width = 0.4
+    df.y1.plot(kind='bar', color=color1, ax=ax, width=width, position=1,logy=logy1)
+    df.y2.plot(kind='bar', color=color2, ax=ax2, width=width, position=0,logy=logy2)
+
+    ax.set_ylabel(ylabel1)
+    ax2.set_ylabel(ylabel2)
+    ax.set_xticklabels(xtick_labels, rotation=90)
+    ax2.set_xticklabels(xtick_labels, rotation=90)
+
+    ax.tick_params(axis='y', colors=color1)
+    ax2.tick_params(axis='y', colors=color2)
+    plt.title(title)
+    plt.tight_layout()
+    plt.savefig(path)
+def fancy_bloxplot(df,x,y,hue = None,path:str="figure.png",title="",save=True):
+
+    grped_bplot = sns.catplot(x=x,
+                              y=y,
+                              hue=hue,
+                              kind="box",
+                              legend=False,
+                              height=6,
+                              aspect=1.3,
+                              data=df)  # .set(title="Title")
+    # make grouped stripplot
+    grped_bplot = sns.stripplot(x=x,
+                                y=y,
+                                hue=hue,
+                                jitter=True,
+                                dodge=True,
+                                marker='o',
+                                edgecolor="gray",
+                                linewidth=1,
+                                # palette="set2",
+                                alpha=0.5,
+                                data=df)
+    # how to remove redundant legends in Python
+    # Let us first get legend information from the plot object
+    handles, labels = grped_bplot.get_legend_handles_labels()
+    # grped_bplot.set_title("The title")
+    plt.title(title, fontsize=12)
+    # specify just one legend
+    l = plt.legend(handles[:3], labels[:3])
+    if save:
+        plt.savefig(path, bbox_inches="tight")
+
+    return plt.gcf()
+
+def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
+    net = get_model(cfg)
+    names, weights = zip(*get_layer_dict(net))
+    average_magnitude = lambda w: torch.abs(w).mean()
+    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
+    number_param = lambda w: w.nelement()
+    elements = np.array(list(map(number_param, weights)))
+    ratios = average_magnitudes_by_layer / cfg.sigma
+    sorted_idexes_by_size = np.flip(np.argsort(elements))
+    weights_magnitude_by_size = [np.abs(weights[i].flatten().detach().numpy()) for i in sorted_idexes_by_size]
+    names_by_size = [names[i] for i in sorted_idexes_by_size]
+    n = pyarr.array("u", [])
+    we = pyarr.array("f", [])
+    for j, w in enumerate(weights_by_size):
+        we.extend(w)
+        for i in range(len(w)):
+            n.append(''.join(r'\u{:04X}'.format(ord(chr)) for chr in names_by_size[j]))
+    df = pd.DataFrame(data={"x": we, "g": n})
+    df.to_csv(
+        "data/weights_by_size.csv", sep=",", index=False
+    )
+    df = pd.from_csv("data/weights_by_size.csv", header=0, sep=",")
+    # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
+    df.rename(columns={"g":"Layer Name","x":"Weight magnitude"},inplace=True)
+    fancy_bloxplot(df,x="Layer Name",y="Weight magnitude")
+
+    ########################## This is double bar plot ################################################
+
+    y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
+    title = r"$\sigma = {}$".format(cfg.sigma)
+
+    df = pd.DataFrame(data={"y1": ratios[sorted_idexes_by_ratios].transpose(), "y2": elements[
+        sorted_idexes_by_ratios].transpose()})
+    xtick_labels = [names[i] for i in sorted_idexes_by_ratios]
+    plot_double_barplot(df,y_axes_label,"Number of parameters",title,f"data/figures/sigma_"
+                                                                     f"{cfg.sigma}_V_original_weights.png",
+                        xtick_labels,logy2=True)
 
 
 def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.DictConfig):
