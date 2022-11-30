@@ -2433,7 +2433,7 @@ def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     # df.to_csv(
     #     "data/weights_by_size.csv", sep=",", index=False
     # )
-    df = pd.from_csv("data/weights_by_size.csv", header=0, sep=",")
+    df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
     # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g":"Layer Name","x":"Weight magnitude"},inplace=True)
     fancy_bloxplot(df,x="Layer Name",y="Weight magnitude")
