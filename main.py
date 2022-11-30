@@ -2414,25 +2414,25 @@ def fancy_bloxplot(df,x,y,hue = None,path:str="figure.png",title="",save=True):
 
 def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
-    names, weights = zip(*get_layer_dict(net))
-    average_magnitude = lambda w: torch.abs(w).mean()
-    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
-    number_param = lambda w: w.nelement()
-    elements = np.array(list(map(number_param, weights)))
-    ratios = average_magnitudes_by_layer / cfg.sigma
-    sorted_idexes_by_size = np.flip(np.argsort(elements))
-    weights_magnitude_by_size = [np.abs(weights[i].flatten().detach().numpy()) for i in sorted_idexes_by_size]
-    names_by_size = [names[i] for i in sorted_idexes_by_size]
-    n = pyarr.array("u", [])
-    we = pyarr.array("f", [])
-    for j, w in enumerate(weights_by_size):
-        we.extend(w)
-        for i in range(len(w)):
-            n.append(''.join(r'\u{:04X}'.format(ord(chr)) for chr in names_by_size[j]))
-    df = pd.DataFrame(data={"x": we, "g": n})
-    df.to_csv(
-        "data/weights_by_size.csv", sep=",", index=False
-    )
+    # names, weights = zip(*get_layer_dict(net))
+    # average_magnitude = lambda w: torch.abs(w).mean()
+    # average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
+    # number_param = lambda w: w.nelement()
+    # elements = np.array(list(map(number_param, weights)))
+    # ratios = average_magnitudes_by_layer / cfg.sigma
+    # sorted_idexes_by_size = np.flip(np.argsort(elements))
+    # weights_magnitude_by_size = [np.abs(weights[i].flatten().detach().numpy()) for i in sorted_idexes_by_size]
+    # names_by_size = [names[i] for i in sorted_idexes_by_size]
+    # n = np.array([],dtype=str)
+    # we = pyarr.array("f", [])
+    # for j, w in enumerate(weights_magnitude_by_size):
+    #     we.extend(w)
+    #     for i in range(len(w)):
+    #        n = np.append(n,names_by_size[j])
+    # df = pd.DataFrame(data={"x": we, "g": n})
+    # df.to_csv(
+    #     "data/weights_by_size.csv", sep=",", index=False
+    # )
     df = pd.from_csv("data/weights_by_size.csv", header=0, sep=",")
     # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g":"Layer Name","x":"Weight magnitude"},inplace=True)
