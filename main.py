@@ -2414,13 +2414,13 @@ def fancy_bloxplot(df,x,y,hue = None,path:str="figure.png",title="",save=True):
 
 def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
-    # names, weights = zip(*get_layer_dict(net))
-    # average_magnitude = lambda w: torch.abs(w).mean()
-    # average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
-    # number_param = lambda w: w.nelement()
-    # elements = np.array(list(map(number_param, weights)))
-    # ratios = average_magnitudes_by_layer / cfg.sigma
-    # sorted_idexes_by_size = np.flip(np.argsort(elements))
+    names, weights = zip(*get_layer_dict(net))
+    average_magnitude = lambda w: torch.abs(w).mean()
+    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
+    number_param = lambda w: w.nelement()
+    elements = np.array(list(map(number_param, weights)))
+    ratios = average_magnitudes_by_layer / cfg.sigma
+    sorted_idexes_by_ratios = np.flip(np.argsort(ratios))
     # weights_magnitude_by_size = [np.abs(weights[i].flatten().detach().numpy()) for i in sorted_idexes_by_size]
     # names_by_size = [names[i] for i in sorted_idexes_by_size]
     # n = np.array([],dtype=str)
@@ -2443,10 +2443,10 @@ def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
     title = r"$\sigma = {}$".format(cfg.sigma)
 
-    df = pd.DataFrame(data={"y1": ratios[sorted_idexes_by_ratios].transpose(), "y2": elements[
+    df2 = pd.DataFrame(data={"y1": ratios[sorted_idexes_by_ratios].transpose(), "y2": elements[
         sorted_idexes_by_ratios].transpose()})
     xtick_labels = [names[i] for i in sorted_idexes_by_ratios]
-    plot_double_barplot(df,y_axes_label,"Number of parameters",title,f"data/figures/sigma_"
+    plot_double_barplot(df2,y_axes_label,"Number of parameters",title,f"data/figures/sigma_"
                                                                      f"{cfg.sigma}_V_original_weights.png",
                         xtick_labels,logy2=True)
 
