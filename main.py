@@ -1,5 +1,7 @@
 import sys
+import math
 import pickle
+import typing
 from typing import List
 import pandas as pd
 import datetime as date
@@ -26,14 +28,15 @@ import numpy as np
 import random
 import torch.nn.utils.prune as prune
 import platform
-import matplotlib
 from functools import partial
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
 import array as pyarr
+import matplotlib
 
 matplotlib.use('Agg')
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
 import sklearn as sk
@@ -47,6 +50,7 @@ import torchvision as tv
 from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from itertools import chain, combinations
 import seaborn as sns
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -316,6 +320,16 @@ def add_gaussian_noise_to_weights(m, sigma=0.01):
             m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
 
+def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig):
+    current_model = copy.deepcopy(net)
+    if cfg.noise == "gaussian":
+        current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
+    elif cfg.noise == "geogaussian":
+        current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+    return current_model
+
+
+##################################################################################################################
 ##################################################################################################################
 
 ##################################################################################################################
@@ -353,7 +367,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2):
     return 100. * correct.item() / total
 
 
-def weigths_to_prune(model):
+def weights_to_prune(model):
     modules = []
     for m in model.modules():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
@@ -441,7 +455,7 @@ def heatmap1_exp(cfg):
         # Here I just prune once for the deterministic pruning
 
         pruned_original = copy.deepcopy(net)
-        weights_to_prune = weigths_to_prune(pruned_original)
+        weights_to_prune = weights_to_prune(pruned_original)
         prune.global_unstructured(
             weights_to_prune,
             pruning_method=prune.L1Unstructured,
@@ -466,7 +480,7 @@ def heatmap1_exp(cfg):
 
                         current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
 
-                    prune.global_unstructured(weigths_to_prune(current_model),
+                    prune.global_unstructured(weights_to_prune(current_model),
                                               pruning_method=prune.L1Unstructured,
                                               amount=pruning_percentage)
 
@@ -597,7 +611,7 @@ def heatmap2_mean_decrease_maskTransfer_exp(cfg):
         # Here I just prune once for the deterministic pruning
 
         pruned_original = copy.deepcopy(net)
-        weights_to_prune = weigths_to_prune(pruned_original)
+        weights_to_prune = weights_to_prune(pruned_original)
         prune.global_unstructured(
             weights_to_prune,
             pruning_method=prune.L1Unstructured,
@@ -625,7 +639,7 @@ def heatmap2_mean_decrease_maskTransfer_exp(cfg):
                     current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
 
                 prune.global_unstructured(
-                    weigths_to_prune(current_model),
+                    weights_to_prune(current_model),
                     pruning_method=prune.L1Unstructured,
                     amount=pruning_percentage)
                 copy_buffers(from_net=current_model, to_net=pruned_original)
@@ -759,7 +773,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg):
                     current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
 
                 prune.global_unstructured(
-                    weigths_to_prune(current_model),
+                    weights_to_prune(current_model),
                     pruning_method=prune.L1Unstructured,
                     amount=pruning_percentage)
                 copy_buffers(from_net=current_model, to_net=pruned_original)
@@ -886,7 +900,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
         # Here I just prune once for the deterministic pruning
 
         pruned_original = copy.deepcopy(net)
-        weights_to_prune = weigths_to_prune(pruned_original)
+        weights_to_prune = weights_to_prune(pruned_original)
         prune.global_unstructured(
             weights_to_prune,
             pruning_method=prune.L1Unstructured,
@@ -915,7 +929,7 @@ def heatmap2_mean_decrease_maskTransfer_exp_to_random(cfg):
                     current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=sigma))
 
                 prune.global_unstructured(
-                    weigths_to_prune(current_model),
+                    weights_to_prune(current_model),
                     pruning_method=prune.L1Unstructured,
                     amount=pruning_percentage)
                 copy_buffers(from_net=current_model, to_net=stochastic_random_net)
@@ -1100,17 +1114,14 @@ def plot_heatmaps(cfg, plot_index=1):
 ################################# Noise calibration with optuna ##################################
 def calibrate(trial: optuna.trial.Trial) -> np.ndarray:
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
-    net = None
-    if cfg.architecture == "resnet18":
-        net = ResNet18()
-        load_model(net, "trained_models/cifar10/cifar_csghmc_5.pt")
+    net = get_model(cfg)
     # sigma_add = trial.suggest_float("sigma_add", 0.0001, 0.1)
     sigma_add = cfg.sigma
     sigma_mul = trial.suggest_float("sigma_mul", 0.1, 1)
 
     # Prune original
     pruned_original = copy.deepcopy(net)
-    weights_prune = weigths_to_prune(pruned_original)
+    weights_prune = weights_to_prune(pruned_original)
     prune.global_unstructured(
         weights_prune,
         pruning_method=prune.L1Unstructured,
@@ -1128,7 +1139,7 @@ def calibrate(trial: optuna.trial.Trial) -> np.ndarray:
 
         # Pruning of the  noisy models
         # Additive
-        weights_prune = weigths_to_prune(add_noise_model)
+        weights_prune = weights_to_prune(add_noise_model)
         prune.global_unstructured(
             weights_prune,
             pruning_method=prune.L1Unstructured,
@@ -1136,7 +1147,7 @@ def calibrate(trial: optuna.trial.Trial) -> np.ndarray:
         )
         remove_reparametrization(model=add_noise_model)
         # Geometric
-        weights_prune = weigths_to_prune(mul_noise_model)
+        weights_prune = weights_to_prune(mul_noise_model)
         prune.global_unstructured(
             weights_prune,
             pruning_method=prune.L1Unstructured,
@@ -1519,6 +1530,27 @@ def get_intelligent_pruned_network(cfg):
         print(f"Model has compression ratio of {count_zero_parameters(full_model) / count_parameters(full_model)}")
 
 
+def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], type: str = "global", criterion: str =
+"l1"):
+    if type == "global":
+        weights = weights_to_prune(net)
+        if criterion == "l1":
+            prune.global_unstructured(
+                weights,
+                pruning_method=prune.L1Unstructured,
+                amount=amount
+            )
+        if criterion == "l2":
+            prune.global_unstructured(
+                weights,
+                pruning_method=prune.LnStructured,
+                amount=amount,
+                n=2
+            )
+    else:
+        raise NotImplementedError("Not implemented for type {}".format(type))
+
+
 def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
     # Pruning rate large layers
     pruning_large_layers = trial.suggest_float("Pr_big_layers", 0.8, 0.99)
@@ -1624,7 +1656,7 @@ def main(cfg: omegaconf.DictConfig):
     stochastic_deltas = []
     original_performance = test(net, use_cuda, testloader)
     pruned_original = copy.deepcopy(net)
-    weights_to_prune = weigths_to_prune(pruned_original)
+    weights_to_prune = weights_to_prune(pruned_original)
     prune.global_unstructured(
         weights_to_prune,
         pruning_method=prune.L1Unstructured,
@@ -1649,7 +1681,7 @@ def main(cfg: omegaconf.DictConfig):
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
         prune.global_unstructured(
-            weigths_to_prune(current_model),
+            weights_to_prune(current_model),
             pruning_method=prune.L1Unstructured,
             amount=cfg.amount)
         remove_reparametrization(current_model)
@@ -1958,17 +1990,20 @@ def get_stochastic_pruning_results_on(cfg):
 
 ############################### Experiments 25 of October # ############################################################
 
-def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
+def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "test"):
     use_cuda = torch.cuda.is_available()
-    net = None
-    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
-        net = ResNet18()
-    else:
-        from alternate_models.resnet import ResNet18
-        net = ResNet18()
-
+    net = get_model(cfg)
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    load_model(net, cfg.solution)
+    evaluation_set = None
+    if eval_set == "test":
+        evaluation_set = testloader
+    elif eval_set == "val":
+        evaluation_set = valloader
+    elif eval_set == "train":
+        evaluation_set = trainloader
+    else:
+        raise Exception("Invalid evaluation set {} is not valid".format(eval_set))
+
     N = cfg.population
     pop = []
     pruned_performance = []
@@ -1977,52 +2012,45 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
     deterministic_with_stochastic_mask_performance = []
     stochastic_with_deterministic_mask_performance = []
 
-    original_performance = test(net, use_cuda, testloader)
+    original_performance = test(net, use_cuda, valloader)
     pruned_original = copy.deepcopy(net)
-    weights_to_prune = weigths_to_prune(pruned_original)
-    prune.global_unstructured(
-        weights_to_prune,
-        pruning_method=prune.L1Unstructured,
-        amount=cfg.amount
-    )
+    prune_with_rate(pruned_original, cfg.amount)
     # remove_reparametrization(pruned_original)
     print("pruned_performance of pruned original")
-    pruned_original_performance = test(pruned_original, use_cuda, testloader)
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set)
     pop.append(pruned_original)
     pruned_performance.append(pruned_original_performance)
     labels = ["pruned original"]
     stochastic_dense_performances.append(original_performance)
     for n in range(N):
-        current_model = copy.deepcopy(net)
         sto_mask_transfer_model = copy.deepcopy(net)
-        if cfg.noise == "gaussian":
-            current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
-        elif cfg.noise == "geogaussian":
-            current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+
+        current_model = get_noisy_sample(net, cfg)
+
         det_mask_transfer_model = copy.deepcopy(current_model)
         copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
-        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
+        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set)
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         print("Stochastic dense performance")
-        StoDense_performance = test(current_model, use_cuda, testloader)
+        StoDense_performance = test(current_model, use_cuda, evaluation_set)
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
-        prune.global_unstructured(
-            weigths_to_prune(current_model),
-            pruning_method=prune.L1Unstructured,
-            amount=cfg.amount)
+
+        prune_with_rate(current_model, amount=cfg.amount)
+
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
         copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model)
         print("Performance for model {}".format(n))
 
-        stochastic_pruned_performance = test(current_model, use_cuda, testloader)
-        deterministic_with_stochastic_mask_performance.append(test(sto_mask_transfer_model, use_cuda, testloader))
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set)
+        deterministic_with_stochastic_mask_performance.append(test(sto_mask_transfer_model, use_cuda, evaluation_set))
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         current_model.cpu()
         pop.append(current_model)
+
     # len(pruned performance)-1 because the first one is the pruned original
     labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
     labels.extend(["sto mask transfer"] * len(deterministic_with_stochastic_mask_performance))
@@ -2044,9 +2072,9 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
     pruned_performance = np.array(pruned_performance)
     stochastic_dense_performances = np.array(stochastic_dense_performances)
     result = time.localtime(time.time())
-    np.save(
-        "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
-        pruned_performance)
+    # np.save(
+    #     "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
+    #     pruned_performance)
     # for i, model in enumerate(pop):
     #     with open("data/population_data/{}/model_{}.pkl".format(cfg.noise, i), "wb") as f:
     #         pickle.dump(model, f)
@@ -2062,7 +2090,6 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
     pr = format_percentages(cfg.amount)
     if cfg.noise == "geogaussian":
         plt.title(f"CIFAR10 Geometric Gaussian Noise $\sigma={sigma},pr={pr}$", fontsize=10)
-
     if cfg.noise == "gaussian":
         plt.title(f"CIFAR10 Additive Gaussian Noise $\sigma={sigma},pr={pr}$", fontsize=10)
 
@@ -2109,25 +2136,18 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig):
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}"
         f"_t_{result.tm_hour}"
-        f"-{result.tm_min}.pdf")
+        f"-{result.tm_min}_{eval_set}.pdf")
     plt.savefig(f"data/figures/transfers_comparison_{cfg.noise}_sigma_{cfg.sigma}_pr_{cfg.amount}_batchSize"
                 f"_{cfg.batch_size}_pop"
                 f"_{cfg.population}"
                 f"_t_{result.tm_hour}"
-                f"-{result.tm_min}.png")
+                f"-{result.tm_min}_{eval_set}.png")
 
 
 def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     use_cuda = torch.cuda.is_available()
-    net = None
-    if cfg.architecture == "resnet18" and "csgmcmc" in cfg.solution:
-        net = ResNet18()
-    else:
-        from alternate_models.resnet import ResNet18
-        net = ResNet18()
-
+    net = get_model(cfg)
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    load_model(net, cfg.solution)
     N = cfg.population
     pruned_performance = []
     stochastic_deltas = []
@@ -2139,7 +2159,7 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
 
     original_performance = test(net, use_cuda, testloader)
     pruned_original = copy.deepcopy(net)
-    weights_to_prune = weigths_to_prune(pruned_original)
+    weights_to_prune = weights_to_prune(pruned_original)
     prune.global_unstructured(
         weights_to_prune,
         pruning_method=prune.L1Unstructured,
@@ -2150,22 +2170,19 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     pruned_original_performance = test(pruned_original, use_cuda, testloader)
     pruned_performance.append(pruned_original_performance)
     for n in range(N):
-        current_model = copy.deepcopy(net)
         sto_mask_transfer_model = copy.deepcopy(net)
-        if cfg.noise == "gaussian":
-            current_model.apply(partial(add_gaussian_noise_to_weights, sigma=cfg.sigma))
-        elif cfg.noise == "geogaussian":
-            current_model.apply(partial(add_geometric_gaussian_noise_to_weights, sigma=cfg.sigma))
+        current_model = get_noisy_sample(net, cfg)
         det_mask_transfer_model = copy.deepcopy(current_model)
         copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         prune.global_unstructured(
-            weigths_to_prune(current_model),
+            weights_to_prune(current_model),
             pruning_method=prune.L1Unstructured,
             amount=cfg.amount)
-        # Here is where I transfer the mask from the prunec stochastic model to the
+        # Here is where I transfer the mask from the prune stochastic model to the
         # original weights and put it in the ranking
+
         copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model)
         print("Performance for model {}".format(n))
@@ -2183,29 +2200,7 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
     # index 0 of pruned_performance.
     result = time.localtime(time.time())
-    # np.save(
-    #     "data/population_data/performances_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
-    #     pruned_performance)
-    # with open("data/population_data/labels_{}_transfer_t_{}-{}.npy".format(cfg.noise, result.tm_hour, result.tm_min),
-    #           "wb") as f:
-    #     pickle.dump(labels, f)
-    #
-    # np.save(
-    #     "data/population_data/deltas_{}_sto_mask_to_ori_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.noise,
-    #                                                                                             cfg.population,
-    #                                                                                             result.tm_hour,
-    #                                                                                             result.tm_min),
-    #     np.array(sto_mask_to_ori_weights_deltas)
-    # )
-    #
-    # np.save(
-    #     "data/population_data/deltas_{}_det_mask_to_sto_weights_deltas_N_{}_t_{}-{}.npy".format(cfg.nois,
-    #                                                                                             cfg.population,
-    #                                                                                             result.tm_hour,
-    #                                                                                             result.tm_min),
-    #     np.array(ori_mask_to_sto_weights_deltas)
-    # )
-    #
+
     epsilon = []
     labels = []
     epsilon.extend(stochastic_deltas)
@@ -2317,6 +2312,7 @@ def get_model(cfg: omegaconf.DictConfig):
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
 
+############################### Plotting function #####################################################################
 def plot_ridge_plot(df: pd.DataFrame, path: str):
     """
     Simple wrapper for plotting a ridge plot
@@ -2358,15 +2354,14 @@ def plot_ridge_plot(df: pd.DataFrame, path: str):
 
 
 def plot_double_barplot(df: pd.DataFrame, ylabel1, ylabel2, title, path: str, xtick_labels: List[str], color1="blue",
-                        color2="red",logy1=False,logy2=False):
-
+                        color2="red", logy1=False, logy2=False):
     fig = plt.figure()  # Create matplotlib figure
 
     ax = fig.add_subplot(111)  # Create matplotlib axes
     ax2 = ax.twinx()  # Create another axes that shares the same x-axis as ax.
     width = 0.4
-    df.y1.plot(kind='bar', color=color1, ax=ax, width=width, position=1,logy=logy1)
-    df.y2.plot(kind='bar', color=color2, ax=ax2, width=width, position=0,logy=logy2)
+    df.y1.plot(kind='bar', color=color1, ax=ax, width=width, position=1, logy=logy1)
+    df.y2.plot(kind='bar', color=color2, ax=ax2, width=width, position=0, logy=logy2)
 
     ax.set_ylabel(ylabel1)
     ax2.set_ylabel(ylabel2)
@@ -2378,8 +2373,9 @@ def plot_double_barplot(df: pd.DataFrame, ylabel1, ylabel2, title, path: str, xt
     plt.title(title)
     plt.tight_layout()
     plt.savefig(path)
-def fancy_bloxplot(df,x,y,hue = None,path:str="figure.png",title="",save=True):
 
+
+def fancy_bloxplot(df, x, y1, y2, hue=None, path: str = "figure.png", title="", save=True):
     grped_bplot = sns.catplot(x=x,
                               y=y,
                               hue=hue,
@@ -2407,12 +2403,213 @@ def fancy_bloxplot(df,x,y,hue = None,path:str="figure.png",title="",save=True):
     plt.title(title, fontsize=12)
     # specify just one legend
     l = plt.legend(handles[:3], labels[:3])
+
     if save:
         plt.savefig(path, bbox_inches="tight")
-
+    plt.xticks(rotation=90)
     return plt.gcf()
 
-def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
+
+def stacked_barplot(df: pd.DataFrame, x, y1, y2, ylabel, hue=None, ax=None, path: str = "figure.png", title="",
+                    save=True,
+                    label1="Type = one",
+                    label2="Type = 2",
+                    color1="darkblue",
+                    color2="lightblue", rot=0, logscale=False):
+    # set the figure size
+    if not ax:
+        plt.figure(figsize=(14, 14))
+        # from raw value to percentage
+        # bar chart 1 -> top bars (group of 'smoker=No')
+        df["total"] = df[y1] + df[y2]
+        bar1 = sns.barplot(x=x, y="total", data=df, color=color1)
+        if logscale:
+            bar1.set_yscale("log")
+
+        # bar chart 2 -> bottom bars (group of 'smoker=Yes')
+        bar2 = sns.barplot(x=x, y=y2, data=df, estimator=sum, errorbar=None, color=color2)
+        if logscale:
+            bar2.set_yscale("log")
+
+        # add legend
+        top_bar = mpatches.Patch(color=color1, label=label1)
+        bottom_bar = mpatches.Patch(color=color2, label=label2)
+        # leg = plt.legend(handles=[top_bar, bottom_bar])
+        # add legends
+        # This is for getting large patches
+        leg = plt.legend(handles=[top_bar, bottom_bar], loc='upper right', labelspacing=1.5, handlelength=4)
+        for patch in leg.get_patches():
+            patch.set_height(22)
+            patch.set_y(-6)
+        plt.xticks(ticks=range(0, len(df[x])), labels=df[x], rotation=rot)
+        plt.ylabel(ylabel, fontsize=14)
+        plt.title(title, fontsize=15)
+        plt.tight_layout()
+        # show the graph
+        if save:
+            plt.savefig(path)
+        else:
+            return plt.gcf()
+    else:
+        # from raw value to percentage
+        # bar chart 1 -> top bars (group of 'smoker=No')
+        bar1 = sns.barplot(x=x, y=y1, data=df, ax=ax, color=color1)
+        bar1.set_yscale("log")
+        # bar chart 2 -> bottom bars (group of 'smoker=Yes')
+        bar2 = sns.barplot(x=x, y=y2, data=df, ax=ax, color=color2)
+        bar2.set_yscale("log")
+        # add legend
+        top_bar = mpatches.Patch(color=color1, label=label1)
+        bottom_bar = mpatches.Patch(color=color2, label=label2)
+        ax.legend(handles=[top_bar, bottom_bar])
+        ax.set_xticklabels(rotation=rot)
+
+        # show the graph
+        if save:
+            plt.savefig(path)
+        else:
+            return plt.gcf()
+
+
+def stacked_barplot_with_third_subplot(df: pd.DataFrame, x, y1, y2, y3, label1, label2, path: str = "", title=""):
+    fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
+    fig = stacked_barplot(df, x, y1, y2, ylabel="Count", ax=axes[0], label1=label1, label2=label2, color1="blue",
+                          color2="orange")
+    ax2 = axes[1]
+    bar3 = sns.barplot(x=x, y=y3, data=df, ax=ax2, color="darkblue")
+    bar3.set_ylabel("Count")
+    bar3.set_scale("log")
+    ax2.suptitle(label3)
+    plt.xticks(ticks=range(1, len(df[x]) + 1), labels=df[x], rotation=90)
+    plt.tight_layout()
+    plt.title(title, fontsize=15)
+    if path:
+        plt.savefig(path)
+        plt.close()
+    else:
+        return plt.gcf()
+
+
+######################################## Check functions ##########################################################
+def layers_to_vector(layers_params: typing.List[torch.Tensor]):
+    flatten_list = [tensor.flatten().detach() for tensor in layers_params]
+    full_vector = torch.cat(flatten_list)
+    return full_vector
+
+
+def get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers: typing.List[torch.Tensor], pruning_rate: float):
+    full_vector = layers_to_vector(list_of_layers)
+    magnitudes = torch.abs(full_vector)
+    total = len(full_vector)
+    sorted_index = torch.argsort(magnitudes)
+    index_of_threshold = math.floor(total * pruning_rate)
+    threshold = magnitudes[sorted_index[index_of_threshold]]
+    full_vector[sorted_index[:index_of_threshold]] = 0
+    number_of_zeros = len(torch.where(full_vector == 0)[0])
+    assert number_of_zeros == index_of_threshold, "Length of 0s in full vector is not the same as the" \
+                                                  f"index threshold: " \
+                                                  f"{number_of_zeros}!=" \
+                                                  f"{index_of_threshold}"
+
+    return threshold, index_of_threshold, full_vector
+
+
+def get_df_pruned_by_layer(names: typing.List[str], weights: typing.List[torch.nn.Module], function: typing.Callable,
+                          cfg: omegaconf.DictConfig) -> typing.Tuple[pd.DataFrame, float, int, torch.Tensor]:
+    elements = np.array(list(map(function, weights)))
+    sorted_indexes_by_function = np.flip(np.argsort(elements))
+
+    threshold, index_of_threshold, pruned_vector = get_threshold_and_pruned_vector_from_pruning_rate(weights,
+                                                                                                     cfg.amount)
+    new_weights = copy.deepcopy(weights)
+
+    vector_to_parameters(pruned_vector, new_weights)
+
+    layer_survived = []
+    layer_died = []
+    for w in [new_weights[i] for i in sorted_indexes_by_function]:
+        survived = len(torch.where(w != 0)[0])
+        died = w.nelement() - survived
+        layer_survived.append(survived)
+        layer_died.append(died)
+    le_dictionary = {"Layer": [names[i] for i in sorted_indexes_by_function], "Survived": layer_survived,
+                     "Pruned": layer_died}
+    df = pd.DataFrame(le_dictionary)
+    return df, threshold, index_of_threshold, pruned_vector
+
+
+def get_df_changes_by_layer(names: typing.List[str], weights: typing.List[torch.nn.Module], vector1: torch.Tensor,
+                            vector2: torch.Tensor,
+                            function:
+                            typing.Callable):
+    elements = np.array(list(map(function, weights)))
+    sorted_indexes_by_function = np.flip(np.argsort(elements))
+    difference_vector = torch.bitwise_xor(vector1.type(torch.bool),vector2.type(torch.bool))
+    w = copy.deepcopy(weights)
+    vector_to_parameters(difference_vector, w)
+    number_different_per_layer = []
+
+    for diff_vec in w:
+        number_different_per_layer.append(diff_vec.sum().item())
+
+    le_dictionary = {"Layer": [names[i] for i in sorted_indexes_by_function], "Changed":number_different_per_layer}
+    df = pd.DataFrame(le_dictionary)
+    return df
+
+def check_noise_impact_in_weights_by_layer(cfg):
+    net = get_model(cfg)
+    names, weights = zip(*get_layer_dict(net))
+    N = cfg.population
+    # BarPlot the original weights pruned at level cfg.amount
+    number_param = lambda w: w.nelement()
+    df, threshold, index_threshold, pruned_vector = get_df_pruned_by_layer(names=names, weights=weights,
+                                                                           function=number_param, cfg=cfg)
+    pruned_original = copy.deepcopy(net)
+    prune_with_rate(pruned_original, amount=cfg.amount)
+    deterministic_pruned_buffer_vector = parameters_to_vector(pruned_original.buffers())
+    names_pruned, weights_pruned = zip(*get_layer_dict(pruned_original))
+    # remove_reparametrization(pruned_original)
+    # zeros = count_zero_parameters(pruned_original)
+    stacked_barplot(df,
+                    x="Layer",
+                    y1="Survived",
+                    y2="Pruned",
+                    ylabel="Count",
+                    path="test_pr_{}.pdf".format(cfg.amount),
+                    title="Pruning rate " f"{cfg.amount} "+f" Pruning Threshold={threshold}",
+                    label1="Survived",
+                    label2="Pruned",
+                    rot=90,
+                    logscale=True
+                    )
+    plt.close()
+
+
+    first_sample = get_noisy_sample(net, cfg)
+    prune_with_rate(first_sample, amount=cfg.amount)
+    stochastic_pruned_buffer_vector = parameters_to_vector(first_sample.buffers())
+    # remove_reparametrization(first_sample)
+    df_stochastic = get_df_changes_by_layer(names,weights,deterministic_pruned_buffer_vector,
+                                        stochastic_pruned_buffer_vector,
+                             number_param)
+    fig = plt.figure()
+    ax = df_stochastic.plot.bar(x='Layer', y='Changed', rot=90)
+    ax.set_xlabel("Layers by number of parameters "+r"$+\;\rightarrow\;-$")
+    ax.set_yscale("log")
+    plt.ylabel("Count")
+    plt.tight_layout()
+    plt.savefig(f"changes_single_sample_pr_{cfg.amount}.png")
+    plt.close()
+
+def iterative_stochastic_pruning(cfg:omegaconf.DictConfig):
+    pass
+
+def two_step_iterative_pruning(cfg:omegaconf.DictConfig):
+    pass
+
+def gradient_decent_on_sigma_pr():
+    pass
+def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
     average_magnitude = lambda w: torch.abs(w).mean()
@@ -2434,21 +2631,23 @@ def check_sigma_normalization_againts_weights(cfg: omegaconf.DictConfig):
     #     "data/weights_by_size.csv", sep=",", index=False
     # )
     df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
-    # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
-    df.rename(columns={"g":"Layer Name","x":"Weight magnitude"},inplace=True)
-    fancy_bloxplot(df,x="Layer Name",y="Weight magnitude")
+    # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
+    df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
+    quantile_df = df.groupby("Layer Name").quantile([0.25,0.5,0.75])
+    # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
+    quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",", index=False)
 
     ########################## This is double bar plot ################################################
 
-    y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
-    title = r"$\sigma = {}$".format(cfg.sigma)
-
-    df2 = pd.DataFrame(data={"y1": ratios[sorted_idexes_by_ratios].transpose(), "y2": elements[
-        sorted_idexes_by_ratios].transpose()})
-    xtick_labels = [names[i] for i in sorted_idexes_by_ratios]
-    plot_double_barplot(df2,y_axes_label,"Number of parameters",title,f"data/figures/sigma_"
-                                                                     f"{cfg.sigma}_V_original_weights.png",
-                        xtick_labels,logy2=True)
+    # y_axes_label = r"$\frac{\bar{\mid w \mid}}{\sigma}$"
+    # title = r"$\sigma = {}$".format(cfg.sigma)
+    #
+    # df2 = pd.DataFrame(data={"y1": ratios[sorted_idexes_by_ratios].transpose(), "y2": elements[
+    #     sorted_idexes_by_ratios].transpose()})
+    # xtick_labels = [names[i] for i in sorted_idexes_by_ratios]
+    # plot_double_barplot(df2,y_axes_label,"Number of parameters",title,f"data/figures/sigma_"
+    #                                                                  f"{cfg.sigma}_V_original_weights.png",
+    #                     xtick_labels,logy2=True)
 
 
 def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.DictConfig):
@@ -2502,7 +2701,7 @@ def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.D
             current_df = current_df[current_df["Pruning Rate"] == current_pr]
 
             pruned_original = copy.deepcopy(net)
-            weights_to_prune = weigths_to_prune(pruned_original)
+            weights_to_prune = weights_to_prune(pruned_original)
             prune.global_unstructured(
                 weights_to_prune,
                 pruning_method=prune.L1Unstructured,
@@ -2683,14 +2882,21 @@ if __name__ == '__main__':
         "model": "5",
         "noise": "gaussian",
         "type": "alternative",
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.001,
+        "sigma": 0.0021419609859022197,
+        # "sigma": 0.001,
         "amount": 0.90,
         "batch_size": 512,
         "num_workers": 1,
         "use_wandb": True
     })
-    check_sigma_normalization_againts_weights(cfg)
+    # transfer_mask_rank_experiments(cfg,eval_set="val")
+    weights_analysis_per_weight(cfg)
+    # pruning_rates = [0.95, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8, 0.75, 0.7, 0.6, 0.5, ]
+    # for pr in pruning_rates:
+    #     cfg.amount = pr
+    #     check_noise_impact_in_weights_by_layer(cfg)
+
+    # check_sigma_normalization_against_weights(cfg)
     # fp = "data/epsilon_experiments_t_1-33_full.csv"
     # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
     # sigmas = [0.001,0.002,0.005]
@@ -2706,19 +2912,11 @@ if __name__ == '__main__':
     # df1.to_csv(fp,sep=",", index=False)
     # single_statistics_of_epsilon_for_stochastic_pruning(fp)
     # statistics_of_epsilon_for_stochastic_pruning("data/epsilon_experiments_t_0-59.csv")
-    # run_layer_experiment(cfg)
-    # get_intelligent_pruned_network(cfg)
-    # get_best_pruning_strategy(cfg)
-    # heatmap1_exp(cfg)
+
     # pruning_rates = [0.95,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
     # for pr in pruning_rates:
     #     cfg.amount = pr
     #     main(cfg)
-    # main(cfg)
-    # plot_heatmaps(cfg)
-    # plot_heatmaps(cfg,plot_index=0)
-    # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    # heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
 
     # heatmap1_exp(cfg)
     # cfg = omegaconf.DictConfig({
@@ -2732,13 +2930,3 @@ if __name__ == '__main__':
     #     "num_workers":1,
     #     "use_wandb": False
     # })
-    # heatmap2_mean_decrease_maskTransfer_exp_to_stochastic(cfg)
-    # heatmap1_exp(cfg)
-    # heatmap2_mean_decrease_maskTransfer_exp(cfg)
-    # plot_heatmaps(cfg)
-    # plot_heatmaps(cfg, plot_index=0)
-    # main(cfg)
-    # noise_calibration(cfg)
-    # plot_layer_experiments("a")
-    # plot_layer_experiments("b")
-    # run_layer_experiment(cfg)
