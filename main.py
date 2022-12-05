@@ -2633,7 +2633,7 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
     # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
-    # df = df['Weight magnitude'].apply(lambda x: float(x.replace("tensor(","").replace(")","")))
+    df = df['Weight magnitude'].apply(lambda x: np.abs(x))
     def q25(x):
         return x.quantile(0.25)
 
@@ -2647,7 +2647,9 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     quantile_df = df.groupby('Layer Name').agg(vals)
     # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
     # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
-    quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",")
+    print(quantile_df)
+    quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",",index=True)
+    
 
     ########################## This is double bar plot ################################################
 
