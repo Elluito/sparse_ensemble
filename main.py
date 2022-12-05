@@ -2609,7 +2609,7 @@ def two_step_iterative_pruning(cfg:omegaconf.DictConfig):
 
 def gradient_decent_on_sigma_pr():
     pass
-def weights_analysis_per_layer(cfg: omegaconf.DictConfig):
+def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
     average_magnitude = lambda w: torch.abs(w).mean()
@@ -2634,7 +2634,18 @@ def weights_analysis_per_layer(cfg: omegaconf.DictConfig):
     # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
     # df = df['Weight magnitude'].apply(lambda x: float(x.replace("tensor(","").replace(")","")))
-    quantile_df = df.groupby("Layer Name").quantile([0.25,0.5,0.75])
+    def q25(x):
+        return x.quantile(0.25)
+
+    def q50(x):
+        return x.quantile(0.50)
+
+    def q75(x):
+        return x.quantile(0.75)
+
+    vals = {'Weight magnitude': [q25, q50, q75]}
+    quantile_df = df.groupby('Layer Name').agg(vals)
+    # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
     # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
     quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",", index=False)
 
@@ -2891,7 +2902,7 @@ if __name__ == '__main__':
         "use_wandb": True
     })
     # transfer_mask_rank_experiments(cfg,eval_set="val")
-    weights_analysis_per_layer(cfg)
+    weights_analysis_per_weight(cfg)
     # pruning_rates = [0.95, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8, 0.75, 0.7, 0.6, 0.5, ]
     # for pr in pruning_rates:
     #     cfg.amount = pr
