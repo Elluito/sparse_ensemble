@@ -2647,7 +2647,7 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     quantile_df = df.groupby('Layer Name').agg(vals)
     # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
     # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
-    quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",", index=False)
+    quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",")
 
     ########################## This is double bar plot ################################################
 
