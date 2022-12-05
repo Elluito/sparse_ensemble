@@ -2609,7 +2609,7 @@ def two_step_iterative_pruning(cfg:omegaconf.DictConfig):
 
 def gradient_decent_on_sigma_pr():
     pass
-def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
+def weights_analysis_per_layer(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
     average_magnitude = lambda w: torch.abs(w).mean()
@@ -2891,7 +2891,7 @@ if __name__ == '__main__':
         "use_wandb": True
     })
     # transfer_mask_rank_experiments(cfg,eval_set="val")
-    weights_analysis_per_weight(cfg)
+    weights_analysis_per_layer(cfg)
     # pruning_rates = [0.95, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8, 0.75, 0.7, 0.6, 0.5, ]
     # for pr in pruning_rates:
     #     cfg.amount = pr
