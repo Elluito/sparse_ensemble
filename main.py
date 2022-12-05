@@ -2626,13 +2626,14 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     #     we.extend(w)
     #     for i in range(len(w)):
     #        n = np.append(n,names_by_size[j])
-    # df = pd.DataFrame(data={"x": we, "g": n})
+    # df = pd.DataFrame(data={"x": float(we), "g": n})
     # df.to_csv(
     #     "data/weights_by_size.csv", sep=",", index=False
     # )
     df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
     # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
+    # df = df['Weight magnitude'].apply(lambda x: float(x.replace("tensor(","").replace(")","")))
     quantile_df = df.groupby("Layer Name").quantile([0.25,0.5,0.75])
     # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
     quantile_df.to_csv("data/quantiles_of_weights_per_layer.csv", sep=",", index=False)
