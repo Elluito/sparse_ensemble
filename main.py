@@ -2633,7 +2633,9 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
     # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
     df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
-    df = df['Weight magnitude'].apply(lambda x: np.abs(x))
+    df["Weight magnitude"] = df['Weight magnitude'].apply(lambda x: np.abs(x))
+    print(df)
+
     def q25(x):
         return x.quantile(0.25)
 
