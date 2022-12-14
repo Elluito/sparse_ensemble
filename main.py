@@ -164,7 +164,6 @@ def get_layer_dict(model):
 def save_onnx(cfg):
     data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                "University of Leeds\PhD\Datasets\CIFAR10"
-    use_cuda = torch.cuda.is_available()
     net = ResNet18()
     # transform_train = transforms.Compose([
     #     transforms.RandomCrop(32, padding=4),
@@ -313,12 +312,59 @@ def add_geometric_gaussian_noise_to_weights(m, sigma=0.2):
             m.weight.multiply_(torch.normal(mean=torch.ones_like(m.weight), std=sigma).to(m.weight.device))
 
 
-def add_gaussian_noise_to_weights(m, sigma=0.01):
+def add_gaussian_noise_to_weights(m, sigma=0.01, adaptive=False):
     with torch.no_grad():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d):
-            m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
+            if adaptive:
+                sigma_adaptive = torch.quantile(torch.abs(m.weight), torch.tensor([0.50]))
+                m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma_adaptive).to(m.weight.device))
+            else:
+                m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
+
+def add_geogaussian_noise_to_layers(model: torch.nn.Module, sigma_per_layer: dict, exclude_layers: list = []):
+    named_modules = model.named_modules()
+
+    with torch.no_grad():
+        for name, m in named_modules:
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m,
+                                                                                     nn.BatchNorm2d) and not isinstance(
+                m, nn.BatchNorm3d) and name not in exclude_layers:
+                sigma = sigma_per_layer[name]
+                m.weight.multiply_(torch.normal(mean=torch.ones_like(m.weight), std=sigma).to(m.weight.device))
+
+
+def add_gaussian_noise_to_layers(model: torch.nn.Module, sigma_per_layer: dict, iterative: bool = False, exclude_layers:
+list =
+[]):
+    named_modules = model.named_modules()
+    with torch.no_grad():
+        for name, m in named_modules:
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m,
+                                                                                     nn.BatchNorm2d) and not isinstance(
+                m, nn.BatchNorm3d) and name not in exclude_layers:
+                sigma = sigma_per_layer[name]
+                if "weight_mask" in dict(m.named_buffers()).keys() and iterative:
+                    weight_mask = dict(m.named_buffers())["weight_mask"]
+                    noise = torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device)
+                    noise.mul_(weight_mask)
+                    m.weight.add_(noise)
+                else:
+                    m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
+
+
+def get_noisy_sample_sigma_per_layer(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer):
+    current_model = copy.deepcopy(net)
+    if cfg.noise == "gaussian":
+        add_gaussian_noise_to_layers(current_model, sigma_per_layer=sigma_per_layer, exclude_layers=cfg.exclude_layers)
+    elif cfg.noise == "geogaussian":
+        add_geogaussian_noise_to_layers(current_model, sigma_per_layer=sigma_per_layer,
+                                        exclude_layers=cfg.exclude_layers)
+    return current_model
+
+
+# def get_noisy_sample_pruned_net_work(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer):
 
 def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig):
     current_model = copy.deepcopy(net)
@@ -330,9 +376,7 @@ def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig):
 
 
 ##################################################################################################################
-##################################################################################################################
 
-##################################################################################################################
 def test(net, use_cuda, testloader, one_batch=False, verbose=2):
     if use_cuda:
         net.cuda()
@@ -367,11 +411,11 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2):
     return 100. * correct.item() / total
 
 
-def weights_to_prune(model):
+def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
     modules = []
-    for m in model.modules():
+    for name, m in model.named_modules():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
-                m, nn.BatchNorm3d):
+                m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
     return modules
 
@@ -561,7 +605,8 @@ def copy_buffers(from_net: nn.Module, to_net: nn.Module):
     for name, m in iter_1:
         with torch.no_grad():
             if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
-                    isinstance(m, nn.BatchNorm3d):
+                    isinstance(m, nn.BatchNorm3d) and "weight_mask" in list(dict(from_net.named_modules())[
+                                                                                name].named_buffers()):
                 weight_mask = dict(dict(from_net.named_modules())[name].named_buffers())["weight_mask"]
                 m.weight.data.mul_(weight_mask)
 
@@ -1531,9 +1576,9 @@ def get_intelligent_pruned_network(cfg):
 
 
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], type: str = "global", criterion: str =
-"l1"):
+"l1", exclude_layers=[]):
     if type == "global":
-        weights = weights_to_prune(net)
+        weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
         if criterion == "l1":
             prune.global_unstructured(
                 weights,
@@ -1988,11 +2033,36 @@ def get_stochastic_pruning_results_on(cfg):
     pass
 
 
+def one_shot_iterative_sotchastic_pruning(cfg):
+    # TODO implement the algorithm for one shot pruning wit optimization of the pruning rate and the
+    #
+
+    pass
+
+
+###############################  Channel inspection
+# ############################################
+def channel_inspection_of_convolutional_layers(pruned_model: torch.nn.Module, exclude_layer_list=[]):
+    histograms_of_0_per_layer = {}
+    for name, m in pruned_model.named_modules():
+        if hasattr(m, 'weight') and isinstance(m, nn.Conv2d) and name not in exclude_layer_list:
+
+            # input channels X output shanels X dim1 kernel X dim2 kernel
+            weight_copy = m.weight.detach().clone().numpy()
+            in_channels, out_channels, dim1k, dim2k = weight_copy.shape
+
+            for output_index in range(out_channels):
+                slice_weight = weight_copy[:, output_index, :, :]
+                slice_weight.reshape((in_channels, dim1k * dim2k))
+
+            # histograms_of_0_per_layer[]
+
+            modules.append((m, "weight"))
+
+
 ############################### Experiments 25 of October # ############################################################
 
-def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "test"):
-    use_cuda = torch.cuda.is_available()
-    net = get_model(cfg)
+def select_eval_set(cfg: omegaconf.DictConfig, eval_set: str):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     evaluation_set = None
     if eval_set == "test":
@@ -2003,7 +2073,13 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
         evaluation_set = trainloader
     else:
         raise Exception("Invalid evaluation set {} is not valid".format(eval_set))
+    return evaluation_set
 
+
+def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "test"):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    evaluation_set = select_eval_set(cfg, eval_set)
     N = cfg.population
     pop = []
     pruned_performance = []
@@ -2011,13 +2087,12 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
     stochastic_deltas = []
     deterministic_with_stochastic_mask_performance = []
     stochastic_with_deterministic_mask_performance = []
-
-    original_performance = test(net, use_cuda, valloader)
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     pruned_original = copy.deepcopy(net)
     prune_with_rate(pruned_original, cfg.amount)
     # remove_reparametrization(pruned_original)
     print("pruned_performance of pruned original")
-    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set)
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     pop.append(pruned_original)
     pruned_performance.append(pruned_original_performance)
     labels = ["pruned original"]
@@ -2029,10 +2104,11 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
 
         det_mask_transfer_model = copy.deepcopy(current_model)
         copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
-        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set)
+        det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         print("Stochastic dense performance")
-        StoDense_performance = test(current_model, use_cuda, evaluation_set)
+        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
 
@@ -2044,8 +2120,9 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
         remove_reparametrization(current_model)
         print("Performance for model {}".format(n))
 
-        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set)
-        deterministic_with_stochastic_mask_performance.append(test(sto_mask_transfer_model, use_cuda, evaluation_set))
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        deterministic_with_stochastic_mask_performance.append(test(sto_mask_transfer_model, use_cuda, evaluation_set,
+                                                                   verbose=1))
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         current_model.cpu()
@@ -2080,7 +2157,10 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
     #         pickle.dump(model, f)
     del pop
     cutoff = original_performance - 2
-
+    # plot_population_ranking_with_cutoff(cfg, original_performance, cutoff, pruned_performance, ranked_index,
+    #                                     stochastic_dense_performances, index_of_pruned_original, labels, result,
+    #                                     eval_set, "static")
+    ################################# plotting the comparison #########################################################
     fig = plt.figure()
     plt.axhline(y=original_performance, color="k", linestyle="-", label="Original dense pruned_performance")
     plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
@@ -2144,6 +2224,211 @@ def transfer_mask_rank_experiments(cfg: omegaconf.DictConfig, eval_set: str = "t
                 f"-{result.tm_min}_{eval_set}.png")
 
 
+def transfer_mask_rank_experiments_plot_adaptive_noise(cfg: omegaconf.DictConfig, eval_set: str = "test"):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+                                     names=["layer", "q25", "q50", "q75"])
+
+    sigma_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+
+    N = cfg.population
+    pruned_performance = []
+    stochastic_static_dense_performances = []
+    stochastic_dynamic_dense_performances = []
+
+    dynamic_pruned_performance = []
+    stochastic_deltas = []
+    sto_mask_to_ori_weights_deltas = []
+    ori_mask_to_sto_weights_deltas = []
+
+    original_with_stochastic_mask_performance = []
+    stochastic_with_deterministic_mask_performance = []
+    original_performance = test(net, use_cuda, evaluation_set)
+    pruned_original = copy.deepcopy(net)
+
+    prune_with_rate(pruned_original, amount=cfg.amount, exclude_layers=cfg.exclude_layers)
+
+    # remove_reparametrization(pruned_original)
+    print("pruned_performance of pruned original")
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+
+    pruned_performance.append(pruned_original_performance)
+    stochastic_static_dense_performances.append(original_performance)
+
+    plot_labels = ["pruned original"]
+
+    for n in range(N):
+        sto_mask_transfer_model = copy.deepcopy(net)
+        current_model_static_noise = get_noisy_sample(net, cfg)
+
+        stochastic_static_dense_performance = test(current_model_static_noise, use_cuda, evaluation_set, verbose=1)
+        stochastic_static_dense_performances.append(stochastic_static_dense_performance)
+        current_model_dynamic_noise = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        stochastic_dynamic_dense_performance = test(current_model_static_noise, use_cuda, evaluation_set, verbose=1)
+        stochastic_dynamic_dense_performances.append(stochastic_dynamic_dense_performance)
+
+        det_mask_transfer_model = copy.deepcopy(current_model_static_noise)
+        copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+        # print("Performance for dense model {}".format(n))
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+
+        # prune current model static noise
+        prune_with_rate(current_model_static_noise, cfg.amount, exclude_layers=cfg.exclude_layers)
+
+        # prune current model dynamic noise
+
+        prune_with_rate(current_model_dynamic_noise, cfg.amount, exclude_layers=cfg.exclude_layers)
+
+        # Here is where I transfer the mask from the prune stochastic model to the
+        # original weights and put it in the ranking
+
+        copy_buffers(from_net=current_model_static_noise, to_net=sto_mask_transfer_model)
+
+        # remove_reparametrization(current_model_static_noise)
+
+        print("Performance for static stochastic pruned model {}".format(n))
+        stochastic_pruned_performance = test(current_model_static_noise, use_cuda, evaluation_set, verbose=1)
+        print("Performance for dynamic stochastic pruned model {}".format(n))
+        stochastic_dynamic_pruned_performance = test(current_model_dynamic_noise, use_cuda, evaluation_set, verbose=1)
+
+        # print("Performance for Transfer sto mask {} to model".format(n))
+        # # original_with_sto_mask = test(sto_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+        # original_with_stochastic_mask_performance.append(original_with_sto_mask)
+
+        pruned_performance.append(stochastic_pruned_performance)
+        dynamic_pruned_performance.append(stochastic_dynamic_pruned_performance)
+
+        stochastic_deltas.append(original_performance - stochastic_pruned_performance)
+        # sto_mask_to_ori_weights_deltas.append(original_performance - original_with_sto_mask)
+        # ori_mask_to_sto_weights_deltas.append(original_performance - det_mask_transfer_model_performance)
+    # len(pruned performance)-1 because the first one is the pruned original
+    # Deterministic mask transfer to stochastic model
+    plot_labels.extend(["static stochastic pruned"] * (len(pruned_performance) - 1))
+    plot_labels.extend(["dynamic stochastic pruned"] * (len(dynamic_pruned_performance)))
+    pruned_performance.extend(dynamic_pruned_performance)
+    stochastic_static_dense_performances.extend(stochastic_dynamic_dense_performances)
+
+    # Deterministic mask transfer to stochastic model
+    # plot_labels.extend(["det mask transfer"] * len(stochastic_with_deterministic_mask_performance))
+    # pruned_performance.extend(stochastic_with_deterministic_mask_performance)
+    # stochastic_static_dense_performances.extend([1] * len(stochastic_with_deterministic_mask_performance))
+
+    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # index 0 of pruned_performance.
+
+    assert len(plot_labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+                                                        f"{len(plot_labels)}!={len(pruned_performance)}"
+
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+
+    pruned_performance = np.array(pruned_performance)
+    stochastic_static_dense_performances = np.array(stochastic_static_dense_performances)
+
+    result = time.localtime(time.time())
+    epsilon = []
+    labels = []
+    epsilon.extend(stochastic_deltas)
+    labels.extend(["stochastic pruning"] * len(stochastic_deltas))
+    epsilon.extend(sto_mask_to_ori_weights_deltas)
+    labels.extend(["Sto. mask original weights"] * len(sto_mask_to_ori_weights_deltas))
+    epsilon.extend(ori_mask_to_sto_weights_deltas)
+    labels.extend(["Det. mask sto. weights"] * len(ori_mask_to_sto_weights_deltas))
+    df_sigmas = [format_sigmas(cfg.sigma)] * len(labels)
+    df_N = [cfg.population] * len(labels)
+    df_pr = [cfg.amount] * len(labels)
+    results = {"Epsilon": epsilon, "Population": df_N, "Type": labels, "Pruning Rate": df_pr, "sigma": df_sigmas}
+    df = pd.DataFrame(results)
+
+    # plot_population_ranking_with_cutoff(cfg, original_performance, cutoff=original_performance - 2,
+    #                                     pruned_performance=pruned_performance, ranked_index=ranked_index,
+    #                                     stochastic_static_dense_performances=stochastic_static_dense_performances,
+    #                                     index_of_pruned_original=index_of_pruned_original,
+    #                                     labels=labels, time_object=result, eval_set=eval_set, identifier="ADAPTIVE")
+    cutoff = original_performance - 2
+    ######################################### Plot the comparisons #####################################################
+    fig = plt.figure()
+    plt.axhline(y=original_performance, color="k", linestyle="-", label="Original dense pruned_performance")
+    plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
+    plt.xlabel("Ranking index", fontsize=20)
+    plt.ylabel("Accuracy", fontsize=20)
+    sigma = format_sigmas(cfg.sigma)
+    pr = format_percentages(cfg.amount)
+    if cfg.noise == "geogaussian":
+        plt.title(f"CIFAR10 Geometric Gaussian Noise $pr={pr}$", fontsize=10)
+    if cfg.noise == "gaussian":
+        plt.title(f"CIFAR10 Additive Gaussian Noise $pr={pr}$", fontsize=10)
+
+    stochastic_static_models_points_dense = []
+    stochastic_static_models_points_pruned = []
+
+    stochastic_dynamic_models_points_dense = []
+    stochastic_dynamic_models_points_pruned = []
+
+    transfer_mask_models_points = []
+    stochastic_with_deterministic_mask_models_points = []
+
+    p1 = None
+
+    for i, element in enumerate(pruned_performance[ranked_index]):
+        if i == index_of_pruned_original:
+            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+                                                           f"in list {element} VS pruned performance:" \
+                                                           f" {pruned_original_performance}"
+            p1 = plt.scatter(i, element, c="g", marker="o")
+        else:
+            if plot_labels[ranked_index[i]] == "sto mask transfer":
+                sto_transfer_point = plt.scatter(i, element, c="tab:orange", marker="P")
+                transfer_mask_models_points.append(sto_transfer_point)
+            elif plot_labels[ranked_index[i]] == "det mask transfer":
+                det_transfer_point = plt.scatter(i, element, c="tab:olive", marker="X")
+                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+
+            elif plot_labels[ranked_index[i]] == "static stochastic pruned":
+                pruned_point = plt.scatter(i, element, c="b", marker="x")
+                stochastic_static_models_points_pruned.append(pruned_point)
+            elif plot_labels[ranked_index[i]] == "dynamic stochastic pruned":
+                pruned_point = plt.scatter(i, element, c="b", marker="d")
+                stochastic_dynamic_models_points_pruned.append(pruned_point)
+
+    for i, element in enumerate(stochastic_static_dense_performances[ranked_index]):
+        if i == index_of_pruned_original or element == 1:
+            continue
+            # plt.scatter(i, element, c="y", marker="o", label="original model performance")
+        elif plot_labels[ranked_index[i]] == "static stochastic pruned":
+            dense_point = plt.scatter(i, element, c="c", marker="1")
+            stochastic_static_models_points_dense.append(dense_point)
+        elif plot_labels[ranked_index[i]] == "dynamic stochastic pruned":
+            dense_point = plt.scatter(i, element, c="c", marker="D")
+            stochastic_dynamic_models_points_dense.append(dense_point)
+
+    plt.legend([tuple(stochastic_static_models_points_pruned), tuple(stochastic_static_models_points_dense), p1,
+                tuple(stochastic_dynamic_models_points_pruned), tuple(stochastic_dynamic_models_points_dense)],
+               ['Pruned static stochastic', 'Dense static stochastic', "Original model pruned",
+                "Pruned dynamic stochastic",
+                "Dense dynamic stochastic"],
+               scatterpoints=1,
+               numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+    plt.tight_layout()
+    plt.savefig(
+        f"data/figures/adaptive_V_static_comparison_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}"
+        f"_t_{result.tm_hour}"
+        f"-{result.tm_min}_{eval_set}.pdf")
+    plt.savefig(f"data/figures/adaptive_V_static_comparison_{cfg.noise}_sigma_{cfg.sigma}_pr_{cfg.amount}_batchSize"
+                f"_{cfg.batch_size}_pop"
+                f"_{cfg.population}"
+                f"_t_{result.tm_hour}"
+                f"-{result.tm_min}_{eval_set}.png")
+    return df
+
+
 def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
@@ -2200,7 +2485,6 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
     # index 0 of pruned_performance.
     result = time.localtime(time.time())
-
     epsilon = []
     labels = []
     epsilon.extend(stochastic_deltas)
@@ -2312,7 +2596,16 @@ def get_model(cfg: omegaconf.DictConfig):
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
 
-############################### Plotting function #####################################################################
+############################### Plotting functions #####################################################################
+def plot_histograms_per_group(df: pd.DataFrame, variable,group,title="",path: str="histogram.pdf"):
+    fig = plt.figure()
+    fig = df[variable].hist(by=df[group])
+    plt.title(title,fontsize=20)
+    plt.tight_layout()
+    plt.savefig(path)
+    plt.close()
+
+
 def plot_ridge_plot(df: pd.DataFrame, path: str):
     """
     Simple wrapper for plotting a ridge plot
@@ -2375,7 +2668,7 @@ def plot_double_barplot(df: pd.DataFrame, ylabel1, ylabel2, title, path: str, xt
     plt.savefig(path)
 
 
-def fancy_bloxplot(df, x, y1, y2, hue=None, path: str = "figure.png", title="", save=True):
+def fancy_bloxplot(df, x, y1, y2, hue=None, path: str = "figure.png", title="", save=True,rot=0):
     grped_bplot = sns.catplot(x=x,
                               y=y,
                               hue=hue,
@@ -2406,7 +2699,7 @@ def fancy_bloxplot(df, x, y1, y2, hue=None, path: str = "figure.png", title="", 
 
     if save:
         plt.savefig(path, bbox_inches="tight")
-    plt.xticks(rotation=90)
+    plt.xticks(rotation=rot)
     return plt.gcf()
 
 
@@ -2511,11 +2804,11 @@ def get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers: typing.Lis
                                                   f"{number_of_zeros}!=" \
                                                   f"{index_of_threshold}"
 
-    return threshold, index_of_threshold, full_vector
+    return float(threshold), index_of_threshold, full_vector
 
 
 def get_df_pruned_by_layer(names: typing.List[str], weights: typing.List[torch.nn.Module], function: typing.Callable,
-                          cfg: omegaconf.DictConfig) -> typing.Tuple[pd.DataFrame, float, int, torch.Tensor]:
+                           cfg: omegaconf.DictConfig) -> typing.Tuple[pd.DataFrame, float, int, torch.Tensor]:
     elements = np.array(list(map(function, weights)))
     sorted_indexes_by_function = np.flip(np.argsort(elements))
 
@@ -2541,20 +2834,28 @@ def get_df_pruned_by_layer(names: typing.List[str], weights: typing.List[torch.n
 def get_df_changes_by_layer(names: typing.List[str], weights: typing.List[torch.nn.Module], vector1: torch.Tensor,
                             vector2: torch.Tensor,
                             function:
-                            typing.Callable):
-    elements = np.array(list(map(function, weights)))
-    sorted_indexes_by_function = np.flip(np.argsort(elements))
-    difference_vector = torch.bitwise_xor(vector1.type(torch.bool),vector2.type(torch.bool))
+                            typing.Callable = None):
+    if function:
+        elements = np.array(list(map(function, weights)))
+        sorted_indexes_by_function = np.flip(np.argsort(elements))
+
+    difference_vector = torch.bitwise_xor(vector1.type(torch.bool), vector2.type(torch.bool))
     w = copy.deepcopy(weights)
     vector_to_parameters(difference_vector, w)
     number_different_per_layer = []
-
+    #
     for diff_vec in w:
         number_different_per_layer.append(diff_vec.sum().item())
+    if function:
+        le_dictionary = {"Layer": [names[i] for i in sorted_indexes_by_function],
+                         "Changed": [number_different_per_layer[i]
+                                     for i in sorted_indexes_by_function]}
+    else:
+        le_dictionary = {"Layer": names, "Changed": number_different_per_layer}
 
-    le_dictionary = {"Layer": [names[i] for i in sorted_indexes_by_function], "Changed":number_different_per_layer}
     df = pd.DataFrame(le_dictionary)
-    return df
+    return df, w
+
 
 def check_noise_impact_in_weights_by_layer(cfg):
     net = get_model(cfg)
@@ -2568,47 +2869,83 @@ def check_noise_impact_in_weights_by_layer(cfg):
     prune_with_rate(pruned_original, amount=cfg.amount)
     deterministic_pruned_buffer_vector = parameters_to_vector(pruned_original.buffers())
     names_pruned, weights_pruned = zip(*get_layer_dict(pruned_original))
+
     # remove_reparametrization(pruned_original)
     # zeros = count_zero_parameters(pruned_original)
-    stacked_barplot(df,
-                    x="Layer",
-                    y1="Survived",
-                    y2="Pruned",
-                    ylabel="Count",
-                    path="test_pr_{}.pdf".format(cfg.amount),
-                    title="Pruning rate " f"{cfg.amount} "+f" Pruning Threshold={threshold}",
-                    label1="Survived",
-                    label2="Pruned",
-                    rot=90,
-                    logscale=True
-                    )
-    plt.close()
-
+    # stacked_barplot(df,
+    #                 x="Layer",
+    #                 y1="Survived",
+    #                 y2="Pruned",
+    #                 ylabel="Count",
+    #                 path="test_pr_{}.pdf".format(cfg.amount),
+    #                 title="Pruning rate " f"{cfg.amount} " + f" Pruning Threshold={threshold}",
+    #                 label1="Survived",
+    #                 label2="Pruned",
+    #                 rot=90,
+    #                 logscale=True
+    #                 )
+    # plt.close()
 
     first_sample = get_noisy_sample(net, cfg)
     prune_with_rate(first_sample, amount=cfg.amount)
     stochastic_pruned_buffer_vector = parameters_to_vector(first_sample.buffers())
     # remove_reparametrization(first_sample)
-    df_stochastic = get_df_changes_by_layer(names,weights,deterministic_pruned_buffer_vector,
-                                        stochastic_pruned_buffer_vector,
-                             number_param)
+    df_stochastic, changes_bool_vector_list = get_df_changes_by_layer(names, weights,
+                                                                      deterministic_pruned_buffer_vector,
+                                                                      stochastic_pruned_buffer_vector,
+                                                                      number_param)
+    elements = np.array(list(map(number_param, weights)))
+    sorted_indexes_by_function = np.flip(np.argsort(elements))
+    elements_sorted = elements[sorted_indexes_by_function]
+    df_stochastic["Changed Percentage"] = df_stochastic["Changed"] / elements_sorted
+    df_stochastic["Total Parameters"] = elements_sorted
+    df_stochastic.to_csv("data/analysis_per_layer/weights_altered_per_layer_one_sample_pr_{}.csv".format(cfg.amount),
+                         sep=",", index=False)
+    fig = plt.figure()
+    ax = df_stochastic.plot.bar(x='Layer', y='Changed Percentage', rot=90)
+    ax.set_xlabel("Layers by number of parameters " + r"$+\;\rightarrow\;-$")
+    # ax.set_yscale("log")
+    plt.ylabel("Percentage")
+    plt.title("Pruning rate = {}".format(cfg.amount))
+    plt.tight_layout()
+    plt.savefig(f"data/analysis_per_layer/changes_percentages_single_sample_pr_{cfg.amount}.pdf")
+    plt.savefig(f"data/analysis_per_layer/changes_percentages_single_sample_pr_{cfg.amount}.png")
+    plt.close()
     fig = plt.figure()
     ax = df_stochastic.plot.bar(x='Layer', y='Changed', rot=90)
-    ax.set_xlabel("Layers by number of parameters "+r"$+\;\rightarrow\;-$")
+    ax.set_xlabel("Layers by number of parameters " + r"$+\;\rightarrow\;-$")
     ax.set_yscale("log")
     plt.ylabel("Count")
+    plt.title("Pruning rate = {}".format(cfg.amount) + "Static sigma ={}".format(cfg.sigma))
     plt.tight_layout()
-    plt.savefig(f"changes_single_sample_pr_{cfg.amount}.png")
+    plt.savefig(f"data/analysis_per_layer/changes_single_sample_pr_{cfg.amount}_sigma_{cfg.sigma}.pdf")
+    plt.savefig(f"data/analysis_per_layer/changes_single_sample_pr_{cfg.amount}_sigma_{cfg.sigma}.png")
     plt.close()
+    return threshold
 
-def iterative_stochastic_pruning(cfg:omegaconf.DictConfig):
+
+def heatmap_scaled_noise_per_layer(cfg: omegaconf.DictConfig):
+    """
+    This is for a experiment that uses stochastic noise only on
+    one layer at the time and plots a heatmap for different pruning rates.
+    :param cfg:
+    :return:
+    """
     pass
 
-def two_step_iterative_pruning(cfg:omegaconf.DictConfig):
+
+def iterative_stochastic_pruning(cfg: omegaconf.DictConfig):
     pass
+
+
+def two_step_iterative_pruning(cfg: omegaconf.DictConfig):
+    pass
+
 
 def gradient_decent_on_sigma_pr():
     pass
+
+
 def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
@@ -2645,13 +2982,13 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     def q75(x):
         return x.quantile(0.75)
 
-    vals = {'Weight magnitude': [q25, q50, q75]}
-    quantile_df = df.groupby('Layer Name').agg(vals)
+    # vals = {'Weight magnitude': [q25, q50, q75]}
+    # quantile_df = df.groupby('Layer Name').agg(vals)
     # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
-    # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
-    print(quantile_df)
-    quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",",index=True)
-    
+    plot_histograms_per_group(df,"Weight magnitude","Layer Name")
+    fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
+    # print(quantile_df)
+    # quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", index=True)
 
     ########################## This is double bar plot ################################################
 
@@ -2871,6 +3208,104 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
     return file_path
 
 
+############################# Stochastic pruning with sigma optimization ###########################################
+def get_sigma_sample_per_layer_optuna(trial: optuna.Trial, upper_limit_per_layer: dict):
+    # trial = study.ask()  # `trial` is a `Trial` and not a `FrozenTrial`.
+    new_dict = {}
+    for key, value in upper_limit_per_layer.items():
+        new_dict[key] = trial.suggest_float("{}_sigma".format(key), 1e-7, value)
+
+    return trial, new_dict
+
+
+def stochastic_pruning_with_sigma_optimization(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    N = cfg.population
+    first_sparsity = 0.5
+    original_model = get_model(cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+    ######## begin the procedure    #################################
+    names, weights = get_layer_dict(original_model)
+    noise = [cfg.sigma] * len(names)
+    noise_per_layer = dict(zip(names, noise))
+    study = optuna.create_study(direction="maximize")
+
+    quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+                                     names=["layer", "q25", "q50", "q75"])
+
+    sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    for gen in range(generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        generation_trial = study.ask()
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+            sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial, sigma_upper_bound_per_layer)
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers)
+            noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
+            study.tell(generation_trial, noisy_sample_performance)
+            print("Generation {} Individual {}:{}".format(gen, individual_index, noisy_sample_performance))
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+
+            temp = copy.deepcopy(best_model_found)
+            remove_reparametrization(temp)
+            current_best_model = temp
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    print("The performance of on test set the best model is {} with pruning rate of {}".format(
+        performance_best_model_found, cfg.amount))
+    print("Performance of deterministic pruning is: {}".format(de))
+    print("\n Best trial:")
+    trial = study.best_trial
+
+    print("  Performance on validation set for set of sigmas: {}".format(trial.value))
+
+    print("Set of sigmas: ")
+    for key, value in trial.params.items():
+        print("    {}: {}".format(key, value))
+
+
+
+############################# Iterative stochastic pruning #############################################################
+
+def nstep_iterative_stochastic_pruning(cfg: omegaconf.DictConfig, number_of_jumps: int = 0, generations=20):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    N = cfg.population
+    first_sparsity = 0.5
+    original_model = get_model(cfg)
+    ######## begin the procedure    #################################
+    names, weights = get_layer_dict(model)
+    noise = [cfg.sigma] * len(names)
+    noise_per_layer = dict(zip(names, noise))
+    for gen in range(generations):
+
+        for individual_index in range():
+            noisy_sample = get_noisy_sample_sigma_per_layer()
+
+
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
     #     "architecture": "resnet18",
@@ -2898,20 +3333,28 @@ if __name__ == '__main__':
         "model": "5",
         "noise": "gaussian",
         "type": "alternative",
+        "exclude_layers": ["conv1", "linear"],
         "sigma": 0.0021419609859022197,
         # "sigma": 0.001,
-        "amount": 0.90,
+        "amount": 0.9,
         "batch_size": 512,
         "num_workers": 1,
         "use_wandb": True
     })
+    # stochastic_pruning_with_sigma_optimization(cfg)
+    # transfer_mask_rank_experiments_plot_adaptive_noise(cfg)
+
     # transfer_mask_rank_experiments(cfg,eval_set="val")
     weights_analysis_per_weight(cfg)
-    # pruning_rates = [0.95, 0.9, 0.88, 0.86, 0.84, 0.82, 0.8, 0.75, 0.7, 0.6, 0.5, ]
+    # pruning_rates = [ 0.9, 0.8, 0.5]
+    # # thresholds = []
     # for pr in pruning_rates:
     #     cfg.amount = pr
-    #     check_noise_impact_in_weights_by_layer(cfg)
+    #     threshold = check_noise_impact_in_weights_by_layer(cfg)
 
+    # thresholds.append(threshold)
+    # df = pd.DataFrame({"Pruning Rate": pruning_rates, "Threshold": thresholds})
+    # df.to_csv("data/analysis_per_layer/pruning_thesholds_per_layer_traditional_trained.csv", sep=",", index=False)
     # check_sigma_normalization_against_weights(cfg)
     # fp = "data/epsilon_experiments_t_1-33_full.csv"
     # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
