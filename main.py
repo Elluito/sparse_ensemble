@@ -2668,7 +2668,7 @@ def plot_double_barplot(df: pd.DataFrame, ylabel1, ylabel2, title, path: str, xt
     plt.savefig(path)
 
 
-def fancy_bloxplot(df, x, y1, y2, hue=None, path: str = "figure.png", title="", save=True,rot=0):
+def fancy_bloxplot(df, x, y, hue=None, path: str = "figure.png", title="", save=True,rot=0):
     grped_bplot = sns.catplot(x=x,
                               y=y,
                               hue=hue,
@@ -2986,7 +2986,7 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     # quantile_df = df.groupby('Layer Name').agg(vals)
     # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
     plot_histograms_per_group(df,"Weight magnitude","Layer Name")
-    fancy_bloxplot(df, x="Layer Name", y="Weight magnitude")
+    fancy_bloxplot(df, x="Layer Name", y="Weight magnitude",rot=90)
     # print(quantile_df)
     # quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", index=True)
 
