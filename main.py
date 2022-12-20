@@ -3036,7 +3036,7 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
 
-            sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial,lower_bound,sigma_upper_bound_per_layer)
+            generation_trial,sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial,lower_bound,sigma_upper_bound_per_layer)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
             prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,type="layer-wise",
