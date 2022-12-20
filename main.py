@@ -3024,7 +3024,6 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
 
     quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
                                      names=["layer", "q25", "q50", "q75"])
-
     sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
     lower_bound = 1e-10
     best_model_found = None
@@ -3194,7 +3193,7 @@ if __name__ == '__main__':
         "model": "5",
         "noise": "gaussian",
         "type": "alternative",
-        "generations":50
+        "generations":50,
         "exclude_layers": ["conv1", "linear"],
         "sigma": 0.0021419609859022197,
         # "sigma": 0.001,
