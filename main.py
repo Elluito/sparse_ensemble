@@ -53,7 +53,7 @@ import seaborn as sns
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
-from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict,is_prunable_module
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -1595,12 +1595,12 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                 else:
                     prune.l1_unstructured(module, name="weight", amount=float(amount_per_layer[name]))
         if pruner == "manual":
-            names, weights = zip(*get_layer_dict(net))
             for name, module in net.named_modules():
-                if name in exclude_layers or name not in names:
-                    continue
-                else:
-                    prune.l1_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
+                with torch.no_grad():
+                    if name in exclude_layers or not is_prunable_module(module):
+                        continue
+                    else:
+                        prune.l1_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
 
 
 
@@ -3320,7 +3320,8 @@ if __name__ == '__main__':
         "num_workers": 1,
         "use_wandb": True
     })
-    stochastic_pruning_with_sigma_and_pr_optimization(cfg)
+    stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
+    # stochastic_pruning_with_sigma_and_pr_optimization(cfg)
     # stochastic_pruning_with_sigma_optimization(cfg)
     # transfer_mask_rank_experiments_plot_adaptive_noise(cfg)
 

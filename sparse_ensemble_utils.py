@@ -19,6 +19,8 @@ from torch import nn
 # from .funcs.prune import registry as prune_registry
 # from .funcs.redistribute import registry as redistribute_registry
 # from .sparse_ensemble_utils.smoothen_value import AverageValue
+def is_prunable_module(m):
+    return (isinstance(m,nn.Linear) or isinstance(m,nn.Conv2d))
 
 def get_layer_dict(model):
     """
