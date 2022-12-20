@@ -3017,7 +3017,7 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
 
     ######## Begin the procedure    #################################
 
-    names, weights = get_layer_dict(original_model)
+    names, weights = zip(*get_layer_dict(original_model))
     noise = [cfg.sigma] * len(names)
     noise_per_layer = dict(zip(names, noise))
     study = optuna.create_study(direction="maximize")
