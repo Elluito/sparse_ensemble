@@ -2987,11 +2987,11 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
 
 
 ############################# Stochastic pruning with sigma optimization ###########################################
-def get_sigma_sample_per_layer_optuna(trial: optuna.Trial, upper_limit_per_layer: dict):
+def get_sigma_sample_per_layer_optuna(trial: optuna.Trial,lower_limit:int, upper_limit_per_layer: dict):
     # trial = study.ask()  # `trial` is a `Trial` and not a `FrozenTrial`.
     new_dict = {}
     for key, value in upper_limit_per_layer.items():
-        new_dict[key] = trial.suggest_float("{}_sigma".format(key), 1e-7, value)
+        new_dict[key] = trial.suggest_float("{}_sigma".format(key),lower_limit, value,log=True)
 
     return trial, new_dict
 
@@ -3026,17 +3026,18 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
                                      names=["layer", "q25", "q50", "q75"])
 
     sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    lower_bound = 1e-10
     best_model_found = None
     best_accuracy_found = 0
     current_best_model = original_model
-    for gen in range(generations):
+    for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
         generation_trial = study.ask()
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
 
-            sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial, sigma_upper_bound_per_layer)
+            sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial,lower_bound,sigma_upper_bound_per_layer)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
             prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,type="layer-wise",
@@ -3193,6 +3194,7 @@ if __name__ == '__main__':
         "model": "5",
         "noise": "gaussian",
         "type": "alternative",
+        "generations":50
         "exclude_layers": ["conv1", "linear"],
         "sigma": 0.0021419609859022197,
         # "sigma": 0.001,
