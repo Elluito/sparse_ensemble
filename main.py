@@ -3041,7 +3041,7 @@ def stochastic_pruning_with_sigma_and_pr_optimization(cfg: omegaconf.DictConfig)
 
     names, weights = zip(*get_layer_dict(original_model))
     count = lambda w: w.nelement()
-    number_per_layer = lis(map(count, weights))
+    number_per_layer = list(map(count, weights))
     number_per_layer = dict(zip(names, number_per_layer))
 
     ################# Optuna study###########################
@@ -3320,7 +3320,7 @@ if __name__ == '__main__':
         "num_workers": 1,
         "use_wandb": True
     })
-    stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
+    stochastic_pruning_with_sigma_and_pr_optimization(cfg)
     # stochastic_pruning_with_sigma_optimization(cfg)
     # transfer_mask_rank_experiments_plot_adaptive_noise(cfg)
 

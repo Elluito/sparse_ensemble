@@ -1,5 +1,5 @@
 import torch
-from tools.datasets import *
+from .datasets import *
 
 data_route      = '/data/'
 cifar10_strings = ['vgg16','resnet18','densenet','effnet']

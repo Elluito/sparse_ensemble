@@ -2,8 +2,8 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as sched
 import torchvision.models as tmodels
 from functools import partial
-from tools.models import *
-from tools.pruners import prune_weights_reparam
+from .models import *
+from .pruners import prune_weights_reparam
 
 def model_and_opt_loader(model_string,DEVICE):
     if DEVICE == None:
