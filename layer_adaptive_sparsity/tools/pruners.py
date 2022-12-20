@@ -1,6 +1,6 @@
 import torch
 from torch.nn.utils import prune
-from utils import get_weights, get_modules
+from .utils import get_weights, get_modules
 import numpy as np
 
 def weight_pruner_loader(pruner_string):
