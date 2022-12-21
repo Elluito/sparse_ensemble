@@ -60,7 +60,8 @@ def random_perm(a: torch.Tensor) -> torch.Tensor:
 # Functions adapted from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/funcs
 # /init_scheme.py
 
-def erdos_renyi_per_layer_pruning_rate(model: torch.nn.Module, cfg: omegaconf.DictConfig, is_kernel: bool = True,
+def erdos_renyi_per_layer_pruning_rate(model: torch.nn.Module, cfg: omegaconf.DictConfig, is_kernel:
+bool = True,
                                        **kwargs) -> typing.Tuple[dict, dict, float, int]:
     names, weights = zip(*get_layer_dict(model))
     prob_dict = get_erdos_renyi_dist(model, names, weights, cfg, is_kernel)
