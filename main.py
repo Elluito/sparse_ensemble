@@ -3137,6 +3137,7 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
     names, weights = zip(*get_layer_dict(original_model))
     noise = [cfg.sigma] * len(names)
     noise_per_layer = dict(zip(names, noise))
+    ############## Craete the study###############################
     study = optuna.create_study(direction="maximize")
 
     quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
@@ -3149,18 +3150,18 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
     for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
-        generation_trial = study.ask()
         for individual_index in range(N):
+            individual_trial = study.ask()
             individual = copy.deepcopy(current_best_model)
 
-            generation_trial, sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial, lower_bound,
+            individual_trial, sigmas_for_individual = get_sigma_sample_per_layer_optuna(individual_trial, lower_bound,
                                                                                         sigma_upper_bound_per_layer)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
             prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="erk")
             noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
-            study.tell(generation_trial, noisy_sample_performance)
+            study.tell(individual_trial, noisy_sample_performance)
             print("Generation {} Individual {}:{}".format(gen, individual_index, noisy_sample_performance))
             current_gen_accuracies.append(noisy_sample_performance)
             current_gen_models.append(noisy_sample)
@@ -3227,7 +3228,8 @@ def stochastic_pruning_with_sigma_optimization(cfg: omegaconf.DictConfig):
         generation_trial = study.ask()
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
-            sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial, sigma_upper_bound_per_layer)
+            generation_trial, sigmas_for_individual = get_sigma_sample_per_layer_optuna(generation_trial,
+                                                                           sigma_upper_bound_per_layer)
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
             prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers)
             noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
