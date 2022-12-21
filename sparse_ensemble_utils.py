@@ -20,7 +20,8 @@ from torch import nn
 # from .funcs.redistribute import registry as redistribute_registry
 # from .sparse_ensemble_utils.smoothen_value import AverageValue
 def is_prunable_module(m):
-    return (isinstance(m,nn.Linear) or isinstance(m,nn.Conv2d))
+    return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
+
 
 def get_layer_dict(model):
     """
@@ -57,8 +58,29 @@ def random_perm(a: torch.Tensor) -> torch.Tensor:
     return a.reshape(-1)[idx].reshape(a.shape)
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def sparstiy(model):
+    # check if they hav
+    total_params = count_parameters(model)
+    non_zero_param = 0
+    for name, module in model.named_modules:
+        if is_prunable_module(module):
+
+            if list(module.buffers()):
+                list_buffers = list(module.buffers())
+                non_zero_param += list_buffers[0].nonzero().item()
+            else:
+
+                non_zero_param += m.weight.nonzero().item()
+    return non_zero_param/total_params
+
+
 # Functions adapted from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/funcs
 # /init_scheme.py
+
 
 def erdos_renyi_per_layer_pruning_rate(model: torch.nn.Module, cfg: omegaconf.DictConfig, is_kernel:
 bool = True,
