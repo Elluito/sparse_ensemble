@@ -20,7 +20,6 @@ dependencies:
   - decorator=5.1.1
   - ffmpeg=4.2.2
   - freetype=2.10.4
-  - icc_rt=2019.0.0
   - idna=3.3
   - ignite=0.4.10
   - importlib_metadata=4.11.3
@@ -73,8 +72,6 @@ dependencies:
   - tqdm=4.64.0
   - typing_extensions=4.3.0
   - urllib3=1.26.11
-  - vc=14.2
-  - vs2015_runtime=14.27.29016
   - win_inet_pton=1.1.0
   - wincertstore=0.2
   - xz=5.2.5

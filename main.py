@@ -3032,12 +3032,12 @@ def stochastic_pruning_with_sigma_and_pr_optimization(cfg: omegaconf.DictConfig)
     original_model = get_model(cfg)
     if cfg.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
-        now = date.datetime.now().strftime("%m:%s")
+        # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.to_container(cfg, resolve=True),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"pruning_rate_sigma_optimization_{now}",
+            name=f"pruning_rate_sigma_optimization",
             reinit=True,
             save_code=True,
         )
@@ -3170,12 +3170,12 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
     use_cuda = torch.cuda.is_available()
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
-        now = date.datetime.now().strftime("%m:%s")
+        # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.to_container(cfg, resolve=True),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"erk_pr_sigma_optimization_{now}",
+            name=f"erk_pr_sigma_optimization",
             reinit=True,
             save_code=True,
         )
@@ -3399,7 +3399,7 @@ if __name__ == '__main__':
         "model": "5",
         "noise": "gaussian",
         "type": "alternative",
-        "generations": 50,
+        "generations": 100,
         "exclude_layers": ["conv1", "linear"],
         "sigma": 0.0021419609859022197,
         # "sigma": 0.001,
@@ -3410,7 +3410,7 @@ if __name__ == '__main__':
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
-    # stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
+    stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
     stochastic_pruning_with_sigma_and_pr_optimization(cfg)
     # stochastic_pruning_with_sigma_optimization(cfg)
     # transfer_mask_rank_experiments_plot_adaptive_noise(cfg)
