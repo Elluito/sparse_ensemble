@@ -19,11 +19,11 @@ from torch import nn
 # from .funcs.prune import registry as prune_registry
 # from .funcs.redistribute import registry as redistribute_registry
 # from .sparse_ensemble_utils.smoothen_value import AverageValue
-def is_prunable_module(m):
+def is_prunable_module(m: torch.nn.Module):
     return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
 
 
-def get_layer_dict(model):
+def get_layer_dict(model: torch.nn.Module):
     """
     :param model:
     :return: The name of the modules that are not batch norm and their correspondent weight with original shape.
@@ -58,9 +58,19 @@ def random_perm(a: torch.Tensor) -> torch.Tensor:
     return a.reshape(-1)[idx].reshape(a.shape)
 
 
-def count_parameters(model):
+def count_parameters(model: torch.nn.Module):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+
+@torch.no_grad
+def get_percentile_per_layer(model: torch.nn.Module, percentile: int = 0.1):
+    return_dict = {}
+    for name, module in model.named_modules():
+        if is_prunable_module(module):
+            flat_weights = module.weight.detach().flatten()
+            desired_quantile = float(torch.quantile(flat_weights))
+            return_dict[name] = desired_quantile
+    return  return_dict
 
 def sparstiy(model):
     # check if they hav
@@ -75,7 +85,7 @@ def sparstiy(model):
             else:
 
                 non_zero_param += m.weight.nonzero().item()
-    return non_zero_param/total_params
+    return non_zero_param / total_params
 
 
 # Functions adapted from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/funcs
