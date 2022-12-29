@@ -3448,15 +3448,15 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            wandb.log(log_dict)
+
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
-            if cfg.use_wandb:
-                log_dict = {"val_set_accuracy": best_accuracy_found, "generation": gen,
-                            "sparsity": sparstiy(best_model_found),
-                            "Deterministic performance": deterministic_pruning_performance}
-                wandb.log(log_dict)
-
             ### I don't want the pruning to be iterative at this stage
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
@@ -3549,15 +3549,14 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            wandb.log(log_dict)
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
-            if cfg.use_wandb:
-                log_dict = {"val_set_accuracy": best_accuracy_found, "generation": gen,
-                            "sparsity": sparstiy(best_model_found),
-                            "Deterministic performance": deterministic_pruning_performance}
-                wandb.log(log_dict)
-
             ### I don't want the pruning to be iterative at this stage
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
@@ -3650,15 +3649,14 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy":gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            wandb.log(log_dict)
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
-            if cfg.use_wandb:
-                log_dict = {"val_set_accuracy": best_accuracy_found, "generation": gen,
-                            "sparsity": sparstiy(best_model_found),
-                            "Deterministic performance": deterministic_pruning_performance}
-                wandb.log(log_dict)
-
             ### I don't want the pruning to be iterative at this stage
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
@@ -3769,17 +3767,16 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            log_dict.update(current_gen_sigmas[best_index])
+            wandb.log(log_dict)
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
             best_sigma_found = current_gen_sigmas[best_index]
-            if cfg.use_wandb:
-                log_dict = {"val_set_accuracy": best_accuracy_found, "generation": gen,
-                            "sparsity": sparstiy(best_model_found),
-                            "Deterministic performance": deterministic_pruning_performance}
-                log_dict.update(best_sigma_found)
-                wandb.log(log_dict)
-
             ### I don't want the pruning to be iterative at this stage
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
@@ -3788,6 +3785,10 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     # Test the best model found in the test set
 
     performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparstiy(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance})
     print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {}"
           "".format(
         performance_best_model_found, cfg.amount, sparstiy(best_model_found)))
@@ -3886,16 +3887,18 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            log_dict.update(current_gen_sigmas[best_index])
+            wandb.log(log_dict)
+
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
             best_sigma_found = current_gen_sigmas[best_index]
-            if cfg.use_wandb:
-                log_dict = {"val_set_accuracy": best_accuracy_found, "generation": gen,
-                            "sparsity": sparstiy(best_model_found),
-                            "Deterministic performance": deterministic_pruning_performance}
-                log_dict.update(best_sigma_found)
-                wandb.log(log_dict)
+
             ### I don't want the pruning to be iterative at this stage
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
@@ -3907,6 +3910,10 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     # Test the best model found in the test set
 
     performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparstiy(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance})
     print("The performance of on test set the best model is {} with pruning rate of {}".format(
         performance_best_model_found, cfg.amount))
     print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
@@ -4162,7 +4169,7 @@ if __name__ == '__main__':
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
         "population": 10,
-        "generations": 100,
+        "generations": 51,
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
@@ -4180,11 +4187,11 @@ if __name__ == '__main__':
     })
     # test_sigma_experiment_selector()
 
-    sigma_experiment_selector(test_cfg, 1)
-    # sigma_experiment_selector(test_cfg, 2)
-    sigma_experiment_selector(test_cfg, 3)
-    # sigma_experiment_selector(test_cfg, 4)
-    # sigma_experiment_selector(test_cfg, 5)
+    sigma_experiment_selector(cfg, 1)
+    sigma_experiment_selector(cfg, 2)
+    sigma_experiment_selector(cfg, 3)
+    sigma_experiment_selector(cfg, 4)
+    sigma_experiment_selector(cfg, 5)
     ########### Mask Transfer experiments #############################
     # transfer_mask_rank_experiments(cfg)
     ############ Stchastic pruning VS Deterministic Pruning ###########
