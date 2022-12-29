@@ -4170,7 +4170,7 @@ if __name__ == '__main__':
         "type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.003,
+        "sigma": 0.005,
         "amount": 0.9,
         "batch_size": 512,
         "num_workers": 0,
@@ -4178,8 +4178,13 @@ if __name__ == '__main__':
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
-    test_sigma_experiment_selector()
+    # test_sigma_experiment_selector()
 
+    sigma_experiment_selector(test_cfg, 1)
+    # sigma_experiment_selector(test_cfg, 2)
+    sigma_experiment_selector(test_cfg, 3)
+    # sigma_experiment_selector(test_cfg, 4)
+    # sigma_experiment_selector(test_cfg, 5)
     ########### Mask Transfer experiments #############################
     # transfer_mask_rank_experiments(cfg)
     ############ Stchastic pruning VS Deterministic Pruning ###########
