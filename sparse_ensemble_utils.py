@@ -62,13 +62,13 @@ def count_parameters(model: torch.nn.Module):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-@torch.no_grad
-def get_percentile_per_layer(model: torch.nn.Module, percentile: int = 0.1):
+@torch.no_grad()
+def get_percentile_per_layer(model: torch.nn.Module, percentile: float= 0.1):
     return_dict = {}
     for name, module in model.named_modules():
         if is_prunable_module(module):
-            flat_weights = module.weight.detach().flatten()
-            desired_quantile = float(torch.quantile(flat_weights))
+            flat_weights = torch.abs(module.weight.detach().flatten())
+            desired_quantile = float(torch.quantile(flat_weights,percentile))
             return_dict[name] = desired_quantile
     return  return_dict
 
@@ -76,16 +76,16 @@ def sparstiy(model):
     # check if they hav
     total_params = count_parameters(model)
     non_zero_param = 0
-    for name, module in model.named_modules:
+    for name, module in model.named_modules():
         if is_prunable_module(module):
 
             if list(module.buffers()):
                 list_buffers = list(module.buffers())
-                non_zero_param += list_buffers[0].nonzero().item()
+                non_zero_param += len(list_buffers[0].flatten().nonzero())
             else:
 
-                non_zero_param += m.weight.nonzero().item()
-    return non_zero_param / total_params
+                non_zero_param += len(module.weight.data.flatten().nonzero())
+    return 1-non_zero_param / total_params
 
 
 # Functions adapted from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/funcs
