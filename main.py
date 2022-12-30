@@ -3379,7 +3379,7 @@ def enqueue_sigmas(study: optuna.Study, initial_sigmas_per_layer: dict):
 def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig):
     sigmas_for_experiment = None
     try:
-        with open(cfg.save_data_path + "one_shot_optim_sigmas_per_layers_{}_dist_pr {}.pth".format(cfg.pruner,
+        with open(cfg.save_data_path + "one_shot_optim_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                    cfg.amount),
                   "rb") as f:
             sigmas_for_experiment = pickle.load(f)
@@ -3391,6 +3391,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
+    print("Cuda: {}".format(use_cuda))
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -3808,7 +3809,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     model_name = model_name.replace(" ","")
     with open(model_name, "wb") as f:
         pickle.dump(best_model_found, f)
-    with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr {}.pth".format(cfg.pruner,
+    with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                  cfg.amount),
               "wb") as f:
         pickle.dump(best_sigma_found, f)
@@ -3933,7 +3934,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
                 cfg.pruner, accuracy_string, result.tm_hour, result.tm_min),
             "wb") as f:
         pickle.dump(best_model_found, f)
-    with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr {}.pth".format(cfg.pruner,
+    with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                    cfg.amount),
               "wb") as f:
         pickle.dump(best_sigma_found, f)
@@ -4187,11 +4188,11 @@ if __name__ == '__main__':
     })
     # test_sigma_experiment_selector()
 
-    sigma_experiment_selector(cfg, 1)
-    sigma_experiment_selector(cfg, 2)
+    # sigma_experiment_selector(cfg, 1)
+    # sigma_experiment_selector(cfg, 2)
     sigma_experiment_selector(cfg, 3)
-    sigma_experiment_selector(cfg, 4)
-    sigma_experiment_selector(cfg, 5)
+    # sigma_experiment_selector(cfg, 4)
+    # sigma_experiment_selector(cfg, 5)
     ########### Mask Transfer experiments #############################
     # transfer_mask_rank_experiments(cfg)
     ############ Stchastic pruning VS Deterministic Pruning ###########
