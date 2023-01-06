@@ -3391,6 +3391,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
+    print("Cuda:{}".format(use_cuda))
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
