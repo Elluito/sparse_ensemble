@@ -55,6 +55,41 @@ from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparstiy, get_percentile_per_layer
+from matplotlib.patches import PathPatch
+
+
+def adjust_box_widths(g, fac):
+    """
+    Adjust the widths of a seaborn-generated boxplot.
+    """
+
+    # iterating through Axes instances
+    for ax in g.axes:
+
+        # iterating through axes artists:
+        for c in ax.get_children():
+
+            # searching for PathPatches
+            if isinstance(c, PathPatch):
+                # getting current width of box:
+                p = c.get_path()
+                verts = p.vertices
+                verts_sub = verts[:-1]
+                xmin = np.min(verts_sub[:, 0])
+                xmax = np.max(verts_sub[:, 0])
+                xmid = 0.5 * (xmin + xmax)
+                xhalf = 0.5 * (xmax - xmin)
+
+                # setting new width of box
+                xmin_new = xmid - fac * xhalf
+                xmax_new = xmid + fac * xhalf
+                verts_sub[verts_sub[:, 0] == xmin, 0] = xmin_new
+                verts_sub[verts_sub[:, 0] == xmax, 0] = xmax_new
+
+                # setting new width of median line
+                for l in ax.lines:
+                    if np.all(l.get_xdata() == [xmin, xmax]):
+                        l.set_xdata([xmin_new, xmax_new])
 
 
 # function taken from https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -1582,7 +1617,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         from layer_adaptive_sparsity.tools.pruners import get_modules, get_weights, weight_pruner_loader
         if pruner == "lamp":
             pruner = weight_pruner_loader(pruner)
-            pruner(model=net, amount=amount)
+            pruner(model=net, amount=amount, exclude_layers=exclude_layers)
         if pruner == "erk":
             _, amount_per_layer, _, _ = erdos_renyi_per_layer_pruning_rate(model=net, cfg=cfg)
             names, weights = zip(*get_layer_dict(net))
@@ -2834,7 +2869,10 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
     # For each num_row is going to be one plot with num_col subplots for each pruning rate
     for i, current_sigma in enumerate(specific_sigmas):
         # current_sigma = df["sigma"].unique()[i]
-        fig, axs_p = plt.subplots(1, num_col, figsize=(17, 10), layout="constrained")
+        # if num_col == 1:
+        #     fig = plt.figure(figsize=(13, 13 ))
+        #     axs_p = fig.subplot()
+        fig, axs_p = plt.subplots(1, num_col, figsize=(8.5, 10))
         axs = []
         if isinstance(axs_p, SubplotBase):
             axs.append(axs_p)
@@ -2858,24 +2896,26 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                             hue="Type",
                             data=current_df,
                             ax=axj
+                            # width = 1
                             )
+            adjust_box_widths(plt.gcf(), 2)
             g.axhline(delta_pruned_original_performance, c="purple", label="Deterministic Pruning")
-            g = sns.stripplot(x='Type',
-                              y='Epsilon',
-                              hue='Type',
-                              jitter=True,
-                              # dodge=True,
-                              marker='o',
-                              edgecolor="gray",
-                              linewidth=1,
-                              # palette="set2",
-                              alpha=0.5,
-                              data=current_df,
-                              ax=axj)
+            g2 = sns.stripplot(x='Type',
+                               y='Epsilon',
+                               hue='Type',
+                               jitter=True,
+                               dodge=True,
+                               marker='o',
+                               edgecolor="gray",
+                               linewidth=1,
+                               # palette="set2",
+                               alpha=0.5,
+                               data=current_df,
+                               ax=axj)
             # axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=15)
             axj.set_ylabel(r"$\epsilon$", fontsize=30)
             axj.tick_params(axis='both', which='major', labelsize=20)
-            handles, labels = g.get_legend_handles_labels()
+            handles, labels = g2.get_legend_handles_labels()
             l = axj.legend(handles[:4], labels[:4], fontsize=20)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
@@ -2884,12 +2924,21 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
+            # axj.set_aspect(1.01)
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(pr_string, current_sigma), bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(pr_string, current_sigma), bbox_inches="tight")
+
+
+def plot_val_accuracy_wandb(filepath, save_path, x_variable, y_variable, xlabel, ylabel):
+    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    df.plot(x=x_variable, y=y_variable, legend=False)
+    plt.ylabel(ylabel, fontsize=20)
+    plt.xlabel(xlabel, fontsize=20)
+    plt.savefig(save_path)
 
 
 def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.DictConfig):
@@ -3379,14 +3428,18 @@ def enqueue_sigmas(study: optuna.Study, initial_sigmas_per_layer: dict):
 def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig):
     sigmas_for_experiment = None
     try:
-        with open(cfg.save_data_path + "one_shot_optim_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
-                                                                                                   cfg.amount),
+        print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
+                                                                                                 cfg.amount))
+        with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
+                                                                                                     cfg.amount),
                   "rb") as f:
+
             sigmas_for_experiment = pickle.load(f)
     except:
-        print("The respective sigmas file for pruning rate {} and pr per layer {} hasn't been generated, You need to "
-              "run first \n"
-              "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
+        raise Exception("The respective sigmas file for pruning rate {} and pr per layer {} hasn't been generated, "
+                        "You need to "
+                        "run first \n"
+                        "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
             cfg.amount, cfg.pruner))
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
@@ -3462,7 +3515,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
             temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp,exclude_layer_list=cfg.exclude_layers)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
             current_best_model = temp
 
         print("Current best accuracy: {}".format(best_accuracy_found))
@@ -3480,8 +3533,9 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
 
     accuracy_string = "{:10.2f}".format(performance_best_model_found)
     result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path +"iterative_static_sigma_optimized_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(cfg.pruner,
-                  accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = cfg.save_model_path + "iterative_static_sigma_optimized_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.pruner,
+        accuracy_string, result.tm_hour, result.tm_min)
     with open(model_file_name,
               "wb") as f:
         pickle.dump(best_model_found, f)
@@ -3562,7 +3616,7 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
             temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp,exclude_layer_list=cfg.exclude_layers)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
             current_best_model = temp
 
         print("Current best accuracy: {}".format(best_accuracy_found))
@@ -3578,11 +3632,11 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
         performance_best_model_found, cfg.amount, sparstiy(best_model_found)))
     print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
 
-    accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ","")
+    accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ", "")
     result = time.localtime(time.time())
-    model_file_name =cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-                cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ","")
+    model_file_name = cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
     with open(model_file_name, "wb") as f:
         pickle.dump(best_model_found, f)
 
@@ -3651,7 +3705,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
         if cfg.use_wandb:
-            log_dict = {"val_set_accuracy":gen_best_accuracy, "generation": gen,
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
                         "sparsity": sparstiy(current_gen_models[best_index]),
                         "Deterministic performance": deterministic_pruning_performance}
             wandb.log(log_dict)
@@ -3662,7 +3716,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
             ### so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
             temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp,exclude_layer_list=cfg.exclude_layers)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
             current_best_model = temp
 
         print("Current best accuracy: {}".format(best_accuracy_found))
@@ -3680,8 +3734,8 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
     accuracy_string = "{:10.2f}%".format(performance_best_model_found)
     result = time.localtime(time.time())
     model_file_name = cfg.save_model_path + "global_sigma_iterative_stochastic_pruning_pr_{}_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-                cfg.amount, cfg.pruner,
-                accuracy_string, result.tm_hour, result.tm_min)
+        cfg.amount, cfg.pruner,
+        accuracy_string, result.tm_hour, result.tm_min)
     model_file_name = model_file_name.replace(" ", "")
     with open(model_file_name, "wb") as f:
         pickle.dump(best_model_found, f)
@@ -3717,6 +3771,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
 
     deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
     print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+    print("Deterministic pruning sparsity:  {}".format(sparstiy(deterministic_pruning)))
 
     ######## Begin the procedure    #################################
 
@@ -3727,6 +3782,9 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     noise_upper_bound_dict = dict(zip(names, noise_upper_bound))
     noise_initail_value_dict = dict(zip(names, noise_initial_value))
     ############## Craete the study###############################
+    sampler = None
+
+
     study = optuna.create_study(study_name="One shot stochastic pruning "
                                            "with sigma optimization per layer",
                                 direction="maximize")
@@ -3805,8 +3863,8 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     accuracy_string = "{:10.2f}".format(performance_best_model_found)
     result = time.localtime(time.time())
     model_name = cfg.save_model_path + "one_shot_dynamic_sigmas_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-                cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    model_name = model_name.replace(" ","")
+        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_name = model_name.replace(" ", "")
     with open(model_name, "wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
@@ -3838,7 +3896,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"dynamic_sigma_iterative_{cfg.pruner}_pr_{target_sparsity}",
+            name=f"iterative_{cfg.pruner}_pr_{target_sparsity}_dynamic_sigma",
             reinit=True,
             save_code=True,
         )
@@ -3905,7 +3963,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
             ### method do not prune over the mask that is found
 
             temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp,exclude_layer_list=cfg.exclude_layers)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
             current_best_model = temp
         print("Current best accuracy: {}".format(best_accuracy_found))
     # Test the best model found in the test set
@@ -3935,7 +3993,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
             "wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
-                                                                                                   cfg.amount),
+                                                                                                  cfg.amount),
               "wb") as f:
         pickle.dump(best_sigma_found, f)
     if cfg.use_wandb:
@@ -3978,7 +4036,7 @@ def test_sigma_experiment_selector():
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
-        "pruner": "erk",
+        "pruner": "lamp",
         "type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "sigma": 0.0021419609859022197,
@@ -3988,7 +4046,7 @@ def test_sigma_experiment_selector():
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     sigma_experiment_selector(test_cfg, 1)
     sigma_experiment_selector(test_cfg, 2)
@@ -4014,7 +4072,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     pruned_original = copy.deepcopy(net)
-    prune_with_rate(pruned_original, cfg.amount,exclude_layers=cfg.exclude_layers)
+    prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers)
     # remove_reparametrization(pruned_original)
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
@@ -4037,12 +4095,12 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
 
-        prune_with_rate(current_model, amount=cfg.amount,exclude_layers=cfg.exclude_layers)
+        prune_with_rate(current_model, amount=cfg.amount, exclude_layers=cfg.exclude_layers)
 
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(current_model,exclude_layer_list=cfg.exclude_layers)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
         pruned_performance.append(stochastic_pruned_performance)
@@ -4177,6 +4235,7 @@ if __name__ == '__main__':
         "pruner": "erk",
         "type": "alternative",
         "exclude_layers": ["conv1", "linear"],
+        "sampler":"tpe",
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -4186,11 +4245,14 @@ if __name__ == '__main__':
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
+    # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
+    #                         "val_acc_plot.pdf",
+    #                         "generation","iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
+    #                         "Generations","Accuracy")
     # test_sigma_experiment_selector()
-
-    # sigma_experiment_selector(cfg, 1)
+    sigma_experiment_selector(cfg, 1)
     # sigma_experiment_selector(cfg, 2)
-    sigma_experiment_selector(cfg, 3)
+    # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 5)
     ########### Mask Transfer experiments #############################

@@ -4,6 +4,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 import omegaconf
 # from main import get_layer_dict
+import optuna.samplers
 from einops import repeat
 import numpy as np
 import torch
@@ -22,6 +23,20 @@ from torch import nn
 def is_prunable_module(m: torch.nn.Module):
     return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
 
+
+def get_sampler(cfg: omegaconf.DictConfig):
+    if cfg.sampler == "tpe":
+        return optuna.samplers.TPESampler()
+    if cfg.sampler == "cmaes":
+        return optuna.samplers.CmaEsSampler(
+            restart_strategy="ipop",
+            inc_popsize=2,
+            n_startup_trials=10
+
+        )
+    if cfg.sampler == "qmc":
+        return optuna.samplers.QMCSampler()
+    raise NotImplementedError("Sampler {} is not supported yet".format(cfg.sampler))
 
 def get_layer_dict(model: torch.nn.Module):
     """
@@ -63,14 +78,15 @@ def count_parameters(model: torch.nn.Module):
 
 
 @torch.no_grad()
-def get_percentile_per_layer(model: torch.nn.Module, percentile: float= 0.1):
+def get_percentile_per_layer(model: torch.nn.Module, percentile: float = 0.1):
     return_dict = {}
     for name, module in model.named_modules():
         if is_prunable_module(module):
             flat_weights = torch.abs(module.weight.detach().flatten())
-            desired_quantile = float(torch.quantile(flat_weights,percentile))
+            desired_quantile = float(torch.quantile(flat_weights, percentile))
             return_dict[name] = desired_quantile
-    return  return_dict
+    return return_dict
+
 
 def sparstiy(model):
     # check if they hav
@@ -85,7 +101,7 @@ def sparstiy(model):
             else:
 
                 non_zero_param += len(module.weight.data.flatten().nonzero())
-    return 1-non_zero_param / total_params
+    return 1 - non_zero_param / total_params
 
 
 # Functions adapted from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/funcs
