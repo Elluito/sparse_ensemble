@@ -2924,7 +2924,6 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
-            # axj.set_aspect(1.01)
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
@@ -3756,7 +3755,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"one-shot_{cfg.pruner}_pr_{target_sparsity}_sigma_optimization",
+            name=f"one-shot_{cfg.pruner}_pr_{target_sparsity}_sampler_{cfg.sampler}_sigma_optimization",
             reinit=True,
             save_code=True,
         )
@@ -3896,7 +3895,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{target_sparsity}_dynamic_sigma",
+            name=f"iterative_{cfg.pruner}_pr_{target_sparsity}_sampler_{cfg.sampler}_dynamic_sigma",
             reinit=True,
             save_code=True,
         )
