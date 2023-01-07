@@ -4230,7 +4230,7 @@ if __name__ == '__main__':
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
-        "pruner": "erk",
+        "pruner": "lamp",
         "type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler":"tpe",
