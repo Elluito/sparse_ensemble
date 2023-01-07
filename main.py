@@ -4248,8 +4248,8 @@ if __name__ == '__main__':
     #                         "val_acc_plot.pdf",
     #                         "generation","iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
     #                         "Generations","Accuracy")
-    # test_sigma_experiment_selector()
-    sigma_experiment_selector(cfg, 1)
+    test_sigma_experiment_selector()
+    # sigma_experiment_selector(cfg, 1)
     # sigma_experiment_selector(cfg, 2)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
