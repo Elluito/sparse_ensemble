@@ -4048,8 +4048,8 @@ def test_sigma_experiment_selector():
     })
     sigma_experiment_selector(test_cfg, 1)
     # sigma_experiment_selector(test_cfg, 2)
-    sigma_experiment_selector(test_cfg, 3)
-    # sigma_experiment_selector(test_cfg, 4)
+    # sigma_experiment_selector(test_cfg, 3)
+    sigma_experiment_selector(test_cfg, 4)
     # sigma_experiment_selector(test_cfg, 5)
 
 
