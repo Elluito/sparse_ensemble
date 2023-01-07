@@ -4248,9 +4248,9 @@ if __name__ == '__main__':
     #                         "generation","iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
     #                         "Generations","Accuracy")
     # test_sigma_experiment_selector()
-    sigma_experiment_selector(cfg, 1)
-    # sigma_experiment_selector(cfg, 2)
-    sigma_experiment_selector(cfg, 3)
+    # sigma_experiment_selector(cfg, 1)
+    sigma_experiment_selector(cfg, 2)
+    # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 5)
     ########### Mask Transfer experiments #############################
