@@ -3984,12 +3984,11 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
     ######################### Saving the model and the sigmas ##########################################################
-    accuracy_string = "{:10.2f}%".format(performance_best_model_found)
+    accuracy_string = "{:10.2f}".format(performance_best_model_found)
     result = time.localtime(time.time())
-    with open(
-            cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-                cfg.pruner, accuracy_string, result.tm_hour, result.tm_min),
-            "wb") as f:
+    model_file_name = cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ","")
+    with open(model_file_name,"wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                   cfg.amount),
@@ -4048,10 +4047,10 @@ def test_sigma_experiment_selector():
         "use_wandb": False
     })
     sigma_experiment_selector(test_cfg, 1)
-    sigma_experiment_selector(test_cfg, 2)
+    # sigma_experiment_selector(test_cfg, 2)
     sigma_experiment_selector(test_cfg, 3)
-    sigma_experiment_selector(test_cfg, 4)
-    sigma_experiment_selector(test_cfg, 5)
+    # sigma_experiment_selector(test_cfg, 4)
+    # sigma_experiment_selector(test_cfg, 5)
 
 
 ########################################################################################################################
