@@ -54,7 +54,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparstiy, get_percentile_per_layer, get_sampler
+    count_parameters, sparstiy, get_percentile_per_layer
 from matplotlib.patches import PathPatch
 
 
@@ -3997,10 +3997,9 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     ######################### Saving the model and the sigmas ##########################################################
     accuracy_string = "{:10.2f}".format(performance_best_model_found)
     result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ", "")
-    with open(model_file_name, "wb") as f:
+    model_file_name = cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ","")
+    with open(model_file_name,"wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                   cfg.amount),
