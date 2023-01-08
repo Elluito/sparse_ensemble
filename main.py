@@ -54,7 +54,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparstiy, get_percentile_per_layer,get_sampler
+    count_parameters, sparstiy, get_percentile_per_layer, get_sampler
 from matplotlib.patches import PathPatch
 
 
@@ -1701,20 +1701,20 @@ def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
 
 ######################################################################################################
 def get_cifar_datasets(cfg):
-    if cfg.dataset=="cifar10":
+    if cfg.dataset == "cifar10":
         data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                    "University of Leeds\PhD\Datasets\CIFAR10"
         transform_train = transforms.Compose([
-                                                  transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
-                                                  transforms.RandomHorizontalFlip(),
-                                                  transforms.ToTensor(),
-                                                  transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-                                                     ])
+            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
         transform_test = transforms.Compose([
-                                                 transforms.ToTensor(),
-                                                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-                                                    ])
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
         trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
@@ -1727,7 +1727,7 @@ def get_cifar_datasets(cfg):
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
-    if cfg.dataset =="cifar100":
+    if cfg.dataset == "cifar100":
         data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                    "University of Leeds\PhD\Datasets\CIFAR10"
         transform_train = transforms.Compose([
@@ -3457,11 +3457,11 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
     sigmas_for_experiment = None
     try:
         print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
-                                                                                                 cfg.amount,
+                                                                                                            cfg.amount,
                                                                                                             cfg.sampler))
         with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(
                 cfg.pruner,
-                                                                                                     cfg.amountcfg.sampler),
+                cfg.amountcfg.sampler),
                   "rb") as f:
 
             sigmas_for_experiment = pickle.load(f)
@@ -3471,7 +3471,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
                         "You need to "
                         "run first \n"
                         "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
-            cfg.amount, cfg.pruner,cfg.sampler))
+            cfg.amount, cfg.pruner, cfg.sampler))
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -3908,7 +3908,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     with open(model_name, "wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
-                                                                                                 cfg.amount,
+                                                                                                            cfg.amount,
                                                                                                             cfg.sampler),
               "wb") as f:
         pickle.dump(best_sigma_found, f)
@@ -4028,9 +4028,10 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     ######################### Saving the model and the sigmas ##########################################################
     accuracy_string = "{:10.2f}".format(performance_best_model_found)
     result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ","")
-    with open(model_file_name,"wb") as f:
+    model_file_name = cfg.save_model_path + "iterative_dynamic_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
+    with open(model_file_name, "wb") as f:
         pickle.dump(best_model_found, f)
     with open(cfg.save_data_path + "iterative_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
                                                                                                   cfg.amount),
@@ -4279,6 +4280,7 @@ if __name__ == '__main__':
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
+        "dataset":"cifar10",
         "batch_size": 512,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
