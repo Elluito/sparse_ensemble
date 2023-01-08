@@ -54,7 +54,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparstiy, get_percentile_per_layer
+    count_parameters, sparstiy, get_percentile_per_layer,get_sampler
 from matplotlib.patches import PathPatch
 
 
@@ -1701,31 +1701,58 @@ def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
 
 ######################################################################################################
 def get_cifar_datasets(cfg):
-    data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                               "University of Leeds\PhD\Datasets\CIFAR10"
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+    if cfg.dataset=="cifar10":
+        data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                                   "University of Leeds\PhD\Datasets\CIFAR10"
+        transform_train = transforms.Compose([
+                                                  transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+                                                  transforms.RandomHorizontalFlip(),
+                                                  transforms.ToTensor(),
+                                                  transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                                                     ])
 
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+        transform_test = transforms.Compose([
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                                                    ])
 
-    trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
-    cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+        cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-    trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
-                                              num_workers=cfg.num_workers)
-    val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
-                                             num_workers=cfg.num_workers)
-    testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
-                                             num_workers=cfg.num_workers)
-    return trainloader, val_loader, testloader
+        trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+                                                  num_workers=cfg.num_workers)
+        val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+                                                 num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+        return trainloader, val_loader, testloader
+    if cfg.dataset =="cifar100":
+        data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+                                                                                   "University of Leeds\PhD\Datasets\CIFAR10"
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
+        cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+                                                  num_workers=cfg.num_workers)
+        val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+                                                 num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+        return trainloader, val_loader, testloader
 
 
 def main(cfg: omegaconf.DictConfig):
