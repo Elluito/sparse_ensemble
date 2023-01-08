@@ -3429,19 +3429,22 @@ def enqueue_sigmas(study: optuna.Study, initial_sigmas_per_layer: dict):
 def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig):
     sigmas_for_experiment = None
     try:
-        print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
-                                                                                                 cfg.amount))
-        with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
-                                                                                                     cfg.amount),
+        print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
+                                                                                                 cfg.amount,
+                                                                                                            cfg.sampler))
+        with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(
+                cfg.pruner,
+                                                                                                     cfg.amountcfg.sampler),
                   "rb") as f:
 
             sigmas_for_experiment = pickle.load(f)
     except:
-        raise Exception("The respective sigmas file for pruning rate {} and pr per layer {} hasn't been generated, "
+        raise Exception("The respective sigmas file for pruning rate {} and pr per layer {} and sampler {} hasn't been "
+                        "generated, "
                         "You need to "
                         "run first \n"
                         "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
-            cfg.amount, cfg.pruner))
+            cfg.amount, cfg.pruner,cfg.sampler))
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -3877,8 +3880,9 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     model_name = model_name.replace(" ", "")
     with open(model_name, "wb") as f:
         pickle.dump(best_model_found, f)
-    with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}.pth".format(cfg.pruner,
-                                                                                                 cfg.amount),
+    with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
+                                                                                                 cfg.amount,
+                                                                                                            cfg.sampler),
               "wb") as f:
         pickle.dump(best_sigma_found, f)
     if cfg.use_wandb:
