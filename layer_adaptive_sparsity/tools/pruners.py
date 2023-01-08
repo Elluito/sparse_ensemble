@@ -53,7 +53,7 @@ def prune_weights_global(model, amount):
 def prune_weights_lamp(model, amount, exclude_layers: list = []):
     assert amount <= 1
     amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers)
-    prune_weights_l1predefined(model, amounts,exclude_layers=exclude_layers)
+    prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
 
 
 def prune_weights_uniform(model, amount):
@@ -69,10 +69,10 @@ def prune_weights_unifplus(model, amount):
     prune_weights_l1predefined(model, amounts)
 
 
-def prune_weights_erk(model, amount):
+def prune_weights_erk(model, amount, exclude_layers=[]):
     assert amount <= 1
-    amounts = _compute_erk_amounts(model, amount)
-    prune_weights_l1predefined(model, amounts)
+    amounts = _compute_erk_amounts(model, amount, exclude_layers=exclude_layers)
+    prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
 
 
 """
@@ -130,14 +130,18 @@ def _compute_unifplus_amounts(model, amount):
     return amounts
 
 
-def _compute_erk_amounts(model, amount):
-    unmaskeds = _count_unmasked_weights(model)
-    erks = _compute_erks(model)
+def _compute_erk_amounts(model, amount, exclude_layers):
+    unmaskeds_dict = _count_unmasked_weights(model, exclude_layers)
+    unmaskeds = torch.FloatTensor(list(unmaskeds_dict.values()))
+
+    erks = _compute_erks(model, exclude_layers)
 
     return _amounts_from_eps(unmaskeds, erks, amount)
 
 
-def _amounts_from_eps(unmaskeds, ers, amount):
+def _amounts_from_eps(unmaskeds, ers_dict, amount):
+    ers = torch.FloatTensor(list(ers_dict.values()))
+    names = list(ers_dict.keys())
     num_layers = ers.size(0)
     layers_to_keep_dense = torch.zeros(num_layers)
     total_to_survive = (1.0 - amount) * unmaskeds.sum()  # Total to keep.
@@ -171,7 +175,7 @@ def _amounts_from_eps(unmaskeds, ers, amount):
             amounts[idx] = 0.0
         else:
             amounts[idx] = 1.0 - (survs_of_prunables[idx] / unmaskeds[idx])
-    return amounts
+    return dict(zip(names, amounts))
 
 
 def _compute_lamp_amounts(model, amount, exclude_layers):
@@ -200,14 +204,14 @@ def _compute_lamp_amounts(model, amount, exclude_layers):
     return dict(amounts)
 
 
-def _compute_erks(model):
-    wlist = get_weights(model)
-    erks = torch.zeros(len(wlist))
-    for idx, w in enumerate(wlist):
+def _compute_erks(model, exclude_layers=[]):
+    wdict = get_weights(model, exclude_layers)
+    erks = {}
+    for name, w in wdict.items():
         if w.dim() == 4:
-            erks[idx] = w.size(0) + w.size(1) + w.size(2) + w.size(3)
+            erks[name] = w.size(0) + w.size(1) + w.size(2) + w.size(3)
         else:
-            erks[idx] = w.size(0) + w.size(1)
+            erks[name] = w.size(0) + w.size(1)
     return erks
 
 
