@@ -11,6 +11,9 @@ import torch
 from torch import nn
 
 
+def fine_tune_measure_flops(pruned_model:nn.Module,dataLoader:torch.utils.data.DataLoader):
+    names,weights = get_layer_dict(pruned_model)
+
 #
 # from .counting.ops import get_inference_FLOPs
 #

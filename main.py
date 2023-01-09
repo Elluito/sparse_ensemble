@@ -1942,6 +1942,7 @@ def manual_train(model: nn.Module, train_loader, val_loader, save_name, epochs, 
             torch.save(model.state_dict(), f"trained_models/{save_name}_val_accuracy={msg_performance}.pt")
 
 
+
 def run_traditional_training(cfg):
     data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
                                                                                "University of Leeds\PhD\Datasets\CIFAR10"
@@ -3855,7 +3856,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
             # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
             if noisy_sample_performance > best_gen_accuracy:
                 best_gen_accuracy = noisy_sample_performance
-                best_gen_model = noisy_sample_performance
+                best_gen_model = noisy_sample
                 best_gen_sigma = sigmas_for_individual
 
             current_gen_accuracies.append(noisy_sample_performance)
