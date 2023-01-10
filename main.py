@@ -54,8 +54,9 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparstiy, get_percentile_per_layer, get_sampler
+    count_parameters, sparstiy, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops
 from matplotlib.patches import PathPatch
+from shrinkbench.metrics.flops import flops
 
 
 def adjust_box_widths(g, fac):
@@ -398,39 +399,6 @@ def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig):
 
 
 ##################################################################################################################
-
-def test(net, use_cuda, testloader, one_batch=False, verbose=2):
-    if use_cuda:
-        net.cuda()
-    criterion = nn.CrossEntropyLoss()
-    net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            if use_cuda:
-                inputs, targets = inputs.cuda(), targets.cuda()
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.data.item()
-            _, predicted = torch.max(outputs.data, 1)
-            total += targets.size(0)
-            correct += predicted.eq(targets.data).cpu().sum()
-
-            if batch_idx % 100 == 0:
-                if verbose == 2:
-                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
-                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
-            if one_batch:
-                return 100. * correct.item() / total
-    if verbose == 1 or verbose == 2:
-        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-            test_loss / len(testloader), correct, total,
-            100. * correct.item() / total))
-    net.cpu()
-    return 100. * correct.item() / total
 
 
 def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
@@ -1940,7 +1908,6 @@ def manual_train(model: nn.Module, train_loader, val_loader, save_name, epochs, 
         msg_performance = f"{performance:.2f}".replace(".", ",")
         if performance > best_accuracy:
             torch.save(model.state_dict(), f"trained_models/{save_name}_val_accuracy={msg_performance}.pt")
-
 
 
 def run_traditional_training(cfg):
@@ -3677,6 +3644,139 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
         wandb.join()
 
 
+def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"finetune_{cfg.pruner}_pr_{cfg.amount}",
+            reinit=True,
+        )
+    pruned_model = get_model(cfg)
+    prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                       use_wandb=cfg.use_wandb)
+
+
+def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
+    FLOP_limit = cfg.flop_limit
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count",
+            reinit=True,
+            save_code=True,
+        )
+    N = cfg.population
+    original_model = get_model(cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+
+    ######## Begin the procedure    #################################
+
+    names, weights = zip(*get_layer_dict(original_model))
+    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
+
+    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
+
+    ############## Craete the study###############################
+
+    ######### Here I set the intial values I want the trial to have which is a global value
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+
+    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    sparse_flops = 0
+    for gen in range(cfg.generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+            remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, valloader, verbose=0,
+                                                                     count_flops=True)
+            sparse_flops += individual_sparse_flops
+            print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
+                                                                           sparstiy(noisy_sample),sparse_flops,
+                                                                      noisy_sample_performance))
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+            if sparse_flops > FLOP_limit:
+                break
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparstiy(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance,
+                        "sparse_flops": sparse_flops
+                        }
+            wandb.log(log_dict)
+            if total_sparse_FLOPS > FLOP_limit:
+                break
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+            temp = copy.deepcopy(best_model_found)
+            # remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
+            current_best_model = temp
+
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparstiy(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance,
+                   "sparse_flops": sparse_flops
+                   })
+    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
+          "".format(
+        performance_best_model_found, cfg.amount, sparstiy(best_model_found)))
+    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
+    #
+    # accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ", "")
+    # result = time.localtime(time.time())
+    # model_file_name = cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+    #     cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    # model_file_name = model_file_name.replace(" ", "")
+    # with open(model_file_name, "wb") as f:
+    #     pickle.dump(best_model_found, f)
+
+    if cfg.use_wandb:
+        wandb.save(model_file_name)
+        wandb.join()
+
+
 def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
@@ -4045,7 +4145,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
         wandb.join()
 
 
-def sigma_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
+def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
     if number_experiment == 2:
@@ -4056,6 +4156,10 @@ def sigma_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int 
         static_global_sigma_iterative_process(cfg)
     if number_experiment == 5:
         dynamic_sigma_iterative_process(cfg)
+    if number_experiment == 6:
+        run_fine_tune_experiment(cfg)
+    if number_experiment == 7:
+        static_sigma_per_layer_manually_iterative_process_flops_counts(cfg)
 
 
 def pruning_rate_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
@@ -4090,14 +4194,12 @@ def test_sigma_experiment_selector():
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": False
     })
-    sigma_experiment_selector(test_cfg, 1)
-    sigma_experiment_selector(test_cfg, 2)
-    sigma_experiment_selector(test_cfg, 3)
-    sigma_experiment_selector(test_cfg, 4)
-    sigma_experiment_selector(test_cfg, 5)
+    experiment_selector(test_cfg, 1)
+    experiment_selector(test_cfg, 2)
+    experiment_selector(test_cfg, 3)
+    experiment_selector(test_cfg, 4)
+    experiment_selector(test_cfg, 5)
 
-
-########################################################################################################################
 
 ############################### Plot of stochastic pruning against deterministic pruning ###############################
 
@@ -4278,15 +4380,16 @@ if __name__ == '__main__':
         "type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "cmaes",
+        "flop_limit": 1e6,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
-        "dataset":"cifar10",
+        "dataset": "cifar10",
         "batch_size": 512,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -4294,7 +4397,7 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    sigma_experiment_selector(cfg, 1)
+    experiment_selector(cfg, 6)
     # sigma_experiment_selector(cfg, 2)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)

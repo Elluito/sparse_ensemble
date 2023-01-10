@@ -9,10 +9,143 @@ from einops import repeat
 import numpy as np
 import torch
 from torch import nn
+from shrinkbench.metrics.flops import flops
+from torchmetrics import Accuracy
+import wandb
 
 
-def fine_tune_measure_flops(pruned_model:nn.Module,dataLoader:torch.utils.data.DataLoader):
-    names,weights = get_layer_dict(pruned_model)
+def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False):
+    if use_cuda:
+        net.cuda()
+    criterion = nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if use_cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                if first_time:
+                    _, sparse_flops_batch = flops(net, inputs)
+                    first_time = 0
+                sparse_flops += sparse_flops_batch
+            test_loss += loss.data.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                return 100. * correct.item() / total
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    net.cpu()
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
+
+
+def get_mask(weight: torch.FloatTensor):
+    return (weight != 0).type(torch.float)
+
+
+def mask_gradient(model: torch.nn.Module, mask_dict: dict):
+    for name, module in model.named_modules():
+        if name in mask_dict:
+            module.weight.grad = weight.grad * mask_dict[name]
+
+
+
+def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+                                       testLoader: torch.utils.data.DataLoader,
+                                       epochs = 50,
+                                       FLOP_limit: float = 1e15, use_wandb=False):
+    # optimizer = torch.optim.SGD()
+    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                          momentum=0.9, weight_decay=5e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    grad_clip = 0.1
+    names, weights = zip(*get_layer_dict(pruned_model))
+    accuracy = Accuracy(task="multiclass",num_classes=10)
+
+
+    masks = list(map(get_mask, weights))
+    mask_dict = dict(zip(names, masks))
+    if use_wandb:
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"constricted_fine_tune",
+            reinit=True,
+        )
+    criterion = nn.CrossEntropyLoss()
+    total_FLOPS = 0
+    total_sparse_FLOPS = 0
+    first_time = 1
+    forward_pass_sparse_flops = 0
+    forward_pass_dense_flops = 0
+    pruned_model.cuda()
+    for epoch in range(epochs):
+        for batch_idx, (data, target) in enumerate(dataLoader):
+            data, target = data.cuda(), target.cuda()
+            optimizer.zero_grad()
+            # first forward-backward step
+            predictions = pruned_model(data)
+            if first_time:
+                forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+                first_time = 0
+            # enable_bn(model)
+            loss = criterion(predictions, target)
+            loss.backward()
+            backward_flops_sparse = 2 * forward_pass_sparse_flops
+            backward_flops_dense = 2 * forward_pass_dense_flops
+            total_FLOPS += forward_flops_dense + backward_flops_dense
+            total_sparse_FLOPS += forward_flops_sparse + backward_flops_sparse
+            accuracy.update((predictions, target))
+            mask_gradient(pruned_model, mask_dict=mask_dict)
+            if grad_clip:
+                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+
+            optimizer.step()
+            lr_scheduler.step()
+
+            if batch_idx % 10 == 0 or total_sparse_FLOPS > FLOP_limit:
+                acc = accuracy.compute()
+                print(f"Training Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                      f" {loss.item():.2f} FLOPS:{total_sparse_FLOPS}")
+                if use_wandb:
+                    wandb.log({
+                        "val_set_accuracy": acc,
+                        "sparse_flops": total_sparse_FLOPS,
+                    })
+                if total_sparse_FLOPS > FLOP_limit:
+                    break
+
+        if total_sparse_FLOPS > FLOP_limit:
+            break
+    test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+
+    if use_wandb:
+        wandb.log({
+            "test_set_accuracy": test_set_performance
+        })
+    # msg_perormance = f"{performance:.2f}".replace(".", ",")
+
 
 #
 # from .counting.ops import get_inference_FLOPs
@@ -40,6 +173,7 @@ def get_sampler(cfg: omegaconf.DictConfig):
     if cfg.sampler == "qmc":
         return optuna.samplers.QMCSampler()
     raise NotImplementedError("Sampler {} is not supported yet".format(cfg.sampler))
+
 
 def get_layer_dict(model: torch.nn.Module):
     """
