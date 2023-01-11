@@ -4406,7 +4406,7 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 7)
     # sigma_experiment_selector(cfg, 2)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
