@@ -3655,7 +3655,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"finetune_{cfg.pruner}_pr_{cfg.amount}",
+            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4405,7 +4405,7 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    experiment_selector(cfg, 7)
+    experiment_selector(cfg, 6)
     # sigma_experiment_selector(cfg, 2)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)

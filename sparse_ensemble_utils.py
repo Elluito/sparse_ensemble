@@ -87,14 +87,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     masks = list(map(get_mask, weights))
     mask_dict = dict(zip(names, masks))
-    if use_wandb:
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"constricted_fine_tune",
-            reinit=True,
-        )
     criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
     total_sparse_FLOPS = 0
