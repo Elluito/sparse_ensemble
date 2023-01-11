@@ -58,6 +58,6 @@ def flops(model, input):
             total_flops += module_flops
             # For our operations, all weights are symmetric so we can just
             # do simple rule of three for the estimation
-            nonzero_flops += module_flops * nonzero(w).sum() / np.prod(w.shape)
+            nonzero_flops += module_flops * (nonzero(w).sum() / np.prod(w.shape))
 
     return total_flops, nonzero_flops

@@ -3662,7 +3662,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                     pruner=cfg.pruner)
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                       use_wandb=cfg.use_wandb)
+                                       use_wandb=cfg.use_wandb,epochs=cfg.epochs)
 
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
@@ -3707,6 +3707,10 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
     best_accuracy_found = 0
     current_best_model = original_model
     sparse_flops = 0
+    first_time = 1
+    unit_sparse_flops = 0
+    data, y = next(iter(valloader))
+    _, unit_sparse_flops = flops(deterministic_pruning, data)
     for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
@@ -3718,15 +3722,17 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
                             pruner=cfg.pruner)
             remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
             noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, valloader, verbose=0,
-                                                                     count_flops=True)
+                                                                     count_flops=True, batch_flops=unit_sparse_flops)
             sparse_flops += individual_sparse_flops
             print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
-                                                                           sparstiy(noisy_sample),sparse_flops,
-                                                                      noisy_sample_performance))
+                                                                                             sparstiy(noisy_sample),
+                                                                                             sparse_flops,
+                                                                                             noisy_sample_performance))
             current_gen_accuracies.append(noisy_sample_performance)
             current_gen_models.append(noisy_sample)
-            if sparse_flops > FLOP_limit:
-                break
+            if FLOP_limit != 0:
+                if sparse_flops > FLOP_limit:
+                    break
 
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
@@ -3737,7 +3743,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
                         "sparse_flops": sparse_flops
                         }
             wandb.log(log_dict)
-            if total_sparse_FLOPS > FLOP_limit:
+            if sparse_flops > FLOP_limit:
                 break
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
@@ -3764,11 +3770,11 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
         performance_best_model_found, cfg.amount, sparstiy(best_model_found)))
     print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
     #
-    # accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ", "")
-    # result = time.localtime(time.time())
-    # model_file_name = cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-    #     cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    # model_file_name = model_file_name.replace(" ", "")
+    accuracy_string = "{:10.2f}".format(performance_best_model_found).replace(" ", "")
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path + "iterative_manual_sigma_{}_dist_test_accuracy={}_flops_{}_time_{}-{}.pth".format(
+        cfg.pruner, accuracy_string, sparse_flops, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
     # with open(model_file_name, "wb") as f:
     #     pickle.dump(best_model_found, f)
 
@@ -4372,15 +4378,16 @@ if __name__ == '__main__':
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
         "population": 10,
-        "generations": 150,
+        "generations": 200,
+        "epochs": 200,
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
         "pruner": "lamp",
-        "type": "alternative",
+        "type": "layer-wise",
         "exclude_layers": ["conv1", "linear"],
-        "sampler": "cmaes",
-        "flop_limit": 1e6,
+        "sampler": "tpe",
+        "flop_limit": 0,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,

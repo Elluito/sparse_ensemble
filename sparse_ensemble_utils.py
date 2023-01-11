@@ -14,7 +14,7 @@ from torchmetrics import Accuracy
 import wandb
 
 
-def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False):
+def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -33,10 +33,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             outputs = net(inputs)
             loss = criterion(outputs, targets)
             if count_flops:
-                if first_time:
-                    _, sparse_flops_batch = flops(net, inputs)
-                    first_time = 0
-                sparse_flops += sparse_flops_batch
+                sparse_flops += batch_flops
             test_loss += loss.data.item()
             _, predicted = torch.max(outputs.data, 1)
             total += targets.size(0)
@@ -64,24 +61,25 @@ def get_mask(weight: torch.FloatTensor):
 
 
 def mask_gradient(model: torch.nn.Module, mask_dict: dict):
+    # parameters_dict = dict(model.named_parameters())
     for name, module in model.named_modules():
-        if name in mask_dict:
-            module.weight.grad = weight.grad * mask_dict[name]
-
+        if name in mask_dict.keys():
+            if hasattr(module.weight, "grad"):
+                print("Module Name: {}".format(name))
+                module.weight.grad._mul(mask_dict[name].to("cuda"))
 
 
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
-                                       epochs = 50,
-                                       FLOP_limit: float = 1e15, use_wandb=False):
+                                       epochs=1,
+                                       FLOP_limit: float = 0, use_wandb=False):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
-                          momentum=0.9, weight_decay=5e-4)
+                                momentum=0.9, weight_decay=5e-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     grad_clip = 0.1
     names, weights = zip(*get_layer_dict(pruned_model))
-    accuracy = Accuracy(task="multiclass",num_classes=10)
-
+    accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
 
     masks = list(map(get_mask, weights))
     mask_dict = dict(zip(names, masks))
@@ -96,54 +94,58 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
     total_sparse_FLOPS = 0
-    first_time = 1
+    # first_time = 1
     forward_pass_sparse_flops = 0
     forward_pass_dense_flops = 0
+    data, y = next(iter(dataLoader))
+    forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
     pruned_model.cuda()
+    pruned_model.train()
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
             optimizer.zero_grad()
             # first forward-backward step
             predictions = pruned_model(data)
-            if first_time:
-                forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
-                first_time = 0
             # enable_bn(model)
             loss = criterion(predictions, target)
             loss.backward()
             backward_flops_sparse = 2 * forward_pass_sparse_flops
             backward_flops_dense = 2 * forward_pass_dense_flops
-            total_FLOPS += forward_flops_dense + backward_flops_dense
-            total_sparse_FLOPS += forward_flops_sparse + backward_flops_sparse
-            accuracy.update((predictions, target))
+            batch_dense_flops = forward_pass_dense_flops + backward_flops_dense
+            batch_sparse_flops = forward_pass_sparse_flops + backward_flops_sparse
+            total_FLOPS += batch_dense_flops
+            total_sparse_FLOPS += batch_sparse_flops
+            accuracy.update(preds=predictions.cuda(), target=target.cuda())
             mask_gradient(pruned_model, mask_dict=mask_dict)
+
             if grad_clip:
                 nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
 
             optimizer.step()
             lr_scheduler.step()
 
-            if batch_idx % 10 == 0 or total_sparse_FLOPS > FLOP_limit:
+            if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
-                print(f"Training Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
-                      f" {loss.item():.2f} FLOPS:{total_sparse_FLOPS}")
+                print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                      f" {loss.item():.2f} FLOPS:{total_sparse_FLOPS} sparsity {sparstiy(pruned_model)}")
                 if use_wandb:
                     wandb.log({
                         "val_set_accuracy": acc,
                         "sparse_flops": total_sparse_FLOPS,
                     })
-                if total_sparse_FLOPS > FLOP_limit:
+                if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
-
-        if total_sparse_FLOPS > FLOP_limit:
-            break
+        if FLOP_limit != 0:
+            if total_sparse_FLOPS > FLOP_limit:
+                break
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
         wandb.log({
             "test_set_accuracy": test_set_performance
         })
+        wandb.join()
     # msg_perormance = f"{performance:.2f}".replace(".", ",")
 
 
