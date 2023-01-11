@@ -12,7 +12,7 @@ from torch import nn
 from shrinkbench.metrics.flops import flops
 from torchmetrics import Accuracy
 import wandb
-
+from decimal import Decimal
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
@@ -61,12 +61,16 @@ def get_mask(weight: torch.FloatTensor):
 
 
 def mask_gradient(model: torch.nn.Module, mask_dict: dict):
-    # parameters_dict = dict(model.named_parameters())
+    parameters_dict = dict(model.named_parameters())
+    # for name,parameter in parameters_dict.items():
+    #     for mask_name in mask_dict.keys():
+    #         if mask_name in name:
+    #             parameter.grad.data.mul_(mask_dict[mask_name].to("cuda"))
     for name, module in model.named_modules():
         if name in mask_dict.keys():
             if hasattr(module.weight, "grad"):
-                print("Module Name: {}".format(name))
-                module.weight.grad._mul(mask_dict[name].to("cuda"))
+                # print("Module Name: {}".format(name))
+                module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
 
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
@@ -127,8 +131,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
+                flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
                 print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
-                      f" {loss.item():.2f} FLOPS:{total_sparse_FLOPS} sparsity {sparstiy(pruned_model)}")
+                      f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparstiy(pruned_model):.3f}")
                 if use_wandb:
                     wandb.log({
                         "val_set_accuracy": acc,

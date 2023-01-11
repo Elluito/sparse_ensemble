@@ -2594,9 +2594,9 @@ def get_model(cfg: omegaconf.DictConfig):
                 net = ResNet18()
                 return net
         else:
-            if "csgmcmc" == cfg.type:
+            if "csgmcmc" == cfg.model_type:
                 net = ResNet18()
-            if "alternative" == cfg.type:
+            if "alternative" == cfg.model_type:
                 from alternate_models.resnet import ResNet18
                 net = ResNet18()
             load_model(net, cfg.solution)
@@ -3661,6 +3661,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     pruned_model = get_model(cfg)
     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                     pruner=cfg.pruner)
+    remove_reparametrization(model=pruned_model,exclude_layer_list=cfg.exclude_layers)
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb,epochs=cfg.epochs)
 
@@ -4384,7 +4385,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
         "pruner": "lamp",
-        "type": "layer-wise",
+        "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
@@ -4396,7 +4397,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": False
+        "use_wandb": True
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
