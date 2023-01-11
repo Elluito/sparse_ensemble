@@ -128,17 +128,17 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
             optimizer.step()
             lr_scheduler.step()
-
+            if use_wandb:
+                wandb.log({
+                    "val_set_accuracy": acc,
+                    "sparse_flops": total_sparse_FLOPS,
+                })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
                 flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
                 print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
                       f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparstiy(pruned_model):.3f}")
-                if use_wandb:
-                    wandb.log({
-                        "val_set_accuracy": acc,
-                        "sparse_flops": total_sparse_FLOPS,
-                    })
+
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
         if FLOP_limit != 0:
