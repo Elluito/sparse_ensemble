@@ -3744,8 +3744,9 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
                         "sparse_flops": sparse_flops
                         }
             wandb.log(log_dict)
-            if sparse_flops > FLOP_limit:
-                break
+            if FLOP_limit!=0:
+                if sparse_flops > FLOP_limit:
+                    break
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
