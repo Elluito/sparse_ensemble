@@ -121,6 +121,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             optimizer.step()
             lr_scheduler.step()
             if use_wandb:
+                acc = accuracy.compute()
                 wandb.log({
                     "val_set_accuracy": acc,
                     "sparse_flops": total_sparse_FLOPS,
