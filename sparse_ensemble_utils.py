@@ -91,8 +91,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     total_FLOPS = 0
     total_sparse_FLOPS = 0
     # first_time = 1
-    forward_pass_sparse_flops = 0
-    forward_pass_dense_flops = 0
+
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
     pruned_model.cuda()
@@ -122,8 +121,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             lr_scheduler.step()
             if use_wandb:
                 acc = accuracy.compute()
+                test(pruned_model, use_cuda=True, testloader=testLoader,one_batch=True)
                 wandb.log({
-                    "val_set_accuracy": acc,
+                    "val_set_accuracy": acc*100,
                     "sparse_flops": total_sparse_FLOPS,
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
