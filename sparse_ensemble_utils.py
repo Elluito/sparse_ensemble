@@ -14,6 +14,7 @@ from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
 
+
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
         net.cuda()
@@ -44,7 +45,10 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
                     print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
                           % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
             if one_batch:
-                return 100. * correct.item() / total
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
     if verbose == 1 or verbose == 2:
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
             test_loss / len(testloader), correct, total,
@@ -54,6 +58,15 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         return 100. * correct.item() / total, sparse_flops
     else:
         return 100. * correct.item() / total
+
+def get_random_batch(dataLoader):
+    N = len(dataLoader)
+    iterator=iter(dataLoader)
+    random_int = torch.randint(N)
+    batch = None
+    for  i in range(random_int):
+        batch = next(iterator)
+    return batch
 
 
 def get_mask(weight: torch.FloatTensor):
@@ -121,10 +134,12 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             lr_scheduler.step()
             if use_wandb:
                 acc = accuracy.compute()
-                test(pruned_model, use_cuda=True, testloader=testLoader,one_batch=True)
+                test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
+                                  one_batch=True)
                 wandb.log({
-                    "val_set_accuracy": acc*100,
+                    "val_set_accuracy": acc * 100,
                     "sparse_flops": total_sparse_FLOPS,
+                    "test_set_accuracy":test_accuracy
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()

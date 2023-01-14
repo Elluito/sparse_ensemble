@@ -54,7 +54,8 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparstiy, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops
+    count_parameters, sparstiy, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops,get_random_batch
+from itertools import cycle
 from matplotlib.patches import PathPatch
 from shrinkbench.metrics.flops import flops
 
@@ -3825,20 +3826,24 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
     #                                  names=["layer", "q25", "q50", "q75"])
 
     # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    data_loader_iterator = cycle(iter(valloader))
     best_model_found = None
     best_accuracy_found = 0
     current_best_model = original_model
-    data, y = next(iter(valloader))
+    data, y = next(data_loader_iterator)
     _, unit_sparse_flops = flops(deterministic_pruning, data)
+
     total_sparse_flops = 0
+    first_generation = True
     for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
-        sample_for_generation =  [next(iter(valloader))]
+        sample_for_generation =  [next(data_loader_iterator)]
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
 
             noisy_sample = get_noisy_sample(individual, cfg)
+
 
             if cfg.pruner is "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
@@ -3850,27 +3855,35 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
 
             noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda,sample_for_generation, verbose=0,
-                                                count_flops=True,
-                                       batch_flops=unit_sparse_flops,
-                                            one_batch=cfg.one_batch)
-            total_sparse_flops+=sparse_flops
+                                                          count_flops=True, batch_flops=unit_sparse_flops,one_batch=cfg.one_batch)
+            total_sparse_flops += sparse_flops
             print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparstiy(noisy_sample),
                                                                       noisy_sample_performance))
             # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
             current_gen_accuracies.append(noisy_sample_performance)
             current_gen_models.append(noisy_sample)
-
         best_index = np.argmax(current_gen_accuracies)
         gen_best_accuracy = current_gen_accuracies[best_index]
         if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda,testloader, verbose=0,
-                 one_batch=cfg.one_batch)
+            test_accuracy = test(current_gen_models[best_index], use_cuda,[get_random_batch(testloader)], verbose=0,
+                                                                                               one_batch=cfg.one_batch)
             log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
                         "sparsity": sparstiy(current_gen_models[best_index]),
                         "Deterministic performance": deterministic_pruning_performance,
                         "sparse_flops": total_sparse_flops,
-                        "test_set_accuracy": test_accuracy}
+                        "test_set_accuracy": test_accuracy,
+                        "sigma":cfg.sigma
+                        }
             wandb.log(log_dict)
+
+        if first_generation:
+            cfg.sigma = cfg.sigma / 2
+            first_generation = False
+        if gen == int((1/3)*cfg.generations):
+            cfg.sigma = cfg.sigma / 2
+        if gen == int((2 / 3) * cfg.generations):
+            cfg.sigma = cfg.sigma / 2
+
         if gen_best_accuracy > best_accuracy_found:
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
@@ -4422,7 +4435,7 @@ if __name__ == '__main__':
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch":True,
+        "one_batch": True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -4508,4 +4521,3 @@ if __name__ == '__main__':
     # for pr in pruning_rates:
     #     cfg.amount = pr
     #     main(cfg)
-
