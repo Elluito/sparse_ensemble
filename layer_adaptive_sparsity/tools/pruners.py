@@ -50,10 +50,12 @@ def prune_weights_global(model, amount):
     prune.global_unstructured(parameters_to_prune, pruning_method=prune.L1Unstructured, amount=amount)
 
 
-def prune_weights_lamp(model, amount, exclude_layers: list = []):
+def prune_weights_lamp(model, amount, exclude_layers: list = [],return_amounts=False):
     assert amount <= 1
     amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers)
     prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
+    if return_amounts:
+        return amounts
 
 
 def prune_weights_uniform(model, amount):
@@ -69,10 +71,12 @@ def prune_weights_unifplus(model, amount):
     prune_weights_l1predefined(model, amounts)
 
 
-def prune_weights_erk(model, amount, exclude_layers=[]):
+def prune_weights_erk(model, amount, exclude_layers=[],return_amounts=False):
     assert amount <= 1
     amounts = _compute_erk_amounts(model, amount, exclude_layers=exclude_layers)
     prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
+    if return_amounts:
+        return amounts
 
 
 """

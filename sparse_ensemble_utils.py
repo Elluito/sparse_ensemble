@@ -62,7 +62,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 def get_random_batch(dataLoader):
     N = len(dataLoader)
     iterator=iter(dataLoader)
-    random_int = torch.randint(N)
+    random_int = np.random.randint(N)
     batch = None
     for  i in range(random_int):
         batch = next(iterator)
@@ -145,7 +145,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                 acc = accuracy.compute()
                 flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
                 print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
-                      f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparstiy(pruned_model):.3f}")
+                      f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
 
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
@@ -240,7 +240,7 @@ def get_percentile_per_layer(model: torch.nn.Module, percentile: float = 0.1):
     return return_dict
 
 
-def sparstiy(model):
+def sparsity(model):
     # check if they hav
     total_params = count_parameters(model)
     non_zero_param = 0
