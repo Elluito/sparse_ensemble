@@ -3477,7 +3477,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
     deterministic_pruning = copy.deepcopy(original_model)
 
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
@@ -3528,7 +3528,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
                                                                                         exclude_layer_list=cfg.exclude_layers)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -3623,7 +3623,7 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
     N = cfg.population
     original_model = get_model(cfg)
     deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
@@ -3662,7 +3662,7 @@ def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig)
             individual = copy.deepcopy(current_best_model)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -3771,7 +3771,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
     _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
     deterministic_pruning = copy.deepcopy(original_model)
 
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
                         type="global")
     else:
@@ -3808,7 +3808,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
             #############################33 Pruning ##################################################
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -3899,7 +3899,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
     _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
     deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
@@ -3936,7 +3936,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
             noisy_sample = get_noisy_sample(individual, cfg)
 
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -4018,7 +4018,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     generations = cfg.generations
     original_model = get_model(cfg)
     deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
                         type="global")
     else:
@@ -4073,7 +4073,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
                                                                                         noise_upper_bound_dict,
                                                                                         exclude_layer_list=cfg.exclude_layers)
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -4188,7 +4188,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
     N = cfg.population
     original_model = get_model(cfg)
     deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
@@ -4228,7 +4228,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
             ############################## we prune #######################################
-            if cfg.pruner is "global":
+            if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
             else:
@@ -4328,7 +4328,7 @@ def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.Dict
         model=original_model, cfg=cfg)
     deterministic_pruning = copy.deepcopy(original_model)
 
-    if cfg.pruner is "global":
+    if cfg.pruner == "global":
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
