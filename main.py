@@ -4162,11 +4162,16 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             reinit=True,
         )
     pruned_model = get_model(cfg)
-    prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                    pruner=cfg.pruner)
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs)
+
 
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
