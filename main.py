@@ -4731,7 +4731,7 @@ if __name__ == '__main__':
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
@@ -4754,7 +4754,7 @@ if __name__ == '__main__':
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 7)
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 5)
