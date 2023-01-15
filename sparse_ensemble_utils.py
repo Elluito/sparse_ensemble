@@ -61,8 +61,8 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
 def get_random_batch(dataLoader):
     N = len(dataLoader)
-    iterator=iter(dataLoader)
-    random_int = np.random.randint(N)
+    iterator = iter(dataLoader)
+    random_int = np.random.randint(N)+1
     batch = None
     for  i in range(random_int):
         batch = next(iterator)
