@@ -4754,7 +4754,7 @@ if __name__ == '__main__':
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 7)
-    experiment_selector(cfg, 4)
+    experiment_selector(cfg, 6)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 5)
