@@ -4726,12 +4726,12 @@ if __name__ == '__main__':
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
         "population": 10,
-        "generations": 200,
+        "generations": 500,
         "epochs": 200,
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
@@ -4754,7 +4754,7 @@ if __name__ == '__main__':
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 7)
-    experiment_selector(cfg, 4)
+    experiment_selector(cfg, 8)
     # sigma_experiment_selector(cfg, 3)
     # sigma_experiment_selector(cfg, 4)
     # sigma_experiment_selector(cfg, 5)
