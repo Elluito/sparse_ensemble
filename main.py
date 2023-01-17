@@ -1068,7 +1068,7 @@ def format_sigmas(sigma):
 
 
 def format_percentages(value):
-    string = "{:10.1f}%".format(value)
+    string = "{:10.1f}%".format(value).replace(" ", "")
     return string
 
 
@@ -2594,7 +2594,7 @@ def get_model(cfg: omegaconf.DictConfig):
             if "csgmcmc" == cfg.type:
                 net = ResNet18()
                 return net
-            if "alternative" == cfg.type:
+            if "alternative" == cfg.model_type:
                 from alternate_models.resnet import ResNet18
                 net = ResNet18()
                 return net
@@ -2606,6 +2606,24 @@ def get_model(cfg: omegaconf.DictConfig):
                 net = ResNet18()
             load_model(net, cfg.solution)
             return net
+    if cfg.architecture == "VGG19":
+        if not cfg.solution:
+            if "csgmcmc" == cfg.model_type:
+                net = VGG(cfg.architecture)
+                return net
+            if "alternative" == cfg.model_type:
+                from alternate_models.vgg import VGG
+                net = VGG(cfg.architecture)
+                return net
+        else:
+            if "csgmcmc" == cfg.model_type:
+                net = VGG(cfg.architecture)
+            if "alternative" == cfg.model_type:
+                from alternate_models.vgg import VGG
+                net = VGG(cfg.architecture)
+            load_model(net, cfg.solution)
+            return net
+
     else:
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
@@ -2874,7 +2892,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         # if num_col == 1:
         #     fig = plt.figure(figsize=(13, 13 ))
         #     axs_p = fig.subplot()
-        fig, axs_p = plt.subplots(1, num_col, figsize=(8.5, 10))
+        fig, axs_p = plt.subplots(1, num_col, figsize=(9
+                                                       , 10))
         axs = []
         if isinstance(axs_p, SubplotBase):
             axs.append(axs_p)
@@ -2887,38 +2906,58 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # axj = fig.add_subplot(1, num_col, j+1,)
             current_df = df[df["sigma"] == current_sigma]
             current_df = current_df[current_df["Pruning Rate"] == current_pr]
-
+            current_df["Accuracy"] = original_performance - current_df["Epsilon"]
             pruned_original = copy.deepcopy(net)
             prune_with_rate(pruned_original, float(current_pr))
             remove_reparametrization(pruned_original)
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
-            g = sns.boxplot(x='Type',
-                            y='Epsilon',
-                            hue="Type",
-                            data=current_df,
-                            ax=axj
-                            # width = 1
-                            )
-            adjust_box_widths(plt.gcf(), 2)
-            g.axhline(delta_pruned_original_performance, c="purple", label="Deterministic Pruning")
-            g2 = sns.stripplot(x='Type',
-                               y='Epsilon',
-                               hue='Type',
-                               jitter=True,
-                               dodge=True,
-                               marker='o',
-                               edgecolor="gray",
-                               linewidth=1,
-                               # palette="set2",
-                               alpha=0.5,
-                               data=current_df,
-                               ax=axj)
+
+            axj = sns.boxplot(x='Type',
+                              y='Accuracy',
+                              hue="Type",
+                              data=current_df,
+                              ax=axj
+                              # width = 1
+                              )
+
+            adjust_box_widths(fig, 2)
+
+            axj.axhline(pruned_original_performance, c="purple", label="Deterministic Pruning")
+
+            axj = sns.stripplot(x='Type',
+                                y='Accuracy',
+                                hue='Type',
+                                jitter=True,
+                                dodge=True,
+                                marker='o',
+                                edgecolor="gray",
+                                linewidth=1,
+                                # palette="set2",
+                                alpha=0.5,
+                                data=current_df,
+                                ax=axj)
             # axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=15)
-            axj.set_ylabel(r"$\epsilon$", fontsize=30)
-            axj.tick_params(axis='both', which='major', labelsize=20)
-            handles, labels = g2.get_legend_handles_labels()
-            l = axj.legend(handles[:4], labels[:4], fontsize=20)
+            # plt.ylabel("Accuracy", fontsize=20)
+            # ticks = g.get_yticks(minor=False)
+            # accuracy_ticks = original_performance - ticks
+            # axj.set_ylabel("Accuracy", fontsize=30)
+            # axj.set_yticks(accuracy_ticks, minor=False)
+            # g.tick_params(axis='y', which='major', labelsize=20)
+            # plt.ylim(25, 60)
+            # ax2 = g.twinx()
+            # # y1_tick_positions = ax.get_ticks()
+            # epsilon_ticks = original_performance - np.linspace(25, 55, len(ticks))
+            # ax2.set_yticks(epsilon_ticks,minor=False)
+            # ax2.set_ylabel(r"$\epsilon$", fontsize=20)
+            # ax2.spines['right'].set_color('red')
+            # ax2.tick_params(axis="y", colors="red",labelsize =15
+            #                 )
+            # ax2.yaxis.label.set_color('red')
+            # ax2.invert_yaxis()
+
+            handles, labels = axj.get_legend_handles_labels()
+            l = axj.legend(handles[:4], labels[:4], fontsize=15)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -2926,9 +2965,40 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
+            axj.tick_params(axis="y", labelsize=15)
+            # plt.ylim(25,55)
+            ax2 = axj.twinx()
+            l = axj.get_ylim()
+            l2 = ax2.get_ylim()
+            f = lambda x: l2[0] + (x - l[0]) / (l[1] - l[0]) * (l2[1] - l2[0])
+            ticks = f(axj.get_yticks())
+            # ax2.set_yticks(axj.get_yticks(),labels=[25,30,35,40,45,50,55], minor=False)
+            #
+            ax2.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
+            # axj.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(axj.get_yticks()))
+            y2_ticks = ax2.get_yticks()
+            epsilon_ticks = original_performance - np.linspace(20, 60, len(ticks))
+            formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
+            epsilon_ticks = list(map(formatter_f, epsilon_ticks))
+            epsilon_ticks.reverse()
+            ax2.set_yticks(y2_ticks, labels=epsilon_ticks)
+            ax2.invert_yaxis()
+            # ax2.set_yticks([25,30,35,40,45,50,55], minor=False)
+            ax2.set_ylabel(r"$\epsilon$", fontsize=20)
+            ax2.spines['right'].set_color('red')
+            ax2.tick_params(axis="y", colors="red", labelsize=15
+                            )
+            ax2.yaxis.label.set_color('red')
+            # ax2.tick_params(
+            #     axis='x',  # changes apply to the x-axis
+            #     which='both',  # both major and minor ticks are affected
+            #     bottom=False,  # ticks along the bottom edge are off
+            #     top=False,  # ticks along the top edge are off
+            #     labelbottom=False)
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
+        plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(pr_string, current_sigma), bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(pr_string, current_sigma), bbox_inches="tight")
@@ -3807,7 +3877,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
             individual = copy.deepcopy(current_best_model)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-            #############################33 Pruning ##################################################
+            ############################# Pruning ##################################################
             if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
                                 type="global")
@@ -4169,9 +4239,11 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                         pruner=cfg.pruner)
 
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+    initial_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"val_set_performance": initial_performance})
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs)
-
 
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
@@ -4492,7 +4564,6 @@ def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.Dict
 
 
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
-
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
     if number_experiment == 2:
@@ -4628,7 +4699,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
 
     original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
 
-    deterministic_pruning_line = ax.axhline(pruned_original_performance, c="purple", label="Deterministic Pruning")
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
     # plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
     plt.xlabel("Ranking Index", fontsize=15)
     plt.ylabel("Accuracy", fontsize=15)
@@ -4651,7 +4722,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
             assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
                                                            f"in list {element} VS pruned performance:" \
                                                            f" {pruned_original_performance}"
-            p1 = ax.scatter(i, element, c="g", marker="o")
+            # p1 = ax.scatter(i, element, c="g", marker="o")
         else:
             if labels[ranked_index[i]] == "sto mask transfer":
                 sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
@@ -4675,24 +4746,30 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    plt.ylim(88, 100)
+    plt.ylim(20, 100)
     ax2 = ax.twinx()
-    epsilon_ticks = original_performance - np.linspace(88, original_performance, 5)
-    ax2.set_yticks(np.flip(epsilon_ticks), minor=False)
+    # y1_tick_positions = ax.get_ticks()
+    epsilon_ticks = original_performance - np.linspace(20, 100, 9)
+    ax2.set_yticks(epsilon_ticks, minor=False)
+    ax2.set_ylabel(r"$\epsilon$", fontsize=20)
+    ax2.spines['right'].set_color('red')
     ax2.tick_params(axis="y", colors="red")
+    ax2.yaxis.label.set_color('red')
+    ax2.invert_yaxis()
+    # ax2 = ax.twinx()
+    # y1_tick_positions = ax.get_ticks()
+    # epsilon_ticks = original_performance - np.linspace(88,100, 7)
+    # ax2.set_yticks(np.flip(epsilon_ticks), minor=False)
+    # ax2.tick_params(axis="y", colors="red")
 
     plt.tight_layout()
     plt.savefig(
         f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}"
-        f"_t_{result.tm_hour}"
-        f"-{result.tm_min}_{eval_set}.pdf")
+        f"_{cfg.population}_{eval_set}.pdf")
     plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-                f"_{cfg.population}"
-                f"_t_{result.tm_hour}"
-                f"-{result.tm_min}_{eval_set}.png")
+                f"_{cfg.population}_{eval_set}.png")
 
 
 ############################# Iterative stochastic pruning #############################################################
@@ -4733,8 +4810,9 @@ if __name__ == '__main__':
         "population": 10,
         "generations": 200,
         "epochs": 200,
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "architecture": "VGG19",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": "global",
         "model_type": "alternative",
@@ -4743,10 +4821,10 @@ if __name__ == '__main__':
         "flop_limit": 0,
         "one_batch": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
+        "sigma": 0.001,
         "amount": 0.9,
         "dataset": "cifar10",
-        "batch_size": 128,
+        "batch_size": 512,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
@@ -4758,11 +4836,15 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    # experiment_selector(cfg, 7)
+    experiment_selector(cfg, 4)
     experiment_selector(cfg, 6)
-    # sigma_experiment_selector(cfg, 3)
-    # sigma_experiment_selector(cfg, 4)
-    # sigma_experiment_selector(cfg, 5)
+    experiment_selector(cfg, 7)
+
+    # stochastic_pruning_against_deterministic_pruning(cfg)
+    # cfg.sigma = 0.002
+    # cfg.amount = 0.8
+    # stochastic_pruning_against_deterministic_pruning(cfg)
+
     ########### Mask Transfer experiments #############################
     # transfer_mask_rank_experiments(cfg)
     ############ Stchastic pruning VS Deterministic Pruning ###########
@@ -4788,6 +4870,7 @@ if __name__ == '__main__':
     #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
     #                                           specific_pruning_rates=[0.9])
+
     # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
 
     # stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)

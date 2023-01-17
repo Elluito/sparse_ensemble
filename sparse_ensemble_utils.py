@@ -68,6 +68,12 @@ def get_random_batch(dataLoader):
         batch = next(iterator)
     return batch
 
+def disable_bn(model:nn.Module):
+
+    for module in model.modules():
+        if isinstance(module, nn.BatchNorm1d) or isinstance(module, nn.BatchNorm2d) \
+                or isinstance(module, nn.BatchNorm3d):
+            module.eval()
 
 def get_mask(weight: torch.FloatTensor):
     return (weight != 0).type(torch.float)
@@ -107,8 +113,10 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+
     pruned_model.cuda()
     pruned_model.train()
+    disable_bn(pruned_model)
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
