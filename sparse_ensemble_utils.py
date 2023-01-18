@@ -59,21 +59,38 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
     else:
         return 100. * correct.item() / total
 
+
 def get_random_batch(dataLoader):
     N = len(dataLoader)
     iterator = iter(dataLoader)
-    random_int = np.random.randint(N)+1
+    random_int = np.random.randint(N) + 1
     batch = None
-    for  i in range(random_int):
+    for i in range(random_int):
         batch = next(iterator)
     return batch
 
-def disable_bn(model:nn.Module):
 
+def disable_bn(model: nn.Module):
     for module in model.modules():
         if isinstance(module, nn.BatchNorm1d) or isinstance(module, nn.BatchNorm2d) \
                 or isinstance(module, nn.BatchNorm3d):
             module.eval()
+            for param in module.parameters():
+                param.requires_grad = False
+
+
+def disable_exclude_layers(model: nn.Module, exclude_layers=[]):
+    dict_of_modules = dict(list(model.named_modules()))
+    for name in exclude_layers:
+        dict_of_modules[name].eval()
+        for param in dict_of_modules[name].parameters():
+            param.requires_grad = False
+
+    # for name,module in model.named_modules():
+    #     if isinstance(module, nn.BatchNorm1d) or isinstance(module, nn.BatchNorm2d) \
+    #             or isinstance(module, nn.BatchNorm3d):
+    #         module.eval()
+
 
 def get_mask(weight: torch.FloatTensor):
     return (weight != 0).type(torch.float)
@@ -92,10 +109,28 @@ def mask_gradient(model: torch.nn.Module, mask_dict: dict):
                 module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
 
+def efficient_population_evaluation(memory:list, model:nn.Module, dataLoader, use_cuda:bool):
+    x, y = get_random_batch(dataLoader)
+    if use_cuda:
+        x, y = x.cuda(), y.cuda()
+    rand_index = np.random.randint(0, len(x), size=1)
+    prediction = model(x[rand_index]).detach()
+    if prediction.eq(y[rand_index].data):
+        memory.append(model)
+        return True
+    else:
+        return False
+
+
+
+
+
+
+
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
-                                       FLOP_limit: float = 0, use_wandb=False):
+                                       FLOP_limit: float = 0, use_wandb=False, exclude_layers=[]):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -106,6 +141,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     masks = list(map(get_mask, weights))
     mask_dict = dict(zip(names, masks))
+    for name in exclude_layers:
+        mask_dict.pop(name)
     criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
     total_sparse_FLOPS = 0
@@ -117,6 +154,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
+    disable_exclude_layers(pruned_model, exclude_layers)
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
@@ -143,11 +181,11 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             if use_wandb:
                 acc = accuracy.compute()
                 test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
-                                  one_batch=True)
+                                     one_batch=True)
                 wandb.log({
                     "val_set_accuracy": acc * 100,
                     "sparse_flops": total_sparse_FLOPS,
-                    "test_set_accuracy":test_accuracy
+                    "test_set_accuracy": test_accuracy
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()

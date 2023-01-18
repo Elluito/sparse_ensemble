@@ -4228,7 +4228,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}",
+            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}_exclude_layers",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4239,11 +4239,11 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                         pruner=cfg.pruner)
 
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-    initial_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=1)
+    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
         wandb.log({"val_set_performance": initial_performance})
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs)
+                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs,exclude_layers=cfg.exclude_layers)
 
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
@@ -4809,12 +4809,13 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 10,
         "generations": 200,
-        "epochs": 200,
-        "architecture": "VGG19",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "epochs": 100,
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
@@ -4836,9 +4837,9 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    experiment_selector(cfg, 4)
+    # experiment_selector(cfg, 4)
     experiment_selector(cfg, 6)
-    experiment_selector(cfg, 7)
+    # experiment_selector(cfg, 7)
 
     # stochastic_pruning_against_deterministic_pruning(cfg)
     # cfg.sigma = 0.002
