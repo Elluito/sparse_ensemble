@@ -4746,7 +4746,6 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_
         if cfg.use_wandb:
             test_accuracy = test(noisy_sample, use_cuda, [get_random_batch(testloader)], verbose=0)
             log_dict = {"val_set_accuracy": noisy_sample_performance, "individual": n,
-                        "Deterministic performance": deterministic_pruning_performance,
                         "sparse_flops": initial_flops,
                         "test_set_accuracy": test_accuracy
                         }
@@ -4758,7 +4757,6 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_
             if cfg.use_wandb:
                 log_dict = {"best_val_set_accuracy":best_accuracy, "individual": n,
                             "sparsity": sparsity(best_model),
-                            "Deterministic performance": deterministic_pruning_performance,
                             "sparse_flops": initial_flops,
                             "test_set_accuracy": test_accuracy
                             }
