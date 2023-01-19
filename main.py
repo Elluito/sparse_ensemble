@@ -5123,8 +5123,8 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 100,
-        "generations": 200,
+        "population": 10,
+        "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
         "architecture": "resnet18",
@@ -5156,7 +5156,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 10)
+    experiment_selector(cfg, 4)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
