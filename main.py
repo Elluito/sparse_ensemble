@@ -5132,7 +5132,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 100,
+        "population": 20,
         "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
