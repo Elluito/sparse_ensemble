@@ -1,11 +1,12 @@
 import pickle
 import typing
-from typing import List
+from typing import List, Union, Any
 import pandas as pd
 import datetime as date
 import wandb
 import optuna
 # sys.path.append('csgmcmc')
+from alternate_models import ResNet, VGG
 from csgmcmc.models import *
 import omegaconf
 import copy
@@ -55,10 +56,11 @@ from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
-    get_random_batch
+    get_random_batch,efficient_population_evaluation, get_random_image_label
 from itertools import cycle
 from matplotlib.patches import PathPatch
 from shrinkbench.metrics.flops import flops
+
 
 
 def adjust_box_widths(g, fac):
@@ -4080,7 +4082,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
         wandb.join()
 
 
-def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
+def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig,print_exclude_layers):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4221,6 +4223,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
+    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4228,7 +4231,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}_exclude_layers",
+            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4241,7 +4244,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_performance": initial_performance})
+        wandb.log({"val_set_accuracy": initial_performance})
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs,exclude_layers=cfg.exclude_layers)
 
@@ -4258,7 +4261,10 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count_one_batch",
+            notes="This run use the global iterative first generation uses global sigma 0.005 and then uses the "
+                  "10th percentile "
+                  "of each layer",
             reinit=True,
             save_code=True,
         )
@@ -4302,8 +4308,12 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
         batch_for_gen = [next(iter_val_loader)]
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
-
-            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            ###### If the pruning is vanila global then the first gen is with global sigma
+            #### after that we do it with the 10th percentile iterative process
+            if gen == 0 and cfg.pruner == "global":
+                noisy_sample = get_noisy_sample(individual, cfg)
+            else:
+                noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
             ############################## we prune #######################################
             if cfg.pruner == "global":
                 prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
@@ -4315,6 +4325,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
 
             #######################################################33
             remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+
             noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, batch_for_gen, verbose=0,
                                                                      count_flops=True, batch_flops=unit_sparse_flops,
                                                                      one_batch=cfg.one_batch)
@@ -4632,8 +4643,6 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
-    deterministic_with_stochastic_mask_performance = []
-    stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     pruned_original = copy.deepcopy(net)
     prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers)
@@ -4641,6 +4650,132 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     pop.append(pruned_original)
+    pruned_performance.append(pruned_original_performance)
+    labels = ["pruned original"]
+    stochastic_dense_performances.append(original_performance)
+    for n in range(N):
+
+        current_model = get_noisy_sample(net, cfg)
+
+
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+
+        prune_with_rate(current_model, amount=cfg.amount, exclude_layers=cfg.exclude_layers)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+
+    # len(pruned performance)-1 because the first one is the pruned original
+    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
+
+    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # index 0 of pruned_performance.
+    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+                                                   f"{len(labels)}!={len(pruned_performance)}"
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+
+    pruned_performance = np.array(pruned_performance)
+    stochastic_dense_performances = np.array(stochastic_dense_performances)
+    result = time.localtime(time.time())
+
+    del pop
+    cutoff = original_performance - 2
+    ################################# plotting the comparison #########################################################
+    fig, ax = plt.subplots()
+
+    original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
+
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    plt.xlabel("Ranking Index", fontsize=15)
+    plt.ylabel("Accuracy", fontsize=15)
+    stochastic_models_points_dense = []
+    stochastic_models_points_pruned = []
+    transfer_mask_models_points = []
+    stochastic_with_deterministic_mask_models_points = []
+
+
+    for i, element in enumerate(pruned_performance[ranked_index]):
+        if i == index_of_pruned_original:
+            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+                                                           f"in list {element} VS pruned performance:" \
+                                                           f" {pruned_original_performance}"
+            # p1 = ax.scatter(i, element, c="g", marker="o")
+        else:
+            if labels[ranked_index[i]] == "sto mask transfer":
+                sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
+                transfer_mask_models_points.append(sto_transfer_point)
+            elif labels[ranked_index[i]] == "det mask transfer":
+                det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
+                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+            else:
+                pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
+                stochastic_models_points_pruned.append(pruned_point)
+    for i, element in enumerate(stochastic_dense_performances[ranked_index]):
+        if i == index_of_pruned_original or element == 1:
+            continue
+            # ax.scatter(i, element, c="y", marker="o", label="original model performance")
+        else:
+            dense_point = ax.scatter(i, element, c="c", marker="1")
+            stochastic_models_points_dense.append(dense_point)
+
+    plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
+                deterministic_pruning_line],
+               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
+               scatterpoints=1,
+               numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+    plt.ylim(20, 100)
+    ax2 = ax.twinx()
+
+    epsilon_ticks = original_performance - np.linspace(20, 100, 9)
+    ax2.set_yticks(epsilon_ticks, minor=False)
+    ax2.set_ylabel(r"$\epsilon$", fontsize=20)
+    ax2.spines['right'].set_color('red')
+    ax2.tick_params(axis="y", colors="red")
+    ax2.yaxis.label.set_color('red')
+    ax2.invert_yaxis()
+
+    plt.tight_layout()
+    plt.savefig(
+        f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}_{eval_set}.pdf")
+    plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
+                f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+                f"_{cfg.population}_{eval_set}.png")
+
+def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test"):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    deterministic_with_stochastic_mask_performance = []
+    stochastic_with_deterministic_mask_performance = []
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+
+    lamp_pruned_original: Union[Union[ResNet, None, VGG], Any] = copy.deepcopy(net)
+
+    prune_with_rate(lamp_pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner="lamp")
+    # remove_reparametrization(pruned_original)
+    print("pruned_performance of pruned original")
+    pruned_original_performance = test(lamp_pruned_original, use_cuda, evaluation_set, verbose=1)
+    pop.append(lamp_pruned_original)
     pruned_performance.append(pruned_original_performance)
     labels = ["pruned original"]
     stochastic_dense_performances.append(original_performance)
@@ -4718,21 +4853,21 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     p1 = None
 
     for i, element in enumerate(pruned_performance[ranked_index]):
-        if i == index_of_pruned_original:
-            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
-                                                           f"in list {element} VS pruned performance:" \
-                                                           f" {pruned_original_performance}"
+        # if i == index_of_pruned_original:
+        #     assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+        #                                                    f"in list {element} VS pruned performance:" \
+        #                                                    f" {pruned_original_performance}"
             # p1 = ax.scatter(i, element, c="g", marker="o")
+        # else:
+        if labels[ranked_index[i]] == "sto mask transfer":
+            sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
+            transfer_mask_models_points.append(sto_transfer_point)
+        elif labels[ranked_index[i]] == "det mask transfer":
+            det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
+            stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
         else:
-            if labels[ranked_index[i]] == "sto mask transfer":
-                sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
-                transfer_mask_models_points.append(sto_transfer_point)
-            elif labels[ranked_index[i]] == "det mask transfer":
-                det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
-                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
-            else:
-                pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
-                stochastic_models_points_pruned.append(pruned_point)
+            pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
+            stochastic_models_points_pruned.append(pruned_point)
     for i, element in enumerate(stochastic_dense_performances[ranked_index]):
         if i == index_of_pruned_original or element == 1:
             continue
@@ -4743,7 +4878,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
 
     plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
                 deterministic_pruning_line],
-               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
+               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "LAMP deterministic Pruned"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
     plt.ylim(20, 100)
@@ -4764,30 +4899,63 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
 
     plt.tight_layout()
     plt.savefig(
-        f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
+        f"data/figures/LAMP_stochastic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}.pdf")
-    plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
+        f"_{cfg.population}_{eval_set}_{cfg.architecture}.pdf")
+    plt.savefig(f"data/figures/LAMP_stochastic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-                f"_{cfg.population}_{eval_set}.png")
+                f"_{cfg.population}_{eval_set}_{cfg.architecture}.png")
 
 
+
+
+def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sparsity, sigmas_for_experiment,
+                                                             population,dataloader,image_flops,total_flops,cfg):
+    surviving_models = []
+    first_iteration = 1
+    change_image = False
+    image,y = get_random_image_label(dataloader)
+    for i in range(population):
+        individual = copy.deepcopy(solution)
+
+        noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+        ############################## we prune #######################################
+        if cfg.pruner == "global":
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                            type="global")
+        else:
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                            type="layer-wise",
+                            pruner=cfg.pruner)
+
+        #######################################################33
+        remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+
+        prediction = torch.argmax(noisy_sample(image).detach())
+        total_flops+=image_flops
+        if prediction.eq(y.data):
+            surviving_models.append(model)
+    image,y = get_random_image_label(dataloader)
+    index_to_remove = []
+    ######## While there
+    while len(surviving_models) > 1:
+        for ind in surviving_models:
+            prediction = torch.argmax(ind(image).detach())
+            total_flops += image_flops
+            if not prediction.eq(y.data):
+                index_to_remove.append(surviving_models.index(ind))
+        if len(index_to_remove)==len(surviving_models):
+            image,y = get_random_image_label(dataloader)
+        else:
+            for indx in index_to_remove:
+                surviving_models.pop(indx)
+    return surviving_models[0]
+
+def fine_tune_after_stochatic_pruning_experiment(cfg:omegaconf.OmegaConf):
+    pass
+def big_population_one_shot_efficient_evaluation(cfg:omegaconf.OmegaConf):
+    pass
 ############################# Iterative stochastic pruning #############################################################
-
-def nstep_iterative_stochastic_pruning(cfg: omegaconf.DictConfig, number_of_jumps: int = 0, generations=20):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    N = cfg.population
-    first_sparsity = 0.5
-    original_model = get_model(cfg)
-    ######## begin the procedure    #################################
-    names, weights = get_layer_dict(model)
-    noise = [cfg.sigma] * len(names)
-    noise_per_layer = dict(zip(names, noise))
-    for gen in range(generations):
-
-        for individual_index in range(N):
-            noisy_sample = get_noisy_sample_sigma_per_layer()
 
 
 if __name__ == '__main__':
@@ -4809,20 +4977,20 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 10,
         "generations": 200,
-        "epochs": 100,
+        "epochs": 200,
         # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.001,
+        "sigma": 0.005,
         "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
@@ -4838,8 +5006,10 @@ if __name__ == '__main__':
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
-    experiment_selector(cfg, 6)
-    # experiment_selector(cfg, 7)
+    # experiment_selector(cfg, 6)
+    experiment_selector(cfg, 7)
+
+    # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
     # stochastic_pruning_against_deterministic_pruning(cfg)
     # cfg.sigma = 0.002

@@ -109,7 +109,7 @@ def mask_gradient(model: torch.nn.Module, mask_dict: dict):
                 module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
 
-def efficient_population_evaluation(memory:list, model:nn.Module, dataLoader, use_cuda:bool):
+def efficient_population_evaluation(memory:list, model:nn.Module,image, use_cuda:bool):
     x, y = get_random_batch(dataLoader)
     if use_cuda:
         x, y = x.cuda(), y.cuda()
@@ -122,7 +122,13 @@ def efficient_population_evaluation(memory:list, model:nn.Module, dataLoader, us
         return False
 
 
-
+def get_random_image_label(dataloader):
+    x, y = get_random_batch(dataloader)
+    if use_cuda:
+        x, y = x.cuda(), y.cuda()
+    rand_index = np.random.randint(0, len(x), size=1)
+    image = x[rand_index]
+    return image,y[rand_index]
 
 
 
