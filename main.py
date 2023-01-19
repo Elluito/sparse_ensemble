@@ -5074,6 +5074,7 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
+
     experiment_selector(cfg, 10)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
