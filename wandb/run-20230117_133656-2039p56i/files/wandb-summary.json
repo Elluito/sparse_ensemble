@@ -1,1 +1,0 @@
-{"val_set_accuracy": 21.6796875, "generation": 0, "sparsity": 0.9000824429623141, "Deterministic performance": 80.25, "sparse_flops": 1588706090.0, "test_set_accuracy": 18.359375, "sigma": 0.005, "_timestamp": 1673962689.5897505, "_runtime": 72.87871360778809, "_step": 0, "_wandb": {"runtime": 74}}
