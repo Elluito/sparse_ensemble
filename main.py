@@ -4682,7 +4682,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig):
 
 def big_population_one_shot_efficient_evaluation(cfg: omegaconf.OmegaConf):
     pass
-def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
+def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4692,10 +4692,10 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
         # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.omegaconf.to_container(cfg, resolve=true),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
             name=f"one_shot_stochastic_pruning_static_sigma_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
-            notes="This experiment is to test if iterative global pruning,",
+            notes="This experiment is to test if iterative global stochastic pruning, compares to one-shot stochastic pruning",
             reinit=True,
         )
 
@@ -4718,7 +4718,7 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
 
     for n in range(cfg.population):
 
-        current_model = get_noisy_sample(pruned_model, cfg)
+        noisy_sample = get_noisy_sample(pruned_model, cfg)
 
         # det_mask_transfer_model = copy.deepcopy(current_model)
         # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
@@ -4727,16 +4727,16 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         # Dense stochastic performance
         if cfg.pruner == "global":
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
         else:
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
         if first_iter:
-            _, unit_sparse_flops = flops(current_model, data)
+            _, unit_sparse_flops = flops(noisy_sample, data)
             first_iter = 0
 
         noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
@@ -4745,7 +4745,7 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
         initial_flops += individual_sparse_flops
         if cfg.use_wandb:
             test_accuracy = test(best_model, use_cuda, [get_random_batch(testloader)], verbose=0)
-            log_dict = {"val_set_accuracy":noisy_sample_performance, "individual": n,
+            log_dict = {"val_set_accuracy": noisy_sample_performance, "individual": n,
                         "Deterministic performance": deterministic_pruning_performance,
                         "sparse_flops": initial_flops,
                         "test_set_accuracy": test_accuracy
@@ -4753,7 +4753,7 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test"):
             wandb.log(log_dict)
         if noisy_sample_performance > best_accuracy:
             best_accuracy = noisy_sample_performance
-            best_model = current_model
+            best_model = noisy_sample
             test_accuracy = test(best_model, use_cuda, [get_random_batch(testloader)], verbose=0)
             if cfg.use_wandb:
                 log_dict = {"best_val_set_accuracy":best_accuracy, "individual": n,
@@ -5123,8 +5123,8 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 10,
-        "generations": 10,
+        "population": 100,
+        "generations": 200,
         "epochs": 200,
         # "architecture": "VGG19",
         "architecture": "resnet18",
@@ -5136,7 +5136,7 @@ if __name__ == '__main__':
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": True,
+        "one_batch": False,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5156,7 +5156,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 4)
+    experiment_selector(cfg, 10)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
