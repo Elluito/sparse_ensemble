@@ -3953,6 +3953,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
+    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_valset_per_generation "
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -3960,12 +3961,11 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_global_static_sigma_one_batch_per_generation",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_global_static_sigma{one_batch_string}",
             reinit=True,
             save_code=True,
         )
     N = cfg.population
-    first_sparsity = 0.5
     original_model = get_model(cfg)
 
     _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
@@ -3995,13 +3995,16 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
     current_best_model = original_model
     data, y = next(data_loader_iterator)
     _, unit_sparse_flops = flops(deterministic_pruning, data)
-
+    iter_val_loader = cycle(iter(valloader))
     total_sparse_flops = 0
     first_generation = True
+    evaluation_set = valloader
     for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
-        sample_for_generation = [next(data_loader_iterator)]
+
+        if cfg.one_batch:
+            evaluation_set = [next(iter_val_loader)]
         ################################################################################################################
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
@@ -4016,9 +4019,8 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
                                 type="layer-wise",
                                 pruner=cfg.pruner)
 
-            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda, sample_for_generation, verbose=0,
-                                                          count_flops=True, batch_flops=unit_sparse_flops,
-                                                          one_batch=cfg.one_batch)
+            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
+                                                          count_flops=True, batch_flops=unit_sparse_flops)
             total_sparse_flops += sparse_flops
             print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
                                                                       noisy_sample_performance))
@@ -4255,6 +4257,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
+    one_batch_string = "_one_batch" if cfg.one_batch else ""
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4262,7 +4265,8 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count_one_batch",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count{one_batch_string}"
+                 f"{cfg.one_batch}",
             notes="This run use the global iterative first generation uses global sigma 0.005 and then uses the "
                   "10th percentile "
                   "of each layer",
@@ -4303,10 +4307,12 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
     iter_val_loader = cycle(iter(valloader))
     data, y = next(iter_val_loader)
     _, unit_sparse_flops = flops(deterministic_pruning, data)
+    evaluation_set = valloader
     for gen in range(cfg.generations):
         current_gen_models = []
         current_gen_accuracies = []
-        batch_for_gen = [next(iter_val_loader)]
+        if cfg.one_batch:
+            evaluation_set = [next(iter_val_loader)]
         for individual_index in range(N):
             individual = copy.deepcopy(current_best_model)
             ###### If the pruning is vanila global then the first gen is with global sigma
@@ -4327,9 +4333,8 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
             #######################################################33
             remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
 
-            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, batch_for_gen, verbose=0,
-                                                                     count_flops=True, batch_flops=unit_sparse_flops,
-                                                                     one_batch=cfg.one_batch)
+            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
+                                                                     count_flops=True, batch_flops=unit_sparse_flops)
             sparse_flops += individual_sparse_flops
             print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
                                                                                              sparsity(noisy_sample),
@@ -5125,7 +5130,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 20,
+        "population": 10,
         "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
@@ -5138,7 +5143,7 @@ if __name__ == '__main__':
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch":True,
+        "one_batch": False,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5158,7 +5163,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    experiment_selector(cfg, 4)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
