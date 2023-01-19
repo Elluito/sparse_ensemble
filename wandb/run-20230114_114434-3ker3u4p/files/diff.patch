@@ -1,0 +1,419 @@
+diff --git a/shrinkbench/.gitignore b/shrinkbench/.gitignore
+new file mode 100644
+index 0000000..aca5259
+--- /dev/null
++++ b/shrinkbench/.gitignore
+@@ -0,0 +1,118 @@
++# Byte-compiled / optimized / DLL files
++__pycache__/
++*.py[cod]
++*$py.class
++
++# C extensions
++*.so
++
++# Distribution / packaging
++.Python
++build/
++develop-eggs/
++dist/
++downloads/
++eggs/
++.eggs/
++lib/
++lib64/
++parts/
++sdist/
++var/
++wheels/
++*.egg-info/
++.installed.cfg
++*.egg
++MANIFEST
++
++# PyInstaller
++#  Usually these files are written by a python script from a template
++#  before PyInstaller builds the exe, so as to inject date/other infos into it.
++*.manifest
++*.spec
++
++# Installer logs
++pip-log.txt
++pip-delete-this-directory.txt
++
++# Unit test / coverage reports
++htmlcov/
++.tox/
++.coverage
++.coverage.*
++.cache
++nosetests.xml
++coverage.xml
++*.cover
++.hypothesis/
++.pytest_cache/
++
++# Translations
++*.mo
++*.pot
++
++# Django stuff:
++*.log
++local_settings.py
++db.sqlite3
++
++# Flask stuff:
++instance/
++.webassets-cache
++
++# Scrapy stuff:
++.scrapy
++
++# Sphinx documentation
++docs/_build/
++
++# PyBuilder
++target/
++
++# Jupyter Notebook
++.ipynb_checkpoints
++
++# pyenv
++.python-version
++
++# celery beat schedule file
++celerybeat-schedule
++
++# SageMath parsed files
++*.sage.py
++
++# Environments
++.env
++.venv
++env/
++venv/
++ENV/
++env.bak/
++venv.bak/
++
++# Spyder project settings
++.spyderproject
++.spyproject
++
++# Rope project settings
++.ropeproject
++
++# mkdocs documentation
++/site
++
++# mypy
++.mypy_cache/
++data
++*.pt
++*.pth
++*.hdf5
++*.h5
++results
++tblogs
++debug
++pretrained
++__old
++slurmlog
++scripts/imagenet_profiling_results.csv
++results*
++scripts/*.sh
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/files/conda-environment.yaml b/wandb/run-20230111_132849-5y7u5yyu/files/conda-environment.yaml
+new file mode 100644
+index 0000000..e69de29
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/files/config.yaml b/wandb/run-20230111_132849-5y7u5yyu/files/config.yaml
+new file mode 100644
+index 0000000..31a1c78
+--- /dev/null
++++ b/wandb/run-20230111_132849-5y7u5yyu/files/config.yaml
+@@ -0,0 +1,98 @@
++wandb_version: 1
++
++_wandb:
++  desc: null
++  value:
++    cli_version: 0.13.7
++    framework: ignite
++    is_jupyter_run: false
++    is_kaggle_kernel: false
++    python_version: 3.7.13
++    start_time: 1673461729.934678
++    t:
++      1:
++      - 1
++      - 5
++      - 10
++      - 35
++      - 41
++      - 50
++      - 53
++      - 55
++      2:
++      - 1
++      - 5
++      - 10
++      - 35
++      - 41
++      - 50
++      - 53
++      - 55
++      3:
++      - 13
++      - 16
++      - 23
++      4: 3.7.13
++      5: 0.13.7
++      8:
++      - 3
++      - 8
++amount:
++  desc: null
++  value: 0.9
++architecture:
++  desc: null
++  value: resnet18
++batch_size:
++  desc: null
++  value: 512
++dataset:
++  desc: null
++  value: cifar10
++epochs:
++  desc: null
++  value: 200
++exclude_layers:
++  desc: null
++  value:
++  - conv1
++  - linear
++flop_limit:
++  desc: null
++  value: 0
++generations:
++  desc: null
++  value: 200
++model_type:
++  desc: null
++  value: alternative
++noise:
++  desc: null
++  value: gaussian
++num_workers:
++  desc: null
++  value: 0
++population:
++  desc: null
++  value: 10
++pruner:
++  desc: null
++  value: lamp
++sampler:
++  desc: null
++  value: tpe
++save_data_path:
++  desc: null
++  value: stochastic_pruning_data/
++save_model_path:
++  desc: null
++  value: stochastic_pruning_models/
++sigma:
++  desc: null
++  value: 0.005
++solution:
++  desc: null
++  value: trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth
++use_wandb:
++  desc: null
++  value: true
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/files/requirements.txt b/wandb/run-20230111_132849-5y7u5yyu/files/requirements.txt
+new file mode 100644
+index 0000000..600a573
+--- /dev/null
++++ b/wandb/run-20230111_132849-5y7u5yyu/files/requirements.txt
+@@ -0,0 +1,114 @@
++alembic==1.8.1
++antlr4-python3-runtime==4.9.3
++asgiref==3.5.2
++atomicwrites==1.4.0
++attrs==22.1.0
++autopage==0.5.1
++botorch==0.6.6
++bottleneck==1.3.5
++brotlipy==0.7.0
++certifi==2022.12.7
++cffi==1.15.1
++charset-normalizer==2.0.4
++click==8.1.3
++cliff==3.10.1
++cmaes==0.8.2
++cmd2==2.4.2
++colorama==0.4.5
++colorlog==6.7.0
++cryptography==37.0.1
++cupy-cuda11x==11.2.0
++cycler==0.11.0
++cython==0.29.28
++decorator==5.1.1
++django==3.2.15
++docker-pycreds==0.4.0
++docopt==0.6.2
++einops==0.6.0
++fastdtw==0.3.4
++fastrlock==0.8
++fonttools==4.38.0
++futures==3.0.5
++gensim==4.2.0
++gitdb==4.0.10
++gitpython==3.1.29
++gpytorch==1.8.1
++greenlet==1.1.3
++hydra-core==1.2.0
++idna==3.3
++image==1.5.33
++importlib-metadata==4.12.0
++iniconfig==1.1.1
++joblib==1.1.0
++kiwisolver==1.4.4
++mako==1.2.2
++markupsafe==2.1.1
++matplotlib==3.5.3
++mkl-fft==1.3.1
++mkl-random==1.2.2
++mkl-service==2.4.0
++moead-framework==0.5.9.1
++multipledispatch==0.6.0
++networkx==2.2
++numexpr==2.8.3
++numpy==1.21.5
++omegaconf==2.2.3
++opt-einsum==3.3.0
++optuna==3.0.2
++packaging==21.3
++pandas==1.3.5
++pathtools==0.1.2
++pbr==5.10.0
++pillow==9.0.1
++pip==22.2.2
++pipreqs==0.4.11
++plotly==5.6.0
++pluggy==1.0.0
++prettytable==3.4.1
++promise==2.3
++protobuf==4.21.12
++psutil==5.9.4
++py==1.11.0
++pycparser==2.21
++pyopenssl==22.0.0
++pyparsing==3.0.4
++pyperclip==1.8.2
++pyreadline3==3.4.1
++pyro-api==0.1.2
++pyro-ppl==1.8.3
++pysocks==1.7.1
++pytest==7.1.2
++python-dateutil==2.8.2
++pytorch-ignite==0.4.10
++pytz==2022.1
++pyyaml==6.0
++requests==2.28.1
++scikit-learn==1.0.2
++scipy==1.7.3
++seaborn==0.12.1
++sentry-sdk==1.12.1
++setproctitle==1.3.2
++setuptools==65.4.1
++shortuuid==1.0.11
++six==1.16.0
++smart-open==6.2.0
++smmap==5.0.0
++sqlalchemy==1.4.41
++sqlparse==0.4.2
++stevedore==3.5.0
++tenacity==8.0.1
++threadpoolctl==3.1.0
++tomli==1.2.2
++torch==1.12.1
++torchaudio==0.12.1
++torchmetrics==0.11.0
++torchvision==0.13.1
++tqdm==4.64.0
++typing-extensions==4.3.0
++urllib3==1.26.11
++wandb==0.13.7
++wcwidth==0.2.5
++win-inet-pton==1.1.0
++wincertstore==0.2
++yarg==0.1.9
++zipp==3.9.0
+\ No newline at end of file
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/files/wandb-metadata.json b/wandb/run-20230111_132849-5y7u5yyu/files/wandb-metadata.json
+new file mode 100644
+index 0000000..292b506
+--- /dev/null
++++ b/wandb/run-20230111_132849-5y7u5yyu/files/wandb-metadata.json
+@@ -0,0 +1,50 @@
++{
++    "os": "Windows-10-10.0.22000-SP0",
++    "python": "3.7.13",
++    "heartbeatAt": "2023-01-11T18:28:50.824870",
++    "startedAt": "2023-01-11T18:28:49.882228",
++    "docker": null,
++    "cuda": null,
++    "args": [],
++    "state": "running",
++    "program": "C:/Users/Luis Alfredo/OneDrive - University of Leeds/PhD/Code/Local Experiments/sparse_ensemble/main.py",
++    "codePath": "main.py",
++    "git": {
++        "remote": "https://github.com/Elluito/sparse_ensemble.git",
++        "commit": "39aedebc93c3d1f744c2466ad46a24634940ceae"
++    },
++    "email": "alfredoavendano@hotmail.com",
++    "root": "C:/Users/Luis Alfredo/OneDrive - University of Leeds/PhD/Code/Local Experiments/sparse_ensemble",
++    "host": "LAPTOP-688BJM84",
++    "username": "LuisAlfredo",
++    "executable": "C:\\Users\\Luis Alfredo\\.conda\\envs\\pytorch\\python.exe",
++    "cpu_count": 4,
++    "cpu_count_logical": 8,
++    "cpu_freq": {
++        "current": 2300.0,
++        "min": 0.0,
++        "max": 2301.0
++    },
++    "cpu_freq_per_core": [
++        {
++            "current": 2300.0,
++            "min": 0.0,
++            "max": 2301.0
++        }
++    ],
++    "disk": {
++        "total": 237.42218399047852,
++        "used": 220.8005485534668
++    },
++    "gpu": "NVIDIA GeForce GTX 1050",
++    "gpu_count": 1,
++    "gpu_devices": [
++        {
++            "name": "NVIDIA GeForce GTX 1050",
++            "memory_total": 4294967296
++        }
++    ],
++    "memory": {
++        "total": 7.859973907470703
++    }
++}
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/files/wandb-summary.json b/wandb/run-20230111_132849-5y7u5yyu/files/wandb-summary.json
+new file mode 100644
+index 0000000..dcb4bee
+--- /dev/null
++++ b/wandb/run-20230111_132849-5y7u5yyu/files/wandb-summary.json
+@@ -0,0 +1 @@
++{"val_set_accuracy": 0.921875, "sparse_flops": 433147152.0, "_timestamp": 1673461780.2769005, "_runtime": 50.342222452163696, "_step": 0, "_wandb": {"runtime": 71}}
+\ No newline at end of file
+diff --git a/wandb/run-20230111_132849-5y7u5yyu/run-5y7u5yyu.wandb b/wandb/run-20230111_132849-5y7u5yyu/run-5y7u5yyu.wandb
+new file mode 100644
+index 0000000..e69de29

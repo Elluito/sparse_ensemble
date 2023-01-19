@@ -1,12 +1,11 @@
 import pickle
 import typing
-from typing import List, Union, Any
+from typing import List
 import pandas as pd
 import datetime as date
 import wandb
 import optuna
 # sys.path.append('csgmcmc')
-from alternate_models import ResNet, VGG
 from csgmcmc.models import *
 import omegaconf
 import copy
@@ -55,9 +54,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
-    get_random_batch, efficient_population_evaluation, get_random_image_label
-from itertools import cycle
+    count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops
 from matplotlib.patches import PathPatch
 from shrinkbench.metrics.flops import flops
 
@@ -218,6 +215,7 @@ def save_onnx(cfg):
 def models_inspection(population):
     total_params = count_parameters(population[0])
     layers_of_models = [get_layer_dict(mod) for mod in population]
+    sparsity = lambda w: torch.count_nonzero(w == 0) / w.nelement()
     zero_number = lambda w: torch.count_nonzero(w == 0) / total_params
     tsne = []
     mds = []
@@ -1069,7 +1067,7 @@ def format_sigmas(sigma):
 
 
 def format_percentages(value):
-    string = "{:10.1f}%".format(value).replace(" ", "")
+    string = "{:10.1f}%".format(value)
     return string
 
 
@@ -1567,7 +1565,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     type: str = "global",
                     criterion:
                     str =
-                    "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False):
+                    "l1", exclude_layers: list = [], pr_per_layer: dict = {}):
     if type == "global":
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
         if criterion == "l1":
@@ -1587,11 +1585,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         from layer_adaptive_sparsity.tools.pruners import get_modules, get_weights, weight_pruner_loader
         if pruner == "lamp":
             pruner = weight_pruner_loader(pruner)
-            if return_pr_per_layer:
-                return pruner(model=net, amount=amount, exclude_layers=exclude_layers,
-                              return_amounts=return_pr_per_layer)
-            else:
-                pruner(model=net, amount=amount, exclude_layers=exclude_layers)
+            pruner(model=net, amount=amount, exclude_layers=exclude_layers)
         if pruner == "erk":
             pruner = weight_pruner_loader(pruner)
             pruner(model=net, amount=amount, exclude_layers=exclude_layers)
@@ -2595,7 +2589,7 @@ def get_model(cfg: omegaconf.DictConfig):
             if "csgmcmc" == cfg.type:
                 net = ResNet18()
                 return net
-            if "alternative" == cfg.model_type:
+            if "alternative" == cfg.type:
                 from alternate_models.resnet import ResNet18
                 net = ResNet18()
                 return net
@@ -2607,24 +2601,6 @@ def get_model(cfg: omegaconf.DictConfig):
                 net = ResNet18()
             load_model(net, cfg.solution)
             return net
-    if cfg.architecture == "VGG19":
-        if not cfg.solution:
-            if "csgmcmc" == cfg.model_type:
-                net = VGG(cfg.architecture)
-                return net
-            if "alternative" == cfg.model_type:
-                from alternate_models.vgg import VGG
-                net = VGG(cfg.architecture)
-                return net
-        else:
-            if "csgmcmc" == cfg.model_type:
-                net = VGG(cfg.architecture)
-            if "alternative" == cfg.model_type:
-                from alternate_models.vgg import VGG
-                net = VGG(cfg.architecture)
-            load_model(net, cfg.solution)
-            return net
-
     else:
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
@@ -2893,8 +2869,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         # if num_col == 1:
         #     fig = plt.figure(figsize=(13, 13 ))
         #     axs_p = fig.subplot()
-        fig, axs_p = plt.subplots(1, num_col, figsize=(9
-                                                       , 10))
+        fig, axs_p = plt.subplots(1, num_col, figsize=(8.5, 10))
         axs = []
         if isinstance(axs_p, SubplotBase):
             axs.append(axs_p)
@@ -2907,58 +2882,38 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # axj = fig.add_subplot(1, num_col, j+1,)
             current_df = df[df["sigma"] == current_sigma]
             current_df = current_df[current_df["Pruning Rate"] == current_pr]
-            current_df["Accuracy"] = original_performance - current_df["Epsilon"]
+
             pruned_original = copy.deepcopy(net)
             prune_with_rate(pruned_original, float(current_pr))
             remove_reparametrization(pruned_original)
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
-
-            axj = sns.boxplot(x='Type',
-                              y='Accuracy',
-                              hue="Type",
-                              data=current_df,
-                              ax=axj
-                              # width = 1
-                              )
-
-            adjust_box_widths(fig, 2)
-
-            axj.axhline(pruned_original_performance, c="purple", label="Deterministic Pruning")
-
-            axj = sns.stripplot(x='Type',
-                                y='Accuracy',
-                                hue='Type',
-                                jitter=True,
-                                dodge=True,
-                                marker='o',
-                                edgecolor="gray",
-                                linewidth=1,
-                                # palette="set2",
-                                alpha=0.5,
-                                data=current_df,
-                                ax=axj)
+            g = sns.boxplot(x='Type',
+                            y='Epsilon',
+                            hue="Type",
+                            data=current_df,
+                            ax=axj
+                            # width = 1
+                            )
+            adjust_box_widths(plt.gcf(), 2)
+            g.axhline(delta_pruned_original_performance, c="purple", label="Deterministic Pruning")
+            g2 = sns.stripplot(x='Type',
+                               y='Epsilon',
+                               hue='Type',
+                               jitter=True,
+                               dodge=True,
+                               marker='o',
+                               edgecolor="gray",
+                               linewidth=1,
+                               # palette="set2",
+                               alpha=0.5,
+                               data=current_df,
+                               ax=axj)
             # axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=15)
-            # plt.ylabel("Accuracy", fontsize=20)
-            # ticks = g.get_yticks(minor=False)
-            # accuracy_ticks = original_performance - ticks
-            # axj.set_ylabel("Accuracy", fontsize=30)
-            # axj.set_yticks(accuracy_ticks, minor=False)
-            # g.tick_params(axis='y', which='major', labelsize=20)
-            # plt.ylim(25, 60)
-            # ax2 = g.twinx()
-            # # y1_tick_positions = ax.get_ticks()
-            # epsilon_ticks = original_performance - np.linspace(25, 55, len(ticks))
-            # ax2.set_yticks(epsilon_ticks,minor=False)
-            # ax2.set_ylabel(r"$\epsilon$", fontsize=20)
-            # ax2.spines['right'].set_color('red')
-            # ax2.tick_params(axis="y", colors="red",labelsize =15
-            #                 )
-            # ax2.yaxis.label.set_color('red')
-            # ax2.invert_yaxis()
-
-            handles, labels = axj.get_legend_handles_labels()
-            l = axj.legend(handles[:4], labels[:4], fontsize=15)
+            axj.set_ylabel(r"$\epsilon$", fontsize=30)
+            axj.tick_params(axis='both', which='major', labelsize=20)
+            handles, labels = g2.get_legend_handles_labels()
+            l = axj.legend(handles[:4], labels[:4], fontsize=20)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -2966,40 +2921,9 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
-            axj.tick_params(axis="y", labelsize=15)
-            # plt.ylim(25,55)
-            ax2 = axj.twinx()
-            l = axj.get_ylim()
-            l2 = ax2.get_ylim()
-            f = lambda x: l2[0] + (x - l[0]) / (l[1] - l[0]) * (l2[1] - l2[0])
-            ticks = f(axj.get_yticks())
-            # ax2.set_yticks(axj.get_yticks(),labels=[25,30,35,40,45,50,55], minor=False)
-            #
-            ax2.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
-            # axj.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(axj.get_yticks()))
-            y2_ticks = ax2.get_yticks()
-            epsilon_ticks = original_performance - np.linspace(20, 60, len(ticks))
-            formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
-            epsilon_ticks = list(map(formatter_f, epsilon_ticks))
-            epsilon_ticks.reverse()
-            ax2.set_yticks(y2_ticks, labels=epsilon_ticks)
-            ax2.invert_yaxis()
-            # ax2.set_yticks([25,30,35,40,45,50,55], minor=False)
-            ax2.set_ylabel(r"$\epsilon$", fontsize=20)
-            ax2.spines['right'].set_color('red')
-            ax2.tick_params(axis="y", colors="red", labelsize=15
-                            )
-            ax2.yaxis.label.set_color('red')
-            # ax2.tick_params(
-            #     axis='x',  # changes apply to the x-axis
-            #     which='both',  # both major and minor ticks are affected
-            #     bottom=False,  # ticks along the bottom edge are off
-            #     top=False,  # ticks along the top edge are off
-            #     labelbottom=False)
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
-        plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(pr_string, current_sigma), bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(pr_string, current_sigma), bbox_inches="tight")
@@ -3222,30 +3146,12 @@ def get_sigma_pr_sample_per_layer_optuna(trial: optuna.Trial, lower_limit: int, 
     sum_of_pruning_weights_by_layer = 0
     for key, value in upper_limit_per_layer.items():
         sigma_dict[key] = trial.suggest_float("{}_sigma".format(key), lower_limit, value, log=True)
-        pr_dict[key] = trial.suggest_float("{}_pr".format(key), 0.05, 0.99)
+        pr_dict[key] = trial.suggest_float("{}_pr".format(key), 0, 0.99)
         sum_of_pruning_weights_by_layer += pr_dict[key] * number_weights_per_layer[key]
     # Store the constraints as user attributes so that they can be restored after optimization.
     c0 = total_number_weights - sum_of_pruning_weights_by_layer
     trial.set_user_attr("constraint", (c0,))
     return trial, sigma_dict, pr_dict
-
-
-def get_pr_sample_per_layer_optuna(trial: optuna.Trial, layer_names: dict,
-                                   number_weights_per_layer: dict, lower_bounds: dict, total_number_weights_pruned: int,
-                                   exclude_layers=[]):
-    # trial = study.ask()  # `trial` is a `Trial` and not a `FrozenTrial`.
-    pr_dict = {}
-    sum_of_pruning_weights_by_layer = 0
-    for key in layer_names:
-        if key in exclude_layers:
-            sum_of_pruning_weights_by_layer += number_weights_per_layer[key]
-            continue
-        pr_dict[key] = trial.suggest_float("{}_pr".format(key), lower_bounds[key], 0.99)
-        sum_of_pruning_weights_by_layer += pr_dict[key] * number_weights_per_layer[key]
-    # Store the constraints as user attributes so that they can be restored after optimization.
-    c0 = total_number_weights_pruned - sum_of_pruning_weights_by_layer
-    trial.set_user_attr("constraint", (c0,))
-    return trial, pr_dict, c0
 
 
 def stochastic_pruning_with_sigma_and_pr_optimization(cfg: omegaconf.DictConfig):
@@ -3508,22 +3414,496 @@ def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(
 
 
 def enqueue_sigmas(study: optuna.Study, initial_sigmas_per_layer: dict):
-    first_trial_dict = {}
     for key, value in initial_sigmas_per_layer.items():
-        first_trial_dict["{}_sigma".format(key)] = value
-    study.enqueue_trial(first_trial_dict, user_attrs={"memo": "good global value fond by grid "
-                                                              "search"})
-
-
-def enqueue_pr(study: optuna.Study, initial_pr_per_layer: dict):
-    first_trial_dict = {}
-    for key, value in initial_pr_per_layer.items():
-        first_trial_dict[key] = float(value)
-    print(omegaconf.OmegaConf.to_yaml(first_trial_dict))
-    study.enqueue_trial(first_trial_dict, user_attrs={"memo": "good pr found from literature"})
+        study.enqueue_trial({"{}_sigma".format(key): value}, user_attrs={"memo": "good global value fond by grid "
+                                                                                 "search"})
 
 
 ############################# Ablation experiments #####################################################################
+
+def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig):
+    sigmas_for_experiment = None
+    try:
+        print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
+                                                                                                            cfg.amount,
+                                                                                                            cfg.sampler))
+        with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(
+                cfg.pruner,
+                cfg.amountcfg.sampler),
+                  "rb") as f:
+
+            sigmas_for_experiment = pickle.load(f)
+    except:
+        raise Exception("The respective sigmas file for pruning rate {} and pr per layer {} and sampler {} hasn't been "
+                        "generated, "
+                        "You need to "
+                        "run first \n"
+                        "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
+            cfg.amount, cfg.pruner, cfg.sampler))
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    print("Cuda: {}".format(use_cuda))
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_optimized",
+            reinit=True,
+            save_code=True,
+        )
+    N = cfg.population
+    original_model = get_model(cfg)
+
+    _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+
+    ######## Begin the procedure    #################################
+
+    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
+
+    ############## Craete the study###############################
+
+    ######### Here I set the intial values I want the trial to have which is a global value
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+
+    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    ################## The big loop begins ###################################
+    for gen in range(cfg.generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+            noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
+            print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
+                                                                      noisy_sample_performance))
+
+            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
+
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparsity(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            wandb.log(log_dict)
+
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+            temp = copy.deepcopy(best_model_found)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
+            current_best_model = temp
+
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparsity(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance})
+    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
+          "".format(
+        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
+    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
+
+    accuracy_string = "{:10.2f}".format(performance_best_model_found)
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path + "iterative_static_sigma_optimized_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.pruner,
+        accuracy_string, result.tm_hour, result.tm_min)
+    with open(model_file_name,
+              "wb") as f:
+        pickle.dump(best_model_found, f)
+    if cfg.use_wandb:
+        wandb.save(model_file_name)
+        wandb.join()
+
+
+def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile",
+            reinit=True,
+            save_code=True,
+        )
+    N = cfg.population
+    original_model = get_model(cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+
+    ######## Begin the procedure    #################################
+
+    names, weights = zip(*get_layer_dict(original_model))
+    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
+
+    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
+
+    ############## Craete the study###############################
+
+    ######### Here I set the intial values I want the trial to have which is a global value
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+
+    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    for gen in range(cfg.generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+            noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
+            print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
+                                                                      noisy_sample_performance))
+
+            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
+
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparsity(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance}
+            wandb.log(log_dict)
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+            temp = copy.deepcopy(best_model_found)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
+            current_best_model = temp
+
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparsity(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance})
+    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
+          "".format(
+        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
+    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
+
+    accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ", "")
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
+    with open(model_file_name, "wb") as f:
+        pickle.dump(best_model_found, f)
+
+    if cfg.use_wandb:
+        wandb.save(model_file_name)
+        wandb.join()
+
+
+def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}",
+            reinit=True,
+        )
+    pruned_model = get_model(cfg)
+    prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    remove_reparametrization(model=pruned_model,exclude_layer_list=cfg.exclude_layers)
+    restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                       use_wandb=cfg.use_wandb,epochs=cfg.epochs)
+
+
+def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
+    FLOP_limit = cfg.flop_limit
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count",
+            reinit=True,
+            save_code=True,
+        )
+    N = cfg.population
+    original_model = get_model(cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+
+    ######## Begin the procedure    #################################
+
+    names, weights = zip(*get_layer_dict(original_model))
+    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
+
+    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
+
+    ############## Craete the study###############################
+
+    ######### Here I set the intial values I want the trial to have which is a global value
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+
+    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    sparse_flops = 0
+    first_time = 1
+    unit_sparse_flops = 0
+    data, y = next(iter(valloader))
+    _, unit_sparse_flops = flops(deterministic_pruning, data)
+    for gen in range(cfg.generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+            remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, valloader, verbose=0,
+                                                                     count_flops=True, batch_flops=unit_sparse_flops)
+            sparse_flops += individual_sparse_flops
+            print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
+                                                                                             sparsity(noisy_sample),
+                                                                                             sparse_flops,
+                                                                                             noisy_sample_performance))
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+            if FLOP_limit != 0:
+                if sparse_flops > FLOP_limit:
+                    break
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparsity(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance,
+                        "sparse_flops": sparse_flops
+                        }
+            wandb.log(log_dict)
+            if FLOP_limit!=0:
+                if sparse_flops > FLOP_limit:
+                    break
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+            temp = copy.deepcopy(best_model_found)
+            # remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
+            current_best_model = temp
+
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparsity(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance,
+                   "sparse_flops": sparse_flops
+                   })
+    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
+          "".format(
+        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
+    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
+    #
+    accuracy_string = "{:10.2f}".format(performance_best_model_found).replace(" ", "")
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path + "iterative_manual_sigma_{}_dist_test_accuracy={}_flops_{}_time_{}-{}.pth".format(
+        cfg.pruner, accuracy_string, sparse_flops, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
+    # with open(model_file_name, "wb") as f:
+    #     pickle.dump(best_model_found, f)
+
+    if cfg.use_wandb:
+        wandb.save(model_file_name)
+        wandb.join()
+
+
+def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_global_static_sigma_one_batch_per_generation",
+            reinit=True,
+            save_code=True,
+        )
+    N = cfg.population
+    first_sparsity = 0.5
+    original_model = get_model(cfg)
+
+    _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
+    deterministic_pruning = copy.deepcopy(original_model)
+    if cfg.pruner is "global":
+        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
+    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
+    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
+
+    ######## Begin the procedure    #################################
+
+    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
+
+    ############## Craete the study###############################
+
+    ######### Here I set the intial values I want the trial to have which is a global value
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+
+    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    best_model_found = None
+    best_accuracy_found = 0
+    current_best_model = original_model
+    data, y = next(iter(valloader))
+    _, unit_sparse_flops = flops(deterministic_pruning, data)
+    total_sparse_flops = 0
+    for gen in range(cfg.generations):
+        current_gen_models = []
+        current_gen_accuracies = []
+        sample_for_generation =  [next(iter(valloader))]
+        for individual_index in range(N):
+            individual = copy.deepcopy(current_best_model)
+
+            noisy_sample = get_noisy_sample(individual, cfg)
+
+            if cfg.pruner is "global":
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="global")
+            else:
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="layer-wise",
+                                pruner=cfg.pruner)
+
+
+            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda,sample_for_generation, verbose=0,
+                                                count_flops=True,
+                                       batch_flops=unit_sparse_flops,
+                                            one_batch=cfg.one_batch)
+            total_sparse_flops+=sparse_flops
+            print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
+                                                                      noisy_sample_performance))
+            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
+            current_gen_accuracies.append(noisy_sample_performance)
+            current_gen_models.append(noisy_sample)
+
+        best_index = np.argmax(current_gen_accuracies)
+        gen_best_accuracy = current_gen_accuracies[best_index]
+        if cfg.use_wandb:
+            test_accuracy = test(current_gen_models[best_index], use_cuda,testloader, verbose=0,
+                 one_batch=cfg.one_batch)
+            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
+                        "sparsity": sparsity(current_gen_models[best_index]),
+                        "Deterministic performance": deterministic_pruning_performance,
+                        "sparse_flops": total_sparse_flops,
+                        "test_set_accuracy": test_accuracy}
+            wandb.log(log_dict)
+        if gen_best_accuracy > best_accuracy_found:
+            best_accuracy_found = gen_best_accuracy
+            best_model_found = current_gen_models[best_index]
+            ### I don't want the pruning to be iterative at this stage
+            ### so I remove the parametrization so the prune_with_rate
+            ### method do not prune over the mask that is found
+            temp = copy.deepcopy(best_model_found)
+            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
+            current_best_model = temp
+
+        print("Current best accuracy: {}".format(best_accuracy_found))
+    # Test the best model found in the test set
+
+    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
+                   "sparsity": sparsity(best_model_found),
+                   "Deterministic performance": deterministic_pruning_performance})
+    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
+          "".format(
+        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
+
+    accuracy_string = "{:10.2f}%".format(performance_best_model_found)
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path + "global_sigma_iterative_stochastic_pruning_pr_{}_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
+        cfg.amount, cfg.pruner,
+        accuracy_string, result.tm_hour, result.tm_min)
+    model_file_name = model_file_name.replace(" ", "")
+    with open(model_file_name, "wb") as f:
+        pickle.dump(best_model_found, f)
+    if cfg.use_wandb:
+        wandb.save(model_file_name)
+        wandb.join()
 
 
 def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
@@ -3548,11 +3928,8 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
     _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
     deterministic_pruning = copy.deepcopy(original_model)
 
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
 
     deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
     print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
@@ -3599,13 +3976,8 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
                                                                                         exclude_layer_list=cfg.exclude_layers)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
-            if cfg.pruner == "global":
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
             noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
             study.tell(individual_trial, noisy_sample_performance)
             print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
@@ -3676,414 +4048,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
         wandb.join()
 
 
-def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile",
-            reinit=True,
-            save_code=True,
-        )
-    N = cfg.population
-    original_model = get_model(cfg)
-    deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-
-    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
-    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
-
-    ######## Begin the procedure    #################################
-
-    names, weights = zip(*get_layer_dict(original_model))
-    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
-
-    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
-
-    ############## Craete the study###############################
-
-    ######### Here I set the intial values I want the trial to have which is a global value
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-
-    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    best_model_found = None
-    best_accuracy_found = 0
-    current_best_model = original_model
-    total_sparse_flops = 0
-    first_time = 1
-    iter_val_loader = cycle(iter(valloader))
-    data, y = next(iter_val_loader)
-    _, unit_sparse_flops = flops(deterministic_pruning, data)
-    for gen in range(cfg.generations):
-        current_gen_models = []
-        current_gen_accuracies = []
-        batch_for_gen = [next(iter_val_loader)]
-        for individual_index in range(N):
-            individual = copy.deepcopy(current_best_model)
-
-            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-            if cfg.pruner == "global":
-                prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
-            remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
-            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, batch_for_gen, verbose=0,
-                                                                     count_flops=True, batch_flops=unit_sparse_flops,
-                                                                     one_batch=cfg.one_batch)
-            total_sparse_flops += individual_sparse_flops
-            print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
-                                                                                             sparsity(noisy_sample),
-                                                                                             sparse_flops,
-                                                                                             noisy_sample_performance))
-
-            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
-
-            current_gen_accuracies.append(noisy_sample_performance)
-            current_gen_models.append(noisy_sample)
-
-        best_index = np.argmax(current_gen_accuracies)
-        gen_best_accuracy = current_gen_accuracies[best_index]
-        if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda, [get_random_batch(testloader)], verbose=0,
-                                 one_batch=cfg.one_batch)
-            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
-                        "sparsity": sparsity(current_gen_models[best_index]),
-                        "Deterministic performance": deterministic_pruning_performance,
-                        "sparse_flops": total_sparse_flops,
-                        "test_set_accuracy": test_accuracy}
-            wandb.log(log_dict)
-        if gen_best_accuracy > best_accuracy_found:
-            best_accuracy_found = gen_best_accuracy
-            best_model_found = current_gen_models[best_index]
-            ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
-            ### method do not prune over the mask that is found
-            temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
-            current_best_model = temp
-
-        print("Current best accuracy: {}".format(best_accuracy_found))
-    # Test the best model found in the test set
-
-    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
-                   "sparsity": sparsity(best_model_found),
-                   "Deterministic performance": deterministic_pruning_performance})
-    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
-          "".format(
-        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
-    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
-
-    accuracy_string = "{:10.2f}%".format(performance_best_model_found).replace(" ", "")
-    result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "one_shot_manual_sigma_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-        cfg.pruner, accuracy_string, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ", "")
-    with open(model_file_name, "wb") as f:
-        pickle.dump(best_model_found, f)
-
-    if cfg.use_wandb:
-        wandb.save(model_file_name)
-        wandb.join()
-
-
-def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig):
-    sigmas_for_experiment = None
-    try:
-        print(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(cfg.pruner,
-                                                                                                            cfg.amount,
-                                                                                                            cfg.sampler))
-        with open(cfg.save_data_path + "one_shot_dynamic_sigmas_per_layers_{}_dist_pr_{}_sampler_{}.pth".format(
-                cfg.pruner,
-                cfg.amount, cfg.sampler),
-                  "rb") as f:
-
-            sigmas_for_experiment = pickle.load(f)
-    except:
-        raise Exception("The respective sigmas file for pruning rate {} and pr per layer {} and sampler {} hasn't been "
-                        "generated, "
-                        "You need to "
-                        "run first \n"
-                        "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
-            cfg.amount, cfg.pruner, cfg.sampler))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    print("Cuda: {}".format(use_cuda))
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_optimized",
-            reinit=True,
-            save_code=True,
-        )
-    N = cfg.population
-    original_model = get_model(cfg)
-
-    _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
-    deterministic_pruning = copy.deepcopy(original_model)
-
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                        type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                        type="layer-wise",
-                        pruner=cfg.pruner)
-    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
-    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
-
-    ######## Begin the procedure    #################################
-
-    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
-
-    ############## Craete the study###############################
-
-    ######### Here I set the intial values I want the trial to have which is a global value
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-
-    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    best_model_found = None
-    best_accuracy_found = 0
-    current_best_model = original_model
-    iter_val_loader = cycle(iter(valloader))
-    data, y = next(iter_val_loader)
-    _, unit_sparse_flops = flops(deterministic_pruning, data)
-    total_sparse_flops = 0
-    for gen in range(cfg.generations):
-        current_gen_models = []
-        current_gen_accuracies = []
-        batch_for_gen = [next(iter_val_loader)]
-        for individual_index in range(N):
-            individual = copy.deepcopy(current_best_model)
-
-            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-            ############################# Pruning ##################################################
-            if cfg.pruner == "global":
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
-            remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
-            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, batch_for_gen, verbose=0,
-                                                                     count_flops=True, batch_flops=unit_sparse_flops,
-                                                                     one_batch=cfg.one_batch)
-            total_sparse_flops += individual_sparse_flops
-            print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
-                                                                                             sparsity(noisy_sample),
-                                                                                             sparse_flops,
-                                                                                             noisy_sample_performance))
-
-            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
-
-            current_gen_accuracies.append(noisy_sample_performance)
-            current_gen_models.append(noisy_sample)
-
-        best_index = np.argmax(current_gen_accuracies)
-        gen_best_accuracy = current_gen_accuracies[best_index]
-        if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda, [get_random_batch(testloader)], verbose=0,
-                                 one_batch=cfg.one_batch)
-            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
-                        "sparsity": sparsity(current_gen_models[best_index]),
-                        "Deterministic performance": deterministic_pruning_performance,
-                        "sparse_flops": total_sparse_flops,
-                        "test_set_accuracy": test_accuracy}
-            wandb.log(log_dict)
-
-        if gen_best_accuracy > best_accuracy_found:
-            best_accuracy_found = gen_best_accuracy
-            best_model_found = current_gen_models[best_index]
-            ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
-            ### method do not prune over the mask that is found
-            temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
-            current_best_model = temp
-
-        print("Current best accuracy: {}".format(best_accuracy_found))
-    # Test the best model found in the test set
-
-    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
-                   "sparsity": sparsity(best_model_found),
-                   "Deterministic performance": deterministic_pruning_performance})
-    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
-          "".format(
-        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
-    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
-
-    accuracy_string = "{:10.2f}".format(performance_best_model_found)
-    result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "iterative_static_sigma_optimized_stochastic_pruning_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-        cfg.pruner,
-        accuracy_string, result.tm_hour, result.tm_min).replace(" ", "")
-    with open(model_file_name,
-              "wb") as f:
-        pickle.dump(best_model_found, f)
-    if cfg.use_wandb:
-        wandb.save(model_file_name)
-        wandb.join()
-
-
-def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_global_static_sigma_one_batch_per_generation",
-            reinit=True,
-            save_code=True,
-        )
-    N = cfg.population
-    first_sparsity = 0.5
-    original_model = get_model(cfg)
-
-    _, pr_per_layer, _, total_param = erdos_renyi_per_layer_pruning_rate(model=original_model, cfg=cfg)
-    deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
-    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
-
-    ######## Begin the procedure    #################################
-
-    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
-
-    ############## Craete the study###############################
-
-    ######### Here I set the intial values I want the trial to have which is a global value
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-
-    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    data_loader_iterator = cycle(iter(valloader))
-    best_model_found = None
-    best_accuracy_found = 0
-    current_best_model = original_model
-    data, y = next(data_loader_iterator)
-    _, unit_sparse_flops = flops(deterministic_pruning, data)
-
-    total_sparse_flops = 0
-    first_generation = True
-    for gen in range(cfg.generations):
-        current_gen_models = []
-        current_gen_accuracies = []
-        sample_for_generation = [next(data_loader_iterator)]
-        ################################################################################################################
-        for individual_index in range(N):
-            individual = copy.deepcopy(current_best_model)
-
-            noisy_sample = get_noisy_sample(individual, cfg)
-
-            if cfg.pruner == "global":
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
-
-            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda, sample_for_generation, verbose=0,
-                                                          count_flops=True, batch_flops=unit_sparse_flops,
-                                                          one_batch=cfg.one_batch)
-            total_sparse_flops += sparse_flops
-            print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
-                                                                      noisy_sample_performance))
-            # print(omegaconf.OmegaConf.to_yaml(sigmas_for_individual))
-            current_gen_accuracies.append(noisy_sample_performance)
-            current_gen_models.append(noisy_sample)
-        ################################################################################################################
-        best_index = np.argmax(current_gen_accuracies)
-        gen_best_accuracy = current_gen_accuracies[best_index]
-        if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda, [get_random_batch(testloader)], verbose=0,
-                                 one_batch=cfg.one_batch)
-            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
-                        "sparsity": sparsity(current_gen_models[best_index]),
-                        "Deterministic performance": deterministic_pruning_performance,
-                        "sparse_flops": total_sparse_flops,
-                        "test_set_accuracy": test_accuracy,
-                        "sigma": cfg.sigma
-                        }
-            wandb.log(log_dict)
-
-        if first_generation:
-            cfg.sigma = cfg.sigma / 2
-            first_generation = False
-        if gen == int((1 / 3) * cfg.generations):
-            cfg.sigma = cfg.sigma / 2
-        if gen == int((2 / 3) * cfg.generations):
-            cfg.sigma = cfg.sigma / 2
-
-        if gen_best_accuracy > best_accuracy_found:
-            best_accuracy_found = gen_best_accuracy
-            best_model_found = current_gen_models[best_index]
-            ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
-            ### method do not prune over the mask that is found
-            temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
-            current_best_model = temp
-
-        print("Current best accuracy: {}".format(best_accuracy_found))
-    # Test the best model found in the test set
-
-    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
-                   "sparsity": sparsity(best_model_found),
-                   "Deterministic performance": deterministic_pruning_performance})
-    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
-          "".format(
-        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
-
-    accuracy_string = "{:10.2f}%".format(performance_best_model_found)
-    result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "global_sigma_iterative_stochastic_pruning_pr_{}_{}_dist_test_accuracy={}_time_{}-{}.pth".format(
-        cfg.amount, cfg.pruner,
-        accuracy_string, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ", "")
-    with open(model_file_name, "wb") as f:
-        pickle.dump(best_model_found, f)
-    if cfg.use_wandb:
-        wandb.save(model_file_name)
-        wandb.join()
-
-
-def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_layers):
+def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4091,13 +4056,8 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_lay
     generations = cfg.generations
     original_model = get_model(cfg)
     deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                        type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers,
-                        type="layer-wise",
-                        pruner=cfg.pruner)
+    prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                    pruner=cfg.pruner)
     deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
     print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
     if cfg.use_wandb:
@@ -4146,13 +4106,8 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_lay
                                                                                         noise_upper_bound_dict,
                                                                                         exclude_layer_list=cfg.exclude_layers)
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_individual)
-            if cfg.pruner == "global":
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
+            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
             noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0)
 
             study.tell(individual_trial, noisy_sample_performance)
@@ -4220,361 +4175,6 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_lay
         wandb.join()
 
 
-def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.omegaconf.to_container(cfg, resolve=true),
-            project="stochastic_pruning",
-            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
-            reinit=true,
-        )
-    pruned_model = get_model(cfg)
-    if cfg.pruner == "global":
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-
-    remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance})
-    restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, flop_limit=cfg.flop_limit,
-                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers)
-
-
-def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
-    FLOP_limit = cfg.flop_limit
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"iterative_{cfg.pruner}_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count_one_batch",
-            notes="This run use the global iterative first generation uses global sigma 0.005 and then uses the "
-                  "10th percentile "
-                  "of each layer",
-            reinit=True,
-            save_code=True,
-        )
-    N = cfg.population
-    original_model = get_model(cfg)
-    deterministic_pruning = copy.deepcopy(original_model)
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-
-    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
-    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
-
-    ######## Begin the procedure    #################################
-
-    names, weights = zip(*get_layer_dict(original_model))
-    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
-
-    # This initial value is good for pruning rates >= 0.8. For pruning rates like 0.5 is not that good
-
-    ############## Craete the study###############################
-
-    ######### Here I set the intial values I want the trial to have which is a global value
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-
-    # noise_initail_value_dict = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    best_model_found = None
-    best_accuracy_found = 0
-    current_best_model = original_model
-    sparse_flops = 0
-    first_time = 1
-    iter_val_loader = cycle(iter(valloader))
-    data, y = next(iter_val_loader)
-    _, unit_sparse_flops = flops(deterministic_pruning, data)
-    for gen in range(cfg.generations):
-        current_gen_models = []
-        current_gen_accuracies = []
-        batch_for_gen = [next(iter_val_loader)]
-        for individual_index in range(N):
-            individual = copy.deepcopy(current_best_model)
-            ###### If the pruning is vanila global then the first gen is with global sigma
-            #### after that we do it with the 10th percentile iterative process
-            if gen == 0 and cfg.pruner == "global":
-                noisy_sample = get_noisy_sample(individual, cfg)
-            else:
-                noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-            ############################## we prune #######################################
-            if cfg.pruner == "global":
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="global")
-            else:
-                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                                pruner=cfg.pruner)
-
-            #######################################################33
-            remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
-
-            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, batch_for_gen, verbose=0,
-                                                                     count_flops=True, batch_flops=unit_sparse_flops,
-                                                                     one_batch=cfg.one_batch)
-            sparse_flops += individual_sparse_flops
-            print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
-                                                                                             sparsity(noisy_sample),
-                                                                                             sparse_flops,
-                                                                                             noisy_sample_performance))
-            current_gen_accuracies.append(noisy_sample_performance)
-            current_gen_models.append(noisy_sample)
-            if FLOP_limit != 0:
-                if sparse_flops > FLOP_limit:
-                    break
-
-        best_index = np.argmax(current_gen_accuracies)
-        gen_best_accuracy = current_gen_accuracies[best_index]
-        if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda, [get_random_batch(testloader)], verbose=0)
-            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
-                        "sparsity": sparsity(current_gen_models[best_index]),
-                        "Deterministic performance": deterministic_pruning_performance,
-                        "sparse_flops": sparse_flops,
-                        "test_set_accuracy": test_accuracy
-                        }
-            wandb.log(log_dict)
-            if FLOP_limit != 0:
-                if sparse_flops > FLOP_limit:
-                    break
-        if gen_best_accuracy > best_accuracy_found:
-            best_accuracy_found = gen_best_accuracy
-            best_model_found = current_gen_models[best_index]
-            ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
-            ### method do not prune over the mask that is found
-            temp = copy.deepcopy(best_model_found)
-            # remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
-            current_best_model = temp
-
-        print("Current best accuracy: {}".format(best_accuracy_found))
-    # Test the best model found in the test set
-
-    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"test_set_accuracy": performance_best_model_found, "generation": cfg.generations - 1,
-                   "sparsity": sparsity(best_model_found),
-                   "Deterministic performance": deterministic_pruning_performance,
-                   "sparse_flops": sparse_flops
-                   })
-    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
-          "".format(
-        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
-    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
-    #
-    accuracy_string = "{:10.2f}".format(performance_best_model_found).replace(" ", "")
-    result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + "iterative_manual_sigma_{}_dist_test_accuracy={}_flops_{}_time_{}-{}.pth".format(
-        cfg.pruner, accuracy_string, sparse_flops, result.tm_hour, result.tm_min)
-    model_file_name = model_file_name.replace(" ", "")
-    with open(model_file_name, "wb") as f:
-        pickle.dump(best_model_found, f)
-
-    if cfg.use_wandb:
-        wandb.save(model_file_name)
-        wandb.join()
-
-
-def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.DictConfig):
-    print("Config: \n{}".format(omegaconf.OmegaConf.to_yaml(cfg)))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    N = cfg.population
-    first_sparsity = 0.5
-    original_model = get_model(cfg)
-    if cfg.use_wandb:
-        os.environ["WANDB_START_METHOD"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"iterative_dynamic_prpl_pr_{cfg.amount}_sigma_manual_10_percentile_flops_count",
-            reinit=True,
-            save_code=True,
-        )
-
-    _, pr_lowerbound_per_layer, baseline_non_zero, total_param = erdos_renyi_per_layer_pruning_rate(
-        model=original_model, cfg=cfg)
-    deterministic_pruning = copy.deepcopy(original_model)
-
-    if cfg.pruner == "global":
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-    else:
-        prune_with_rate(deterministic_pruning, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-
-    deterministic_pruning_performance = test(deterministic_pruning, use_cuda, testloader, verbose=0)
-    ###############  Sigmas of 10th percentile  #################
-    sigmas_for_experiment = get_percentile_per_layer(original_model, 0.1)
-
-    print("Deterministic pruning performance: {}".format(deterministic_pruning_performance))
-
-    ######## Begin the procedure    #################################
-
-    names, weights = zip(*get_layer_dict(original_model))
-    count = lambda w: w.nelement()
-    number_per_layer = list(map(count, weights))
-    number_per_layer = dict(zip(names, number_per_layer))
-
-    ################# Optuna study###########################
-    #### Good values of PR per layer dictated by LAMP strategy
-    initial_pr_per_layer = prune_with_rate(copy.deepcopy(original_model), target_sparsity,
-                                           exclude_layers=cfg.exclude_layers, type="layer-wise", pruner="lamp",
-                                           return_pr_per_layer=True)
-    initial_pr_per_layer = {f'{k}_pr': v for k, v in initial_pr_per_layer.items()}
-
-    def constraints(trial):
-        return trial.user_attrs["constraint"]
-
-    sampler = optuna.samplers.NSGAIISampler(
-        constraints_func=constraints,
-    )
-    study = optuna.create_study(study_name="stochastic pruning with pr optimisation", sampler=sampler,
-                                # directions=["maximize","minimize"])
-                                direction="maximize")
-
-    ###### Put the first pr in initial #########
-    enqueue_pr(study, initial_pr_per_layer)
-    total_pruned_weights = count_parameters(original_model) * (cfg.amount - 0.02)
-
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-    # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    # lower_bound = 1e-10
-    best_model_found = None
-    best_accuracy_found = 0
-    best_sigmas_found = None
-    best_pruning_rates_found = None
-    current_best_model = original_model
-    data_loader_iterator = cycle(iter(valloader))
-    data, y = next(data_loader_iterator)
-    _, unit_sparse_flops = flops(deterministic_pruning, data)
-    total_sparse_flops = 0
-    for gen in range(cfg.generations):
-        current_gen_models = []
-        current_gen_accuracies = []
-        current_gen_prs = []
-        sample_for_generation = [next(data_loader_iterator)]
-        for individual_index in range(N):
-            individual_trial = study.ask()
-            individual = copy.deepcopy(current_best_model)
-            ############### Here I ask for pr ###################################
-            individual_trial, pr_for_individual, constrain_value = get_pr_sample_per_layer_optuna(
-                individual_trial,
-                names, lower_bounds=pr_lowerbound_per_layer,
-                number_weights_per_layer=number_per_layer,
-                total_number_weights_pruned=total_pruned_weights, exclude_layers=cfg.exclude_layers)
-
-            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-
-            ############ Prune with optuna prs #######################################
-
-            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner="manual", pr_per_layer=pr_for_individual)
-            ##########################################################################################
-            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda, sample_for_generation, verbose=0,
-                                                          count_flops=True, batch_flops=unit_sparse_flops,
-                                                          one_batch=cfg.one_batch)
-            total_sparse_flops += sparse_flops
-            # study.tell(individual_trial, [noisy_sample_performance, sparsity(noisy_sample)])
-            study.tell(individual_trial, noisy_sample_performance)
-
-            print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
-                                                                      noisy_sample_performance))
-            print("Constrain value:{}".format(constrain_value))
-
-            current_gen_accuracies.append(noisy_sample_performance)
-            current_gen_models.append(noisy_sample)
-            current_gen_prs.append(pr_for_individual)
-
-        best_index = np.argmax(current_gen_accuracies)
-        gen_best_accuracy = current_gen_accuracies[best_index]
-        if cfg.use_wandb:
-            test_accuracy = test(current_gen_models[best_index], use_cuda, [get_random_batch(testloader)], verbose=0,
-                                 one_batch=cfg.one_batch)
-            log_dict = {"val_set_accuracy": gen_best_accuracy, "generation": gen,
-                        "sparsity": sparsity(current_gen_models[best_index]),
-                        "Deterministic performance": deterministic_pruning_performance,
-                        "sparse_flops": total_sparse_flops,
-                        "test_set_accuracy": test_accuracy
-                        }
-            log_dict.update(current_gen_prs[best_index])
-            wandb.log(log_dict)
-        if gen_best_accuracy >= best_accuracy_found:
-            best_accuracy_found = gen_best_accuracy
-            best_model_found = current_gen_models[best_index]
-            best_pruning_rates_found = current_gen_prs[best_index]
-
-            ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
-            ### method do not prune over the mask that is found
-
-            temp = copy.deepcopy(best_model_found)
-            remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
-            current_best_model = temp
-
-        print("Current best accuracy: {}".format(best_accuracy_found))
-    # Test the best model found in the test set
-
-    performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
-    print("The performance of on test set the best model is {} with pruning rate of {} and actual sparsity of {} "
-          "".format(
-        performance_best_model_found, cfg.amount, sparsity(best_model_found)))
-    print("Performance of deterministic pruning is: {}".format(deterministic_pruning_performance))
-    print("\n Best trial:")
-    trial = study.best_trials[0]
-
-    print("  Performance on validation set for set of sigmas: {}".format(trial.values))
-
-    print("Set of sigmas and pruning rates: ")
-    for key, value in trial.params.items():
-        print("    {}: {}".format(key, value))
-
-    accuracy_string = "{:10.2f}".format(performance_best_model_found)
-    pruning_rate_string = "{:0.3f}".format(sparsity(best_model_found))
-    result = time.localtime(time.time())
-    ######   Saving the model the pruning
-    with open(cfg.save_model_path + "stochastic_pruning_pr_optim_{}_test_accuracy={}_time_{}-{}.pth".format(
-            pruning_rate_string, accuracy_string, result.tm_hour, result.tm_min).replace(" ", ""),
-              "wb") as f:
-        pickle.dump(best_model_found, f)
-    auxiliary_list_1 = list(best_pruning_rates_found.values())
-    auxiliary_list_2 = list(best_pruning_rates_found.keys())
-
-    dict_1 = {"layer": auxiliary_list_2, "pruning_rate": auxiliary_list_1}
-    best_pr_csv = pd.DataFrame(dict_1)
-    best_pr_csv.to_csv(cfg.save_data_path + "pruning_rate_per_layers_pr_optim_time_{}-{}.csv".format(result.tm_hour,
-                                                                                                     result.tm_min),
-                       sep=",", index=False)
-    # with open(cfg.save_data_path + "pruning_rate_per_layers_pr_optim_time_{}-{}.pth".format(result.tm_hour,
-    #                                                                                         result.tm_min),
-    #           "wb") as f:
-    #     pickle.dump(best_pruning_rates_found, f)
-    #
-    if cfg.use_wandb:
-        wandb.join()
-
-
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
@@ -4590,12 +4190,6 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         run_fine_tune_experiment(cfg)
     if number_experiment == 7:
         static_sigma_per_layer_manually_iterative_process_flops_counts(cfg)
-    if number_experiment == 8:
-        stochastic_pruning_with_static_sigma_and_pr_optimization(cfg)
-    if number_experiment == 9:
-        one_shot_iterative_sotchastic_pruning(cfg)
-    if number_experiment == 10:
-        fine_tune_after_stochatic_pruning_experiment(cfg)
 
 
 def pruning_rate_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
@@ -4648,6 +4242,8 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
+    deterministic_with_stochastic_mask_performance = []
+    stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     pruned_original = copy.deepcopy(net)
     prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers)
@@ -4655,130 +4251,6 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     pop.append(pruned_original)
-    pruned_performance.append(pruned_original_performance)
-    labels = ["pruned original"]
-    stochastic_dense_performances.append(original_performance)
-    for n in range(N):
-        current_model = get_noisy_sample(net, cfg)
-
-        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        print("Stochastic dense performance")
-        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        # Dense stochastic performance
-        stochastic_dense_performances.append(StoDense_performance)
-
-        prune_with_rate(current_model, amount=cfg.amount, exclude_layers=cfg.exclude_layers)
-
-        # Here is where I transfer the mask from the pruned stochastic model to the
-        # original weights and put it in the ranking
-        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-
-        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        pruned_performance.append(stochastic_pruned_performance)
-        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
-
-    # len(pruned performance)-1 because the first one is the pruned original
-    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
-
-    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
-    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
-    # index 0 of pruned_performance.
-    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
-                                                   f"{len(labels)}!={len(pruned_performance)}"
-    ranked_index = np.flip(np.argsort(pruned_performance))
-    index_of_pruned_original = list(ranked_index).index(0)
-
-    pruned_performance = np.array(pruned_performance)
-    stochastic_dense_performances = np.array(stochastic_dense_performances)
-    result = time.localtime(time.time())
-
-    del pop
-    cutoff = original_performance - 2
-    ################################# plotting the comparison #########################################################
-    fig, ax = plt.subplots()
-
-    original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
-
-    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
-    plt.xlabel("Ranking Index", fontsize=15)
-    plt.ylabel("Accuracy", fontsize=15)
-    stochastic_models_points_dense = []
-    stochastic_models_points_pruned = []
-    transfer_mask_models_points = []
-    stochastic_with_deterministic_mask_models_points = []
-
-    for i, element in enumerate(pruned_performance[ranked_index]):
-        if i == index_of_pruned_original:
-            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
-                                                           f"in list {element} VS pruned performance:" \
-                                                           f" {pruned_original_performance}"
-            # p1 = ax.scatter(i, element, c="g", marker="o")
-        else:
-            if labels[ranked_index[i]] == "sto mask transfer":
-                sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
-                transfer_mask_models_points.append(sto_transfer_point)
-            elif labels[ranked_index[i]] == "det mask transfer":
-                det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
-                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
-            else:
-                pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
-                stochastic_models_points_pruned.append(pruned_point)
-    for i, element in enumerate(stochastic_dense_performances[ranked_index]):
-        if i == index_of_pruned_original or element == 1:
-            continue
-            # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-        else:
-            dense_point = ax.scatter(i, element, c="c", marker="1")
-            stochastic_models_points_dense.append(dense_point)
-
-    plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
-                deterministic_pruning_line],
-               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
-               scatterpoints=1,
-               numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    plt.ylim(20, 100)
-    ax2 = ax.twinx()
-
-    epsilon_ticks = original_performance - np.linspace(20, 100, 9)
-    ax2.set_yticks(epsilon_ticks, minor=False)
-    ax2.set_ylabel(r"$\epsilon$", fontsize=20)
-    ax2.spines['right'].set_color('red')
-    ax2.tick_params(axis="y", colors="red")
-    ax2.yaxis.label.set_color('red')
-    ax2.invert_yaxis()
-
-    plt.tight_layout()
-    plt.savefig(
-        f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
-        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}.pdf")
-    plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
-                f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-                f"_{cfg.population}_{eval_set}.png")
-
-
-def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test"):
-    use_cuda = torch.cuda.is_available()
-    net = get_model(cfg)
-    evaluation_set = select_eval_set(cfg, eval_set)
-    N = cfg.population
-    pop = []
-    pruned_performance = []
-    stochastic_dense_performances = []
-    stochastic_deltas = []
-    deterministic_with_stochastic_mask_performance = []
-    stochastic_with_deterministic_mask_performance = []
-    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-
-    lamp_pruned_original: Union[Union[ResNet, None, VGG], Any] = copy.deepcopy(net)
-
-    prune_with_rate(lamp_pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                    pruner="lamp")
-    # remove_reparametrization(pruned_original)
-    print("pruned_performance of pruned original")
-    pruned_original_performance = test(lamp_pruned_original, use_cuda, evaluation_set, verbose=1)
-    pop.append(lamp_pruned_original)
     pruned_performance.append(pruned_original_performance)
     labels = ["pruned original"]
     stochastic_dense_performances.append(original_performance)
@@ -4837,7 +4309,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
     original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
 
-    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    deterministic_pruning_line = ax.axhline(pruned_original_performance, c="purple", label="Deterministic Pruning")
     # plt.axhline(y=cutoff, color="r", linestyle="--", label="cutoff value")
     plt.xlabel("Ranking Index", fontsize=15)
     plt.ylabel("Accuracy", fontsize=15)
@@ -4856,21 +4328,21 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
     p1 = None
 
     for i, element in enumerate(pruned_performance[ranked_index]):
-        # if i == index_of_pruned_original:
-        #     assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
-        #                                                    f"in list {element} VS pruned performance:" \
-        #                                                    f" {pruned_original_performance}"
-        # p1 = ax.scatter(i, element, c="g", marker="o")
-        # else:
-        if labels[ranked_index[i]] == "sto mask transfer":
-            sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
-            transfer_mask_models_points.append(sto_transfer_point)
-        elif labels[ranked_index[i]] == "det mask transfer":
-            det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
-            stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+        if i == index_of_pruned_original:
+            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+                                                           f"in list {element} VS pruned performance:" \
+                                                           f" {pruned_original_performance}"
+            p1 = ax.scatter(i, element, c="g", marker="o")
         else:
-            pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
-            stochastic_models_points_pruned.append(pruned_point)
+            if labels[ranked_index[i]] == "sto mask transfer":
+                sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
+                transfer_mask_models_points.append(sto_transfer_point)
+            elif labels[ranked_index[i]] == "det mask transfer":
+                det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
+                stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+            else:
+                pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
+                stochastic_models_points_pruned.append(pruned_point)
     for i, element in enumerate(stochastic_dense_performances[ranked_index]):
         if i == index_of_pruned_original or element == 1:
             continue
@@ -4879,150 +4351,47 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
             dense_point = ax.scatter(i, element, c="c", marker="1")
             stochastic_models_points_dense.append(dense_point)
 
-    plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
-                deterministic_pruning_line],
-               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "LAMP deterministic Pruned"],
+    plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense), deterministic_pruning_line],
+               ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    plt.ylim(20, 100)
+    plt.ylim(88,100)
     ax2 = ax.twinx()
-    # y1_tick_positions = ax.get_ticks()
-    epsilon_ticks = original_performance - np.linspace(20, 100, 9)
-    ax2.set_yticks(epsilon_ticks, minor=False)
-    ax2.set_ylabel(r"$\epsilon$", fontsize=20)
-    ax2.spines['right'].set_color('red')
-    ax2.tick_params(axis="y", colors="red")
-    ax2.yaxis.label.set_color('red')
-    ax2.invert_yaxis()
-    # ax2 = ax.twinx()
-    # y1_tick_positions = ax.get_ticks()
-    # epsilon_ticks = original_performance - np.linspace(88,100, 7)
-    # ax2.set_yticks(np.flip(epsilon_ticks), minor=False)
-    # ax2.tick_params(axis="y", colors="red")
+    epsilon_ticks = original_performance - np.linspace(88,original_performance,5)
+    ax2.set_yticks(np.flip(epsilon_ticks),minor=False)
+    ax2.tick_params(axis="y",colors="red")
+
 
     plt.tight_layout()
     plt.savefig(
-        f"data/figures/LAMP_stochastic_{cfg.noise}_sigma_"
+        f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}_{cfg.architecture}.pdf")
-    plt.savefig(f"data/figures/LAMP_stochastic_{cfg.noise}_sigma_"
+        f"_{cfg.population}"
+        f"_t_{result.tm_hour}"
+        f"-{result.tm_min}_{eval_set}.pdf")
+    plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-                f"_{cfg.population}_{eval_set}_{cfg.architecture}.png")
-
-
-def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sparsity, sigmas_for_experiment,
-                                                             population, dataloader, image_flops, total_flops, cfg):
-    surviving_models = []
-    first_iteration = 1
-    change_image = False
-    image, y = get_random_image_label(dataloader)
-    for i in range(population):
-        individual = copy.deepcopy(solution)
-
-        noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-        ############################## we prune #######################################
-        if cfg.pruner == "global":
-            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                            type="global")
-        else:
-            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                            type="layer-wise",
-                            pruner=cfg.pruner)
-
-        #######################################################33
-        remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
-
-        prediction = torch.argmax(noisy_sample(image).detach())
-        total_flops += image_flops
-        if prediction.eq(y.data):
-            surviving_models.append(model)
-    image, y = get_random_image_label(dataloader)
-    index_to_remove = []
-    ######## While there
-    while len(surviving_models) > 1:
-        for ind in surviving_models:
-            prediction = torch.argmax(ind(image).detach())
-            total_flops += image_flops
-            if not prediction.eq(y.data):
-                index_to_remove.append(surviving_models.index(ind))
-        if len(index_to_remove) == len(surviving_models):
-            image, y = get_random_image_label(dataloader)
-        else:
-            for indx in index_to_remove:
-                surviving_models.pop(indx)
-    return surviving_models[0]
-
-
-def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.OmegaConf):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
-    target_sparsity = cfg.amount
-    use_cuda = torch.cuda.is_available()
-    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.omegaconf.to_container(cfg, resolve=true),
-            project="stochastic_pruning",
-            name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
-            notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
-                  "static sigma for this experiment with vanilla global, also we on",
-            reinit=True,
-        )
-
-    pruned_model = get_model(cfg)
-    best_model = None
-    best_accuracy = 0
-    initial_flops = 0
-    data_loader_iterator = cycle(iter(valloader))
-    data, y = next(data_loader_iterator)
-    first_iter = 1
-    unit_sparse_flops = 0
-    for n in range(cfg.population):
-
-        current_model = get_noisy_sample(pruned_model, cfg)
-
-        # det_mask_transfer_model = copy.deepcopy(current_model)
-        # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
-        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
-
-        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        # Dense stochastic performance
-        if cfg.pruner == "global":
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-        else:
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
-        # Here is where I transfer the mask from the pruned stochastic model to the
-        # original weights and put it in the ranking
-        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-        if first_iter:
-            _, unit_sparse_flops = flops(current_model, data)
-            first_iter = 0
-        noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, [data], verbose=0,
-                                                                 count_flops=True, batch_flops=unit_sparse_flops,
-                                                                 one_batch=cfg.one_batch)
-        initial_flops += individual_sparse_flops
-        if noisy_sample_performance > best_accuracy:
-            best_accuracy = noisy_sample_performance
-            best_model = current_model
-
-    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-    initial_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
-    if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance})
-    restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
-                                       initial_flops=initial_flops)
-
-
-def big_population_one_shot_efficient_evaluation(cfg: omegaconf.OmegaConf):
-    pass
+                f"_{cfg.population}"
+                f"_t_{result.tm_hour}"
+                f"-{result.tm_min}_{eval_set}.png")
 
 
 ############################# Iterative stochastic pruning #############################################################
+
+def nstep_iterative_stochastic_pruning(cfg: omegaconf.DictConfig, number_of_jumps: int = 0, generations=20):
+    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    target_sparsity = cfg.amount
+    N = cfg.population
+    first_sparsity = 0.5
+    original_model = get_model(cfg)
+    ######## begin the procedure    #################################
+    names, weights = get_layer_dict(model)
+    noise = [cfg.sigma] * len(names)
+    noise_per_layer = dict(zip(names, noise))
+    for gen in range(generations):
+
+        for individual_index in range(N):
+            noisy_sample = get_noisy_sample_sigma_per_layer()
 
 
 if __name__ == '__main__':
@@ -5042,25 +4411,23 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 20,
+        "population": 10,
         "generations": 200,
         "epochs": 200,
-        # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": True,
+        "one_batch":True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
         "dataset": "cifar10",
-        "batch_size": 512,
+        "batch_size": 128,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
@@ -5072,17 +4439,11 @@ if __name__ == '__main__':
     #                         "Generations","Accuracy")
 
     # test_sigma_experiment_selector()
-    # experiment_selector(cfg, 4)
-    # experiment_selector(cfg, 6)
-    experiment_selector(cfg, 10)
-
-    # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
-
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-    # cfg.sigma = 0.002
-    # cfg.amount = 0.8
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-
+    # experiment_selector(cfg, 7)
+    experiment_selector(cfg, 4)
+    # sigma_experiment_selector(cfg, 3)
+    # sigma_experiment_selector(cfg, 4)
+    # sigma_experiment_selector(cfg, 5)
     ########### Mask Transfer experiments #############################
     # transfer_mask_rank_experiments(cfg)
     ############ Stchastic pruning VS Deterministic Pruning ###########
@@ -5108,7 +4469,6 @@ if __name__ == '__main__':
     #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
     #                                           specific_pruning_rates=[0.9])
-
     # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
 
     # stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
@@ -5148,3 +4508,4 @@ if __name__ == '__main__':
     # for pr in pruning_rates:
     #     cfg.amount = pr
     #     main(cfg)
+

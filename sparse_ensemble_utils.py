@@ -136,7 +136,7 @@ def get_random_image_label(dataloader):
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
-                                       FLOP_limit: float = 0, use_wandb=False, exclude_layers=[]):
+                                       FLOP_limit: float = 0,initial_flops=0 ,use_wandb=False, exclude_layers=[]):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -151,7 +151,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         mask_dict.pop(name)
     criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
-    total_sparse_FLOPS = 0
+    total_sparse_FLOPS = initial_flops
     # first_time = 1
 
     data, y = next(iter(dataLoader))
