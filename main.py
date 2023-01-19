@@ -4620,11 +4620,12 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
                 surviving_models.pop(indx)
     return surviving_models[0]
 
-def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,):
+def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
+    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else ""
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4632,7 +4633,8 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,):
             entity="luis_alfredo",
             config=omegaconf.omegaconf.to_container(cfg, resolve=true),
             project="stochastic_pruning",
-            name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
+            name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+                 f"{one_batch_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
                   "static sigma for this experiment with vanilla global",
             reinit=True,
@@ -4683,7 +4685,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,):
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance})
+        wandb.log({"val_set_accuracy": initial_performance,"sparse_flops":initial_flops})
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops)
@@ -5130,7 +5132,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 100,
         "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
@@ -5143,7 +5145,7 @@ if __name__ == '__main__':
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": False,
+        "one_batch": True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5163,7 +5165,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 4)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
