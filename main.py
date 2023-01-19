@@ -4615,7 +4615,7 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
                 surviving_models.pop(indx)
     return surviving_models[0]
 
-def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig):
+def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4629,9 +4629,10 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig):
             project="stochastic_pruning",
             name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
-                  "static sigma for this experiment with vanilla global, also we on",
+                  "static sigma for this experiment with vanilla global",
             reinit=True,
         )
+
 
     pruned_model = get_model(cfg)
     best_model = None
@@ -4641,6 +4642,10 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig):
     data, y = next(data_loader_iterator)
     first_iter = 1
     unit_sparse_flops = 0
+    evaluation_set = valloader
+    if cfg.one_batch:
+        evaluation_set = [data]
+
     for n in range(cfg.population):
 
         current_model = get_noisy_sample(pruned_model, cfg)
@@ -4663,9 +4668,8 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig):
         if first_iter:
             _, unit_sparse_flops = flops(current_model, data)
             first_iter = 0
-        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, [data], verbose=0,
-                                                                 count_flops=True, batch_flops=unit_sparse_flops,
-                                                                 one_batch=cfg.one_batch)
+        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda,evaluation_set, verbose=0,
+                                                                 count_flops=True, batch_flops=unit_sparse_flops)
         initial_flops += individual_sparse_flops
         if noisy_sample_performance > best_accuracy:
             best_accuracy = noisy_sample_performance
@@ -5121,7 +5125,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 20,
         "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
@@ -5134,7 +5138,7 @@ if __name__ == '__main__':
         "exclude_layers": ["conv1", "linear"],
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": False,
+        "one_batch":True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5154,7 +5158,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 4)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
