@@ -4631,7 +4631,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
         # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=true),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
             name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{one_batch_string}",
