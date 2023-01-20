@@ -4019,7 +4019,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
                                 type="layer-wise",
                                 pruner=cfg.pruner)
 
-            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
+            noisy_sample_performance, sparse_flops = test(noisy_sample, use_cuda, evaluation_set, verbose=0,
                                                           count_flops=True, batch_flops=unit_sparse_flops)
             total_sparse_flops += sparse_flops
             print("Generation {} Individual {} sparsity {}:{}".format(gen, individual_index, sparsity(noisy_sample),
@@ -4333,7 +4333,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
             #######################################################33
             remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
 
-            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
+            noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, evaluation_set, verbose=0,
                                                                      count_flops=True, batch_flops=unit_sparse_flops)
             sparse_flops += individual_sparse_flops
             print("Generation {} Individual {} sparsity {:0.3f} FLOPS {} Accuracy {}".format(gen, individual_index,
@@ -4578,6 +4578,8 @@ def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.Dict
     #
     if cfg.use_wandb:
         wandb.join()
+
+
 def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sparsity, sigmas_for_experiment,
                                                              population, dataloader, image_flops, total_flops, cfg):
     surviving_models = []
@@ -4620,7 +4622,8 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
                 surviving_models.pop(indx)
     return surviving_models[0]
 
-def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print_exclude_layers=True):
+
+def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4640,7 +4643,6 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
             reinit=True,
         )
 
-
     pruned_model = get_model(cfg)
     best_model = None
     best_accuracy = 0
@@ -4651,7 +4653,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
     unit_sparse_flops = 0
     evaluation_set = valloader
     if cfg.one_batch:
-        evaluation_set = [data]
+        evaluation_set = [(data, y)]
 
     for n in range(cfg.population):
 
@@ -4675,7 +4677,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
         if first_iter:
             _, unit_sparse_flops = flops(current_model, data)
             first_iter = 0
-        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda,evaluation_set, verbose=0,
+        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
                                                                  count_flops=True, batch_flops=unit_sparse_flops)
         initial_flops += individual_sparse_flops
         if noisy_sample_performance > best_accuracy:
@@ -4685,7 +4687,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance,"sparse_flops":initial_flops})
+        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops})
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops)
@@ -4693,7 +4695,9 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
 
 def big_population_one_shot_efficient_evaluation(cfg: omegaconf.OmegaConf):
     pass
-def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_layers=True):
+
+
+def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -4750,7 +4754,7 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_
             _, unit_sparse_flops = flops(noisy_sample, data)
             first_iter = 0
 
-        noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda,evaluation_set, verbose=0,
+        noisy_sample_performance, individual_sparse_flops = test(noisy_sample, use_cuda, evaluation_set, verbose=0,
                                                                  count_flops=True, batch_flops=unit_sparse_flops)
 
         initial_flops += individual_sparse_flops
@@ -4766,12 +4770,13 @@ def one_shot_static_sigma_stochastic_pruning(cfg,eval_set ="test",print_exclude_
             best_model = noisy_sample
             test_accuracy = test(best_model, use_cuda, [get_random_batch(testloader)], verbose=0)
             if cfg.use_wandb:
-                log_dict = {"best_val_set_accuracy":best_accuracy, "individual": n,
+                log_dict = {"best_val_set_accuracy": best_accuracy, "individual": n,
                             "sparsity": sparsity(best_model),
                             "sparse_flops": initial_flops,
                             "test_set_accuracy": test_accuracy
                             }
                 wandb.log(log_dict)
+
 
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 1:
@@ -4794,7 +4799,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         # one_shot_iterative_sotchastic_pruning(cfg)
         pass
     if number_experiment == 10:
-        one_shot_static_sigma_stochastic_pruning(cfg,eval_set="val")
+        one_shot_static_sigma_stochastic_pruning(cfg, eval_set="val")
     if number_experiment == 11:
         fine_tune_after_stochatic_pruning_experiment(cfg)
 
@@ -5109,8 +5114,6 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
     plt.savefig(f"data/figures/LAMP_stochastic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
                 f"_{cfg.population}_{eval_set}_{cfg.architecture}.png")
-
-
 
 
 ############################# Iterative stochastic pruning #############################################################
