@@ -4631,7 +4631,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig,print
         # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.omegaconf.to_container(cfg, resolve=true),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=true),
             project="stochastic_pruning",
             name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{one_batch_string}",
@@ -4791,7 +4791,8 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 8:
         stochastic_pruning_with_static_sigma_and_pr_optimization(cfg)
     if number_experiment == 9:
-        one_shot_iterative_sotchastic_pruning(cfg)
+        # one_shot_iterative_sotchastic_pruning(cfg)
+        pass
     if number_experiment == 10:
         one_shot_static_sigma_stochastic_pruning(cfg,eval_set="val")
     if number_experiment == 11:
