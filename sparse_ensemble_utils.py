@@ -271,7 +271,7 @@ def get_layer_dict(model: torch.nn.Module):
                 # if not isinstance(m, nn.Conv2d):
                 #     print(f"{name}:{m.weight.data}")
 
-    return layer_dic
+    return layer_dict
 
 def get_buffer_dict(model: torch.nn.Module):
     """
