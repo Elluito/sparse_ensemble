@@ -1,0 +1,50 @@
+{
+    "os": "Windows-10-10.0.22000-SP0",
+    "python": "3.7.13",
+    "heartbeatAt": "2023-01-20T14:48:21.503863",
+    "startedAt": "2023-01-20T14:48:20.507593",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "C:/Users/Luis Alfredo/OneDrive - University of Leeds/PhD/Code/Local Experiments/sparse_ensemble/main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "https://github.com/Elluito/sparse_ensemble.git",
+        "commit": "586071cd11f2bc1d8583a8ccc688ebbab061bf01"
+    },
+    "email": "alfredoavendano@hotmail.com",
+    "root": "C:/Users/Luis Alfredo/OneDrive - University of Leeds/PhD/Code/Local Experiments/sparse_ensemble",
+    "host": "LAPTOP-688BJM84",
+    "username": "LuisAlfredo",
+    "executable": "C:\\Users\\Luis Alfredo\\.conda\\envs\\pytorch\\python.exe",
+    "cpu_count": 4,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 2301.0,
+        "min": 0.0,
+        "max": 2301.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2301.0,
+            "min": 0.0,
+            "max": 2301.0
+        }
+    ],
+    "disk": {
+        "total": 237.42218399047852,
+        "used": 227.393798828125
+    },
+    "gpu": "NVIDIA GeForce GTX 1050",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce GTX 1050",
+            "memory_total": 4294967296
+        }
+    ],
+    "memory": {
+        "total": 7.859973907470703
+    }
+}

@@ -1,0 +1,104 @@
+wandb_version: 1
+
+_wandb:
+  desc: null
+  value:
+    cli_version: 0.13.7
+    framework: ignite
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    python_version: 3.7.13
+    start_time: 1674226100.554209
+    t:
+      1:
+      - 1
+      - 5
+      - 10
+      - 35
+      - 41
+      - 50
+      - 53
+      - 55
+      2:
+      - 1
+      - 5
+      - 10
+      - 35
+      - 41
+      - 50
+      - 53
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.7.13
+      5: 0.13.7
+      8:
+      - 3
+      - 8
+amount:
+  desc: null
+  value: 0.999
+architecture:
+  desc: null
+  value: resnet18
+batch_size:
+  desc: null
+  value: 512
+dataset:
+  desc: null
+  value: cifar10
+epochs:
+  desc: null
+  value: 200
+exclude_layers:
+  desc: null
+  value:
+  - conv1
+  - linear
+flop_limit:
+  desc: null
+  value: 0
+full_fine_tune:
+  desc: null
+  value: false
+generations:
+  desc: null
+  value: 10
+model_type:
+  desc: null
+  value: alternative
+noise:
+  desc: null
+  value: gaussian
+num_workers:
+  desc: null
+  value: 0
+one_batch:
+  desc: null
+  value: true
+population:
+  desc: null
+  value: 10
+pruner:
+  desc: null
+  value: global
+sampler:
+  desc: null
+  value: tpe
+save_data_path:
+  desc: null
+  value: stochastic_pruning_data/
+save_model_path:
+  desc: null
+  value: stochastic_pruning_models/
+sigma:
+  desc: null
+  value: 0.005
+solution:
+  desc: null
+  value: trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth
+use_wandb:
+  desc: null
+  value: true
