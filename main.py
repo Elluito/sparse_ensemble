@@ -4791,7 +4791,9 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     original_epoch_number = cfg.epochs
-    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
+    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    full_fine_tune_step= "_full_fine_tune_step" if cfg.full_fine_tune_step else "_single_fine_tune_step"
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4799,7 +4801,8 @@ def lamp_scenario_2_cheap_evaluation(cfg):
             entity="luis_alfredo",
             config=omegaconf.omegaconf.to_container(cfg, resolve=true),
             project="stochastic_pruning",
-            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
+            name=f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+                 f"{non_zero_string}{full_fine_tune_step}",
             reinit=true,
         )
     pruned_model = get_model(cfg)
@@ -5236,8 +5239,8 @@ if __name__ == '__main__':
         "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers": False,
-        "fine_tune_non_zero_weights":True,
+        "fine_tune_exclude_layers":True,
+        "fine_tune_non_zero_weights":False,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
