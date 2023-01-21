@@ -4631,7 +4631,9 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
-    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
+
+    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     one_batch_string = "_one_batch_per_generation" if cfg.one_batch else ""
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
@@ -4641,7 +4643,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
             name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
-                 f"{one_batch_string}",
+                 f"{non_zero_string}{one_batch_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
                   "static sigma for this experiment with vanilla global",
             reinit=True,
@@ -5223,7 +5225,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 20,
         "generations": 10,
         "epochs": 200,
         # "architecture": "VGG19",
@@ -5231,14 +5233,14 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers":True,
-        "fine_tune_non_zero_weights":False,
+        "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch":True,
+        "one_batch": True,
         "full_fine_tune": True,
         "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
@@ -5260,7 +5262,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
