@@ -5232,7 +5232,7 @@ if __name__ == '__main__':
         "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers": True,
+        "fine_tune_exclude_layers": False,
         "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
