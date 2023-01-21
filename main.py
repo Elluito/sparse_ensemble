@@ -4695,7 +4695,9 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops})
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
-                                       initial_flops=initial_flops)
+                                       initial_flops=initial_flops,
+                                       fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
 
 
 def big_population_one_shot_efficient_evaluation(cfg: omegaconf.OmegaConf):
@@ -5229,14 +5231,14 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers":False,
+        "fine_tune_exclude_layers":True,
         "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": False,
+        "one_batch":True,
         "full_fine_tune": True,
         "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
@@ -5258,7 +5260,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
