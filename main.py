@@ -5236,7 +5236,7 @@ if __name__ == '__main__':
         "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch":False,
+        "one_batch": False,
         "full_fine_tune": True,
         "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
