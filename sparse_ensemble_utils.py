@@ -85,15 +85,18 @@ def disable_exclude_layers(model: nn.Module, exclude_layers=[]):
         dict_of_modules[name].eval()
         for param in dict_of_modules[name].parameters():
             param.requires_grad = False
+def disable_all_except(model:nn.Module,exclude_layers=[]):
+    dict_of_modules = dict(list(model.named_modules()))
+    for name,module in dict_of_modules.items():
+        if name in exclude_layers:
+            for param in module.parameters():
+                param.requires_grad = True
+        else:
+            for param in module.parameters():
+                param.requires_grad = False
 
-    # for name,module in model.named_modules():
-    #     if isinstance(module, nn.BatchNorm1d) or isinstance(module, nn.BatchNorm2d) \
-    #             or isinstance(module, nn.BatchNorm3d):
-    #         module.eval()
-
-
-def get_mask(weight: torch.FloatTensor):
-    return (weight != 0).type(torch.float)
+# def get_mask(weight: torch.FloatTensor):
+#     return (weight != 0).type(torch.float)
 
 
 def mask_gradient(model: torch.nn.Module, mask_dict: dict):
@@ -130,13 +133,18 @@ def get_random_image_label(dataloader):
     image = x[rand_index]
     return image,y[rand_index]
 
-
+def check_for_layers_collapse(model):
+    names,weights = zip(*get_layer_dict(model))
+    for indx, w in enumerate(weights):
+        if torch.count_nonzero(w) == 0:
+            raise Exception("Layer {} has 0 weights different form 0 the layer has collapsed".format(names[indx]))
 
 
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
-                                       FLOP_limit: float = 0,initial_flops=0 ,use_wandb=False, exclude_layers=[]):
+                                       FLOP_limit: float = 0,initial_flops=0 ,use_wandb=False, exclude_layers=[],
+                                       fine_tune_exclude_layers=False,fine_tune_non_zero_weights=True):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -145,8 +153,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     names, weights = zip(*get_layer_dict(pruned_model))
     accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
 
-    masks = list(map(get_mask, weights))
-    mask_dict = dict(zip(names, masks))
+    mask_dict = get_mask(model)
     for name in exclude_layers:
         mask_dict.pop(name)
     criterion = nn.CrossEntropyLoss()
@@ -160,7 +167,11 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
-    disable_exclude_layers(pruned_model, exclude_layers)
+    if not fine_tune_exclude_layers:
+        disable_exclude_layers(pruned_model, exclude_layers)
+    if not fine_tune_non_zero_weights:
+        disable_all_except(pruned_model,exclude_layers)
+
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
@@ -260,9 +271,40 @@ def get_layer_dict(model: torch.nn.Module):
                 # if not isinstance(m, nn.Conv2d):
                 #     print(f"{name}:{m.weight.data}")
 
-    return layer_dict
+    return layer_dic
 
+def get_buffer_dict(model: torch.nn.Module):
+    """
+    :param model:
+    :return: The name of the modules that are not batch norm and their correspondent weight with original shape.
+    """
+    iter_1 = model.named_modules()
+    layer_dict = []
 
+    for name, m in iter_1:
+        with torch.no_grad():
+            if hasattr(m, 'weight_mask') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                    isinstance(m, nn.BatchNorm3d):
+
+                layer_dict.append((name, m.weight_mak.data.cpu().detach()))
+                # if "shortcut" in name:
+                #     print(f"{name}:{m.weight.data}")
+                # if not isinstance(m, nn.Conv2d):
+                #     print(f"{name}:{m.weight.data}")
+    if len(layer_dict)==0:
+        raise Exception("Model needs to have weight_maks attributes on modules")
+    # assert len(layer_dict)!=0, "Model needs to have weight_maks attributes on modules"
+    return layer_dic
+
+def get_mask(model):
+    try:
+        return dict(get_buffer_dict(model))
+    except:
+        temp = lambda w:(w != 0).type(torch.float)
+        names, weights = zip(*get_layer_dict(model))
+        masks = list(map(temp, weights))
+        mask_dict = dict(zip(names, masks))
+        return mask_dict
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
 def random_perm(a: torch.Tensor) -> torch.Tensor:
     """
