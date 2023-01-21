@@ -153,7 +153,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     names, weights = zip(*get_layer_dict(pruned_model))
     accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
 
-    mask_dict = get_mask(model)
+    mask_dict = get_mask(model=pruned_model)
     for name in exclude_layers:
         mask_dict.pop(name)
     criterion = nn.CrossEntropyLoss()

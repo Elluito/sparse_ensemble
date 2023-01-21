@@ -5233,7 +5233,7 @@ if __name__ == '__main__':
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights":False,
+        "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch":False,
