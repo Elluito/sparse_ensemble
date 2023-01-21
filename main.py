@@ -5235,7 +5235,7 @@ if __name__ == '__main__':
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers":True,
-        "fine_tune_non_zero_weights":True,
+        "fine_tune_non_zero_weights":False,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch":True,
@@ -5260,7 +5260,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    experiment_selector(cfg, 6)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
