@@ -4250,7 +4250,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.use_wandb:
         wandb.log({"val_set_accuracy": initial_performance})
 
-    restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, flop_limit=cfg.flop_limit,
+    restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                        fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
@@ -5229,7 +5229,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers": True,
