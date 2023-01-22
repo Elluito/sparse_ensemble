@@ -4233,10 +4233,10 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.omegaconf.to_container(cfg, resolve=true),
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
             name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}",
-            reinit=true,
+            reinit=True,
         )
     pruned_model = get_model(cfg)
     if cfg.pruner == "global":
@@ -5277,7 +5277,7 @@ if __name__ == '__main__':
         "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers": True,
+        "fine_tune_exclude_layers":True,
         "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,

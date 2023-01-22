@@ -108,7 +108,7 @@ def mask_gradient(model: torch.nn.Module, mask_dict: dict):
     for name, module in model.named_modules():
         if name in mask_dict.keys():
             if hasattr(module.weight, "grad"):
-                if module.weight.grad:
+                if module.weight.grad is not None :
                 # print("Module Name: {}".format(name))
                     module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
