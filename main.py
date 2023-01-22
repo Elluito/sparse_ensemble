@@ -4585,11 +4585,13 @@ def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.Dict
 
 
 def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sparsity, sigmas_for_experiment,
-                                                             population, dataloader, image_flops, total_flops, cfg):
+                                                             population, dataloader, image_flops, total_flops, cfg,
+                                                             previews_dict_of_image:dict):
     surviving_models = []
     first_iteration = 1
     change_image = False
     image, y = get_random_image_label(dataloader)
+    dict_of_images = {}
     for i in range(population):
         individual = copy.deepcopy(solution)
 
@@ -4610,7 +4612,9 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         total_flops += image_flops
         if prediction.eq(y.data):
             surviving_models.append(model)
+    dict_of_images[1-len(surviving_models)/population]= (image,y)
     image, y = get_random_image_label(dataloader)
+    image_percentage = 0
     index_to_remove = []
     ######## While there
     while len(surviving_models) > 1:
@@ -4624,6 +4628,8 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         else:
             for indx in index_to_remove:
                 surviving_models.pop(indx)
+
+    image, y = get_random_image_label(dataloader)
     return surviving_models[0]
 
 
@@ -4785,6 +4791,23 @@ def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude
                             "test_set_accuracy": test_accuracy
                             }
                 wandb.log(log_dict)
+
+
+def selesct_pruning(pruned_model,cfg,target_sparsity,use_stochastic,valloader):
+    if use_stochastic:
+
+        image,y = get_random_image_label(valloader)
+
+        generation_of_stochastic_prune_with_efficient_evaluation()
+
+    else:
+        if cfg.pruner == "global":
+            prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+
 def lamp_scenario_2_cheap_evaluation(cfg):
 
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
@@ -4806,6 +4829,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
             reinit=true,
         )
     pruned_model = get_model(cfg)
+
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
@@ -4818,9 +4842,11 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         wandb.log({"val_set_accuracy": initial_performance})
     if cfg.full_fine_tune:
 
-
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers)
+                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
         if cfg.pruner == "global":
             prune_with_rate(pruned_model,0.95, exclude_layers=cfg.exclude_layers, type="global")
         else:
@@ -4828,31 +4854,41 @@ def lamp_scenario_2_cheap_evaluation(cfg):
                             pruner=cfg.pruner)
 
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers)
+                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
         if cfg.pruner == "global":
             prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
         else:
             prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
 
-
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                   use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers)
+                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
     else:
         cfg.epochs = 1
 
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers)
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
         if cfg.pruner == "global":
             prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
         else:
             prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
-
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers)
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
+
+
         if cfg.pruner == "global":
             prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
         else:
@@ -4861,7 +4897,9 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         cfg.epoch = original_epoch_number
         restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers)
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
 
 
 
@@ -5236,11 +5274,11 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers":True,
-        "fine_tune_non_zero_weights":False,
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
@@ -5254,7 +5292,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": False
+        "use_wandb": True
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5265,7 +5303,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    experiment_selector(cfg, 6)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
