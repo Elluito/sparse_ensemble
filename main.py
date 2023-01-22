@@ -5274,11 +5274,11 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
-        "fine_tune_exclude_layers":True,
-        "fine_tune_non_zero_weights":False,
+        "fine_tune_exclude_layers":False,
+        "fine_tune_non_zero_weights":True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
@@ -5303,7 +5303,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
