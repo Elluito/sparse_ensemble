@@ -5416,15 +5416,15 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
-        # "architecture": "VGG19",
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "architecture": "VGG19",
+        # "architecture": "resnet18",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers":["feature.0","classifier"],
+        # "exclude_layers": ["conv1", "linear"],
+        "exclude_layers":["feature.0","classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -5433,7 +5433,7 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
+        "sigma": 0.002,
         "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
@@ -5451,7 +5451,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 12)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
