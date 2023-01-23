@@ -4255,6 +4255,9 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                        fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
 
+    if cfg.use_wand:
+        wandb.join()
+
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
     FLOP_limit = cfg.flop_limit
@@ -4872,7 +4875,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
     full_fine_tune_string = "_full_fine_tune" if cfg.full_fine_tune else "_single_step_fine_tune"
-    stochastic_pruning_string = "_stochastic_pruning" if cfg.use_stochastic else "deterministic pruning"
+    stochastic_pruning_string = "_stochastic_pruning" if cfg.use_stochastic else "_deterministic_pruning"
 
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
@@ -5412,7 +5415,7 @@ if __name__ == '__main__':
         "population": 20,
         "generations": 10,
         "epochs": 200,
-        "short_epochs":10,
+        "short_epochs": 10,
         # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",

@@ -221,7 +221,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         wandb.log({
             "test_set_accuracy": test_set_performance
         })
-        wandb.join()
 
     return total_sparse_FLOPS
     # msg_perormance = f"{performance:.2f}".replace(".", ",")
