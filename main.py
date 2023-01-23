@@ -4974,10 +4974,9 @@ def lamp_scenario_2_cheap_evaluation(cfg):
                        "test_set_accuracy": performance_test_set, "G": 2,
                        "sparsity": sparsity(model=pruned_model)})
     else:
-        cfg.epochs = 1
 
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
@@ -5002,7 +5001,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         #                     pruner=cfg.pruner)
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader,
                                                           FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
@@ -5025,7 +5024,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         # else:
         #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                     pruner=cfg.pruner)
-        cfg.epoch = original_epoch_number
+        # cfg.epoch = original_epoch_number
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
@@ -5413,6 +5412,7 @@ if __name__ == '__main__':
         "population": 20,
         "generations": 10,
         "epochs": 200,
+        "short_epochs":10,
         # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
