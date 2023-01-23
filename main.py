@@ -5430,7 +5430,7 @@ if __name__ == '__main__':
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
-        "full_fine_tune": False,
+        "full_fine_tune": True,
         "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
