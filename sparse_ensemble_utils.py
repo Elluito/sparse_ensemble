@@ -128,8 +128,6 @@ def efficient_population_evaluation(memory:list, model:nn.Module,image, use_cuda
 
 def get_random_image_label(dataloader):
     x, y = get_random_batch(dataloader)
-    if use_cuda:
-        x, y = x.cuda(), y.cuda()
     rand_index = np.random.randint(0, len(x), size=1)
     image = x[rand_index]
     return image,y[rand_index]
@@ -203,7 +201,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                 wandb.log({
                     "val_set_accuracy": acc * 100,
                     "sparse_flops": total_sparse_FLOPS,
-                    "test_set_accuracy": test_accuracy
+                    "test_set_accuracy": test_accuracy,
+                    "sparsity":sparsity(pruned_model)
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()

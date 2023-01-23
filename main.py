@@ -4601,26 +4601,32 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         for percentage in sorted_percentages:
             sorted_images.append(previews_dict_of_image[percentage])
         image, y = sorted_images.pop()
-    for i in range(population):
-        individual = copy.deepcopy(solution)
+    while len(surviving_models) == 0:
+        for i in range(population):
+            individual = copy.deepcopy(solution)
 
-        noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
-        ############################## we prune #######################################
-        if cfg.pruner == "global":
-            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                            type="global")
-        else:
-            prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
-                            type="layer-wise",
-                            pruner=cfg.pruner)
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            ############################## we prune #######################################
+            if cfg.pruner == "global":
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="global")
+            else:
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="layer-wise",
+                                pruner=cfg.pruner)
 
-        #######################################################33
-        # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+            #######################################################33
+                # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
 
-        prediction = torch.argmax(noisy_sample(image).detach())
-        total_flops += image_flops
-        if prediction.eq(y.data):
-            surviving_models.append(model)
+            prediction = torch.argmax(noisy_sample(image).detach())
+            total_flops += image_flops
+            if prediction.eq(y.data):
+                surviving_models.append(noisy_sample)
+
+
+        if len(surviving_models) == 0:
+               image, y = get_random_image_label(dataloader)
+
     if len(sorted_images) == 0 and previews_dict_of_image is None:
         dict_of_images[1 - len(surviving_models) / population] = (image, y)
         image, y = get_random_image_label(dataloader)
@@ -4630,8 +4636,7 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         # else:
         #     previews_dict_of_image[1-len(surviving_models)/population] = (image,y)
         #     image, y = get_random_image_label(dataloader)
-
-    else:
+    if len(sorted_images) != 0:
         image, y = sorted_images.pop()
     index_to_remove: List[int] = []
     ######## While there
@@ -4647,6 +4652,7 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
                 image, y = get_random_image_label(dataloader)
             else:
                 image, y = sorted_images.pop()
+            index_to_remove = []
 
         else:
             if len(sorted_images) == 0 and previews_dict_of_image is not None:
@@ -4727,7 +4733,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             best_model = current_model
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-    initial_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
     if cfg.use_wandb:
         wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops})
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
@@ -4827,15 +4833,27 @@ def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader
                     dict_of_images=None):
     if use_stochastic:
 
-        image, y = get_random_image_label(valloader)
 
-        dict_image = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,target_sparsity,
-                                                                      sigmas_for_experiment,
-                                                                 cfg.population,valloader,image_flops,
-                                                                              total_flops=total_flops,
-                                                                 cfg=cfg ,previews_dict_of_image=dict_of_images)
         if dict_of_images is None:
-            return dict_image
+            best_model,dict_image = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
+                                                                                           target_sparsity,
+                                                                                  sigmas_for_experiment,
+                                                                                  cfg.population, valloader,
+                                                                                  image_flops,
+                                                                                  total_flops=total_flops,
+                                                                                  cfg=cfg,
+                                                                                  previews_dict_of_image=dict_of_images)
+            return best_model,dict_image
+        else:
+            best_model = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
+                                                                                              target_sparsity,
+                                                                                              sigmas_for_experiment,
+                                                                                              cfg.population, valloader,
+                                                                                              image_flops,
+                                                                                              total_flops=total_flops,
+                                                                                              cfg=cfg,
+                                                                                              previews_dict_of_image=dict_of_images)
+            return best_model
 
     else:
         if cfg.pruner == "global":
@@ -4852,7 +4870,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     original_epoch_number = cfg.epochs
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
-    full_fine_tune_step = "_full_fine_tune_step" if cfg.full_fine_tune_step else "_single_fine_tune_step"
+    full_fine_tune_string = "_full_fine_tune" if cfg.full_fine_tune else "_single_step_fine_tune"
     stochastic_pruning_string = "_stochastic_pruning" if cfg.use_stochastic else "deterministic pruning"
 
     if cfg.use_wandb:
@@ -4863,7 +4881,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
             name=f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
-                 f"{non_zero_string}{full_fine_tune_step}{stochastic_pruning_string }",
+                 f"{non_zero_string}{full_fine_tune_string}{stochastic_pruning_string}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4882,73 +4900,152 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     image, y = get_random_image_label(valloader)
     _, image_flops = flops(for_flops_model,image)
     TOTAL_FLOPS = 0
+    if cfg.use_stochastic:
+        pruned_model , dict_of_images = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
+                                      use_stochastic=cfg.use_stochastic,
+                       valloader=valloader,sigmas_for_experiment=sigmas_for_experiment,image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS)
+    else:
+        select_pruning(pruned_model, cfg=cfg, target_sparsity=target_sparsity,
+                       use_stochastic=cfg.use_stochastic,
+                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS)
 
-    dict_of_images = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
-                                  use_stochastic=cfg.use_stochastic,
-                   valloader=valloader,sigmas_for_experiment=sigmas_for_experiment,image_flops=image_flops,
-                   total_flops=TOTAL_FLOPS)
-    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+    initial_performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance,"sparse_flops":TOTAL_FLOPS})
+        wandb.log({"val_set_accuracy": initial_performance,"sparse_flops": TOTAL_FLOPS,
+                   "test_set_accuracy":initial_performance_test_set,"G":-1,"sparsity":sparsity(model=pruned_model)})
     if cfg.full_fine_tune:
 
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
-        if cfg.pruner == "global":
-            prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
-        else:
-            prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 0,
+                       "sparsity": sparsity(model=pruned_model)})
 
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
-        if cfg.pruner == "global":
-            prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
-        else:
-            prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.5,
+                       use_stochastic=cfg.use_stochastic,
+                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS,dict_of_images=dict_of_images)
 
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 1,
+                       "sparsity": sparsity(model=pruned_model)})
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.8,
+                       use_stochastic=cfg.use_stochastic,
+                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
+
+
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                           exclude_layers=cfg.exclude_layers,
+                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 2,
+                       "sparsity": sparsity(model=pruned_model)})
     else:
         cfg.epochs = 1
 
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
-        if cfg.pruner == "global":
-            prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
-        else:
-            prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 0,
+                       "sparsity": sparsity(model=pruned_model)})
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.5,
+                       use_stochastic=cfg.use_stochastic,
+                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
+        performance_val_set = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "val_set_accuracy": performance_val_set,
+                       "sparsity": sparsity(model=pruned_model)})
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader,
+                                                          FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
-
-        if cfg.pruner == "global":
-            prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
-        else:
-            prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 1,
+                       "sparsity": sparsity(model=pruned_model)})
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.8,
+                       use_stochastic=cfg.use_stochastic,
+                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
+                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
+        performance_val_set = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "val_set_accuracy": performance_val_set,
+                       "sparsity": sparsity(model=pruned_model)})
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
         cfg.epoch = original_epoch_number
-        restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+        TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs,
                                            exclude_layers=cfg.exclude_layers,
                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+        performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        if cfg.use_wandb:
+            wandb.log({"sparse_flops": TOTAL_FLOPS,
+                       "test_set_accuracy": performance_test_set, "G": 2,
+                       "sparsity": sparsity(model=pruned_model)})
+
+    last_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    accuracy_string = "{:10.2f}".format(last_performance).replace(" ", "")
+    result = time.localtime(time.time())
+    model_file_name = cfg.save_model_path +f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+    f"{non_zero_string}{full_fine_tune_step}{stochastic_pruning_string}_test_accuracy={accuracy_string}_time_" \
+    f"{result.tm_hour}-{result.tm_min}.pth"
+    model_file_name = model_file_name.replace(" ", "")
+    with open(model_file_name, "wb") as f:
+        pickle.dump(best_model_found, f)
+
+
 
 
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
@@ -5313,7 +5410,7 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 20,
         "generations": 10,
-        "epochs": 200,
+        "epochs": 2,
         # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
@@ -5323,12 +5420,12 @@ if __name__ == '__main__':
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": False,
+        "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
         "full_fine_tune": True,
-        "use_stochastic": False,
+        "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5337,7 +5434,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5348,7 +5445,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 12)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
