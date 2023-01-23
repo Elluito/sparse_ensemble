@@ -154,7 +154,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     mask_dict = get_mask(model=pruned_model)
     for name in exclude_layers:
-        mask_dict.pop(name)
+        if name in list(mask_dict.keys()):
+            mask_dict.pop(name)
     criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
