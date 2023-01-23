@@ -4862,7 +4862,7 @@ def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader
         else:
             prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
-        return None
+        return pruned_model
 
 def lamp_scenario_2_cheap_evaluation(cfg):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
@@ -4901,6 +4901,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     image, y = get_random_image_label(valloader)
     _, image_flops = flops(for_flops_model,image)
     TOTAL_FLOPS = 0
+    dict_of_images = None
     if cfg.use_stochastic:
         pruned_model , dict_of_images = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
                                       use_stochastic=cfg.use_stochastic,
@@ -5040,7 +5041,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     accuracy_string = "{:10.2f}".format(last_performance).replace(" ", "")
     result = time.localtime(time.time())
     model_file_name = cfg.save_model_path +f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
-    f"{non_zero_string}{full_fine_tune_step}{stochastic_pruning_string}_test_accuracy={accuracy_string}_time_" \
+    f"{non_zero_string}{full_fine_tune_string}{stochastic_pruning_string}_test_accuracy={accuracy_string}_time_" \
     f"{result.tm_hour}-{result.tm_min}.pth"
     model_file_name = model_file_name.replace(" ", "")
     with open(model_file_name, "wb") as f:
@@ -5412,21 +5413,22 @@ if __name__ == '__main__':
         "population": 20,
         "generations": 10,
         "epochs": 200,
-        "architecture": "VGG19",
-        # "architecture": "resnet18",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers":["feature.0","classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
         "full_fine_tune": True,
-        "use_stochastic": True,
+        "use_stochastic": False,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
@@ -5435,7 +5437,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": False
+        "use_wandb": True
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5446,7 +5448,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 12)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
