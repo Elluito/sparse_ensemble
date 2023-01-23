@@ -4647,6 +4647,7 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
             total_flops += image_flops
             if not prediction.eq(y.data):
                 index_to_remove.append(surviving_models.index(ind))
+
         if len(index_to_remove) == len(surviving_models):
             if len(sorted_images) == 0:
                 image, y = get_random_image_label(dataloader)
@@ -5410,13 +5411,13 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 20,
         "generations": 10,
-        "epochs": 2,
-        # "architecture": "VGG19",
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "epochs": 200,
+        "architecture": "VGG19",
+        # "architecture": "resnet18",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         "fine_tune_exclude_layers": True,
@@ -5445,7 +5446,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 12)
+    experiment_selector(cfg, 6)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
