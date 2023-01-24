@@ -4248,7 +4248,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance})
+        wandb.log({"val_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -4748,7 +4748,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
-    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else ""
+    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_dataset_per_generation"
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4808,7 +4808,8 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops})
+        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_performance":
+            initial_performance})
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops,
@@ -5494,7 +5495,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 20,
+        "population": 10,
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
@@ -5503,7 +5504,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
@@ -5533,7 +5534,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 12)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 

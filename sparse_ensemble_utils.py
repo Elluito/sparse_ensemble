@@ -203,7 +203,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                     "val_set_accuracy": acc * 100,
                     "sparse_flops": total_sparse_FLOPS,
                     "test_set_accuracy": test_accuracy,
-                    "sparsity":sparsity(pruned_model)
+                    "sparsity": sparsity(pruned_model)
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
@@ -220,7 +220,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     if use_wandb:
         wandb.log({
-            "test_set_accuracy": test_set_performance
+            "test_set_accuracy": test_set_performance,
+            "final_accuracy": test_set_performance
         })
 
     return total_sparse_FLOPS
