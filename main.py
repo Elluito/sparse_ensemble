@@ -5499,14 +5499,8 @@ if __name__ == '__main__':
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
-<<<<<<< HEAD
-        "full_fine_tune":False,
-        "use_stochastic": False,
-=======
         "full_fine_tune": True,
         "use_stochastic": True,
-
->>>>>>> 1614225af20e0c7b14f27ead907c973a34809513
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
