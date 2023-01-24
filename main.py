@@ -4724,15 +4724,17 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
             if not prediction.eq(y.data):
                 index_to_remove.append(index)
 
-        if len(index_to_remove) == len(surviving_models):
+        if len(index_to_remove) == len(surviving_models) :
                 image, y = get_random_image_label(dataloader)
                 images_used += 1
                 image, y = image.cuda(), y.cuda()
                 index_to_remove = []
 
         else:
-            for index in index_to_remove:
-                surviving_models.pop(index)
+                for index in index_to_remove:
+                    surviving_models.pop(index)
+
+                index_to_remove = []
     print(f"Used in total {images_used} images")
     return surviving_models[0]
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
