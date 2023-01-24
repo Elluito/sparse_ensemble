@@ -4619,16 +4619,15 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
                                 pruner=cfg.pruner)
 
             #######################################################33
-                # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+            # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
 
             prediction = torch.argmax(noisy_sample(image).detach())
             total_flops += image_flops
             if prediction.eq(y.data):
                 surviving_models.append(noisy_sample)
 
-
         if len(surviving_models) == 0:
-               image, y = get_random_image_label(dataloader)
+            image, y = get_random_image_label(dataloader)
 
     if len(sorted_images) == 0 and previews_dict_of_image is None:
         dict_of_images[1 - len(surviving_models) / population] = (image, y)
@@ -4670,13 +4669,15 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         return surviving_models[0], dict_of_images
     else:
         return surviving_models[0]
+
+
 def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_experiment,
-                                                             population, dataloader, image_flops, total_flops, cfg,
-                                                             previews_dict_of_image: dict = None):
+                                       population, dataloader, image_flops, total_flops, cfg,
+                                       previews_dict_of_image: dict = None):
     surviving_models = []
 
     image, y = get_random_image_label(dataloader)
-    image,y = image.cuda(),y.cuda()
+    image, y = image.cuda(), y.cuda()
     images_used = 1
     solution.cuda()
     print("First loop evaluation")
@@ -4705,39 +4706,41 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
 
         if len(surviving_models) == 0:
             image, y = get_random_image_label(dataloader)
-            images_used+=1
-            image,y =image.cuda(),y.cuda()
+            images_used += 1
+            image, y = image.cuda(), y.cuda()
 
     print(f"At the end {len(surviving_models)} individuals survived the first loop out of {population} using "
           f"{images_used} images")
     image, y = get_random_image_label(dataloader)
     images_used += 1
-    image,y = image.cuda(),y.cuda()
+    image, y = image.cuda(), y.cuda()
 
     index_to_remove: List[int] = []
     ######## While there
     total_for_image = len(surviving_models)
     while len(surviving_models) > 1:
-        for index,ind in enumerate(surviving_models):
+        for index, ind in enumerate(surviving_models):
             prediction = torch.argmax(ind(image).detach())
             total_flops += image_flops
             if not prediction.eq(y.data):
                 index_to_remove.append(index)
-        print("Index to remove {} {}".format(len(index_to_remove),index_to_remove))
-        print("Surviving Models {}, {}".format(len(surviving_models),surviving_models))
-        if len(index_to_remove) >= len(surviving_models) :
-                image, y = get_random_image_label(dataloader)
-                images_used += 1
-                image, y = image.cuda(), y.cuda()
-                index_to_remove = []
+        print("Index to remove {} {}".format(len(index_to_remove), index_to_remove))
+        print("Surviving Models {}, {}".format(len(surviving_models), surviving_models))
+        if len(index_to_remove) >= len(surviving_models):
+            image, y = get_random_image_label(dataloader)
+            images_used += 1
+            image, y = image.cuda(), y.cuda()
+            index_to_remove = []
 
-        if len(index_to_remove)< len(surviving_models):
-                for index in index_to_remove:
-                    surviving_models.pop(index)
+        if len(index_to_remove) < len(surviving_models):
+            for index in index_to_remove:
+                surviving_models.pop(index)
 
-                index_to_remove = []
+            index_to_remove = []
     print(f"Used in total {images_used} images")
     return surviving_models[0]
+
+
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
@@ -4811,8 +4814,6 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        initial_flops=initial_flops,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
                                        fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
-
-
 
 
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
@@ -4896,12 +4897,12 @@ def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude
                 wandb.log(log_dict)
 
 
-def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader,sigmas_for_experiment,image_flops,
-                    total_flops,
-                    dict_of_images=None):
+def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader, sigmas_for_experiment, image_flops,
+                   total_flops,
+                   dict_of_images=None):
     if use_stochastic:
 
-        return efficient_evaluation_random_images(pruned_model,target_sparsity,
+        return efficient_evaluation_random_images(pruned_model, target_sparsity,
                                                   sigmas_for_experiment,
                                                   cfg.population, valloader,
                                                   image_flops,
@@ -4937,6 +4938,7 @@ def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader
                             pruner=cfg.pruner)
         return pruned_model
 
+
 def lamp_scenario_2_cheap_evaluation(cfg):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
@@ -4966,38 +4968,42 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         prune_with_rate(for_flops_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner=cfg.pruner)
     sigmas_for_experiment = None
-    names,weights = zip(*get_layer_dict(pruned_model))
-    list_of_sigma = [cfg.sigma]*len(names)
-    sigmas_for_experiment = dict(zip(names,list_of_sigma))
+    names, weights = zip(*get_layer_dict(pruned_model))
+    list_of_sigma = [cfg.sigma] * len(names)
+    sigmas_for_experiment = dict(zip(names, list_of_sigma))
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     image, y = get_random_image_label(valloader)
-    _, image_flops = flops(for_flops_model,image)
+    _, image_flops = flops(for_flops_model, image)
     TOTAL_FLOPS = 0
     dict_of_images = None
     if cfg.use_stochastic:
-        pruned_model = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=target_sparsity,
                                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader,sigmas_for_experiment=sigmas_for_experiment,image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS)
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS)
     else:
         pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=target_sparsity,
-                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS)
+                                      use_stochastic=cfg.use_stochastic,
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS)
 
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
     initial_performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance,"sparse_flops": TOTAL_FLOPS,
-                   "test_set_accuracy":initial_performance_test_set,"G":-1,"sparsity":sparsity(model=pruned_model)})
+        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": TOTAL_FLOPS,
+                   "test_set_accuracy": initial_performance_test_set, "G": -1,
+                   "sparsity": sparsity(model=pruned_model)})
     if cfg.full_fine_tune:
 
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5005,9 +5011,10 @@ def lamp_scenario_2_cheap_evaluation(cfg):
                        "sparsity": sparsity(model=pruned_model)})
 
         pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.5,
-                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS,dict_of_images=dict_of_images)
+                                      use_stochastic=cfg.use_stochastic,
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
 
         # if cfg.pruner == "global":
         #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="global")
@@ -5016,10 +5023,11 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         #                     pruner=cfg.pruner)
 
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5031,16 +5039,17 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         #     prune_with_rate(pruned_model, 0.99, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                     pruner=cfg.pruner)
         pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.8,
-                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
-
+                                      use_stochastic=cfg.use_stochastic,
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
 
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5049,19 +5058,21 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     else:
 
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
                        "test_set_accuracy": performance_test_set, "G": 0,
                        "sparsity": sparsity(model=pruned_model)})
         pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.5,
-                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
+                                      use_stochastic=cfg.use_stochastic,
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
         performance_val_set = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5073,20 +5084,22 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         #     prune_with_rate(pruned_model, 0.95, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                     pruner=cfg.pruner)
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader,
-                                                          FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         FLOP_limit=cfg.flop_limit,
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.short_epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
                        "test_set_accuracy": performance_test_set, "G": 1,
                        "sparsity": sparsity(model=pruned_model)})
         pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=0.8,
-                       use_stochastic=cfg.use_stochastic,
-                       valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
-                       total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
+                                      use_stochastic=cfg.use_stochastic,
+                                      valloader=valloader, sigmas_for_experiment=sigmas_for_experiment,
+                                      image_flops=image_flops,
+                                      total_flops=TOTAL_FLOPS, dict_of_images=dict_of_images)
         performance_val_set = test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5099,10 +5112,11 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         #                     pruner=cfg.pruner)
         # cfg.epoch = original_epoch_number
         TOTAL_FLOPS = restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
-                                           use_wandb=cfg.use_wandb, epochs=cfg.epochs,
-                                           exclude_layers=cfg.exclude_layers,
-                                           fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                           fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,initial_flops=TOTAL_FLOPS)
+                                                         use_wandb=cfg.use_wandb, epochs=cfg.epochs,
+                                                         exclude_layers=cfg.exclude_layers,
+                                                         fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                         fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                         initial_flops=TOTAL_FLOPS)
         performance_test_set = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
         if cfg.use_wandb:
             wandb.log({"sparse_flops": TOTAL_FLOPS,
@@ -5112,14 +5126,12 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     last_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     accuracy_string = "{:10.2f}".format(last_performance).replace(" ", "")
     result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path +f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+    model_file_name = cfg.save_model_path + f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
     f"{non_zero_string}{full_fine_tune_string}{stochastic_pruning_string}_test_accuracy={accuracy_string}_time_" \
     f"{result.tm_hour}-{result.tm_min}.pth"
     model_file_name = model_file_name.replace(" ", "")
     with open(model_file_name, "wb") as f:
         pickle.dump(best_model_found, f)
-
-
 
 
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
@@ -5494,13 +5506,13 @@ if __name__ == '__main__':
         "pruner": "global",
         "model_type": "alternative",
         # "exclude_layers": ["conv1", "linear"],
-        "exclude_layers": ["features.0","classifier"],
+        "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
-        "full_fine_tune": True,
+        "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
