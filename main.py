@@ -4676,10 +4676,13 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
     surviving_models = []
 
     image, y = get_random_image_label(dataloader)
-    image,y =image.cuda(),y.cuda()
+    image,y = image.cuda(),y.cuda()
+    images_used = 1
     solution.cuda()
+    print("First loop evaluation")
     while len(surviving_models) == 0:
         for i in range(population):
+
             individual = copy.deepcopy(solution)
 
             noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
@@ -4702,10 +4705,13 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
 
         if len(surviving_models) == 0:
             image, y = get_random_image_label(dataloader)
+            images_used+=1
             image,y =image.cuda(),y.cuda()
 
-
+    print(f"At the end {len(surviving_models)} individuals survived the first loop out of {population} using "
+          f"{images_used} images")
     image, y = get_random_image_label(dataloader)
+    images_used += 1
     image,y = image.cuda(),y.cuda()
 
     index_to_remove: List[int] = []
@@ -4716,16 +4722,18 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
             prediction = torch.argmax(ind(image).detach())
             total_flops += image_flops
             if not prediction.eq(y.data):
-                index_to_remove.append(surviving_models.index(ind))
+                index_to_remove.append(index)
 
         if len(index_to_remove) == len(surviving_models):
                 image, y = get_random_image_label(dataloader)
+                images_used += 1
                 image, y = image.cuda(), y.cuda()
                 index_to_remove = []
 
         else:
+            for index in index_to_remove:
                 surviving_models.pop(index)
-
+    print(f"Used in total {images_used} images")
     return surviving_models[0]
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
@@ -4802,8 +4810,6 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
 
 
-def big_population_one_shot_efficient_evaluation(cfg: omegaconf.OmegaConf):
-    pass
 
 
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
@@ -5473,7 +5479,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 20,
+        "population": 100,
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
