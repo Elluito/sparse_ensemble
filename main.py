@@ -4723,14 +4723,15 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
             total_flops += image_flops
             if not prediction.eq(y.data):
                 index_to_remove.append(index)
-
-        if len(index_to_remove) == len(surviving_models) :
+        print("Index to remove {} {}".format(len(index_to_remove),index_to_remove))
+        print("Surviving Models {}, {}".format(len(surviving_models),surviving_models))
+        if len(index_to_remove) >= len(surviving_models) :
                 image, y = get_random_image_label(dataloader)
                 images_used += 1
                 image, y = image.cuda(), y.cuda()
                 index_to_remove = []
 
-        else:
+        if len(index_to_remove)< len(surviving_models):
                 for index in index_to_remove:
                     surviving_models.pop(index)
 
