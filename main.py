@@ -4670,8 +4670,63 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         return surviving_models[0], dict_of_images
     else:
         return surviving_models[0]
+def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_experiment,
+                                                             population, dataloader, image_flops, total_flops, cfg,
+                                                             previews_dict_of_image: dict = None):
+    surviving_models = []
+
+    image, y = get_random_image_label(dataloader)
+    image,y =image.cuda(),y.cuda()
+    solution.cuda()
+    while len(surviving_models) == 0:
+        for i in range(population):
+            individual = copy.deepcopy(solution)
+
+            noisy_sample = get_noisy_sample_sigma_per_layer(individual, cfg, sigmas_for_experiment)
+            ############################## we prune #######################################
+            if cfg.pruner == "global":
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="global")
+            else:
+                prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="layer-wise",
+                                pruner=cfg.pruner)
+
+            #######################################################33
+            # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+
+            prediction = torch.argmax(noisy_sample(image).detach())
+            total_flops += image_flops
+            if prediction.eq(y.data):
+                surviving_models.append(noisy_sample)
+
+        if len(surviving_models) == 0:
+            image, y = get_random_image_label(dataloader)
+            image,y =image.cuda(),y.cuda()
 
 
+    image, y = get_random_image_label(dataloader)
+    image,y = image.cuda(),y.cuda()
+
+    index_to_remove: List[int] = []
+    ######## While there
+    total_for_image = len(surviving_models)
+    while len(surviving_models) > 1:
+        for index,ind in enumerate(surviving_models):
+            prediction = torch.argmax(ind(image).detach())
+            total_flops += image_flops
+            if not prediction.eq(y.data):
+                index_to_remove.append(surviving_models.index(ind))
+
+        if len(index_to_remove) == len(surviving_models):
+                image, y = get_random_image_label(dataloader)
+                image, y = image.cuda(), y.cuda()
+                index_to_remove = []
+
+        else:
+                surviving_models.pop(index)
+
+    return surviving_models[0]
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
     target_sparsity = cfg.amount
@@ -4837,27 +4892,33 @@ def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader
                     dict_of_images=None):
     if use_stochastic:
 
-
-        if dict_of_images is None:
-            best_model,dict_image = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
-                                                                                           target_sparsity,
-                                                                                  sigmas_for_experiment,
-                                                                                  cfg.population, valloader,
-                                                                                  image_flops,
-                                                                                  total_flops=total_flops,
-                                                                                  cfg=cfg,
-                                                                                  previews_dict_of_image=dict_of_images)
-            return best_model,dict_image
-        else:
-            best_model = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
-                                                                                              target_sparsity,
-                                                                                              sigmas_for_experiment,
-                                                                                              cfg.population, valloader,
-                                                                                              image_flops,
-                                                                                              total_flops=total_flops,
-                                                                                              cfg=cfg,
-                                                                                              previews_dict_of_image=dict_of_images)
-            return best_model
+        return efficient_evaluation_random_images(pruned_model,target_sparsity,
+                                                  sigmas_for_experiment,
+                                                  cfg.population, valloader,
+                                                  image_flops,
+                                                  total_flops=total_flops,
+                                                  cfg=cfg,
+                                                  previews_dict_of_image=dict_of_images)
+        # if dict_of_images is None:
+        #     best_model,dict_image = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
+        #                                                                                    target_sparsity,
+        #                                                                           sigmas_for_experiment,
+        #                                                                           cfg.population, valloader,
+        #                                                                           image_flops,
+        #                                                                           total_flops=total_flops,
+        #                                                                           cfg=cfg,
+        #                                                                           previews_dict_of_image=dict_of_images)
+        #     return best_model,dict_image
+        # else:
+        #     best_model = generation_of_stochastic_prune_with_efficient_evaluation(pruned_model,
+        #                                                                                       target_sparsity,
+        #                                                                                       sigmas_for_experiment,
+        #                                                                                       cfg.population, valloader,
+        #                                                                                       image_flops,
+        #                                                                                       total_flops=total_flops,
+        #                                                                                       cfg=cfg,
+        #                                                                                       previews_dict_of_image=dict_of_images)
+        #     return best_model
 
     else:
         if cfg.pruner == "global":
@@ -4906,12 +4967,12 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     TOTAL_FLOPS = 0
     dict_of_images = None
     if cfg.use_stochastic:
-        pruned_model , dict_of_images = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
+        pruned_model = select_pruning(pruned_model,cfg=cfg,target_sparsity=target_sparsity,
                                       use_stochastic=cfg.use_stochastic,
                        valloader=valloader,sigmas_for_experiment=sigmas_for_experiment,image_flops=image_flops,
                        total_flops=TOTAL_FLOPS)
     else:
-        select_pruning(pruned_model, cfg=cfg, target_sparsity=target_sparsity,
+        pruned_model = select_pruning(pruned_model, cfg=cfg, target_sparsity=target_sparsity,
                        use_stochastic=cfg.use_stochastic,
                        valloader=valloader, sigmas_for_experiment=sigmas_for_experiment, image_flops=image_flops,
                        total_flops=TOTAL_FLOPS)
@@ -5416,24 +5477,24 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
-        "architecture": "VGG19",
-        # "architecture": "resnet18",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": "global",
         "model_type": "alternative",
         # "exclude_layers": ["conv1", "linear"],
-        "exclude_layers":["features.0","classifier"],
+        "exclude_layers": ["features.0","classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
         "full_fine_tune": True,
-        "use_stochastic": False,
+        "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.002,
+        "sigma": 0.005,
         "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
@@ -5451,7 +5512,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    experiment_selector(cfg, 12)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
