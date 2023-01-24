@@ -4725,7 +4725,7 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
             if not prediction.eq(y.data):
                 index_to_remove.append(index)
         print("Index to remove {} {}".format(len(index_to_remove), index_to_remove))
-        print("Surviving Models {}, {}".format(len(surviving_models), surviving_models))
+        print("Surviving Models {}".format(len(surviving_models)))
         if len(index_to_remove) >= len(surviving_models):
             image, y = get_random_image_label(dataloader)
             images_used += 1
@@ -5494,7 +5494,7 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 100,
+        "population": 20,
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
