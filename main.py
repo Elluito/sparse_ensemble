@@ -5501,6 +5501,7 @@ if __name__ == '__main__':
         "one_batch": True,
         "full_fine_tune": True,
         "use_stochastic": True,
+
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
         "amount": 0.9,
