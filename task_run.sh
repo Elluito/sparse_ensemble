@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 48:00:00)
-#$ -l h_rt=04:00:00
+#$ -l h_rt=02:00:00
 
 # ASk for some GPU
 #$ -l coproc_p100=1
@@ -14,7 +14,7 @@
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=4G
 # Tell SGE that this is an array job, with "tasks" numbered from 1 to 10
-#$ -t 1-10
+#$ -t 1-5
 
 # -pe smp 3
 # Send emails when job starts and ends
