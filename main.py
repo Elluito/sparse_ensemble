@@ -4807,7 +4807,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
-    initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=test, verbose=1)
+    initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
         wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_test_performance":
             initial_test_performance})
@@ -5517,8 +5517,8 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
-        "amount": 0.8,
+        "sigma": 0.001,
+        "amount": 0.5,
         "dataset": "cifar10",
         "batch_size": 512,
         "num_workers": 0,
