@@ -2913,6 +2913,14 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             remove_reparametrization(pruned_original)
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
+            ###############  LAMP ################################
+
+            lamp_model = copy.deepcopy(net)
+
+            prune_with_rate(lamp_model, float(current_pr), exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner="lamp")
+
+            LAMP_deterministic_performance = test(pruned_original, use_cuda, testloader, verbose=0)
 
             axj = sns.boxplot(x='Type',
                               y='Accuracy',
@@ -2924,8 +2932,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
 
             adjust_box_widths(fig, 2)
 
-            axj.axhline(pruned_original_performance, c="purple", label="Deterministic Pruning")
-
+            axj.axhline(pruned_original_performance, c="purple", label="Global Deterministic Pruning")
+            axj.axhline(LAMP_deterministic_performance, c="peachpuff", label="LAMP Determinstic Pruning")
             axj = sns.stripplot(x='Type',
                                 y='Accuracy',
                                 hue='Type',
@@ -5505,7 +5513,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
@@ -5535,7 +5543,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    experiment_selector(cfg, 6)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
