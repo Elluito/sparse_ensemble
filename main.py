@@ -4243,7 +4243,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}",
+            name=f"fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4764,7 +4764,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"restricted_finetune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+            name=f"fine_tune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{one_batch_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
                   "static sigma for this experiment with vanilla global",
@@ -4966,7 +4966,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+            name=f"progressive_pruning_fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{full_fine_tune_string}{stochastic_pruning_string}",
             reinit=True,
         )
@@ -5136,7 +5136,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
     last_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     accuracy_string = "{:10.2f}".format(last_performance).replace(" ", "")
     result = time.localtime(time.time())
-    model_file_name = cfg.save_model_path + f"progressive_pruning_restricted_finetune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+    model_file_name = cfg.save_model_path + f"progressive_pruning_fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
     f"{non_zero_string}{full_fine_tune_string}{stochastic_pruning_string}_test_accuracy={accuracy_string}_time_" \
     f"{result.tm_hour}-{result.tm_min}.pth"
     model_file_name = model_file_name.replace(" ", "")
@@ -5513,7 +5513,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "global",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
