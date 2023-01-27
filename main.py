@@ -59,7 +59,7 @@ from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse
 from itertools import cycle
 from matplotlib.patches import PathPatch
-import pylustrator
+# import pylustrator
 from shrinkbench.metrics.flops import flops
 
 matplotlib.use('TkAgg')
