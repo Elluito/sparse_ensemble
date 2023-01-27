@@ -4826,7 +4826,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     evaluation_set = valloader
     if cfg.one_batch:
         evaluation_set = [(data, y)]
-    names,weights = zip(*get_layer_dict(model))
+    names,weights = zip(*get_layer_dict(pruned_model))
     sigma_per_layer = dict(zip(names,[cfg.sigma]*len(names)))
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
