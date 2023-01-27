@@ -35,7 +35,7 @@ from ignite.metrics import Accuracy, Loss
 import array as pyarr
 import matplotlib
 
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
@@ -59,7 +59,10 @@ from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse
 from itertools import cycle
 from matplotlib.patches import PathPatch
+import pylustrator
 from shrinkbench.metrics.flops import flops
+
+matplotlib.use('TkAgg')
 
 
 def adjust_box_widths(g, fac):
@@ -2879,12 +2882,13 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
 
     net = get_model(cfg)
 
-    _, _, testloader = get_cifar_datasets(cfg)
+    _, valloader, testloader = get_cifar_datasets(cfg)
 
     original_performance = test(net, use_cuda, testloader)
 
     df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
     num_col = len(specific_pruning_rates)
+    # pylustrator.start()
     # num_col = 3
     # num_row = 3
     # For each num_row is going to be one plot with num_col subplots for each pruning rate
@@ -2914,13 +2918,36 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
             ###############  LAMP ################################
+            total_observations = len(current_df["Accuracy"][current_df["Type"]=="Stochastic Pruning"])
 
             lamp_model = copy.deepcopy(net)
 
             prune_with_rate(lamp_model, float(current_pr), exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="lamp")
-
-            LAMP_deterministic_performance = test(pruned_original, use_cuda, testloader, verbose=0)
+            print("Lamp deterministic performance")
+            LAMP_deterministic_performance = test(lamp_model, use_cuda, testloader, verbose=0)
+            print(LAMP_deterministic_performance)
+            print("Lamp deterministic performance on val set pruning rate {}".format(current_pr))
+            LAMP_deterministic_performance_val = test(lamp_model, use_cuda, valloader, verbose=0)
+            print(LAMP_deterministic_performance_val)
+            print("GLOBAL deterministic performance")
+            print(pruned_original_performance)
+            print("Global deterministic performance on val set pruning rate {}".format(current_pr))
+            GLOBAL_deterministic_performance_val = test(pruned_original, use_cuda, valloader, verbose=0)
+            print(GLOBAL_deterministic_performance_val)
+            for type in current_df["Type"].unique():
+                number_of_elements_above_LAMP_determinstic = (
+                            current_df["Accuracy"][type == current_df["Type"]] > LAMP_deterministic_performance).sum()
+                number_of_elements_above_GLOBAL_determinstic = (
+                        current_df["Accuracy"][type == current_df["Type"]] > pruned_original_performance).sum()
+                print(
+                    "For pruning rate {} and sigma {} the number of elements above deterministic LAMP for type {} are {} then the fraction is {}".format(
+                        current_pr, current_sigma, type, number_of_elements_above_LAMP_determinstic,
+                        number_of_elements_above_LAMP_determinstic/total_observations))
+                print(
+                    "For pruning rate {} and sigma {} the number of elements above deterministic Global for type {} are {} then the fraction is {}".format(
+                        current_pr, current_sigma, type,number_of_elements_above_GLOBAL_determinstic,
+                        number_of_elements_above_GLOBAL_determinstic/total_observations))
 
             axj = sns.boxplot(x='Type',
                               y='Accuracy',
@@ -2931,9 +2958,11 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                               )
 
             adjust_box_widths(fig, 2)
+            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Global Deterministic Pruning")
+            axj.axhline(LAMP_deterministic_performance, c="xkcd:greeny yellow", linewidth=2.5, label="LAMP "
+                                                                                                     "Deterministic "
+                                                                                                     "Pruning")
 
-            axj.axhline(pruned_original_performance, c="purple", label="Global Deterministic Pruning")
-            axj.axhline(LAMP_deterministic_performance, c="peachpuff", label="LAMP Determinstic Pruning")
             axj = sns.stripplot(x='Type',
                                 y='Accuracy',
                                 hue='Type',
@@ -2966,7 +2995,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # ax2.invert_yaxis()
 
             handles, labels = axj.get_legend_handles_labels()
-            l = axj.legend(handles[:4], labels[:4], fontsize=15)
+            l = axj.legend(handles[:5], labels[:5], fontsize=15)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -2974,30 +3003,44 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
-            axj.tick_params(axis="y", labelsize=15)
+            axj.tick_params(axis="y", labelsize=20)
+            axj.set_ylabel("Accuracy", fontsize=20)
             # plt.ylim(25,55)
-            ax2 = axj.twinx()
             l = axj.get_ylim()
-            l2 = ax2.get_ylim()
-            f = lambda x: l2[0] + (x - l[0]) / (l[1] - l[0]) * (l2[1] - l2[0])
-            ticks = f(axj.get_yticks())
-            # ax2.set_yticks(axj.get_yticks(),labels=[25,30,35,40,45,50,55], minor=False)
+            plt.ylim(l[0], l[1])
+            ax2 = axj.twinx()
+            ax2.set_ylim(l[0], l[1])
+            # l2 = ax2.
+            # f = lambda x: l2[0] + (x - l[0]) / (l[1] - l[0]) * (l2[1] - l2[0])
+            # ticks = f(axj.get_yticks())
+            unnormalied_ticks = axj.get_yticks()
+            # ax2.set_yticks(axj.get_yticks(),labeget_ylim()
+            #             # ax2.set_ylim(*l)ls=[25,30,35,40,45,50,55], minor=False)
             #
-            ax2.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
-            # axj.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(axj.get_yticks()))
+            # ax2.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
+            # axj.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(ticks))
             y2_ticks = ax2.get_yticks()
-            epsilon_ticks = original_performance - np.linspace(20, 60, len(ticks))
+            epsilon_ticks = original_performance - np.linspace(unnormalied_ticks[0], unnormalied_ticks[-1],
+                                                               len(y2_ticks))
+            new_ticks = np.linspace(l[0], l[1],
+                                    len(y2_ticks))
             formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
+            if l[1]-l[0] <=2:
+                formatter_q = lambda n: "{:10.2f}".format(n).replace(" ", "")
+            else:
+                formatter_q = lambda n: "{:10.0f}".format(n).replace(" ", "")
+            new_ticks = list(map(formatter_q, unnormalied_ticks))
+            axj.set_yticks(ticks=unnormalied_ticks, labels=new_ticks, minor=False)
             epsilon_ticks = list(map(formatter_f, epsilon_ticks))
             epsilon_ticks.reverse()
-            ax2.set_yticks(y2_ticks, labels=epsilon_ticks)
-            ax2.invert_yaxis()
+            ax2.set_yticks(ticks=unnormalied_ticks, labels=epsilon_ticks, minor=False)
             # ax2.set_yticks([25,30,35,40,45,50,55], minor=False)
             ax2.set_ylabel(r"$\epsilon$", fontsize=20)
             ax2.spines['right'].set_color('red')
-            ax2.tick_params(axis="y", colors="red", labelsize=15
+            ax2.tick_params(axis="y", colors="red", labelsize=20
                             )
             ax2.yaxis.label.set_color('red')
+            ax2.invert_yaxis()
             # ax2.tick_params(
             #     axis='x',  # changes apply to the x-axis
             #     which='both',  # both major and minor ticks are affected
@@ -3009,6 +3052,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
         plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
+        # plt.show()
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(pr_string, current_sigma), bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(pr_string, current_sigma), bbox_inches="tight")
 
@@ -4256,7 +4300,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     if cfg.use_wandb:
-        wandb.log({"val_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
+        wandb.log({"test_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -4764,10 +4808,10 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"fine_tune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+            name=f"fine_tune_base_no_noise_exclude_layers_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{one_batch_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
-                  "static sigma for this experiment with vanilla global",
+                  "static sigma for this experiment with vanilla global with no noise in the exclude_layers",
             reinit=True,
         )
 
@@ -4782,11 +4826,11 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     evaluation_set = valloader
     if cfg.one_batch:
         evaluation_set = [(data, y)]
-
+    names,weights = zip(*get_layer_dict(model))
+    sigma_per_layer = dict(zip(names,[cfg.sigma]*len(names)))
     for n in range(cfg.population):
-
-        current_model = get_noisy_sample(pruned_model, cfg)
-
+        # current_model = get_noisy_sample(pruned_model, cfg)
+        current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg,sigma_per_layer)
         # det_mask_transfer_model = copy.deepcopy(current_model)
         # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
@@ -5331,7 +5375,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
                 f"_{cfg.population}_{eval_set}.png")
 
-
+# def stochastic_pruning_global_against_LAMP_deterministic_pruning():
 def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test"):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
@@ -5513,7 +5557,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
@@ -5525,14 +5569,14 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.001,
-        "amount": 0.5,
+        "sigma": 0.005,
+        "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb":False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5543,7 +5587,7 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
