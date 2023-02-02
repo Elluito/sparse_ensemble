@@ -3024,11 +3024,12 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                                                                len(y2_ticks))
             new_ticks = np.linspace(l[0], l[1],
                                     len(y2_ticks))
-            formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
             if l[1]-l[0] <=2:
                 formatter_q = lambda n: "{:10.2f}".format(n).replace(" ", "")
+                formatter_f = lambda n: "{:10.2f}".format(n).replace(" ", "")
             else:
                 formatter_q = lambda n: "{:10.0f}".format(n).replace(" ", "")
+                formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
             new_ticks = list(map(formatter_q, unnormalied_ticks))
             axj.set_yticks(ticks=unnormalied_ticks, labels=new_ticks, minor=False)
             epsilon_ticks = list(map(formatter_f, epsilon_ticks))
@@ -4808,10 +4809,11 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"fine_tune_base_no_noise_exclude_layers_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+            name=f"fine_tune_base_exclude_layers_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{one_batch_string}",
-            notes="This run, run one iteration of stochastic pruning with fine tune on top of that. We do global "
-                  "static sigma for this experiment with vanilla global with no noise in the exclude_layers",
+            notes="This run, run one iteration of stochastic pruning with fine tune on top of that. I'm doing lamp "
+                  "with the pruning rates calculated no the original model and record the pruning rates of the noisy "
+                  "models to compare",
             reinit=True,
         )
 
@@ -4828,6 +4830,15 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         evaluation_set = [(data, y)]
     names,weights = zip(*get_layer_dict(pruned_model))
     sigma_per_layer = dict(zip(names,[cfg.sigma]*len(names)))
+
+    pr_per_layer = prune_with_rate(copy.deepcopy(pruned_model), target_sparsity, exclude_layers=cfg.exclude_layers,
+                      type="layer-wise",
+                    pruner="lamp", return_pr_per_layer=True)
+    if cfg.use_wandb:
+        log_dict = {}
+        for name,elem in pr_per_layer.items():
+            log_dict["deterministic_{}_pr".format(name)] = elem
+        wandb.log(log_dict)
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
         current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg,sigma_per_layer)
@@ -4839,9 +4850,24 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         # Dense stochastic performance
         if cfg.pruner == "global":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-        else:
+
+        if cfg.pruner == "manual":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner="manual", pr_per_layer=pr_per_layer)
+            individual_prs_per_layer = prune_with_rate(current_model, target_sparsity,
+                                                      exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner,return_pr_per_layer=True)
+
+            if cfg.use_wandb:
+                log_dict = {}
+                for name, elem in individual_prs_per_layer.items():
+                    log_dict["individual_{}_pr".format(name)] = elem
+                wandb.log(log_dict)
+
+            if cfg.pruner == "lamp":
+                prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
+
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
@@ -5557,7 +5583,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "lamp",
+        "pruner": "manual",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
