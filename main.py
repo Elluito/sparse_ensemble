@@ -4842,6 +4842,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
         current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg,sigma_per_layer)
+        copy_of_pruned_model = copy.deepcopy(current_model)
         # det_mask_transfer_model = copy.deepcopy(current_model)
         # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
@@ -4854,9 +4855,9 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         if cfg.pruner == "manual":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="manual", pr_per_layer=pr_per_layer)
-            individual_prs_per_layer = prune_with_rate(current_model, target_sparsity,
+            individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
                                                       exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner,return_pr_per_layer=True)
+                            pruner="lamp",return_pr_per_layer=True)
 
             if cfg.use_wandb:
                 log_dict = {}
@@ -5602,7 +5603,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
