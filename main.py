@@ -4865,9 +4865,12 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                     log_dict["individual_{}_pr".format(name)] = elem
                 wandb.log(log_dict)
 
-            if cfg.pruner == "lamp":
-                prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner=cfg.pruner)
+        if cfg.pruner == "lamp":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+                                type="layer-wise",
+                        pruner=cfg.pruner)
+        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
 
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
@@ -5584,7 +5587,7 @@ if __name__ == '__main__':
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner": "global",
+        "pruner": "lamp",
         "model_type": "alternative",
         #"exclude_layers": ["conv1", "linear"],
         "exclude_layers": ["features.0", "classifier"],

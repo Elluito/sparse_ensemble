@@ -297,7 +297,7 @@ def get_buffer_dict(model: torch.nn.Module):
     if len(layer_dict)==0:
         raise Exception("Model needs to have weight_maks attributes on modules")
     # assert len(layer_dict)!=0, "Model needs to have weight_maks attributes on modules"
-    return layer_dic
+    return layer_dict
 
 def get_mask(model):
     try:
