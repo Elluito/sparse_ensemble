@@ -2918,7 +2918,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
             ###############  LAMP ################################
-            total_observations = len(current_df["Accuracy"][current_df["Type"]=="Stochastic Pruning"])
+            total_observations = len(current_df["Accuracy"][current_df["Type"] == "Stochastic Pruning"])
 
             lamp_model = copy.deepcopy(net)
 
@@ -2937,17 +2937,17 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             print(GLOBAL_deterministic_performance_val)
             for type in current_df["Type"].unique():
                 number_of_elements_above_LAMP_determinstic = (
-                            current_df["Accuracy"][type == current_df["Type"]] > LAMP_deterministic_performance).sum()
+                        current_df["Accuracy"][type == current_df["Type"]] > LAMP_deterministic_performance).sum()
                 number_of_elements_above_GLOBAL_determinstic = (
                         current_df["Accuracy"][type == current_df["Type"]] > pruned_original_performance).sum()
                 print(
                     "For pruning rate {} and sigma {} the number of elements above deterministic LAMP for type {} are {} then the fraction is {}".format(
                         current_pr, current_sigma, type, number_of_elements_above_LAMP_determinstic,
-                        number_of_elements_above_LAMP_determinstic/total_observations))
+                        number_of_elements_above_LAMP_determinstic / total_observations))
                 print(
                     "For pruning rate {} and sigma {} the number of elements above deterministic Global for type {} are {} then the fraction is {}".format(
-                        current_pr, current_sigma, type,number_of_elements_above_GLOBAL_determinstic,
-                        number_of_elements_above_GLOBAL_determinstic/total_observations))
+                        current_pr, current_sigma, type, number_of_elements_above_GLOBAL_determinstic,
+                        number_of_elements_above_GLOBAL_determinstic / total_observations))
 
             axj = sns.boxplot(x='Type',
                               y='Accuracy',
@@ -3024,7 +3024,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                                                                len(y2_ticks))
             new_ticks = np.linspace(l[0], l[1],
                                     len(y2_ticks))
-            if l[1]-l[0] <=2:
+            if l[1] - l[0] <= 2:
                 formatter_q = lambda n: "{:10.2f}".format(n).replace(" ", "")
                 formatter_f = lambda n: "{:10.2f}".format(n).replace(" ", "")
             else:
@@ -3064,6 +3064,22 @@ def plot_val_accuracy_wandb(filepath, save_path, x_variable, y_variable, xlabel,
     plt.ylabel(ylabel, fontsize=20)
     plt.xlabel(xlabel, fontsize=20)
     plt.savefig(save_path)
+
+
+def plot_test_accuracy_wandb(filepaths,legends, save_path, x_variable, y_variable, y_min, y_max, xlabel, ylabel,
+                             title=""):
+    figure , ax = plt.subplots()
+    for filepath in filepaths:
+        df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+        plt.plot(df[x_variable].ewm().mean(), df[y_variable].ewm())
+        plt.fill_between(df[x_variable], df[y_min].ewm().mean(), df[y_max].man(), alpha=0.2)
+
+    plt.ylabel(ylabel, fontsize=20)
+    plt.xlabel(xlabel, fontsize=20)
+    ax.legend(legends)
+    plt.title(title, fontsize=20)
+    # plt.savefig(save_path)
+    plt.show()
 
 
 def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.DictConfig):
@@ -4828,20 +4844,20 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     evaluation_set = valloader
     if cfg.one_batch:
         evaluation_set = [(data, y)]
-    names,weights = zip(*get_layer_dict(pruned_model))
-    sigma_per_layer = dict(zip(names,[cfg.sigma]*len(names)))
+    names, weights = zip(*get_layer_dict(pruned_model))
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * len(names)))
 
     pr_per_layer = prune_with_rate(copy.deepcopy(pruned_model), target_sparsity, exclude_layers=cfg.exclude_layers,
-                      type="layer-wise",
-                    pruner="lamp", return_pr_per_layer=True)
+                                   type="layer-wise",
+                                   pruner="lamp", return_pr_per_layer=True)
     if cfg.use_wandb:
         log_dict = {}
-        for name,elem in pr_per_layer.items():
+        for name, elem in pr_per_layer.items():
             log_dict["deterministic_{}_pr".format(name)] = elem
         wandb.log(log_dict)
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
-        current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg,sigma_per_layer)
+        current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
         copy_of_pruned_model = copy.deepcopy(current_model)
         # det_mask_transfer_model = copy.deepcopy(current_model)
         # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
@@ -4856,8 +4872,8 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="manual", pr_per_layer=pr_per_layer)
             individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
-                                                      exclude_layers=cfg.exclude_layers, type="layer-wise",
-                            pruner="lamp",return_pr_per_layer=True)
+                                                       exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                                       pruner="lamp", return_pr_per_layer=True)
 
             if cfg.use_wandb:
                 log_dict = {}
@@ -4867,8 +4883,8 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         if cfg.pruner == "lamp":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
-                                type="layer-wise",
-                        pruner=cfg.pruner)
+                            type="layer-wise",
+                            pruner=cfg.pruner)
         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
@@ -5405,6 +5421,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
                 f"_{cfg.population}_{eval_set}.png")
 
+
 # def stochastic_pruning_global_against_LAMP_deterministic_pruning():
 def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test"):
     use_cuda = torch.cuda.is_available()
@@ -5585,11 +5602,11 @@ if __name__ == '__main__':
         "architecture": "VGG19",
         # "architecture": "resnet18",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": "lamp",
         "model_type": "alternative",
-        #"exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["conv1", "linear"],
         "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
@@ -5610,14 +5627,22 @@ if __name__ == '__main__':
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
-    #                         "generation","iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
-    #                         "Generations","Accuracy")
+    #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
+    #                         "Generations", "Accuracy")
+    # filepaths = ["stochastic_global_fine_tuning_testset.csv","stochastic_lamp_fine_tuning_testset.csv"]
+    # legends = ["Stochatic Global Pruning","Stochastic LAMP Pruning"]
+    filepaths = ["stochastic_global_fine_tuning_testset.csv"]
+    legends = ["Stochatic Global Pruning"]
+    plot_test_accuracy_wandb(filepaths,legends, "stochastic_pruning_fine_tuning_testset.pdf",
+                             "sparse_flops", "architecture: resnet18 - test_set_accuracy", "architecture: resnet18 - "
+                                                                                           "test_set_accuracy__MIN",
+                             "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
 
-    experiment_selector(cfg, 11)
+    # experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 

@@ -221,6 +221,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     if use_wandb:
         wandb.log({
             "test_set_accuracy": test_set_performance,
+            "sparse_flops": total_sparse_FLOPS,
             "final_accuracy": test_set_performance
         })
 
