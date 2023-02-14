@@ -56,11 +56,12 @@ from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
-    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse
+    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
 from itertools import cycle
 from matplotlib.patches import PathPatch
 # import pylustrator
 from shrinkbench.metrics.flops import flops
+from pathlib import Path
 
 matplotlib.use('TkAgg')
 
@@ -377,13 +378,17 @@ list =
                     weight_mask = dict(m.named_buffers())["weight_mask"]
                     noise = torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device)
                     noise.mul_(weight_mask)
-                    m.weight.add_(noise)
+                    m.weight.data.add_(noise)
                 else:
-                    m.weight.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
+                    m.weight.data.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
 
-def get_noisy_sample_sigma_per_layer(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer):
-    current_model = copy.deepcopy(net)
+def get_noisy_sample_sigma_per_layer(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer,clone=True):
+    current_model = None
+    if clone:
+        current_model = copy.deepcopy(net)
+    else:
+        current_model = net
     if cfg.noise == "gaussian":
         add_gaussian_noise_to_layers(current_model, sigma_per_layer=sigma_per_layer, exclude_layers=cfg.exclude_layers)
     elif cfg.noise == "geogaussian":
@@ -1679,8 +1684,20 @@ def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
 ######################################################################################################
 def get_cifar_datasets(cfg):
     if cfg.dataset == "cifar10":
-        data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                                   "University of Leeds\PhD\Datasets\CIFAR10"
+        # data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path ="/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path ="C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
             transforms.RandomHorizontalFlip(),
@@ -4290,6 +4307,15 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_lay
                 cfg.pruner, accuracy_string, result.tm_hour, result.tm_min))
         wandb.join()
 
+def compare_weights(weight_list_1:List[torch.TensorType],weight_list_2:List[torch.TensorType]):
+    list_equals = []
+    list_of_elem = []
+    for i ,weight1 in enumerate(weight_list_1):
+        weight2 = weight_list_2[i]
+        list_equals.append((weight1==weight2).sum())
+        list_of_elem.append(weight2.numel())
+    return list_equals,list_of_elem
+
 
 def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     trainloader, valloader, testloader = get_cifar_datasets(cfg)
@@ -4297,6 +4323,8 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
+    post_pruning_noise_string = "_post_training_noise" if bool(cfg.cfg.noise_after_pruning)*cfg.measure_gradient_flow else ""
+
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4304,7 +4332,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}",
+            name=f"fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}{post_pruning_noise_string}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -4313,16 +4341,47 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     else:
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner=cfg.pruner)
+    # Add small noise just to get tiny variations of the deterministic case
+    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+    print("Original version performance: {}".format(initial_performance))
+    if cfg.noise_after_pruning and cfg.measure_gradient_flow:
+        remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+        mask_dict = get_mask(pruned_model)
+        p2_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+        print("p2_model version 1 performance: {}".format(initial_performance))
+        apply_mask(p2_model,mask_dict)
+        initial_performance = test(p2_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+        print("p2_model version 2 performance: {}".format(initial_performance))
 
-    remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+    # mask_dict = get_mask(pruned_model)
+    # p2_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+    # print("p2_model version 1 performance: {}".format(initial_performance))
+    # apply_mask(p2_model,mask_dict)
+    # initial_performance = test(p2_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+    # print("p2_model version 2 performance: {}".format(initial_performance))
+    # return
     if cfg.use_wandb:
         wandb.log({"test_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
+    filepath_GF_measure =""
+    if cfg.measure_gradient_flow:
+        if cfg.prune == "lamp":
+            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/".format(cfg.architecture)
+            path: Path = Path(filepath_GF_measure).is_dir()
+            if not path:
+                path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.prune == "global":
+            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/".format(cfg.architecture)
+            path: Path = Path(filepath_GF_measure).is_dir()
+            if not path:
+                path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,gradient_flow_file_prefix=filepath_GF_measure)
 
     if cfg.use_wand:
         wandb.join()
@@ -4825,13 +4884,19 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"fine_tune_base_exclude_layers_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
+            name=f"fine_tune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{one_batch_string}",
             notes="This run, run one iteration of stochastic pruning with fine tune on top of that. I'm doing lamp "
                   "with the pruning rates calculated no the original model and record the pruning rates of the noisy "
                   "models to compare",
             reinit=True,
         )
+    file_path_GF_measure = ""
+    if cfg.measure_gradient_flow:
+        if cfg.pruner == "lamp":
+            file_path_GF_measure +="gradient_flow_data/stochastic_LAMP/pr_{}_{}".format(cfg.amount,cfg.architecture)
+        if cfg.pruner == "global":
+            file_path_GF_measure +="gradient_flow_data/stochastic_GLOBAL/pr_{}_{}".format(cfg.amount,cfg.architecture)
 
     pruned_model = get_model(cfg)
     best_model = None
@@ -4909,11 +4974,14 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     if cfg.use_wandb:
         wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_test_performance":
             initial_test_performance})
+
+
     restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights)
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,gradient_flow_file_prefix=file_path_GF_measure,cfg=cfg )
+
 
 
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
@@ -5599,15 +5667,15 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 200,
         "short_epochs": 10,
-        "architecture": "VGG19",
-        # "architecture": "resnet18",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": "lamp",
         "model_type": "alternative",
-        # "exclude_layers": ["conv1", "linear"],
-        "exclude_layers": ["features.0", "classifier"],
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -5617,13 +5685,14 @@ if __name__ == '__main__':
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
         "sigma": 0.005,
+        "noise_after_pruning":0.005,
         "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5631,16 +5700,18 @@ if __name__ == '__main__':
     #                         "Generations", "Accuracy")
     # filepaths = ["stochastic_global_fine_tuning_testset.csv","stochastic_lamp_fine_tuning_testset.csv"]
     # legends = ["Stochatic Global Pruning","Stochastic LAMP Pruning"]
-    filepaths = ["stochastic_global_fine_tuning_testset.csv"]
-    legends = ["Stochatic Global Pruning"]
-    plot_test_accuracy_wandb(filepaths,legends, "stochastic_pruning_fine_tuning_testset.pdf",
-                             "sparse_flops", "architecture: resnet18 - test_set_accuracy", "architecture: resnet18 - "
-                                                                                           "test_set_accuracy__MIN",
-                             "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
+    # filepaths = ["stochastic_global_fine_tuning_testset.csv"]
+    # legends = ["Stochatic Global Pruning"]
+    # plot_test_accuracy_wandb(filepaths,legends, "stochastic_pruning_fine_tuning_testset.pdf",
+    #                          "sparse_flops", "architecture: resnet18 - test_set_accuracy", "architecture: resnet18 - "
+    #                                                                                        "test_set_accuracy__MIN",
+    #                          "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
+    #
+
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
-    # experiment_selector(cfg, 6)
+    experiment_selector(cfg, 6)
 
     # experiment_selector(cfg, 11)
 
@@ -5716,3 +5787,4 @@ if __name__ == '__main__':
     # for pr in pruning_rates:
     #     cfg.amount = pr
     #     main(cfg)
+

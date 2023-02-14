@@ -1,10 +1,13 @@
 import logging
+import time
 import typing
 from functools import partial
 from typing import TYPE_CHECKING
 import omegaconf
 # from main import get_layer_dict
 import optuna.samplers
+import pandas as pd
+from pathlib import Path
 from einops import repeat
 import numpy as np
 import torch
@@ -85,9 +88,11 @@ def disable_exclude_layers(model: nn.Module, exclude_layers=[]):
         dict_of_modules[name].eval()
         for param in dict_of_modules[name].parameters():
             param.requires_grad = False
-def disable_all_except(model:nn.Module,exclude_layers=[]):
+
+
+def disable_all_except(model: nn.Module, exclude_layers=[]):
     dict_of_modules = dict(list(model.named_modules()))
-    for name,module in dict_of_modules.items():
+    for name, module in dict_of_modules.items():
         if name in exclude_layers:
             for param in module.parameters():
                 param.requires_grad = True
@@ -95,10 +100,11 @@ def disable_all_except(model:nn.Module,exclude_layers=[]):
             for param in module.parameters():
                 param.requires_grad = False
 
+
 # def get_mask(weight: torch.FloatTensor):
 #     return (weight != 0).type(torch.float)
 
-
+@torch.no_grad()
 def mask_gradient(model: torch.nn.Module, mask_dict: dict):
     parameters_dict = dict(model.named_parameters())
     # for name,parameter in parameters_dict.items():
@@ -108,12 +114,12 @@ def mask_gradient(model: torch.nn.Module, mask_dict: dict):
     for name, module in model.named_modules():
         if name in mask_dict.keys():
             if hasattr(module.weight, "grad"):
-                if module.weight.grad is not None :
-                # print("Module Name: {}".format(name))
+                if module.weight.grad is not None:
+                    # print("Module Name: {}".format(name))
                     module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
 
-def efficient_population_evaluation(memory:list, model:nn.Module,image, use_cuda:bool):
+def efficient_population_evaluation(memory: list, model: nn.Module, image, use_cuda: bool):
     x, y = get_random_batch(dataLoader)
     if use_cuda:
         x, y = x.cuda(), y.cuda()
@@ -130,10 +136,11 @@ def get_random_image_label(dataloader):
     x, y = get_random_batch(dataloader)
     rand_index = np.random.randint(0, len(x), size=1)
     image = x[rand_index]
-    return image,y[rand_index]
+    return image, y[rand_index]
+
 
 def check_for_layers_collapse(model):
-    names,weights = zip(*get_layer_dict(model))
+    names, weights = zip(*get_layer_dict(model))
     for indx, w in enumerate(weights):
         if torch.count_nonzero(w) == 0:
             raise Exception("Layer {} has 0 weights different form 0 the layer has collapsed".format(names[indx]))
@@ -142,8 +149,9 @@ def check_for_layers_collapse(model):
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
-                                       FLOP_limit: float = 0,initial_flops=0 ,use_wandb=False, exclude_layers=[],
-                                       fine_tune_exclude_layers=False,fine_tune_non_zero_weights=True):
+                                       FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
+                                       fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                       gradient_flow_file_prefix="", cfg=None):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -156,7 +164,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     for name in exclude_layers:
         if name in list(mask_dict.keys()):
             mask_dict.pop(name)
-    criterion = nn.CrossEntropyLoss()
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
     # first_time = 1
@@ -164,14 +171,20 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
+    file_path = None
+    if gradient_flow_file_prefix != "":
+        identifier = f"{time.time():14.2f}.csv".replace(" ", "")
+        file_path = gradient_flow_file_prefix + identifier
+        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,use_wandb=use_wandb)
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
     if not fine_tune_exclude_layers:
         disable_exclude_layers(pruned_model, exclude_layers)
     if not fine_tune_non_zero_weights:
-        disable_all_except(pruned_model,exclude_layers)
+        disable_all_except(pruned_model, exclude_layers)
 
+    criterion = nn.CrossEntropyLoss()
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
@@ -213,17 +226,25 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
+        if gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,use_wandb=use_wandb)
+
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:
                 break
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
+        if gradient_flow_file_prefix != "":
+            df = pd.read_csv(file_path,sep=",", header=0 , index_col=False)
+            table = wandb.Table(data=df)
+            wandb.log({"Gradient Flow results": table})
         wandb.log({
             "test_set_accuracy": test_set_performance,
             "sparse_flops": total_sparse_FLOPS,
             "final_accuracy": test_set_performance
         })
+
 
     return total_sparse_FLOPS
     # msg_perormance = f"{performance:.2f}".replace(".", ",")
@@ -277,6 +298,7 @@ def get_layer_dict(model: torch.nn.Module):
 
     return layer_dict
 
+
 def get_buffer_dict(model: torch.nn.Module):
     """
     :param model:
@@ -289,26 +311,33 @@ def get_buffer_dict(model: torch.nn.Module):
         with torch.no_grad():
             if hasattr(m, 'weight_mask') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
                     isinstance(m, nn.BatchNorm3d):
-
                 layer_dict.append((name, m.weight_mak.data.cpu().detach()))
                 # if "shortcut" in name:
                 #     print(f"{name}:{m.weight.data}")
                 # if not isinstance(m, nn.Conv2d):
                 #     print(f"{name}:{m.weight.data}")
-    if len(layer_dict)==0:
+    if len(layer_dict) == 0:
         raise Exception("Model needs to have weight_maks attributes on modules")
     # assert len(layer_dict)!=0, "Model needs to have weight_maks attributes on modules"
     return layer_dict
+
 
 def get_mask(model):
     try:
         return dict(get_buffer_dict(model))
     except:
-        temp = lambda w:(w != 0).type(torch.float)
+        temp = lambda w: (w != 0).type(torch.float)
         names, weights = zip(*get_layer_dict(model))
         masks = list(map(temp, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
+
+@torch.no_grad()
+def apply_mask(model:nn.Module,mask_dict:dict):
+    for name,module in model.named_modules():
+        if name in mask_dict.keys():
+            module.weight.data.mul_(mask_dict[name])
+
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
 def random_perm(a: torch.Tensor) -> torch.Tensor:
     """
@@ -339,7 +368,7 @@ def get_percentile_per_layer(model: torch.nn.Module, percentile: float = 0.1):
 
 
 def sparsity(model):
-    # check if they hav
+    #
     total_params = count_parameters(model)
     non_zero_param = 0
     for name, module in model.named_modules():
@@ -379,6 +408,57 @@ bool = True,
         total_params += weight.numel()
 
     return mask_dict, pruning_rate_per_layer, baseline_nonzero, total_params
+
+
+@torch.no_grad()
+def get_gradient_norm(model: nn.Module, masked=False):
+    sum_of_gradients = 0
+    for m in model.modules():
+        if is_prunable_module(m):
+            if hasattr("grad", m.weight):
+                sum_of_gradients += torch.pow(m.weigth.grad, 2).sum().detach().numpy()
+
+    return np.sqrt(sum_of_gradients)
+
+
+def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
+                                     mask_dict, use_wandb=False):
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+    model.cuda()
+    disable_bn(model)
+    total_gradient_norm = 0
+    if cfg.fine_tune_exclude_layers:
+        disable_exclude_layers(model, cfg.exclude)
+    if cfg.fine_tune_non_zero_weights:
+        disable_all_except(model, cfg.exclude_layers)
+
+    for batch_idx, (data, target) in enumerate(dataLoader):
+        optimizer.zero_grad()
+        data, target = data.cuda(), target.cuda()
+        # first forward-backward step
+        predictions = model(data)
+        # enable_bn(model)
+        loss = criterion(predictions, target)
+        loss.backward()
+        batch_grad_norm = get_gradient_norm(model)
+        total_gradient_norm = total_gradient_norm + (batch_grad_norm - total_gradient_norm) / (batch_idx + 1)
+        optimizer.zero_grad()
+    accuracy = test(model, True, testLoader, verbose=0)
+
+    if Path(filepath).is_file():
+        df = pd.DataFrame({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
+                           "Test set accuracy": accuracy})
+        df.to_csv(filepath, mode="a", header=False, index=False)
+    else:
+        # Try to read the file to see if it is
+        df = pd.DataFrame({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
+                           "Test set accuracy": accuracy})
+        df.to_csv(filepath, sep=",", index=False)
+    if use_wandb:
+        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
+                   "Test set accuracy": accuracy})
 
 
 def get_erdos_renyi_dist(
