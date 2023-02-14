@@ -4367,14 +4367,14 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.measure_gradient_flow:
         if cfg.prune == "lamp":
             filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/".format(cfg.architecture)
-            path: Path = Path(filepath_GF_measure).is_dir()
-            if not path:
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.prune == "global":
             filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/".format(cfg.architecture)
-            path: Path = Path(filepath_GF_measure).is_dir()
-            if not path:
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
@@ -4874,6 +4874,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
 
+    ################################## WANDB configuration ############################################
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
     one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_dataset_per_generation"
@@ -4891,12 +4892,21 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                   "models to compare",
             reinit=True,
         )
+       ################################## Gradient flow measure############################################
     file_path_GF_measure = ""
     if cfg.measure_gradient_flow:
-        if cfg.pruner == "lamp":
-            file_path_GF_measure +="gradient_flow_data/stochastic_LAMP/pr_{}_{}".format(cfg.amount,cfg.architecture)
-        if cfg.pruner == "global":
-            file_path_GF_measure +="gradient_flow_data/stochastic_GLOBAL/pr_{}_{}".format(cfg.amount,cfg.architecture)
+        if cfg.prune == "lamp":
+            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/".format(cfg.architecture)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.prune == "global":
+            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/".format(cfg.architecture)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     pruned_model = get_model(cfg)
     best_model = None
@@ -5663,9 +5673,9 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
     cfg = omegaconf.DictConfig({
-        "population": 10,
+        "population": 1,
         "generations": 10,
-        "epochs": 200,
+        "epochs": 100,
         "short_epochs": 10,
         # "architecture": "VGG19",
         "architecture": "resnet18",
@@ -5692,7 +5702,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": False
+        "use_wandb": True
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5711,7 +5721,7 @@ if __name__ == '__main__':
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
-    experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # experiment_selector(cfg, 11)
 
