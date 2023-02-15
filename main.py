@@ -4347,6 +4347,8 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.noise_after_pruning and cfg.measure_gradient_flow:
         remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
         mask_dict = get_mask(pruned_model)
+        names,weights = zip(*get_layer_dict(pruned_model))
+        sigma_per_layer = dict(names,[cfg.noise_after_pruning]*len(names))
         p2_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
         print("p2_model version 1 performance: {}".format(initial_performance))
         apply_mask(p2_model,mask_dict)
