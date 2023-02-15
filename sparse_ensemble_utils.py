@@ -456,8 +456,8 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
-        df = pd.DataFrame({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
-                           "Test set accuracy": accuracy})
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [total_gradient_norm],
+                           "Test set accuracy": [accuracy]})
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
