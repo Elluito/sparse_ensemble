@@ -4323,7 +4323,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
-    post_pruning_noise_string = "_post_training_noise" if bool(cfg.cfg.noise_after_pruning)*cfg.measure_gradient_flow else ""
+    post_pruning_noise_string = "_post_training_noise" if bool(cfg.noise_after_pruning)*cfg.measure_gradient_flow else ""
 
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
@@ -5705,6 +5705,7 @@ if __name__ == '__main__':
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": False
     })
+
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
     #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
@@ -5722,6 +5723,7 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     experiment_selector(cfg, 6)
+    experiment_selector(cfg, 11)
 
     # experiment_selector(cfg, 11)
 
