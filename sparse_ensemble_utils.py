@@ -453,7 +453,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     print("accuracy:{}, gradient norm: {}".format(accuracy,total_gradient_norm))
 
     if Path(filepath).is_file():
-        df = pd.DataFrame({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [total_gradient_norm],
                            "Test set accuracy": accuracy})
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:

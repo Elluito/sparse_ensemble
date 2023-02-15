@@ -4374,11 +4374,15 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            else:
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            else:
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
@@ -4906,11 +4910,15 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            else:
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
+                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            else:
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     pruned_model = get_model(cfg)
