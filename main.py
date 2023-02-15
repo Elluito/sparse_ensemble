@@ -1,4 +1,4 @@
-import pickle
+mport pickle
 import typing
 from typing import List, Union, Any
 import pandas as pd
@@ -35,7 +35,7 @@ from ignite.metrics import Accuracy, Loss
 import array as pyarr
 import matplotlib
 
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
@@ -63,7 +63,8 @@ from matplotlib.patches import PathPatch
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
 
-matplotlib.use('TkAgg')
+
+# matplotlib.use('TkAgg')
 
 
 def adjust_box_widths(g, fac):
