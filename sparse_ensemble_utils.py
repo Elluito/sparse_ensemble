@@ -415,7 +415,7 @@ def get_gradient_norm(model: nn.Module, masked=False):
     sum_of_gradients = 0
     for m in model.modules():
         if is_prunable_module(m):
-            if hasattr("grad", m.weight):
+            if hasattr(m.weight,"grad"):
                 sum_of_gradients += torch.pow(m.weigth.grad, 2).sum().detach().numpy()
 
     return np.sqrt(sum_of_gradients)
