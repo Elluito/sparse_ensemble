@@ -175,7 +175,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     if gradient_flow_file_prefix != "":
         identifier = f"{time.time():14.2f}.csv".replace(" ", "")
         file_path = gradient_flow_file_prefix + identifier
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,use_wandb=use_wandb)
+        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
@@ -430,7 +430,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     disable_bn(model)
     total_gradient_norm = 0
     if cfg.fine_tune_exclude_layers:
-        disable_exclude_layers(model, cfg.exclude)
+        disable_exclude_layers(model, cfg.exclude_layers)
     if cfg.fine_tune_non_zero_weights:
         disable_all_except(model, cfg.exclude_layers)
 
@@ -443,9 +443,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         loss = criterion(predictions, target)
         loss.backward()
         batch_grad_norm = get_gradient_norm(model)
+        print("batch gradient norm:{}".format(batch_grad_norm))
         total_gradient_norm = total_gradient_norm + (batch_grad_norm - total_gradient_norm) / (batch_idx + 1)
-        optimizer.zero_grad()
+
     accuracy = test(model, True, testLoader, verbose=0)
+    print("accuracy:{}, gradient norm: {}".format(accuracy,total_gradient_norm))
 
     if Path(filepath).is_file():
         df = pd.DataFrame({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,

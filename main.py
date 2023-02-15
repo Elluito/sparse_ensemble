@@ -4365,13 +4365,13 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         wandb.log({"test_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
-        if cfg.prune == "lamp":
+        if cfg.pruner == "lamp":
             filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-        if cfg.prune == "global":
+        if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
@@ -4893,15 +4893,15 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             reinit=True,
         )
        ################################## Gradient flow measure############################################
-    file_path_GF_measure = ""
+    filepath_GF_measure = ""
     if cfg.measure_gradient_flow:
-        if cfg.prune == "lamp":
+        if cfg.pruner == "lamp":
             filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
                 filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-        if cfg.prune == "global":
+        if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/".format(cfg.architecture)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
@@ -4990,7 +4990,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,gradient_flow_file_prefix=file_path_GF_measure,cfg=cfg )
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights, gradient_flow_file_prefix=filepath_GF_measure, cfg=cfg)
 
 
 
@@ -5675,7 +5675,7 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 1,
         "generations": 10,
-        "epochs": 100,
+        "epochs": 2,
         "short_epochs": 10,
         # "architecture": "VGG19",
         "architecture": "resnet18",
@@ -5691,6 +5691,7 @@ if __name__ == '__main__':
         "sampler": "tpe",
         "flop_limit": 0,
         "one_batch": True,
+        "measure_gradient_flow":True,
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
@@ -5702,7 +5703,7 @@ if __name__ == '__main__':
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
+        "use_wandb": False
     })
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5717,7 +5718,6 @@ if __name__ == '__main__':
     #                                                                                        "test_set_accuracy__MIN",
     #                          "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
     #
-
 
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
