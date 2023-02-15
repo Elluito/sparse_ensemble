@@ -4392,7 +4392,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                                        cfg=cfg,
                                        gradient_flow_file_prefix=filepath_GF_measure)
 
-    if cfg.use_wand:
+    if cfg.use_wandb:
         wandb.join()
 
 
