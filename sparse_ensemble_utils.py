@@ -227,6 +227,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
         if gradient_flow_file_prefix != "":
+
             measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,use_wandb=use_wandb)
 
         if FLOP_limit != 0:

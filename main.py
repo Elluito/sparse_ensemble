@@ -4383,7 +4383,9 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,gradient_flow_file_prefix=filepath_GF_measure)
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                       cfg=cfg,
+                                       gradient_flow_file_prefix=filepath_GF_measure)
 
     if cfg.use_wand:
         wandb.join()
@@ -4992,7 +4994,9 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        initial_flops=initial_flops,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
-                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights, gradient_flow_file_prefix=filepath_GF_measure, cfg=cfg)
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                       gradient_flow_file_prefix=filepath_GF_measure,
+                                       cfg=cfg)
 
 
 
