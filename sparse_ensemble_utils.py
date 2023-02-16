@@ -17,6 +17,7 @@ from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
+import pyhessian as pyhes
 from torch.nn.utils import vector_to_parameters,parameters_to_vector
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
@@ -434,34 +435,77 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         disable_all_except(model, cfg.exclude_layers)
     model.to(device=device)
 
+    # Calculate everything with respect to the validation set
+    val_dict = {}
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
     #TODO: The number of calsses should by automated based on the dataset
     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
-
     grad_vect = parameters_to_vector(grad)
     hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)
     norm_hg = torch.norm(hg_vect)
+    val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
+    val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    criterion = nn.CrossEntropyLoss()
+    hessian_comp = pyhes.hessian(model,
+                               criterion,
+                               dataloader=dataLoader,
+                               cuda=True if device == "cuda" else False)
+    accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
+    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=20)
+    trace = hessian_comp.trace()
+    for i,value in enumerate(top_eigenvalues):
+        val_dict["val_set_EV{}".format(i)] = [value]
+    val_dict["val_set_trace"] = [trace]
+    # density_eigen, density_weight = hessian_comp.density()
+    val_dict["val_accuracy"] =  [accuracy]
+
+    # Calculate everything with respect to the test set
+    test_dict = {}
+    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=testLoader)
+    #TODO: The number of calsses should by automated based on the dataset
+    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=testLoader,n_classes=10)
+    grad_vect = parameters_to_vector(grad)
+    hg_vect = parameters_to_vector(hg)
+    norm_grad = torch.norm(grad_vect)
+    norm_hg = torch.norm(hg_vect)
+    test_dict["test_set_gradient_magnitude"] = [norm_grad.cpu().detach().numpy()]
+    test_dict["test_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    criterion = nn.CrossEntropyLoss()
+    hessian_comp = pyhes.hessian(model,
+                                 criterion,
+                                 dataloader=testLoader,
+                                 cuda=True if device == "cuda" else False)
+
 
     accuracy = test(model, True, testLoader, verbose=0)
+    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=20)
+    trace = hessian_comp.trace()
+    for i,value in enumerate(top_eigenvalues):
+        val_dict["test_set_EV{}".format(i)] = [value]
+    val_dict["test_set_trace"] = [trace]
+    val_dict["test_accuracy"] = [accuracy]
 
-    print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
+    # print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
 
     if Path(filepath).is_file():
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad.cpu().detach().numpy()],
-                           "Hessian-gradient product norm" : [norm_hg.cpu().detach().numpy()],
-                           "Test set accuracy": accuracy})
+        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        df = pd.DataFrame(log_dict)
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad.cpu().detach().numpy()],
-                           "Hessian-gradient product norm" :[norm_hg.cpu().detach().numpy()],
-                           "Test set accuracy": [accuracy]})
+        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        df = pd.DataFrame(log_dict)
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
-        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad,
-                   "Hessian-gradient product norm":norm_hg,
-                   "Test set accuracy": accuracy})
+        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        wandb.log(log_dict)
     model.to(device)
 
 def get_erdos_renyi_dist(

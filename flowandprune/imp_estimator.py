@@ -4,6 +4,7 @@ from torch.autograd import Variable, grad
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
+from pyhessian import hessian,get_params_grad
 from tqdm import tqdm
 import itertools as itools
 
