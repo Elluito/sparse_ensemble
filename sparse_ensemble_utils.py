@@ -16,6 +16,8 @@ from shrinkbench.metrics.flops import flops
 from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
+from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
+from torch.nn.utils import vector_to_parameters,parameters_to_vector
 
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
@@ -426,43 +428,36 @@ def get_gradient_norm(model: nn.Module, masked=False):
 
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
                                      mask_dict, use_wandb=False):
-    criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.0001,
-                                momentum=0.9, weight_decay=5e-4)
-    model.cuda()
     disable_bn(model)
-    total_gradient_norm = 0
     if cfg.fine_tune_exclude_layers:
         disable_exclude_layers(model, cfg.exclude_layers)
     if cfg.fine_tune_non_zero_weights:
         disable_all_except(model, cfg.exclude_layers)
 
-    for batch_idx, (data, target) in enumerate(dataLoader):
-        optimizer.zero_grad()
-        data, target = data.cuda(), target.cuda()
-        # first forward-backward step
-        predictions = model(data)
-        # enable_bn(model)
-        loss = criterion(predictions, target)
-        loss.backward()
-        batch_grad_norm = get_gradient_norm(model)
-        print("batch gradient norm:{}".format(batch_grad_norm))
-        total_gradient_norm = total_gradient_norm + (batch_grad_norm - total_gradient_norm) / (batch_idx + 1)
+    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
+    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader)
+
+    grad_vect = parameters_to_vector(grad)
+    hg_vect = parameters_to_vector(hg)
+    norm_grad = torch.norm(grad_vect)
+    norm_hg = torch.norm(hg_vect)
+
+
 
     accuracy = test(model, True, testLoader, verbose=0)
-    print("accuracy:{}, gradient norm: {}".format(accuracy,total_gradient_norm))
+    print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
 
     if Path(filepath).is_file():
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [total_gradient_norm],
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad], "Hessian-gradient product norm" : [norm_hg],
                            "Test set accuracy": accuracy})
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [total_gradient_norm],
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad], "Hessian-gradient product norm" :[norm_hg],
                            "Test set accuracy": [accuracy]})
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
-        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": total_gradient_norm,
+        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad, "Hessian-gradient product norm":[norm_hg],
                    "Test set accuracy": accuracy})
     model.cuda()
 
