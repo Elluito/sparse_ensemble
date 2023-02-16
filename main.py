@@ -61,7 +61,9 @@ from matplotlib.patches import PathPatch
 # import pylustrator
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
-
+# enable cuda devices
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 # matplotlib.use('TkAgg')
 
