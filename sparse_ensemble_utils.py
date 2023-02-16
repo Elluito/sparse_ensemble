@@ -462,7 +462,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad,
                    "Hessian-gradient product norm":norm_hg,
                    "Test set accuracy": accuracy})
-
+    model.to(device)
 
 def get_erdos_renyi_dist(
         model, names, weights, cfg: omegaconf.DictConfig, is_kernel: bool = True
