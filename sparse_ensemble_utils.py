@@ -433,8 +433,10 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     if cfg.fine_tune_non_zero_weights:
         disable_all_except(model, cfg.exclude_layers)
     model.to(device=device)
+
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
-    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader)
+    #TODO: The number of calsses should by automated based on the dataset
+    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
 
     grad_vect = parameters_to_vector(grad)
     hg_vect = parameters_to_vector(hg)
