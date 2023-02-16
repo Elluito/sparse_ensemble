@@ -443,22 +443,24 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     norm_grad = torch.norm(grad_vect)
     norm_hg = torch.norm(hg_vect)
 
-
-
     accuracy = test(model, True, testLoader, verbose=0)
+
     print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
 
     if Path(filepath).is_file():
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad], "Hessian-gradient product norm" : [norm_hg],
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad.cpu().detach().numpy()],
+                           "Hessian-gradient product norm" : [norm_hg.cpu().detach().numpy()],
                            "Test set accuracy": accuracy})
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
-        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad], "Hessian-gradient product norm" :[norm_hg],
+        df = pd.DataFrame({"Epoch": [epoch], "sparse_flops": [total_flops], "Gradient Magnitude": [norm_grad.cpu().detach().numpy()],
+                           "Hessian-gradient product norm" :[norm_hg.cpu().detach().numpy()],
                            "Test set accuracy": [accuracy]})
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
-        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad, "Hessian-gradient product norm":[norm_hg],
+        wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad,
+                   "Hessian-gradient product norm":norm_hg,
                    "Test set accuracy": accuracy})
 
 
