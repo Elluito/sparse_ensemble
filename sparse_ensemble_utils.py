@@ -18,8 +18,7 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
 from torch.nn.utils import vector_to_parameters,parameters_to_vector
-
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
         net.cuda()
@@ -433,7 +432,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         disable_exclude_layers(model, cfg.exclude_layers)
     if cfg.fine_tune_non_zero_weights:
         disable_all_except(model, cfg.exclude_layers)
-
+    model.to(device=device)
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader)
 
@@ -459,7 +458,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     if use_wandb:
         wandb.log({"Epoch": epoch, "sparse_flops": total_flops, "Gradient Magnitude": norm_grad, "Hessian-gradient product norm":[norm_hg],
                    "Test set accuracy": accuracy})
-    model.cuda()
+
 
 def get_erdos_renyi_dist(
         model, names, weights, cfg: omegaconf.DictConfig, is_kernel: bool = True
