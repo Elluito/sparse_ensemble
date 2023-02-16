@@ -5,6 +5,7 @@ import torchvision
 import torchvision.transforms as transforms
 import numpy as np
 from tqdm import tqdm
+import itertools as itools
 
 criterion = nn.CrossEntropyLoss()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -34,7 +35,9 @@ def grasp_data(dataloader, n_classes, n_samples):
 	datas = [[] for _ in range(n_classes)]
 	labels = [[] for _ in range(n_classes)]
 	mark = dict()
-	dataloader_iter = iter(dataloader)
+	# LUIS: Made a modification here because I'm using the validation set which is smaller than the one used by the authors.
+	# which is the training set.
+	dataloader_iter = itools.cycle(iter(dataloader))
 	while True:
 		inputs, targets = next(dataloader_iter)
 		for idx in range(inputs.shape[0]):
