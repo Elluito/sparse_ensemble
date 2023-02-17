@@ -4355,7 +4355,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         print("p2_model version 1 performance: {}".format(initial_performance))
         apply_mask(p2_model,mask_dict)
         initial_performance = test(p2_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
-        print("p2_model version 2 performance: {}".format(initial_performance))
+        print("p2_model version 2 performance: {} with sparsity {}".format(initial_performance,sparsity(p2_model)))
         pruned_model = p2_model
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)

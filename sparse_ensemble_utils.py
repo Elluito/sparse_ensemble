@@ -20,6 +20,7 @@ from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
 import pyhessian as pyhes
 from torch.nn.utils import vector_to_parameters,parameters_to_vector
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print("Device: {}".format(device))
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
         net.cuda()
@@ -121,7 +122,7 @@ def mask_gradient(model: torch.nn.Module, mask_dict: dict):
                     module.weight.grad.mul_(mask_dict[name].to("cuda"))
 
 
-def efficient_population_evaluation(memory: list, model: nn.Module, image, use_cuda: bool):
+def efficient_population_evaluation(memory: list, model: nn.Module, image, use_cuda: bool, dataLoader=None):
     x, y = get_random_batch(dataLoader)
     if use_cuda:
         x, y = x.cuda(), y.cuda()
@@ -178,6 +179,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         identifier = f"{time.time():14.2f}.csv".replace(" ", "")
         file_path = gradient_flow_file_prefix + identifier
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+        return
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
@@ -436,32 +438,32 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     model.to(device=device)
 
     # Calculate everything with respect to the validation set
-    val_dict = {}
-    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
-    #TODO: The number of calsses should by automated based on the dataset
-    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
-    grad_vect = parameters_to_vector(grad)
-    hg_vect = parameters_to_vector(hg)
-    norm_grad = torch.norm(grad_vect)
-    norm_hg = torch.norm(hg_vect)
-    val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
-    val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
-    criterion = nn.CrossEntropyLoss()
-    hessian_comp = pyhes.hessian(model,
-                               criterion,
-                               dataloader=dataLoader,
-                               cuda=True if device == "cuda" else False)
-    accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
-    model.to(device)
-    print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
-    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
-    print("Calculating hessian trace on validation set for epoch:{}".format(epoch))
-    trace = hessian_comp.trace(maxIter=20)
-    for i,value in enumerate(top_eigenvalues):
-        val_dict["val_set_EV{}".format(i)] = [value]
-    val_dict["val_set_trace"] = [trace]
-    # density_eigen, density_weight = hessian_comp.density()
-    val_dict["val_accuracy"] =  [accuracy]
+    # val_dict = {}
+    # grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
+    # #TODO: The number of calsses should by automated based on the dataset
+    # hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    # grad_vect = parameters_to_vector(grad)
+    # hg_vect = parameters_to_vector(hg)
+    # norm_grad = torch.norm(grad_vect)
+    # norm_hg = torch.norm(hg_vect)
+    # val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
+    # val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    # criterion = nn.CrossEntropyLoss()
+    # hessian_comp = pyhes.hessian(model,
+    #                            criterion,
+    #                            dataloader=dataLoader,
+    #                            cuda=True if device == "cuda" else False)
+    # accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
+    # model.to(device)
+    # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
+    # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
+    # print("Calculating hessian trace on validation set for epoch:{}".format(epoch))
+    # trace = hessian_comp.trace(maxIter=20)
+    # for i,value in enumerate(top_eigenvalues):
+    #     val_dict["val_set_EV{}".format(i)] = [value]
+    # val_dict["val_set_trace"] = [trace]
+    # # density_eigen, density_weight = hessian_comp.density()
+    # val_dict["val_accuracy"] =  [accuracy]
 
 
     # Calculate everything with respect to the test set
@@ -485,32 +487,39 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     accuracy = test(model, True, testLoader, verbose=0)
     model.to(device)
     print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
-    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
+    start = time.time()
+    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
+    stop = time.time()
+    print("Time elapsed: {}s".format(stop-start))
     print("Calculating hessian trace on test set for epoch:{}".format(epoch))
-    trace = hessian_comp.trace( maxIter=20)
+    start = time.time()
+    trace = hessian_comp.trace(maxIter=10)
+    stop = time.time()
+    print("Time elapsed: {}s".format(stop-start))
     for i,value in enumerate(top_eigenvalues):
-        val_dict["test_set_EV{}".format(i)] = [value]
-    val_dict["test_set_trace"] = [trace]
-    val_dict["test_accuracy"] = [accuracy]
+        test_dict["test_set_EV{}".format(i)] = [value]
+    test_dict["test_set_trace"] = [trace]
+    test_dict["test_accuracy"] = [accuracy]
+    print("Test dictionary :\n {}".format(test_dict))
 
     # print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
 
     if Path(filepath).is_file():
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        log_dict.update(val_dict)
+        # log_dict.update(val_dict)
         log_dict.update(test_dict)
         df = pd.DataFrame(log_dict)
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        log_dict.update(val_dict)
+        # log_dict.update(val_dict)
         log_dict.update(test_dict)
         df = pd.DataFrame(log_dict)
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        log_dict.update(val_dict)
+        # log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
 
