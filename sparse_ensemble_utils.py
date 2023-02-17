@@ -452,6 +452,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
                                dataloader=dataLoader,
                                cuda=True if device == "cuda" else False)
     accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
+    model.to(device)
     top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=20)
     trace = hessian_comp.trace()
     for i,value in enumerate(top_eigenvalues):
@@ -459,6 +460,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     val_dict["val_set_trace"] = [trace]
     # density_eigen, density_weight = hessian_comp.density()
     val_dict["val_accuracy"] =  [accuracy]
+
 
     # Calculate everything with respect to the test set
     test_dict = {}
@@ -479,6 +481,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
 
 
     accuracy = test(model, True, testLoader, verbose=0)
+    model.to(device)
     top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=20)
     trace = hessian_comp.trace()
     for i,value in enumerate(top_eigenvalues):
@@ -506,7 +509,6 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
-    model.to(device)
 
 def get_erdos_renyi_dist(
         model, names, weights, cfg: omegaconf.DictConfig, is_kernel: bool = True
