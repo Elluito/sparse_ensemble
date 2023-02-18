@@ -5693,7 +5693,7 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         "population": 1,
         "generations": 10,
-        "epochs": 2,
+        "epochs": 100,
         "short_epochs": 10,
         # "architecture": "VGG19",
         "architecture": "resnet18",
@@ -5741,7 +5741,7 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     experiment_selector(cfg, 6)
-    experiment_selector(cfg, 11)
+    # experiment_selector(cfg, 11)
 
     # experiment_selector(cfg, 11)
 
