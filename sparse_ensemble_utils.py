@@ -1,3 +1,4 @@
+import copy
 import logging
 import time
 import typing
@@ -438,6 +439,7 @@ def get_gradient_norm(model: nn.Module, masked=False):
 
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
                                      mask_dict, use_wandb=False):
+    model = copy.deepcopy(model)
     disable_bn(model)
     if cfg.fine_tune_exclude_layers:
         disable_exclude_layers(model, cfg.exclude_layers)
@@ -454,8 +456,8 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)
     norm_hg = torch.norm(hg_vect)
-    val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
-    val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    val_dict["val_set_gradient_magnintude"] = [float(norm_grad.cpu().detach().numpy())]
+    val_dict["val_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
     # criterion = nn.CrossEntropyLoss()
     # hessian_comp = pyhes.hessian(model,
     #                            criterion,
@@ -483,8 +485,8 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)
     norm_hg = torch.norm(hg_vect)
-    test_dict["test_set_gradient_magnitude"] = [norm_grad.cpu().detach().numpy()]
-    test_dict["test_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    test_dict["test_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+    test_dict["test_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
 
     # criterion = nn.CrossEntropyLoss()
     # hessian_comp = pyhes.hessian(model,
@@ -527,7 +529,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         df = pd.DataFrame(log_dict)
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
-        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict = {"Epoch": epoch, "sparse_flops": total_flops}
+        for n,v in val_dict.items():
+            log_dict[n]=v[0]
+        for n,v in test_dict.items():
+            log_dict[n]=v[0]
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
