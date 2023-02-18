@@ -4370,22 +4370,23 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         wandb.log({"test_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
+
+        identifier = f"{time.time():14.0f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/".format(cfg.architecture)
+            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-            else:
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/".format(cfg.architecture)
+            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-            else:
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -4904,25 +4905,25 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             reinit=True,
         )
        ################################## Gradient flow measure############################################
-    filepath_GF_measure = ""
+    filepath_GF_measure =""
     if cfg.measure_gradient_flow:
-        if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/".format(cfg.architecture)
-            path: Path = Path(filepath_GF_measure)
-            if not path.is_dir():
-                path.mkdir(parents=True)
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-            else:
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-        if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/".format(cfg.architecture)
-            path: Path = Path(filepath_GF_measure)
-            if not path.is_dir():
-                path.mkdir(parents=True)
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-            else:
-                filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
+        identifier = f"{time.time():14.0f}".replace(" ", "")
+        if cfg.pruner == "lamp":
+            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+            # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.pruner == "global":
+            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
     pruned_model = get_model(cfg)
     best_model = None
     best_accuracy = 0

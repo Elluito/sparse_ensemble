@@ -175,10 +175,15 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
     file_path = None
+    weights_path = ""
     if gradient_flow_file_prefix != "":
-        identifier = f"{time.time():14.2f}.csv".replace(" ", "")
-        file_path = gradient_flow_file_prefix + identifier
+        file_path = gradient_flow_file_prefix
+        file_path +=  "recordings.csv"
+        weights_file_path = gradient_flow_file_prefix + "weigths/"
+        weights_path = Path(weights_file_path)
+        weights_path .mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+
         return
     pruned_model.cuda()
     pruned_model.train()
@@ -235,10 +240,14 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
                                              mask_dict=mask_dict
                                              ,use_wandb=use_wandb)
-
+        if epoch%10 == 0 and gradient_flow_file_prefix != "":
+            state_dict = pruned_model.state_dict()
+            temp_name = weights_path / "epoch{}.pth".format(epoch)
+            torch.save(state_dict,temp_name)
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:
                 break
+
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
@@ -438,22 +447,22 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     model.to(device=device)
 
     # Calculate everything with respect to the validation set
-    # val_dict = {}
-    # grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
-    # #TODO: The number of calsses should by automated based on the dataset
-    # hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
-    # grad_vect = parameters_to_vector(grad)
-    # hg_vect = parameters_to_vector(hg)
-    # norm_grad = torch.norm(grad_vect)
-    # norm_hg = torch.norm(hg_vect)
-    # val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
-    # val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
+    val_dict = {}
+    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
+    #TODO: The number of calsses should by automated based on the dataset
+    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    grad_vect = parameters_to_vector(grad)
+    hg_vect = parameters_to_vector(hg)
+    norm_grad = torch.norm(grad_vect)
+    norm_hg = torch.norm(hg_vect)
+    val_dict["val_set_gradient_magnintude"] = [norm_grad.cpu().detach().numpy()]
+    val_dict["val_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
     # criterion = nn.CrossEntropyLoss()
     # hessian_comp = pyhes.hessian(model,
     #                            criterion,
     #                            dataloader=dataLoader,
     #                            cuda=True if device == "cuda" else False)
-    # accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
+    accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
     # model.to(device)
     # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
@@ -463,7 +472,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #     val_dict["val_set_EV{}".format(i)] = [value]
     # val_dict["val_set_trace"] = [trace]
     # # density_eigen, density_weight = hessian_comp.density()
-    # val_dict["val_accuracy"] =  [accuracy]
+    val_dict["val_accuracy"] =  [accuracy]
 
 
     # Calculate everything with respect to the test set
@@ -477,28 +486,29 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     norm_hg = torch.norm(hg_vect)
     test_dict["test_set_gradient_magnitude"] = [norm_grad.cpu().detach().numpy()]
     test_dict["test_set_Hg_magnitude"] = [norm_hg.cpu().detach().numpy()]
-    criterion = nn.CrossEntropyLoss()
-    hessian_comp = pyhes.hessian(model,
-                                 criterion,
-                                 dataloader=testLoader,
-                                 cuda=True if device == "cuda" else False)
 
-
+    # criterion = nn.CrossEntropyLoss()
+    # hessian_comp = pyhes.hessian(model,
+    #                              criterion,
+    #                              dataloader=testLoader,
+    #                              cuda=True if device == "cuda" else False)
+    #
+    #
     accuracy = test(model, True, testLoader, verbose=0)
-    model.to(device)
-    print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
-    start = time.time()
-    top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
-    stop = time.time()
-    print("Time elapsed: {}s".format(stop-start))
-    print("Calculating hessian trace on test set for epoch:{}".format(epoch))
-    start = time.time()
-    trace = hessian_comp.trace(maxIter=10)
-    stop = time.time()
-    print("Time elapsed: {}s".format(stop-start))
-    for i,value in enumerate(top_eigenvalues):
-        test_dict["test_set_EV{}".format(i)] = [value]
-    test_dict["test_set_trace"] = [trace]
+    # model.to(device)
+    # print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
+    # start = time.time()
+    # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
+    # stop = time.time()
+    # print("Time elapsed: {}s".format(stop-start))
+    # print("Calculating hessian trace on test set for epoch:{}".format(epoch))
+    # start = time.time()
+    # trace = hessian_comp.trace(maxIter=10)
+    # stop = time.time()
+    # print("Time elapsed: {}s".format(stop-start))
+    # for i,value in enumerate(top_eigenvalues):
+    #     test_dict["test_set_EV{}".format(i)] = [value]
+    # test_dict["test_set_trace"] = [trace]
     test_dict["test_accuracy"] = [accuracy]
     print("Test dictionary :\n {}".format(test_dict))
 
@@ -506,14 +516,14 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
 
     if Path(filepath).is_file():
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        # log_dict.update(val_dict)
+        log_dict.update(val_dict)
         log_dict.update(test_dict)
         df = pd.DataFrame(log_dict)
         df.to_csv(filepath, mode="a", header=False, index=False)
     else:
         # Try to read the file to see if it is
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        # log_dict.update(val_dict)
+        log_dict.update(val_dict)
         log_dict.update(test_dict)
         df = pd.DataFrame(log_dict)
         df.to_csv(filepath, sep=",", index=False)
