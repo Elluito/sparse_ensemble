@@ -463,7 +463,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #                            dataloader=dataLoader,
     #                            cuda=True if device == "cuda" else False)
     accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
-    # model.to(device)
+    model.to(device)
     # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
     # print("Calculating hessian trace on validation set for epoch:{}".format(epoch))
@@ -495,7 +495,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #
     #
     accuracy = test(model, True, testLoader, verbose=0)
-    # model.to(device)
+    model.to(device)
     # print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
     # start = time.time()
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
