@@ -184,7 +184,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         weights_path .mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
 
-        return
     pruned_model.cuda()
     pruned_model.train()
     disable_bn(pruned_model)
@@ -529,7 +528,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        # log_dict.update(val_dict)
+        log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
 
