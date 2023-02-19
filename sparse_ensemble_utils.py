@@ -235,14 +235,14 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
-        if gradient_flow_file_prefix != "":
+        # if gradient_flow_file_prefix != "":
 
+        if epoch%10 == 0 and gradient_flow_file_prefix != "":
             measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
                                              mask_dict=mask_dict
                                              ,use_wandb=use_wandb)
-        if epoch%10 == 0 and gradient_flow_file_prefix != "":
             state_dict = pruned_model.state_dict()
-            temp_name = weights_path / "epoch{}.pth".format(epoch)
+            temp_name = weights_path / "epoch_{}.pth".format(epoch)
             torch.save(state_dict,temp_name)
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:

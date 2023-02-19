@@ -5718,6 +5718,7 @@ if __name__ == '__main__':
         "amount": 0.9,
         "dataset": "cifar10",
         "batch_size": 512,
+        # "batch_size": 128,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
