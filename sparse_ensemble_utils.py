@@ -180,7 +180,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
         file_path +=  "recordings.csv"
-        weights_file_path = gradient_flow_file_prefix + "weigths/"
+        if  Path(gradient_flow_file_prefix).owner() == "sclaam":
+            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
         weights_path = Path(weights_file_path)
         weights_path .mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)

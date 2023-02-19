@@ -4371,7 +4371,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
 
-        identifier = f"{time.time():14.0f}".replace(" ", "")
+        identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
             filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
