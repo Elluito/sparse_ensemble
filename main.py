@@ -5699,7 +5699,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF  = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_GOBAL_DF.to_csv("gradientflow_deterministic_global.csv",header=0,index=False)
+    combine_deterministic_GOBAL_DF.to_csv("gradientflow_deterministic_global.csv",header=True,index=False)
 
     ########################### Lamp Deterministic  ########################################
 
@@ -5712,7 +5712,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=0,index=False)
+    combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
@@ -5724,7 +5724,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv("gradientflow_stochatic_global.csv",header=0,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv("gradientflow_stochatic_global.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -5737,7 +5737,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochatic_lamp.csv",header=0,index=False)
+    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochatic_lamp.csv",header=True,index=False)
 
 
 if __name__ == '__main__':
