@@ -5687,7 +5687,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     ########################### Global Determinisitc ########################################
 
-    for index, individual in enumerate(glob.glob(deterministic_global_root+"*/"),recursive=True):
+    for index, individual in enumerate(glob.glob(deterministic_global_root+"*/",recursive=True)):
         individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = df.shape[0]
         individual_df["individual"] = [index] * len_df
