@@ -5674,10 +5674,10 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
-    deterministic_lamp_root = prefix + "deterministic_LAMP" + f"{cfg.architecture}/{cfg.amount}/"
-    deterministic_global_root = prefix + "deterministic_GLOBAL" + f"{cfg.architecture}/{cfg.amount}/"
-    stochastic_global_root = prefix + "stohastic_GLOBAL" + f"{cfg.architecture}/{cfg.amount}/"
-    stochastic_lamp_root = prefix + "stochastic_LAMP" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_global_root = prefix + "stohastic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
