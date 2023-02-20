@@ -1,4 +1,5 @@
 import pickle
+import glob
 import typing
 from typing import List, Union, Any
 import pandas as pd
@@ -384,7 +385,6 @@ list =
                 else:
                     m.weight.data.add_(torch.normal(mean=torch.zeros_like(m.weight), std=sigma).to(m.weight.device))
 
-
 def get_noisy_sample_sigma_per_layer(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer,clone=True):
     current_model = None
     if clone:
@@ -400,7 +400,6 @@ def get_noisy_sample_sigma_per_layer(net: torch.nn.Module, cfg: omegaconf.DictCo
 
 
 # def get_noisy_sample_pruned_net_work(net: torch.nn.Module, cfg: omegaconf.DictConfig, sigma_per_layer):
-
 def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig):
     current_model = copy.deepcopy(net)
     if cfg.noise == "gaussian":
@@ -5672,6 +5671,70 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
 
 ############################# Iterative stochastic pruning #############################################################
+def gradient_flow_correlation_analysis(prefix:str,cfg):
+    prefix = Path(prefix)
+
+    deterministic_lamp_root = prefix / "deterministic_LAMP" / f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_global_root = prefix / "deterministic_GLOBAL" / f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_global_root = prefix / "stohastic_GLOBAL" / f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_lamp_root = prefix / "stochastic_LAMP" / f"{cfg.architecture}/{cfg.amount}/"
+
+
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+    combine_deterministic_GOBAL_DF: pd.DataFrame = None
+    combine_deterministic_LAMP_DF: pd.DataFrame = None
+
+    ########################### Global Determinisitc ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_global_root/"*/"),recursive=True):
+        individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = df.shape[0]
+        individual_df["individual"] = [index] * len_df
+        if combine_deterministic_GOBAL_DF is None:
+            combine_deterministic_GOBAL_DF = individual_df
+        else:
+            combine_stochastic_GLOBAL_DF  = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
+
+    combine_deterministic_GOBAL_DF.to_csv("gradientflow_deterministic_global.csv",header=0,index=False)
+
+    ########################### Lamp Deterministic  ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_lamp_root/"*/"),recursive=True):
+        individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = df.shape[0]
+        individual_df["individual"] = [index] * len_df
+        if combine_deterministic_LAMP_DF is None:
+            combine_deterministic_LAMP_DF = individual_df
+        else:
+            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
+
+    combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=0,index=False)
+
+    ########################## first Global stochatic #######################################
+    for index, individual in enumerate(glob.glob(stochastic_global_root /"*/"),recursive=True):
+        individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = df.shape[0]
+        individual_df["individual"] = [index] * len_df
+        if combine_stochastic_GLOBAL_DF is None:
+            combine_stochastic_GLOBAL_DF = individual_df
+        else:
+            combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
+
+    combine_stochastic_GLOBAL_DF.to_csv("gradientflow_stochatic_global.csv",header=0,index=False)
+    ########################## Second LAMP stochatic #######################################
+
+
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root/"*/"),recursive=True):
+        individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = df.shape[0]
+        individual_df["individual"] = [index] * len_df
+        if combine_stochastic_LAMP_DF is None:
+            combine_stochastic_LAMP_DF = individual_df
+        else:
+            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
+
+    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochatic_lamp.csv",header=0,index=False)
 
 
 if __name__ == '__main__':
@@ -5742,8 +5805,8 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
-    experiment_selector(cfg, 11)
-
+    # experiment_selector(cfg, 11)
+    gradient_flow_correlation_analysis("gradient_flow/",cfg)
     # experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
