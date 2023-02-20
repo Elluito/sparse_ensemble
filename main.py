@@ -5692,7 +5692,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     for index, individual in enumerate(glob.glob(deterministic_global_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = df.shape[0]
+        len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
         if combine_deterministic_GOBAL_DF is None:
             combine_deterministic_GOBAL_DF = individual_df
@@ -5705,7 +5705,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = df.shape[0]
+        len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
         if combine_deterministic_LAMP_DF is None:
             combine_deterministic_LAMP_DF = individual_df
@@ -5717,7 +5717,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
     ########################## first Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = df.shape[0]
+        len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
         if combine_stochastic_GLOBAL_DF is None:
             combine_stochastic_GLOBAL_DF = individual_df
@@ -5730,7 +5730,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = df.shape[0]
+        len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
         if combine_stochastic_LAMP_DF is None:
             combine_stochastic_LAMP_DF = individual_df
