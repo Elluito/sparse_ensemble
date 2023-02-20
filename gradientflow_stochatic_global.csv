@@ -1,3 +1,4 @@
+Epoch,sparse_flops,val_set_gradient_magnintude,val_set_Hg_magnitude,val_accuracy,test_set_gradient_magnitude,test_set_Hg_magnitude,test_accuracy,individual
 -1,0.0,0.64779335,3.015196e-07,29.02,0.6375496,3.3992055e-07,29.07,1
 0,3970702560.0,0.6439604,3.1897878e-07,29.26,0.63325006,3.3485404e-07,29.3,1
 1,7941405120.0,0.63675034,3.1724335e-07,29.46,0.6251752,3.2872612e-07,29.78,1
