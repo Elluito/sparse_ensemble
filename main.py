@@ -5700,7 +5700,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     ########################### Lamp Deterministic  ########################################
 
-    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/"),recursive=True):
+    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = df.shape[0]
         individual_df["individual"] = [index] * len_df
@@ -5712,7 +5712,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
     combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=0,index=False)
 
     ########################## first Global stochatic #######################################
-    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/"),recursive=True):
+    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = df.shape[0]
         individual_df["individual"] = [index] * len_df
@@ -5725,7 +5725,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
     ########################## Second LAMP stochatic #######################################
 
 
-    for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/"),recursive=True):
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(indivudual_df+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = df.shape[0]
         individual_df["individual"] = [index] * len_df
