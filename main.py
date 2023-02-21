@@ -5808,8 +5808,8 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
-    # experiment_selector(cfg, 11)
-    gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    experiment_selector(cfg,6)
+    #gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
