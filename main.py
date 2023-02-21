@@ -5678,7 +5678,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
 
-    stochastic_global_root = prefix + "stohastic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
 
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
 
@@ -5710,7 +5710,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         if combine_deterministic_LAMP_DF is None:
             combine_deterministic_LAMP_DF = individual_df
         else:
-            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
+            combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
 
     combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=True,index=False)
 
@@ -5738,7 +5738,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochatic_lamp.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochastic_lamp.csv",header=True ,index=False)
 
 
 if __name__ == '__main__':
