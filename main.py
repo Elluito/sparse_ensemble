@@ -5739,7 +5739,76 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
     combine_stochastic_LAMP_DF.to_csv("gradientflow_stochastic_lamp.csv",header=True ,index=False)
+def plot_gradientFlow_data(filepath,title=""):
+    data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
 
+    sns.set_theme(style="dark")
+
+    # Plot each year's time series in its own facet
+    g = sns.relplot(
+        data=data_frame,
+        x="Epoch", y="test_set_gradient_magnitude", col="individual", hue="individual",
+        kind="line", palette="crest", linewidth=4, zorder=5,
+        col_wrap=10, height=2, aspect=1.5, legend=False,
+    )
+
+    # Iterate over each subplot to customize further
+    for year, ax in g.axes_dict.items():
+        # Add the title as an annotation within the plot
+        ax.text(.8, .85, year, transform=ax.transAxes, fontweight="bold")
+
+        # Plot every year's time series in the background
+        sns.lineplot(
+            data=data_frame, x="Epoch", y="val_set_gradient_magnitude", units="individual",
+            estimator=None, color=".7", linewidth=1, ax=ax,
+        )
+
+    # Reduce the frequency of the x axis ticks
+    ax.set_xticks(ax.get_xticks()[::2])
+
+    # Tweak the supporting aspects of the plot
+    g.set_titles("")
+    g.set_axis_labels("", r"$|\nabla\mathcal{L}|$")
+    g.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig("le_test.png")
+
+def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
+    initial_val_set_GF = []
+    initial_test_set_GF = []
+    final_test_performance = []
+    average_improvement_rate = []
+    for elem in dataFrame["individual"].unique():
+        temp_df = dataFrame[dataFrame["individual"]==elem]
+        initial_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1]))
+        initial_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1]))
+        final_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==90]))
+        difference = temp_df["test_accuracy"][1:].diff()
+        average_improvement_rate.append(float(difference.mean()))
+    d = pd.DataFrame({"initial_GF_valset":initial_val_set_GF,"initial_GF_testset":initial_test_set_GF,"final_test_accuracy":final_test_performance,"improvement_rate":average_improvement_rate})
+
+
+    plt.figure()
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="final_test_accuracy")
+
+    # g.set_titles("")
+    # g.set_axis_labels("", r"$|\nabla\mathcal{L}|$")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}1.png")
+
+    plt.figure()
+    g = sns.scatterplot(data=d,x="initial_GF_testset",y="final_test_accuracy")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}2.png")
+
+    plt.figure()
+
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="improvement_rate")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}3.png")
 
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
@@ -5810,7 +5879,12 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
     #experiment_selector(cfg,6)
-    gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
+    stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
+    stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
+    get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
+    get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
     # experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
