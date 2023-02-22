@@ -5916,7 +5916,7 @@ if __name__ == '__main__':
     #                         "val_acc_plot.pdf",
     #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
     #                         "Generations", "Accuracy")
-    # filepaths = ["stochastic_global_fine_tuning_testset.csv","stochastic_lamp_fine_tuning_testset.csv"]
+    # task_run.shfilepaths = ["stochastic_global_fine_tuning_testset.csv","stochastic_lamp_fine_tuning_testset.csv"]
     # legends = ["Stochatic Global Pruning","Stochastic LAMP Pruning"]
     # filepaths = ["stochastic_global_fine_tuning_testset.csv"]
     # legends = ["Stochatic Global Pruning"]
