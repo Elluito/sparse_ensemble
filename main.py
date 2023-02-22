@@ -4910,7 +4910,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4918,7 +4918,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
