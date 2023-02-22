@@ -5900,7 +5900,7 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.001,
+        "sigma": 0.0021,
         "noise_after_pruning":0,
         "amount": 0.9,
         "dataset": "cifar10",
