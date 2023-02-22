@@ -1,5 +1,6 @@
 import pickle
 import glob
+# import pygmo
 import typing
 from typing import List, Union, Any
 import pandas as pd
@@ -4372,7 +4373,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4380,7 +4381,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # else:
                 # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4909,7 +4910,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4917,7 +4918,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/{}/{}/".format(cfg.architecture,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -5678,9 +5679,9 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
 
     deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
 
-    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
-    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
@@ -5694,12 +5695,13 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_deterministic_GOBAL_DF is None:
             combine_deterministic_GOBAL_DF = individual_df
         else:
             combine_deterministic_GOBAL_DF = pd.concat((combine_deterministic_GOBAL_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_GOBAL_DF.to_csv("gradientflow_deterministic_global.csv",header=True,index=False)
+    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_sigma{cfg.sigma}_global.csv",header=True,index=False)
 
     ########################### Lamp Deterministic  ########################################
 
@@ -5707,24 +5709,26 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_deterministic_LAMP_DF is None:
             combine_deterministic_LAMP_DF = individual_df
         else:
             combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_LAMP_DF.to_csv("gradientflow_deterministic_lamp.csv",header=True,index=False)
+    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_sigma{cfg.sigma}_lamp.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_stochastic_GLOBAL_DF is None:
             combine_stochastic_GLOBAL_DF = individual_df
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv("gradientflow_stochastic_global.csv",header=True,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_sigma{cfg.sigma}_global.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -5733,12 +5737,13 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_stochastic_LAMP_DF is None:
             combine_stochastic_LAMP_DF = individual_df
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv("gradientflow_stochastic_lamp.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_sigma{cfg.sigma}_lamp.csv",header=True ,index=False)
 def plot_gradientFlow_data(filepath,title=""):
     data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
 
@@ -5777,38 +5782,84 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     initial_val_set_GF = []
     initial_test_set_GF = []
     final_test_performance = []
-    average_improvement_rate = []
+    initial_test_performance = []
+    final_val_performance = []
+    initial_val_performance = []
+    average_test_improvement_rate = []
+    average_val_improvement_rate = []
     for elem in dataFrame["individual"].unique():
         temp_df = dataFrame[dataFrame["individual"]==elem]
         initial_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1]))
         initial_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1]))
         final_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==90]))
-        difference = temp_df["test_accuracy"][1:].diff()
-        average_improvement_rate.append(float(difference.mean()))
-    d = pd.DataFrame({"initial_GF_valset":initial_val_set_GF,"initial_GF_testset":initial_test_set_GF,"final_test_accuracy":final_test_performance,"improvement_rate":average_improvement_rate})
+        initial_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
+        final_val_performance.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==90]))
+        initial_val_performance.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+        test_difference = temp_df["test_accuracy"][1:].diff()
+        val_difference = temp_df["val_accuracy"][1:].diff()
+        average_test_improvement_rate.append(float(test_difference.mean()))
+        average_val_improvement_rate.append(float(val_difference.mean()))
+    d = pd.DataFrame({"initial_GF_valset":initial_val_set_GF,"initial_GF_testset":initial_test_set_GF,
+                      "final_test_accuracy":final_test_performance,
+                      "test_improvement_rate":average_test_improvement_rate,
+                      "val_improvement_rate":average_val_improvement_rate,
+                      "initial_test_accuracy":initial_test_performance,
+                      "final_val_accuracy": final_val_performance,
+                      "initial_val_accuracy": initial_val_performance,
+                      })
+
+
+
 
 
     plt.figure()
-    g = sns.scatterplot(data=d,x="initial_GF_valset",y="final_test_accuracy")
 
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="final_test_accuracy")
     # g.set_titles("")
     # g.set_axis_labels("", r"$|\nabla\mathcal{L}|$")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}1.png")
-
+    plt.savefig(f"{file}1.png", bbox_inches="tight")
     plt.figure()
     g = sns.scatterplot(data=d,x="initial_GF_testset",y="final_test_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}2.png")
+    plt.savefig(f"{file}2.png", bbox_inches="tight")
 
     plt.figure()
 
-    g = sns.scatterplot(data=d,x="initial_GF_valset",y="improvement_rate")
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="test_improvement_rate")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}3.png")
+    plt.savefig(f"{file}3.png", bbox_inches="tight")
+
+
+    plt.figure()
+
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="val_improvement_rate")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}4.png", bbox_inches="tight")
+    plt.figure()
+
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_test_accuracy")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}5.png", bbox_inches="tight")
+
+    plt.figure()
+
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_val_accuracy")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}6.png", bbox_inches="tight")
+
+    plt.figure()
+
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="final_val_accuracy")
+    plt.tight_layout()
+    plt.title(title,fontsize=20)
+    plt.savefig(f"{file}7.png", bbox_inches="tight")
 
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
@@ -5835,8 +5886,8 @@ if __name__ == '__main__':
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        "noise": "gaussian",
-       "pruner": "global",
+       "noise": "gaussian",
+       "pruner": "lamp",
         "model_type": "alternative",
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
@@ -5849,7 +5900,7 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
+        "sigma": 0.001,
         "noise_after_pruning":0,
         "amount": 0.9,
         "dataset": "cifar10",
@@ -5878,14 +5929,14 @@ if __name__ == '__main__':
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
-    #experiment_selector(cfg,6)
+    # experiment_selector(cfg,6)
     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
-    stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
-    stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
-    get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
-    get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
-    # experiment_selector(cfg, 11)
+    # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
+    # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
+    # get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
+    # get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
+    experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
