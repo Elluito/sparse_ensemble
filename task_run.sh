@@ -14,7 +14,7 @@
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=8G
 # Tell SGE that this is an array job, with "tasks" numbered from 1 to 10
-#$ -t 13-50
+#$ -t 1-50
 #  -tc 20
 # -pe smp 3
 # Send emails when job starts and ends
