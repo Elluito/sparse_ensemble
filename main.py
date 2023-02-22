@@ -55,14 +55,78 @@ import seaborn as sns
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
-from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate,from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
 from itertools import cycle
 from matplotlib.patches import PathPatch
 # import pylustrator
 from shrinkbench.metrics.flops import flops
-from pathlib import Path
+from pathlib import Pathimport pickle
+import glob
+# import pygmo
+import typing
+from typing import list, union, any
+import pandas as pd
+import datetime as date
+import wandb
+import optuna
+# sys.path.append('csgmcmc')
+from alternate_models import resnet, vgg
+from csgmcmc.models import *
+import omegaconf
+import copy
+import pprint
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as f
+import torch.backends.cudnn as cudnn
+import hydra
+import torchvision
+import torchvision.transforms as transforms
+import scipy
+import os
+import argparse
+import scipy.optimize as optimize
+from torch.autograd import variable
+import numpy as np
+import random
+import torch.nn.utils.prune as prune
+import platform
+from functools import partial
+import glob
+from ignite.engine import events, create_supervised_trainer, create_supervised_evaluator
+from ignite.metrics import accuracy, loss
+import array as pyarr
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+from matplotlib.ticker import percentformatter, formatstrformatter
+import sklearn as sk
+from sklearn.manifold import mds, tsne
+from collections import defaultdict
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import time
+from torch.utils.data import dataloader, random_split, dataset
+import logging
+import torchvision as tv
+from matplotlib.legend_handler import handlerlinecollection, handlertuple
+from matplotlib.axes import subplotbase
+from itertools import chain, combinations
+import seaborn as sns
+from torch.nn.utils import parameters_to_vector, vector_to_parameters
+from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
+    stacked_barplot_with_third_subplot, plot_double_barplot
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate,from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
+    count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
+    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
+from itertools import cycle
+from matplotlib.patches import pathpatch
+# import pylustrator
+from shrinkbench.metrics.flops import flops
+from pathlib import path
 # enable cuda devices
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
@@ -5900,7 +5964,7 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.0043,
+        "sigma": 0.0065,
         "noise_after_pruning":0,
         "amount": 0.9,
         "dataset": "cifar10",
