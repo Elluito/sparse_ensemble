@@ -55,14 +55,16 @@ import seaborn as sns
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
-from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate,from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
 from itertools import cycle
 from matplotlib.patches import PathPatch
 # import pylustrator
 from shrinkbench.metrics.flops import flops
-from pathlib import Pathimport pickle
+from pathlib import Path
+import pickle
 import glob
 # import pygmo
 import typing
@@ -119,7 +121,7 @@ import seaborn as sns
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
-from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate,from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
+from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
 from itertools import cycle
@@ -5964,12 +5966,12 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.0065,
+        "sigma": 0.001,
         "noise_after_pruning":0,
         "amount": 0.9,
         "dataset": "cifar10",
-        "batch_size": 512,
-        # "batch_size": 128,
+        # "batch_size": 512,
+        "batch_size": 128,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
