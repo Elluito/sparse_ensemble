@@ -64,9 +64,10 @@ from matplotlib.patches import PathPatch
 # import pylustrator
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
+import argparse
 # enable cuda devices
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # matplotlib.use('TkAgg')
 
@@ -5861,6 +5862,44 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}7.png", bbox_inches="tight")
+def LeMain(args):
+    cfg = omegaconf.DictConfig({
+        "population": args["population"],
+        "generations": 10,
+        "epochs": 100,
+        "short_epochs": 10,
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "noise": "gaussian",
+        "pruner": args["pruner"],
+        "model_type": "alternative",
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow":True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        # "sigma": 0.0021419609859022197,
+        "sigma": args["sigma"],
+        "noise_after_pruning":0,
+        "amount": 0.9,
+        "dataset": "cifar10",
+        "batch_size": args["batch_size"],
+        # "batch_size": 128,
+        "num_workers": 0,
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
+        "use_wandb": True
+    })
+    experiment_selector(cfg,args["experiment"])
+
+
 
 if __name__ == '__main__':
     # cfg_training = omegaconf.DictConfig({
@@ -5878,40 +5917,51 @@ if __name__ == '__main__':
     #     "epochs": 24
     # })
     # run_traditional_training(cfg_training)
-    cfg = omegaconf.DictConfig({
-        "population": 1,
-        "generations": 10,
-        "epochs": 100,
-        "short_epochs": 10,
-        # "architecture": "VGG19",
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-       "noise": "gaussian",
-       "pruner": "global",
-        "model_type": "alternative",
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
-        "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": True,
-        "sampler": "tpe",
-        "flop_limit": 0,
-        "one_batch": True,
-        "measure_gradient_flow":True,
-        "full_fine_tune": False,
-        "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.011,
-        "noise_after_pruning":0,
-        "amount": 0.9,
-        "dataset": "cifar10",
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-        "save_model_path": "stochastic_pruning_models/",
-        "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
-    })
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    args = vars(parser.parse_args())
+    LeMain(args)
+
+    # cfg = omegaconf.DictConfig({
+    #     "population": 1,
+    #     "generations": 10,
+    #     "epochs": 100,
+    #     "short_epochs": 10,
+    #     # "architecture": "VGG19",
+    #     "architecture": "resnet18",
+    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #    "noise": "gaussian",
+    #    "pruner": "global",
+    #     "model_type": "alternative",
+    #     "exclude_layers": ["conv1", "linear"],
+    #     # "exclude_layers": ["features.0", "classifier"],
+    #     "fine_tune_exclude_layers": True,
+    #     "fine_tune_non_zero_weights": True,
+    #     "sampler": "tpe",
+    #     "flop_limit": 0,
+    #     "one_batch": True,
+    #     "measure_gradient_flow":True,
+    #     "full_fine_tune": False,
+    #     "use_stochastic": True,
+    #     # "sigma": 0.0021419609859022197,
+    #     "sigma": 0.011,
+    #     "noise_after_pruning":0,
+    #     "amount": 0.9,
+    #     "dataset": "cifar10",
+    #     "batch_size": 512,
+    #     # "batch_size": 128,
+    #     "num_workers": 0,
+    #     "save_model_path": "stochastic_pruning_models/",
+    #     "save_data_path": "stochastic_pruning_data/",
+    #     "use_wandb": True
+    # })
 
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
@@ -5937,7 +5987,7 @@ if __name__ == '__main__':
     # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
     # get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
     # get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
-    experiment_selector(cfg, 11)
+    # experiment_selector(cfg, 11)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 

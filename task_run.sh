@@ -30,4 +30,7 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py #&& python main.py && python main.py
+python main.py -exp 11 -bs 512 --sigma 0.0021 --pruner lamp
+
+
+#&& python main.py && python main.py
