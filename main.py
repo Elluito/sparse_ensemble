@@ -6015,7 +6015,7 @@ if __name__ == '__main__':
     #     "cosine_schedule": False,
     #     "epochs": 24
     # })
-    run_traditional_training(cfg_training)
+    # run_traditional_training(cfg_training)
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
