@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 48:00:00)
-#$ -l h_rt=012:00:00
+#$ -l h_rt=05:00:00
 
 # ASk for some GPU
 #$ -l coproc_p100=1
@@ -14,7 +14,7 @@
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=8G
 # Tell SGE that this is an array job, with "tasks" numbered from 1 to 10
-#$ -t 1-26
+#$ -t 1-40
 #  -tc 20
 # -pe smp 3
 # Send emails when job starts and ends
@@ -30,7 +30,7 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py -exp 11 -bs 512 --sigma 0.0043 --pruner global
+python main.py -exp 11 -bs 512 --sigma 0.0065 --pruner global
 
 
 #&& python main.py && python main.py
