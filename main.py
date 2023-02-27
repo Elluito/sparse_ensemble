@@ -1,4 +1,5 @@
 import pickle
+import paretoset
 import glob
 # import pygmo
 import typing
@@ -66,9 +67,10 @@ from shrinkbench.metrics.flops import flops
 from pathlib import Path
 import argparse
 # enable cuda devices
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # matplotlib.use('TkAgg')
 
 
@@ -4901,16 +4903,14 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             project="stochastic_pruning",
             name=f"fine_tune_base_stochastic_pruning_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}"
                  f"{non_zero_string}{one_batch_string}",
-            notes="This run, run one iteration of stochastic pruning with fine tune on top of that. I'm doing lamp "
-                  "with the pruning rates calculated no the original model and record the pruning rates of the noisy "
-                  "models to compare",
+            notes="This run is to see if gradient clipping is hindering stochastic pruning",
             reinit=True,
         )
        ################################## Gradient flow measure############################################
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
 
-        identifier = f"{time.time():14.2f}".replace(" ", "")
+        identifier = f"{time.time():14.5f}".replace(" ", "")
         if cfg.pruner == "lamp":
             filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
@@ -5779,6 +5779,104 @@ def plot_gradientFlow_data(filepath,title=""):
     g.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig("le_test.png")
+def pareto_analysis(dataFrame:pd.DataFrame,file:str):
+    # Before fine-tuning pareto set
+    temp_dataframe = dataFrame[["initial_GF_valset","initial_val_accuracy"]]
+    pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe,sense=['max','max'])
+    temp_dataframe2 = dataFrame[["initial_GF_valset","final_val_accuracy"]]
+
+    pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2,sense=['max','max'])
+
+    best = temp_dataframe2['final_val_accuracy'].argmax()
+
+    plt.figure()
+    g = sns.scatterplot(data=temp_dataframe,x='initial_GF_valset',y='initial_val_accuracy',color='blue')
+
+    index_with_both = pareto_indexes_post*pareto_indexes_pre
+    data_frame_both = temp_dataframe[index_with_both]
+    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post*pareto_indexes_pre)))
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                label='Pareto front for initial val accuracy')
+
+
+    plt.scatter(x= temp_dataframe[pareto_indexes_post]['initial_GF_valset'] ,
+                y= temp_dataframe[pareto_indexes_post]['initial_val_accuracy'],color='blue',edgecolors='red',
+                # alpha=0.5,
+                label='Pareto front for final val accuracy')
+    plt.scatter(x= data_frame_both['initial_GF_valset'],
+                y= data_frame_both['initial_val_accuracy'],color='cyan',edgecolors='red')
+    if pareto_indexes_pre[best]:
+
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+        )
+    else:
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+
+    plt.legend()
+    plt.savefig('{}_pareto_anayisis_GF.png'.format(file),bbox_inches='tight')
+    plt.figure()
+
+    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+    new_data = temp_dataframe[not_first_pareto_set]
+    second_pareto_front =  paretoset.paretoset(costs=new_data,sense=['max','max'])
+    g = sns.scatterplot(data=temp_dataframe,x='initial_GF_valset',y='initial_val_accuracy',color='blue')
+
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+    scattter =  plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'] ,
+                            y=new_data[second_pareto_front]['initial_val_accuracy'],color='green',
+                            label='Second Pareto front for initial val accuracy')
+    # best1 = temp_dataframe[best]["initial_GF_valset"]
+    # best2 = temp_dataframe[best]["initial_val_accuracy"]
+    best1 =temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+    best2 =temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
+
+    temp = new_data[new_data["initial_GF_valset"]==best1]
+    temp = temp[temp["initial_val_accuracy"]==best2]
+
+    if not temp.empty :
+
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+    else:
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+
+
+
+
+    plt.legend()
+    plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file),bbox_inches='tight')
+
+    index_with_both = pareto_indexes_post*pareto_indexes_pre
+    data_frame_both = temp_dataframe[index_with_both]
+    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post*pareto_indexes_pre)))
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
 
 def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     initial_val_set_GF = []
@@ -5809,7 +5907,7 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
                       "final_val_accuracy": final_val_performance,
                       "initial_val_accuracy": initial_val_performance,
                       })
-
+    pareto_analysis(d,file)
 
 
 
@@ -5895,6 +5993,7 @@ def LeMain(args):
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
+        "gradient_cliping": True,
         "use_wandb": True
     })
     experiment_selector(cfg,args["experiment"])
@@ -5916,7 +6015,7 @@ if __name__ == '__main__':
     #     "cosine_schedule": False,
     #     "epochs": 24
     # })
-    # run_traditional_training(cfg_training)
+    run_traditional_training(cfg_training)
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
@@ -5927,6 +6026,7 @@ if __name__ == '__main__':
     parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
     args = vars(parser.parse_args())
     LeMain(args)
+
 
     # cfg = omegaconf.DictConfig({
     #     "population": 1,

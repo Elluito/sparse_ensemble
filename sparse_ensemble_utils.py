@@ -160,7 +160,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-    grad_clip = 0.1
+    grad_clip = 0
+    if cfg.gradient_cliping:
+        grad_clip = 0.1
     names, weights = zip(*get_layer_dict(pruned_model))
     accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
 
