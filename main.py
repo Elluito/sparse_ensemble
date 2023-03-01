@@ -5784,6 +5784,7 @@ def pareto_analysis(dataFrame:pd.DataFrame,file:str):
     temp_dataframe = dataFrame[["initial_GF_valset","initial_val_accuracy"]]
     pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe,sense=['max','max'])
     temp_dataframe2 = dataFrame[["initial_GF_valset","final_val_accuracy"]]
+    temp_dataframe3 = dataFrame[["initial_val_accuracy","final_val_accuracy"]]
 
     pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2,sense=['max','max'])
 
@@ -5878,6 +5879,11 @@ def pareto_analysis(dataFrame:pd.DataFrame,file:str):
                             y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
                             label='Pareto front for initial val accuracy')
 
+
+    plt.figure()
+    g = sns.scatterplot(data=temp_dataframe3,x='initial_val_accuracy',y='final_val_accuracy',color='blue')
+    plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file),bbox_inches='tight')
+
 def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     initial_val_set_GF = []
     initial_test_set_GF = []
@@ -5919,44 +5925,43 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     # g.set_axis_labels("", r"$|\nabla\mathcal{L}|$")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}1.png", bbox_inches="tight")
+    plt.savefig(f"{file}_initial_GF_valset_VS_final_acc_testset.png", bbox_inches="tight")
     plt.figure()
     g = sns.scatterplot(data=d,x="initial_GF_testset",y="final_test_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}2.png", bbox_inches="tight")
+    plt.savefig(f"{file}_initial_GF_testset_VS_final_acc_testset.png", bbox_inches="tight")
 
     plt.figure()
 
     g = sns.scatterplot(data=d,x="initial_GF_valset",y="test_improvement_rate")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}3.png", bbox_inches="tight")
+    plt.savefig(f"{file}_intiial_GF_testset_VS_test_imprvement_rate.png", bbox_inches="tight")
 
 
     plt.figure()
-
     g = sns.scatterplot(data=d,x="initial_GF_valset",y="val_improvement_rate")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}4.png", bbox_inches="tight")
-    plt.figure()
+    plt.savefig(f"{file}_intiial_GF_valset_VS_valset_improvement_rate.png", bbox_inches="tight")
 
+
+    plt.figure()
     g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_test_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}5.png", bbox_inches="tight")
+    plt.savefig(f"{file}_intiial_GF_valset_VS_testset_improvement_rate.png", bbox_inches="tight")
 
     plt.figure()
 
     g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_val_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}6.png", bbox_inches="tight")
+    plt.savefig(f"{file}.png", bbox_inches="tight")
 
     plt.figure()
-
-    g = sns.scatterplot(data=d,x="initial_GF_valset",y="final_val_accuracy")
+    g = sns.scatterplot(data=d,x="initial_val_accuracy",y="final_val_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}7.png", bbox_inches="tight")
