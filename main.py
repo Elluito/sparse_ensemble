@@ -5694,9 +5694,9 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
-    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/pr{cfg.amount}/"
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
 
-    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/pr{cfg.amount}/"
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
 
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
