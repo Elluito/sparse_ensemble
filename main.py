@@ -6110,6 +6110,7 @@ if __name__ == '__main__':
     for sig in sigma_values:
         cfg.sigma = sig
         gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    unify_sigma_datasets(sigma_values,cfg)
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
     # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
