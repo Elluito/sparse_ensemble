@@ -5674,12 +5674,29 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
 
 ############################# Iterative stochastic pruning #############################################################
+def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+    first_sigma = sigmas.pop()
+
+    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    for sigma in sigmas:
+        lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+
+        global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+
+        combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
+        combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
+
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_pr{cfg.amount}.csv",header=True ,index=False)
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
-    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/pr{cfg.amount}/"
 
-    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/pr{cfg.amount}/"
 
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
@@ -5697,13 +5714,12 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_deterministic_GOBAL_DF is None:
             combine_deterministic_GOBAL_DF = individual_df
         else:
             combine_deterministic_GOBAL_DF = pd.concat((combine_deterministic_GOBAL_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_sigma{cfg.sigma}_global.csv",header=True,index=False)
+    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_global_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################### Lamp Deterministic  ########################################
 
@@ -5711,13 +5727,12 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
         individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [cfg.sigma] * len_df
         if combine_deterministic_LAMP_DF is None:
             combine_deterministic_LAMP_DF = individual_df
         else:
             combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_sigma{cfg.sigma}_lamp.csv",header=True,index=False)
+    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
@@ -5730,7 +5745,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_sigma{cfg.sigma}_global.csv",header=True,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -5745,7 +5760,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_sigma{cfg.sigma}_lamp.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
 def plot_gradientFlow_data(filepath,title=""):
     data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
 
@@ -5914,9 +5929,10 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
                       "initial_val_accuracy": initial_val_performance,
                       })
     pareto_analysis(d,file)
-
-
-
+    pearsons_correlations = d.corr(method="pearson")
+    kendal_correlations = d.corr(method="pearson")
+    pearsons_correlations.to_csv(f"{file}pearsons_correlations.csv",sep=",")
+    kendal_correlations.to_csv(f"{file}kendal_correlations.csv",sep=",")
 
     plt.figure()
 
@@ -5948,7 +5964,7 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
 
 
     plt.figure()
-    g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_test_accuracy")
+    g = sns.scatterplot(data=d,x="initial_GF_valset",y="test_improvement_rate")
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}_intiial_GF_valset_VS_testset_improvement_rate.png", bbox_inches="tight")
@@ -5958,13 +5974,13 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     g = sns.scatterplot(data=d,x="initial_GF_valset",y="initial_val_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}.png", bbox_inches="tight")
+    plt.savefig(f"{file}_intial_GF_valset_VS_initial_val_accuracy.png", bbox_inches="tight")
 
     plt.figure()
     g = sns.scatterplot(data=d,x="initial_val_accuracy",y="final_val_accuracy")
     plt.tight_layout()
     plt.title(title,fontsize=20)
-    plt.savefig(f"{file}7.png", bbox_inches="tight")
+    plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
 def LeMain(args):
     cfg = omegaconf.DictConfig({
         "population": args["population"],
@@ -6021,17 +6037,16 @@ if __name__ == '__main__':
     #     "epochs": 24
     # })
     # run_traditional_training(cfg_training)
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    args = vars(parser.parse_args())
-    LeMain(args)
-
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
     # cfg = omegaconf.DictConfig({
     #     "population": 1,
@@ -6081,12 +6096,20 @@ if __name__ == '__main__':
     #                                                                                        "test_set_accuracy__MIN",
     #                          "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
     #
-
+    sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
     # experiment_selector(cfg,6)
-    # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    cfg = omegaconf.DictConfig({
+        "sigma":0.005,
+        "amount":0.9,
+        "architecture":"resnet18",
+
+    })
+    for sig in sigma_values:
+        cfg.sigma = sig
+        gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
     # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
