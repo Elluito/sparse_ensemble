@@ -5673,7 +5673,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
                 f"_{cfg.population}_{eval_set}_{cfg.architecture}.png")
 
 
-############################# Iterative stochastic pruning #############################################################
+############################# Scatter plots #############################################################
 def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
@@ -5694,9 +5694,9 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
-    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
 
-    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.amount}/"
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
 
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
@@ -5898,10 +5898,61 @@ def pareto_analysis(dataFrame:pd.DataFrame,file:str):
     plt.figure()
     g = sns.scatterplot(data=temp_dataframe3,x='initial_val_accuracy',y='final_val_accuracy',color='blue')
     plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file),bbox_inches='tight')
+def scatter_plot_all_sigmas(dataFrame:pd.DataFrame,determintistic_dataframe,title:str="",file:str=""):
+    all_df : pd.DataFrame = None
+    for sigma in dataFrame["sigma"].unique():
+        sigma_temp_df = dataFrame[dataFrame["sigma"]==sigma]
+        gradient_flow = []
+        accuracy = []
+        type = []
+        sigma_list = []
+
+
+        for elem in sigma_temp_df["individual"].unique():
+            # One-shot data
+            temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
+
+            gradient_flow.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1].iloc[0]))
+            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+            type.append("One-Shot")
+            sigma_list.append(sigma)
+            # Now the fine-tuned data
+            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnintude"]))
+            print(temp_df["Epoch"])
+            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+            type.append("Fine-tuned")
+            sigma_list.append(sigma)
+
+        d = pd.DataFrame(
+            {   "Gradient Magnitude":gradient_flow,
+                "Accuracy":accuracy,
+                "Type" : type,
+                "Sigma" :sigma
+
+            }
+        )
+
+        if all_df is None:
+            all_df = d
+        else:
+            all_df = pd.concat((all_df,d),ignore_index=True)
+    plt.figure()
+
+    g = sns.scatterplot(data=all_df,x="Gradient Magnitude",y="Accuracy",hue="Sigma",style="Type",palette="deep",legend="full")
+    # plt.xlabel(fontsize=20)
+    # plt.ylabel(fontsize=20)
+    # plt.scatter(,label="")
+    plt.title("")
+    plt.savefig(file,bb_inch="tight")
+
+
+
 
 def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     initial_val_set_GF = []
     initial_test_set_GF = []
+    final_val_set_GF = []
+    final_test_set_GF = []
     final_test_performance = []
     initial_test_performance = []
     final_val_performance = []
@@ -5912,6 +5963,8 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
         temp_df = dataFrame[dataFrame["individual"]==elem]
         initial_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1]))
         initial_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1]))
+        final_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==90]))
+        final_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==90]))
         final_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==90]))
         initial_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
         final_val_performance.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==90]))
@@ -5921,12 +5974,14 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
         average_test_improvement_rate.append(float(test_difference.mean()))
         average_val_improvement_rate.append(float(val_difference.mean()))
     d = pd.DataFrame({"initial_GF_valset":initial_val_set_GF,"initial_GF_testset":initial_test_set_GF,
-                      "final_test_accuracy":final_test_performance,
-                      "test_improvement_rate":average_test_improvement_rate,
-                      "val_improvement_rate":average_val_improvement_rate,
-                      "initial_test_accuracy":initial_test_performance,
-                      "final_val_accuracy": final_val_performance,
-                      "initial_val_accuracy": initial_val_performance,
+                        "final_GF_valset":final_val_set_GF,
+                        "final_GF_testset":final_test_set_GF,
+                        "final_test_accuracy":final_test_performance,
+                        "test_improvement_rate":average_test_improvement_rate,
+                        "val_improvement_rate":average_val_improvement_rate,
+                        "initial_test_accuracy":initial_test_performance,
+                        "final_val_accuracy": final_val_performance,
+                        "initial_val_accuracy": initial_val_performance,
                       })
     pareto_analysis(d,file)
     pearsons_correlations = d.corr(method="pearson")
@@ -6096,21 +6151,28 @@ if __name__ == '__main__':
     #                                                                                        "test_set_accuracy__MIN",
     #                          "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
     #
-    sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
+    # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
     # test_sigma_experiment_selector()
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
     # experiment_selector(cfg,6)
     cfg = omegaconf.DictConfig({
-        "sigma":0.005,
+        "sigma":0.0,
         "amount":0.9,
         "architecture":"resnet18",
 
     })
-    for sig in sigma_values:
-        cfg.sigma = sig
-        gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
-    unify_sigma_datasets(sigma_values,cfg)
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
+    gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    #
+    # df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # scatter_plot_all_sigmas(df,file="global_scatter.pdf")
+    # df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # scatter_plot_all_sigmas(df,file="lamp_scatter.pdf")
+
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
     # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
