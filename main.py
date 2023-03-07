@@ -3281,18 +3281,39 @@ def test_figure():
 
 
 def population_sweeps_transfer_mask_rank_experiments(identifier=""):
+
     cfg = omegaconf.DictConfig({
-        "population": 3,
+        "population": 1,
+        "generations": 10,
+        "epochs": 100,
+        "short_epochs": 10,
+        # "architecture": "VGG19",
         "architecture": "resnet18",
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "model": "5",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
-        "pruner":"lamp",
-        "sigma": 0.0021419609859022197,
-        # "sigma": 0.001,
-        "amount": 0.8,
+        "pruner": "lamp",
+        "model_type": "alternative",
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow":True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.011,
+        "noise_after_pruning":0,
+        "amount": 0.9,
+        "dataset": "cifar10",
         "batch_size": 512,
-        "num_workers": 1,
+        # "batch_size": 128,
+        "num_workers": 0,
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
     Ns = [10, 50, 100]
