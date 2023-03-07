@@ -2499,9 +2499,9 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     pruned_original = copy.deepcopy(net)
 
     if cfg.pruner == "global":
-        prune_with_rate(pruned_original, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
     else:
-        prune_with_rate(pruned_original, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner=cfg.pruner)
 
 
@@ -2524,14 +2524,10 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         #
         if cfg.pruner == "global":
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+            prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
         else:
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            prune_with_rate(current_model,cfg.amount , exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner=cfg.pruner)
-        prune.global_unstructured(
-            weights_to_prune(current_model),
-            pruning_method=prune.L1Unstructured,
-            amount=cfg.amount)
         # Here is where I transfer the mask from the prune stochastic model to the
         # original weights and put it in the ranking
 
