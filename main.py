@@ -3312,13 +3312,14 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
-    Ns = [10, 50, 100]
-    sigmas = np.linspace(start=0.001, stop=0.005, num=3)
+    Ns = [ 100]
+    # sigmas = np.linspace(start=0.001, stop=0.005, num=3)
+    sigmas = [0.005]
     # sigmas = [0.0021419609859022197]
     pruning_rates = [0.5, 0.8, 0.9]
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
     result = time.localtime(time.time())
-    file_path = f"data/epsilon_experiments_{identifier}_t_{result.tm_hour}-{result.tm_min}_{cfg.pruner}"
+    file_path = f"data/epsilon_experiments_{identifier}_t_1-25_{cfg.pruner}"
     for pop in Ns:
         for sig in sigmas:
             for pr in pruning_rates:
@@ -3328,7 +3329,17 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
                 df_result = transfer_mask_rank_experiments_no_plot(cfg)
                 df = df.append(df_result)
                 df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
-    df.to_csv(file_path + "_full.csv", sep=",", index=False)
+    # df.to_csv(file_path + "_full.csv", sep=",", index=False)
+    full_dataset :pd.DataFrame = None
+
+    for file in glob.glob('epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
+        temp_df = pd.read_csv(filepath_or_buffer=file, sep=",", header=0)
+        if full_dataset is None:
+            full_dataset = temp_df
+        else:
+            full_dataset = pd.concat((full_dataset,temp_df))
+
+    full_dataset.to_csv("epsilon_experiments_lamp_full.csv", sep=",", index=False)
     return file_path
 
 
@@ -6358,7 +6369,7 @@ if __name__ == '__main__':
         "use_wandb": True
     })
     identifier = f"{time.time():14.5f}".replace(" ", "")
-    population_sweeps_transfer_mask_rank_experiments(identifier=identifier)
+    population_sweeps_transfer_mask_rank_experiments(identifier='1678152343.18253')
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
     #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
