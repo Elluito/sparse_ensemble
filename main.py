@@ -2532,7 +2532,7 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         # original weights and put it in the ranking
 
         copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(current_model)
+        remove_reparametrization(current_model,exclude_layer_list=cfg.exclude_layers)
         print("Performance for model {}".format(n))
         stochastic_pruned_performance = test(current_model, use_cuda, testloader)
         original_with_sto_mask = test(sto_mask_transfer_model, use_cuda, testloader)
