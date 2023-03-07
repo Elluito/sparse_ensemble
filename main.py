@@ -3320,19 +3320,19 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
     result = time.localtime(time.time())
     file_path = f"data/epsilon_experiments_{identifier}_t_1-25_{cfg.pruner}"
-    for pop in Ns:
-        for sig in sigmas:
-            for pr in pruning_rates:
-                cfg.population = pop
-                cfg.sigma = float(sig)
-                cfg.amount = pr
-                df_result = transfer_mask_rank_experiments_no_plot(cfg)
-                df = df.append(df_result)
-                df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
+    # for pop in Ns:
+    #     for sig in sigmas:
+    #         for pr in pruning_rates:
+    #             cfg.population = pop
+    #             cfg.sigma = float(sig)
+    #             cfg.amount = pr
+    #             df_result = transfer_mask_rank_experiments_no_plot(cfg)
+    #             df = df.append(df_result)
+    #             df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
     # df.to_csv(file_path + "_full.csv", sep=",", index=False)
     full_dataset :pd.DataFrame = None
 
-    for file in glob.glob('epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
+    for file in glob.glob('data/epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
         temp_df = pd.read_csv(filepath_or_buffer=file, sep=",", header=0)
         if full_dataset is None:
             full_dataset = temp_df
