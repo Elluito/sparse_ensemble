@@ -6,6 +6,9 @@ import typing
 from typing import List, Union, Any
 import pandas as pd
 import datetime as date
+
+from torch.backends.cudnn import deterministic
+
 import wandb
 import optuna
 # sys.path.append('csgmcmc')
@@ -2494,12 +2497,20 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
 
     original_performance = test(net, use_cuda, testloader)
     pruned_original = copy.deepcopy(net)
-    weights_to_prune = weights_to_prune(pruned_original)
-    prune.global_unstructured(
-        weights_to_prune,
-        pruning_method=prune.L1Unstructured,
-        amount=cfg.amount
-    )
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_original, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+
+    # weights_to_prune = weights_to_prune(pruned_original)
+    # prune.global_unstructured(
+    #     weights_to_prune,
+    #     pruning_method=prune.L1Unstructured,
+    #     amount=cfg.amount
+    # )
     # remove_reparametrization(pruned_original)
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, testloader)
@@ -2511,6 +2522,12 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
         copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, testloader)
         stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        #
+        if cfg.pruner == "global":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
         prune.global_unstructured(
             weights_to_prune(current_model),
             pruning_method=prune.L1Unstructured,
@@ -2538,7 +2555,10 @@ def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     epsilon = []
     labels = []
     epsilon.extend(stochastic_deltas)
-    labels.extend(["stochastic pruning"] * len(stochastic_deltas))
+    if cfg.pruner == "global":
+        labels.extend(["Stochastic GMP"] * len(stochastic_deltas))
+    elif cfg.pruner == "lamp":
+        labels.extend(["Stochastic LAMP"] * len(stochastic_deltas))
     epsilon.extend(sto_mask_to_ori_weights_deltas)
     labels.extend(["Sto. mask original weights"] * len(sto_mask_to_ori_weights_deltas))
     epsilon.extend(ori_mask_to_sto_weights_deltas)
@@ -2941,7 +2961,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
             ###############  LAMP ################################
-            total_observations = len(current_df["Accuracy"][current_df["Type"] == "Stochastic Pruning"])
+            total_observations = len(current_df["Accuracy"][current_df["Type"] == "Stochastic GMP"])
 
             lamp_model = copy.deepcopy(net)
 
@@ -2981,10 +3001,10 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                               )
 
             adjust_box_widths(fig, 2)
-            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Global Deterministic Pruning")
-            axj.axhline(LAMP_deterministic_performance, c="xkcd:greeny yellow", linewidth=2.5, label="LAMP "
-                                                                                                     "Deterministic "
-                                                                                                     "Pruning")
+            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic GMP")
+            # axj.axhline(LAMP_deterministic_performance, c="xkcd:greeny yellow", linewidth=2.5, label="LAMP "
+            #                                                                                          "Deterministic "
+            #                                                                                          "Pruning")
 
             axj = sns.stripplot(x='Type',
                                 y='Accuracy',
@@ -3018,7 +3038,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # ax2.invert_yaxis()
 
             handles, labels = axj.get_legend_handles_labels()
-            l = axj.legend(handles[:5], labels[:5], fontsize=15)
+            l = axj.legend(handles[:4], labels[:4], fontsize=15)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -3054,10 +3074,12 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 formatter_q = lambda n: "{:10.0f}".format(n).replace(" ", "")
                 formatter_f = lambda n: "{:10.1f}".format(n).replace(" ", "")
             new_ticks = list(map(formatter_q, unnormalied_ticks))
-            axj.set_yticks(ticks=unnormalied_ticks, labels=new_ticks, minor=False)
+            axj.set_yticks(ticks=unnormalied_ticks, minor=False)
+            axj.set_yticklabels(new_ticks)
             epsilon_ticks = list(map(formatter_f, epsilon_ticks))
             epsilon_ticks.reverse()
-            ax2.set_yticks(ticks=unnormalied_ticks, labels=epsilon_ticks, minor=False)
+            ax2.set_yticks(ticks=unnormalied_ticks, minor=False)
+            ax2.set_yticklabels(epsilon_ticks)
             # ax2.set_yticks([25,30,35,40,45,50,55], minor=False)
             ax2.set_ylabel(r"$\epsilon$", fontsize=20)
             ax2.spines['right'].set_color('red')
@@ -3077,8 +3099,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         # plt.show()
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(pr_string, current_sigma), bbox_inches="tight")
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(pr_string, current_sigma), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_nolamp.png".format(pr_string, current_sigma), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_nolamp.pdf".format(pr_string, current_sigma), bbox_inches="tight")
 
 
 def plot_val_accuracy_wandb(filepath, save_path, x_variable, y_variable, xlabel, ylabel):
@@ -3265,6 +3287,7 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         "model": "5",
         "noise": "gaussian",
+        "pruner":"lamp",
         "sigma": 0.0021419609859022197,
         # "sigma": 0.001,
         "amount": 0.8,
@@ -3278,7 +3301,7 @@ def population_sweeps_transfer_mask_rank_experiments(identifier=""):
     pruning_rates = [0.5, 0.8, 0.9]
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
     result = time.localtime(time.time())
-    file_path = f"data/epsilon_experiments_{identifier}_t_{result.tm_hour}-{result.tm_min}"
+    file_path = f"data/epsilon_experiments_{identifier}_t_{result.tm_hour}-{result.tm_min}_{cfg.pruner}"
     for pop in Ns:
         for sig in sigmas:
             for pr in pruning_rates:
@@ -5761,6 +5784,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
+
 def plot_gradientFlow_data(filepath,title=""):
     data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
 
@@ -5794,12 +5818,155 @@ def plot_gradientFlow_data(filepath,title=""):
     g.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig("le_test.png")
+
+def same_image_pareto_analysis(dataFrame:pd.DataFrame,file:str):
+    temp_dataframe = dataFrame[["initial_GF_valset","initial_val_accuracy"]]
+    pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe,sense=['max','max'])
+    temp_dataframe2 = dataFrame[["initial_GF_valset","final_val_accuracy"]]
+    temp_dataframe3 = dataFrame[["initial_val_accuracy","final_val_accuracy"]]
+    temp_dataframe4 = dataFrame[["final_GF_valset","final_val_accuracy"]]
+
+    pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2,sense=['max','max'])
+
+    best = temp_dataframe2['final_val_accuracy'].argmax()
+
+    plt.figure()
+    g = sns.scatterplot(data=temp_dataframe,x='initial_GF_valset',y='initial_val_accuracy',color='blue')
+
+    index_with_both = pareto_indexes_post*pareto_indexes_pre
+    data_frame_both = temp_dataframe[index_with_both]
+    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post*pareto_indexes_pre)))
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+
+
+    plt.scatter(x= temp_dataframe[pareto_indexes_post]['initial_GF_valset'] ,
+                y= temp_dataframe[pareto_indexes_post]['initial_val_accuracy'],color='blue',edgecolors='red',
+                # alpha=0.5,
+                label='Pareto front for final val accuracy')
+    plt.scatter(x= data_frame_both['initial_GF_valset'],
+                y= data_frame_both['initial_val_accuracy'],color='cyan',edgecolors='red')
+    if pareto_indexes_pre[best]:
+
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+    else:
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+    # After fine-tuning results
+    g = sns.scatterplot(data=temp_dataframe4,x="final_GF_valset",y ="final_val_accuracy",color='blue',markers='+')
+    plt.scatter(x= temp_dataframe4[pareto_indexes_pre]['final_GF_valset'] ,
+                y= temp_dataframe4[pareto_indexes_pre]['final_val_accuracy'],color='cyan',
+                label='Pareto front before training'
+                )
+
+    plt.scatter(x=temp_dataframe['final_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                y=temp_dataframe['final_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                color='red',
+                marker='x',
+                label='Single Best after fine-tuning'
+                )
+    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+    new_data_after_finetuning = temp_dataframe4[not_first_pareto_set]
+    new_data = temp_dataframe[not_first_pareto_set]
+    second_pareto_front =  paretoset.paretoset(costs=new_data,sense=['max','max'])
+    second_pareto_front_finetuning =  paretoset.paretoset(costs=new_data_after_finetuning,sense=['max','max'])
+    
+    #Before Finetunig
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+    scattter =  plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'] ,
+                            y=new_data[second_pareto_front]['initial_val_accuracy'],color='green',
+                            label='Second Pareto front for initial val accuracy')
+    # After finetuning
+    scattter =  plt.scatter(x= temp_dataframe4[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe4[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+    scattter =  plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'] ,
+                            y=new_data[second_pareto_front]['initial_val_accuracy'],color='green',
+                            label='Second Pareto front for initial val accuracy')
+
+    plt.xlabel("Magnitude gradient")
+    plt.ylabel('Accuracy')
+
+    plt.legend()
+    plt.savefig('{}_pareto_anayisis_GF.png'.format(file),bbox_inches='tight')
+    plt.figure()
+
+    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+    new_data = temp_dataframe[not_first_pareto_set]
+    second_pareto_front =  paretoset.paretoset(costs=new_data,sense=['max','max'])
+    g = sns.scatterplot(data=temp_dataframe,x='initial_GF_valset',y='initial_val_accuracy',color='blue')
+
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+    scattter =  plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'] ,
+                            y=new_data[second_pareto_front]['initial_val_accuracy'],color='green',
+                            label='Second Pareto front for initial val accuracy')
+    # best1 = temp_dataframe[best]["initial_GF_valset"]
+    # best2 = temp_dataframe[best]["initial_val_accuracy"]
+    best1 =temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+    best2 =temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
+
+    temp = new_data[new_data["initial_GF_valset"]==best1]
+    temp = temp[temp["initial_val_accuracy"]==best2]
+
+    if not temp.empty :
+
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+    else:
+        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+                    color='red',
+                    marker='x',
+                    label='Single Best after fine-tuning'
+                    )
+
+
+
+
+    plt.legend()
+    plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file),bbox_inches='tight')
+
+    index_with_both = pareto_indexes_post*pareto_indexes_pre
+    data_frame_both = temp_dataframe[index_with_both]
+    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post*pareto_indexes_pre)))
+    scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
+                            y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
+                            label='Pareto front for initial val accuracy')
+
+
+    plt.figure()
+    g = sns.scatterplot(data=temp_dataframe3,x='initial_val_accuracy',y='final_val_accuracy',color='blue')
+    plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file),bbox_inches='tight')
+    pass
 def pareto_analysis(dataFrame:pd.DataFrame,file:str):
     # Before fine-tuning pareto set
     temp_dataframe = dataFrame[["initial_GF_valset","initial_val_accuracy"]]
     pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe,sense=['max','max'])
     temp_dataframe2 = dataFrame[["initial_GF_valset","final_val_accuracy"]]
     temp_dataframe3 = dataFrame[["initial_val_accuracy","final_val_accuracy"]]
+    temp_dataframe4 = dataFrame[["final_GF_valset","final_val_accuracy"]]
 
     pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2,sense=['max','max'])
 
@@ -5898,56 +6065,6 @@ def pareto_analysis(dataFrame:pd.DataFrame,file:str):
     plt.figure()
     g = sns.scatterplot(data=temp_dataframe3,x='initial_val_accuracy',y='final_val_accuracy',color='blue')
     plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file),bbox_inches='tight')
-def scatter_plot_all_sigmas(dataFrame:pd.DataFrame,determintistic_dataframe,title:str="",file:str=""):
-    all_df : pd.DataFrame = None
-    for sigma in dataFrame["sigma"].unique():
-        sigma_temp_df = dataFrame[dataFrame["sigma"]==sigma]
-        gradient_flow = []
-        accuracy = []
-        type = []
-        sigma_list = []
-
-
-        for elem in sigma_temp_df["individual"].unique():
-            # One-shot data
-            temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
-
-            gradient_flow.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1].iloc[0]))
-            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
-            type.append("One-Shot")
-            sigma_list.append(sigma)
-            # Now the fine-tuned data
-            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnintude"]))
-            print(temp_df["Epoch"])
-            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
-            type.append("Fine-tuned")
-            sigma_list.append(sigma)
-
-        d = pd.DataFrame(
-            {   "Gradient Magnitude":gradient_flow,
-                "Accuracy":accuracy,
-                "Type" : type,
-                "Sigma" :sigma
-
-            }
-        )
-
-        if all_df is None:
-            all_df = d
-        else:
-            all_df = pd.concat((all_df,d),ignore_index=True)
-    plt.figure()
-
-    g = sns.scatterplot(data=all_df,x="Gradient Magnitude",y="Accuracy",hue="Sigma",style="Type",palette="deep",legend="full")
-    # plt.xlabel(fontsize=20)
-    # plt.ylabel(fontsize=20)
-    # plt.scatter(,label="")
-    plt.title("")
-    plt.savefig(file,bb_inch="tight")
-
-
-
-
 def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     initial_val_set_GF = []
     initial_test_set_GF = []
@@ -5974,14 +6091,14 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
         average_test_improvement_rate.append(float(test_difference.mean()))
         average_val_improvement_rate.append(float(val_difference.mean()))
     d = pd.DataFrame({"initial_GF_valset":initial_val_set_GF,"initial_GF_testset":initial_test_set_GF,
-                        "final_GF_valset":final_val_set_GF,
-                        "final_GF_testset":final_test_set_GF,
-                        "final_test_accuracy":final_test_performance,
-                        "test_improvement_rate":average_test_improvement_rate,
-                        "val_improvement_rate":average_val_improvement_rate,
-                        "initial_test_accuracy":initial_test_performance,
-                        "final_val_accuracy": final_val_performance,
-                        "initial_val_accuracy": initial_val_performance,
+                      "final_GF_valset":final_val_set_GF,
+                      "final_GF_testset":final_test_set_GF,
+                      "final_test_accuracy":final_test_performance,
+                      "test_improvement_rate":average_test_improvement_rate,
+                      "val_improvement_rate":average_val_improvement_rate,
+                      "initial_test_accuracy":initial_test_performance,
+                      "final_val_accuracy": final_val_performance,
+                      "initial_val_accuracy": initial_val_performance,
                       })
     pareto_analysis(d,file)
     pearsons_correlations = d.corr(method="pearson")
@@ -6036,6 +6153,92 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
+def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",sigmas_to_show=[]):
+    all_df1 : pd.DataFrame = None
+    all_df2 : pd.DataFrame = None
+    for sigma in dataFrame1["sigma"].unique():
+        sigma_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
+        gradient_flow = []
+        accuracy = []
+        type = []
+        sigma_list = []
+
+
+        for elem in sigma_temp_df["individual"].unique():
+            # One-shot data
+            temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
+
+            gradient_flow.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1].iloc[0]))
+            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+            type.append("One-Shot")
+            sigma_list.append(sigma)
+            # Now the fine-tuned data
+            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnintude"]))
+            print(temp_df["Epoch"])
+            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+            type.append("Fine-tuned")
+            sigma_list.append(sigma)
+
+        d = pd.DataFrame(
+            {   "Gradient Magnitude":gradient_flow,
+                "Accuracy":accuracy,
+                "Type" : type,
+                "Sigma" :sigma
+
+            }
+        )
+
+        if all_df1 is None:
+            all_df1 = d
+        else:
+            all_df1 = pd.concat((all_df1, d), ignore_index=True)
+    plt.figure()
+    if not sigmas_to_show:
+        g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type", palette="deep", legend="full", edgecolor=None, linewidth=0)
+    else:
+        bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
+        for s in sigmas_to_show:
+            bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
+        sigma_df = all_df1[bool_index_vector]
+        g = sns.scatterplot(data=sigma_df,x="Gradient Magnitude",y="Accuracy",hue="Sigma",style="Type",palette="deep",legend="full",edgecolor="black",linewidth=0.1)
+
+    # plt.xlabel(fontsize=20)
+    # plt.ylabel(fontsize=20)
+    # plt.scatter(,label="")
+    plt.title("")
+    # Deterministic dataframe 1
+    deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == 0]
+
+    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnintude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnintude"])
+    deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+    deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='^',s=40,c='crimson',edgecolors='crimson',label=f"One-shot {det_label1}")
+    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='crimson',label=f"Fine-Tuned {det_label1}")
+    # Deterministic dataframe 2
+    deterministic_dataframe = deterministic_dataframe2[deterministic_dataframe2["individual"] == 0]
+
+    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnintude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnintude"])
+    deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+    deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+
+    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='v',s=40,c='dodgerblue',edgecolors='dodgerblue',label=f"One-shot {det_label2}")
+    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='dodgerblue',label=f"Fine-Tuned {det_label2}")
+
+
+
+
+    plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0.1)
+    # fig = matplotlib.pyplot.gcf()
+    # fig.set_size_inches(10, 10)
+    plt.xlim(0,2.5)
+    plt.savefig(file)
+
+
+
+
+
 def LeMain(args):
     cfg = omegaconf.DictConfig({
         "population": args["population"],
@@ -6103,41 +6306,42 @@ if __name__ == '__main__':
     # args = vars(parser.parse_args())
     # LeMain(args)
 
-    # cfg = omegaconf.DictConfig({
-    #     "population": 1,
-    #     "generations": 10,
-    #     "epochs": 100,
-    #     "short_epochs": 10,
-    #     # "architecture": "VGG19",
-    #     "architecture": "resnet18",
-    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #    "noise": "gaussian",
-    #    "pruner": "global",
-    #     "model_type": "alternative",
-    #     "exclude_layers": ["conv1", "linear"],
-    #     # "exclude_layers": ["features.0", "classifier"],
-    #     "fine_tune_exclude_layers": True,
-    #     "fine_tune_non_zero_weights": True,
-    #     "sampler": "tpe",
-    #     "flop_limit": 0,
-    #     "one_batch": True,
-    #     "measure_gradient_flow":True,
-    #     "full_fine_tune": False,
-    #     "use_stochastic": True,
-    #     # "sigma": 0.0021419609859022197,
-    #     "sigma": 0.011,
-    #     "noise_after_pruning":0,
-    #     "amount": 0.9,
-    #     "dataset": "cifar10",
-    #     "batch_size": 512,
-    #     # "batch_size": 128,
-    #     "num_workers": 0,
-    #     "save_model_path": "stochastic_pruning_models/",
-    #     "save_data_path": "stochastic_pruning_data/",
-    #     "use_wandb": True
-    # })
-
+    cfg = omegaconf.DictConfig({
+        "population": 1,
+        "generations": 10,
+        "epochs": 100,
+        "short_epochs": 10,
+        # "architecture": "VGG19",
+        "architecture": "resnet18",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+       "noise": "gaussian",
+       "pruner": "global",
+        "model_type": "alternative",
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow":True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.011,
+        "noise_after_pruning":0,
+        "amount": 0.9,
+        "dataset": "cifar10",
+        "batch_size": 512,
+        # "batch_size": 128,
+        "num_workers": 0,
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
+        "use_wandb": True
+    })
+    identifier = f"{np.random.rand(1):10.5f}".replace(" ",'')
+    population_sweeps_transfer_mask_rank_experiments(identifier=identifier)
     # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
     #                         "val_acc_plot.pdf",
     #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
@@ -6156,22 +6360,31 @@ if __name__ == '__main__':
     # experiment_selector(cfg, 4)
     # experiment_selector(cfg, 6)
     # experiment_selector(cfg,6)
-    cfg = omegaconf.DictConfig({
-        "sigma":0.0,
-        "amount":0.9,
-        "architecture":"resnet18",
-
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #
+    # })
     # for sig in sigma_values:
     #     cfg.sigma = sig
     #     gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # unify_sigma_datasets(sigma_values,cfg)
-    gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+    # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     #
     # df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+
     # scatter_plot_all_sigmas(df,file="global_scatter.pdf")
     # df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # scatter_plot_all_sigmas(df,file="lamp_scatter.pdf")
+    # df2 = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # deterministic_lamp_df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # deterministic_glbal_df = pd.read_csv("gradientflow_deterministic_global_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    #
+    # sigmas = [0.001,0.0021,0.005]
+    #
+    # scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+    #                     det_label2='Deter. Global', file="lamp_scatter.pdf", sigmas_to_show=sigmas)
 
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
@@ -6194,8 +6407,10 @@ if __name__ == '__main__':
 
     ########### All epsilon stochastic pruning #######################
     # fp = "data/epsilon_experiments_t_1-33_full.csv"
+    #
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
     #                                           specific_pruning_rates=[0.9])
+    #
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
     #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
