@@ -3385,7 +3385,7 @@ def population_sweeps_transfer_mask_rank_experiments(cfg,identifier=""):
     #     "save_data_path": "stochastic_pruning_data/",
     #     "use_wandb": True
     # })
-    # Ns = [ 100]
+    Ns = [ 10,50,100]
     sigmas = np.linspace(start=0.001, stop=0.005, num=3)
     # sigmas = [0.005]
     pruning_rates = [0.5, 0.8, 0.9]
@@ -3402,7 +3402,7 @@ def population_sweeps_transfer_mask_rank_experiments(cfg,identifier=""):
                 df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
                 df = pd.concat((df,df_result))
     df.to_csv(file_path + "_full.csv", sep=",", index=False)
-    full_dataset :pd.DataFrame = None
+    # full_dataset :pd.DataFrame = None
 
     # for file in glob.glob('data/epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
     #     temp_df = pd.read_csv(filepath_or_buffer=file, sep=",", header=0)
@@ -6497,14 +6497,14 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 100,
         "short_epochs": 10,
-        "dataset": "mnist",
+        "dataset": "cifar100",
         "architecture": "resnet18",
         # "architecture": "resnet18",
-        "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         #  "solution": "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "exclude_layers": ["conv1", "fc"],
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
