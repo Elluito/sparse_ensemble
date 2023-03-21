@@ -481,7 +481,7 @@ def heatmap1_exp(cfg):
     if cfg.architecture == "resnet18":
         net = ResNet18()
 
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     # for filename in glob.glob("trained_models/cifar10/*.pt"):
 
     load_model(net, cfg.solution)
@@ -1447,7 +1447,7 @@ def run_layer_experiment(cfg):
         #     save_code=True,
         # )
         pass
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     load_model(net, cfg.solution)
 
     # plot_layer_experiments(net, exp_type="a")
@@ -1524,7 +1524,7 @@ def get_intelligent_pruned_network(cfg):
     else:
         from alternate_models.resnet import ResNet
         net = ResNet18()
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     load_model(net, cfg.solution)
     layers = get_layer_dict(net)
     layers.reverse()
@@ -1643,7 +1643,7 @@ def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
     else:
         from alternate_models.resnet import ResNet18
         net = ResNet18()
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     load_model(net, cfg.solution)
     n = cfg.population
     layers = get_layer_dict(net)
@@ -1691,7 +1691,7 @@ def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
 
 
 ######################################################################################################
-def get_cifar_datasets(cfg):
+def get_cifar_datasets(cfg:omegaconf.DictConfig):
     if cfg.dataset == "cifar10":
         # data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
         #
@@ -1731,18 +1731,24 @@ def get_cifar_datasets(cfg):
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
     if cfg.dataset == "cifar100":
-        data_path = "/nobackup/sclaam/data" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-                                                                                   "University of Leeds\PhD\Datasets\CIFAR10"
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path ="/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path ="C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846 , 0.27615047)),
         ])
-
         transform_test = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846 , 0.27615047)),
         ])
 
         trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
@@ -1756,7 +1762,49 @@ def get_cifar_datasets(cfg):
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
+def get_datasets(cfg:omegaconf.DictConfig):
+    if "cifar" in cfg.dataset:
+        return get_cifar_datasets(cfg)
+    if "mnist" == cfg.dataset:
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
 
+        transfos = torchvision.transforms.Compose([
+            torchvision.transforms.Grayscale(num_output_channels=3),
+            torchvision.transforms.ToTensor(),
+        ])
+
+        trainset = torchvision.datasets.MNIST(root=data_path,
+                                              train=True,
+                                              transform=transfos,
+                                              download=True)
+
+        testset = torchvision.datasets.MNIST(root=data_path,
+                                             train=False,
+                                             transform=transfos
+                                             )
+
+        MNIST_train, MNIST_val = random_split(trainset, [len(trainset)-5000, 5000])
+
+
+        trainloader = torch.utils.data.DataLoader(
+            MNIST_train, batch_size=cfg.batch_size, shuffle=True, num_workers=cfg.num_workers)
+        valloader = torch.utils.data.DataLoader(
+            MNIST_val, batch_size=cfg.batch_size, shuffle=True, num_workers=cfg.num_workers)
+
+        # testset = torchvision.datasets.CIFAR10(
+        #     root='./data', train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
+        return trainloader,valloader,testloader
+    if 'imagenet'== cfg.dataset:
+        raise NotImplementedError("Get_dataset not yet implemeneted for ImageNet")
 
 def main(cfg: omegaconf.DictConfig):
     print("torch version: {}".format(torch.__version__))
@@ -1767,7 +1815,7 @@ def main(cfg: omegaconf.DictConfig):
     else:
         from alternate_models.resnet import ResNet18
         net = ResNet18()
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     state_dict = torch.load(cfg.solution)
     load_model(net, cfg.solution)
     N = cfg.population
@@ -2115,7 +2163,7 @@ def channel_inspection_of_convolutional_layers(pruned_model: torch.nn.Module, ex
 ############################### Experiments 25 of October # ############################################################
 
 def select_eval_set(cfg: omegaconf.DictConfig, eval_set: str):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     evaluation_set = None
     if eval_set == "test":
         evaluation_set = testloader
@@ -2485,7 +2533,7 @@ def transfer_mask_rank_experiments_plot_adaptive_noise(cfg: omegaconf.DictConfig
 def transfer_mask_rank_experiments_no_plot(cfg: omegaconf.DictConfig):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     N = cfg.population
     pruned_performance = []
     stochastic_deltas = []
@@ -2644,10 +2692,22 @@ def get_model(cfg: omegaconf.DictConfig):
         else:
             if "csgmcmc" == cfg.model_type:
                 net = ResNet18()
+                load_model(net, cfg.solution)
             if "alternative" == cfg.model_type:
                 from alternate_models.resnet import ResNet18
-                net = ResNet18()
-            load_model(net, cfg.solution)
+                if cfg.dataset=="cifar10":
+                    net = ResNet18()
+                if cfg.dataset == "cifar100":
+                    net = ResNet18(num_classes=100)
+                if cfg.dataset=="mnist":
+                    net = ResNet18()
+
+                load_model(net, cfg.solution)
+            if "hub"== cfg.model_type:
+                if cfg.dataset== "cifar100":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+                if cfg.dataset== "cifar10":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
             return net
     if cfg.architecture == "VGG19":
         if not cfg.solution:
@@ -2661,10 +2721,16 @@ def get_model(cfg: omegaconf.DictConfig):
         else:
             if "csgmcmc" == cfg.model_type:
                 net = VGG(cfg.architecture)
+                load_model(net, cfg.solution)
             if "alternative" == cfg.model_type:
                 from alternate_models.vgg import VGG
                 net = VGG(cfg.architecture)
-            load_model(net, cfg.solution)
+                load_model(net, cfg.solution)
+            if "hub"== cfg.model_type:
+                if model.datset== "cifar100":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+                if model.datset== "cifar10":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
             return net
 
     else:
@@ -2921,11 +2987,12 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
 
     net = get_model(cfg)
 
-    _, valloader, testloader = get_cifar_datasets(cfg)
+    _, valloader, testloader = get_datasets(cfg)
 
     original_performance = test(net, use_cuda, testloader)
 
-    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    df_temp = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    df = df_temp[df_temp["Type"]!= "Stochastic GMP"]
     num_col = len(specific_pruning_rates)
     # pylustrator.start()
     # num_col = 3
@@ -2952,8 +3019,14 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             current_df = current_df[current_df["Pruning Rate"] == current_pr]
             current_df["Accuracy"] = original_performance - current_df["Epsilon"]
             pruned_original = copy.deepcopy(net)
-            prune_with_rate(pruned_original, float(current_pr))
-            remove_reparametrization(pruned_original)
+
+            if cfg.pruner == "global":
+                prune_with_rate(pruned_original,float(current_pr), exclude_layers=cfg.exclude_layers, type="global")
+            else:
+                prune_with_rate(pruned_original,float(current_pr), exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+            remove_reparametrization(pruned_original,exclude_layer_list=cfg.exclude_layers)
             pruned_original_performance = test(pruned_original, use_cuda, testloader, verbose=0)
             delta_pruned_original_performance = original_performance - pruned_original_performance
             ###############  LAMP ################################
@@ -2997,7 +3070,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                               )
 
             adjust_box_widths(fig, 2)
-            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic GMP")
+            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic LAMP")
             # axj.axhline(LAMP_deterministic_performance, c="xkcd:greeny yellow", linewidth=2.5, label="LAMP "
             #                                                                                          "Deterministic "
             #                                                                                          "Pruning")
@@ -3095,8 +3168,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         # plt.show()
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_nolamp.png".format(pr_string, current_sigma), bbox_inches="tight")
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_nolamp.pdf".format(pr_string, current_sigma), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_{}_blue.png".format(pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_{}_blue.pdf".format(pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
 
 
 def plot_val_accuracy_wandb(filepath, save_path, x_variable, y_variable, xlabel, ylabel):
@@ -3123,12 +3196,12 @@ def plot_test_accuracy_wandb(filepaths,legends, save_path, x_variable, y_variabl
     plt.show()
 
 
-def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.DictConfig):
+def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.DictConfig,identifier:str):
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
 
-    _, _, testloader = get_cifar_datasets(cfg)
+    _, _, testloader = get_datasets(cfg)
 
     original_performance = test(net, use_cuda, testloader)
 
@@ -3186,8 +3259,8 @@ def statistics_of_epsilon_for_stochastic_pruning(filepath: str, cfg: omegaconf.D
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
-        plt.savefig("data/epsilon_allN_all_pr_sigma={}.png".format(current_sigma), bbox_inches="tight")
-        plt.savefig("data/epsilon_allN_all_pr_sigma={}.pdf".format(current_sigma), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(identifier,current_sigma), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(identifier,current_sigma), bbox_inches="tight")
 
     # subfigs = fig.subfigures(num_row, 1)
     # for i, subfig in enumerate(subfigs):
@@ -3276,70 +3349,69 @@ def test_figure():
     plt.savefig("test.png")
 
 
-def population_sweeps_transfer_mask_rank_experiments(identifier=""):
+def population_sweeps_transfer_mask_rank_experiments(cfg,identifier=""):
 
-    cfg = omegaconf.DictConfig({
-        "population": 1,
-        "generations": 10,
-        "epochs": 100,
-        "short_epochs": 10,
-        # "architecture": "VGG19",
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        "noise": "gaussian",
-        "pruner": "lamp",
-        "model_type": "alternative",
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
-        "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": True,
-        "sampler": "tpe",
-        "flop_limit": 0,
-        "one_batch": True,
-        "measure_gradient_flow":True,
-        "full_fine_tune": False,
-        "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.011,
-        "noise_after_pruning":0,
-        "amount": 0.9,
-        "dataset": "cifar10",
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-        "save_model_path": "stochastic_pruning_models/",
-        "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
-    })
-    Ns = [ 100]
-    # sigmas = np.linspace(start=0.001, stop=0.005, num=3)
-    sigmas = [0.005]
-    # sigmas = [0.0021419609859022197]
+    # cfg = omegaconf.DictConfig({
+    #     "population": 1,
+    #     "generations": 10,
+    #     "epochs": 100,
+    #     "short_epochs": 10,
+    #     # "architecture": "VGG19",
+    #     "architecture": "resnet18",
+    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     "noise": "gaussian",
+    #     "pruner": "lamp",
+    #     "model_type": "alternative",
+    #     "exclude_layers": ["conv1", "linear"],
+    #     # "exclude_layers": ["features.0", "classifier"],
+    #     "fine_tune_exclude_layers": True,
+    #     "fine_tune_non_zero_weights": True,
+    #     "sampler": "tpe",
+    #     "flop_limit": 0,
+    #     "one_batch": True,
+    #     "measure_gradient_flow":True,
+    #     "full_fine_tune": False,
+    #     "use_stochastic": True,
+    #     # "sigma": 0.0021419609859022197,
+    #     "sigma": 0.011,
+    #     "noise_after_pruning":0,
+    #     "amount": 0.9,
+    #     "dataset": "cifar10",
+    #     "batch_size": 512,
+    #     # "batch_size": 128,
+    #     "num_workers": 0,
+    #     "save_model_path": "stochastic_pruning_models/",
+    #     "save_data_path": "stochastic_pruning_data/",
+    #     "use_wandb": True
+    # })
+    # Ns = [ 100]
+    sigmas = np.linspace(start=0.001, stop=0.005, num=3)
+    # sigmas = [0.005]
     pruning_rates = [0.5, 0.8, 0.9]
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
-    result = time.localtime(time.time())
-    file_path = f"data/epsilon_experiments_{identifier}_t_1-25_{cfg.pruner}"
-    # for pop in Ns:
-    #     for sig in sigmas:
-    #         for pr in pruning_rates:
-    #             cfg.population = pop
-    #             cfg.sigma = float(sig)
-    #             cfg.amount = pr
-    #             df_result = transfer_mask_rank_experiments_no_plot(cfg)
-    #             df = df.append(df_result)
-    #             df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
-    # df.to_csv(file_path + "_full.csv", sep=",", index=False)
+    # result = time.localtime(time.time())
+    file_path = f"data/epsilon_experiments_{cfg.dataset}_{cfg.architecture}_{cfg.pruner}_{identifier}"
+    for pop in Ns:
+        for sig in sigmas:
+            for pr in pruning_rates:
+                cfg.population = pop
+                cfg.sigma = float(sig)
+                cfg.amount = pr
+                df_result = transfer_mask_rank_experiments_no_plot(cfg)
+                df_result.to_csv(file_path + f"pop_{pop}_sig_{sig}_pr_{pr}.csv", sep=",", index=False)
+                df = pd.concat((df,df_result))
+    df.to_csv(file_path + "_full.csv", sep=",", index=False)
     full_dataset :pd.DataFrame = None
 
-    for file in glob.glob('data/epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
-        temp_df = pd.read_csv(filepath_or_buffer=file, sep=",", header=0)
-        if full_dataset is None:
-            full_dataset = temp_df
-        else:
-            full_dataset = pd.concat((full_dataset,temp_df))
-
-    full_dataset.to_csv("epsilon_experiments_lamp_full.csv", sep=",", index=False)
+    # for file in glob.glob('data/epsilon_experiments_1678152343.18253_t_1-25_lamppop*.csv'):
+    #     temp_df = pd.read_csv(filepath_or_buffer=file, sep=",", header=0)
+    #     if full_dataset is None:
+    #         full_dataset = temp_df
+    #     else:
+    #         full_dataset = pd.concat((full_dataset,temp_df))
+    #
+    # full_dataset.to_csv("epsilon_experiments_lamp_full.csv", sep=",", index=False)
     return file_path
 
 
@@ -3393,7 +3465,7 @@ def get_pr_sample_per_layer_optuna(trial: optuna.Trial, layer_names: dict,
 
 def stochastic_pruning_with_sigma_and_pr_optimization(cfg: omegaconf.DictConfig):
     print("Config: \n{}".format(omegaconf.OmegaConf.to_yaml(cfg)))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     N = cfg.population
@@ -3534,7 +3606,7 @@ def stochastic_pruning_with_sigma_and_pr_optimization(cfg: omegaconf.DictConfig)
 
 def stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg: omegaconf.DictConfig):
     print("Config: \n{}".format(omegaconf.OmegaConf.to_yaml(cfg)))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     if cfg.use_wandb:
@@ -3670,7 +3742,7 @@ def enqueue_pr(study: optuna.Study, initial_pr_per_layer: dict):
 
 
 def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     if cfg.use_wandb:
@@ -3820,7 +3892,7 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
 
 
 def static_sigma_per_layer_manually_iterative_process(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     if cfg.use_wandb:
@@ -3964,7 +4036,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
                         "run first \n"
                         "dynamic_sigma_per_layer_one_shot_pruning function with the desired pruning rate and pr per layer".format(
             cfg.amount, cfg.pruner, cfg.sampler))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     print("Cuda: {}".format(use_cuda))
@@ -4093,7 +4165,7 @@ def static_sigma_per_layer_optimized_iterative_process(cfg: omegaconf.DictConfig
 
 
 def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_valset_per_generation "
@@ -4229,7 +4301,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
 
 
 def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_layers):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     N = cfg.population
@@ -4375,7 +4447,7 @@ def compare_weights(weight_list_1:List[torch.TensorType],weight_list_2:List[torc
 
 
 def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
@@ -4428,7 +4500,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/deterministic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4436,7 +4508,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # else:
                 # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/deterministic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4456,7 +4528,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
     FLOP_limit = cfg.flop_limit
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     one_batch_string = "_one_batch" if cfg.one_batch else ""
@@ -4602,7 +4674,7 @@ def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegacon
 
 def stochastic_pruning_with_static_sigma_and_pr_optimization(cfg: omegaconf.DictConfig):
     print("Config: \n{}".format(omegaconf.OmegaConf.to_yaml(cfg)))
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     N = cfg.population
@@ -4937,7 +5009,7 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
 
 
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
 
@@ -4963,7 +5035,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         identifier = f"{time.time():14.5f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/stochastic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4971,7 +5043,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/stochastic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -5066,7 +5138,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
 
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
@@ -5189,7 +5261,7 @@ def select_pruning(pruned_model, cfg, target_sparsity, use_stochastic, valloader
 
 
 def lamp_scenario_2_cheap_evaluation(cfg):
-    trainloader, valloader, testloader = get_cifar_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     original_epoch_number = cfg.epochs
@@ -5463,16 +5535,27 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     stochastic_deltas = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     pruned_original = copy.deepcopy(net)
-    prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers)
+    names,weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names,[cfg.sigma]*number_of_layers))
+
+    if cfg.pruner == "global":
+            prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+            prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+
     # remove_reparametrization(pruned_original)
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     pop.append(pruned_original)
-    pruned_performance.append(pruned_original_performance)
-    labels = ["pruned original"]
-    stochastic_dense_performances.append(original_performance)
+    # pruned_performance.append(pruned_original_performance)
+    labels = []
+    # stochastic_dense_performances.append(original_performance)
     for n in range(N):
-        current_model = get_noisy_sample(net, cfg)
+        current_model = get_noisy_sample_sigma_per_layer(net,cfg,sigma_per_layer=sigma_per_layer)
+
 
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         print("Stochastic dense performance")
@@ -5480,7 +5563,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
 
-        prune_with_rate(current_model, amount=cfg.amount, exclude_layers=cfg.exclude_layers)
+        if cfg.pruner == "global":
+            prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
 
         # Here is where I transfer the mask from the pruned stochastic model to the
         # original weights and put it in the ranking
@@ -5492,7 +5579,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
 
     # len(pruned performance)-1 because the first one is the pruned original
-    labels.extend(["stochastic pruned"] * (len(pruned_performance) - 1))
+    labels.extend(["stochastic pruned"] * (len(pruned_performance)))
 
     # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
     # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
@@ -5501,6 +5588,9 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                                                    f"{len(labels)}!={len(pruned_performance)}"
     ranked_index = np.flip(np.argsort(pruned_performance))
     index_of_pruned_original = list(ranked_index).index(0)
+    all_index = np.ones(len(ranked_index),dtype=bool)
+    all_index[index_of_pruned_original]=False
+    ranked_index=ranked_index[all_index]
 
     pruned_performance = np.array(pruned_performance)
     stochastic_dense_performances = np.array(stochastic_dense_performances)
@@ -5522,12 +5612,12 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     stochastic_with_deterministic_mask_models_points = []
 
     for i, element in enumerate(pruned_performance[ranked_index]):
-        if i == index_of_pruned_original:
-            assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
-                                                           f"in list {element} VS pruned performance:" \
-                                                           f" {pruned_original_performance}"
-            # p1 = ax.scatter(i, element, c="g", marker="o")
-        else:
+        # if i == index_of_pruned_original:
+        #     # assert element == pruned_original_performance, "The supposed pruned original is not the original: element " \
+        #     #                                                f"in list {element} VS pruned performance:" \
+        #     #                                                f" {pruned_original_performance}"
+        #     # p1 = ax.scatter(i, element, c="g", marker="o")
+        # else:
             if labels[ranked_index[i]] == "sto mask transfer":
                 sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
                 transfer_mask_models_points.append(sto_transfer_point)
@@ -5550,10 +5640,9 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    plt.ylim(20, 100)
+    plt.ylim(0, 100)
     ax2 = ax.twinx()
-
-    epsilon_ticks = original_performance - np.linspace(20, 100, 9)
+    epsilon_ticks = original_performance - np.linspace(0, 100, 9)
     ax2.set_yticks(epsilon_ticks, minor=False)
     ax2.set_ylabel(r"$\epsilon$", fontsize=20)
     ax2.spines['right'].set_color('red')
@@ -5566,7 +5655,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}.pdf")
-    plt.savefig(f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
+    plt.savefig(f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
                 f"_{cfg.population}_{eval_set}.png")
 
@@ -5585,7 +5674,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
     stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
 
-    lamp_pruned_original: Union[Union[ResNet, None, VGG], Any] = copy.deepcopy(net)
+    lamp_pruned_original: Union[Union[ResNet, None, VGG,nn.Module], Any] = copy.deepcopy(net)
 
     prune_with_rate(lamp_pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                     pruner="lamp")
@@ -6262,11 +6351,90 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # fig.set_size_inches(10, 10)
     plt.xlim(0,2.5)
     plt.savefig(file)
+def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
+    if not is_det:
+        all_df : pd.DataFrame = None
+        for sigma in dataFrame["sigma"].unique():
+            sigma_temp_df = dataFrame[dataFrame["sigma"] == sigma]
+            FLOPS_until_threshold = []
+            sigma_list = []
 
 
+            for elem in sigma_temp_df["individual"].unique():
+                # One-shot data
+                temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
+                flops = temp_df['sparse_flops'][temp_df['test_accuracy']>=threshold].min()
+
+                FLOPS_until_threshold.append(flops)
+                sigma_list.append(sigma)
+
+            d = pd.DataFrame(
+                {  "FLOPS_until_threshold" : FLOPS_until_threshold,
+                    "Sigma" :sigma
+
+                }
+            )
+
+            if all_df is None:
+                all_df = d
+            else:
+                all_df = pd.concat((all_df, d), ignore_index=True)
+
+        print('Here are the statistic for sparse flops until threshold {}'.format(threshold))
+        new_df = all_df.groupby('Sigma').agg(['mean','std','count'])
+
+        ci95_hi = []
+        ci95_lo = []
+
+        for i in new_df.index:
+            m,s,c = new_df.loc[i]
+            if not c:
+                ci95_hi.append(0)
+                ci95_lo.append(0)
+            else:
+                ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+                ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+
+        new_df['ci95_lo'] = ci95_lo
+        new_df['ci95_hi'] = ci95_hi
+        print(new_df)
+    else:
+
+        all_df : pd.DataFrame = None
+        FLOPS_until_threshold = []
 
 
+        for elem in dataFrame["individual"].unique():
+            # One-shot data
+            temp_df =dataFrame[dataFrame["individual"]==elem]
+            flops = temp_df['sparse_flops'][temp_df['test_accuracy']>=threshold].min()
 
+            FLOPS_until_threshold.append(flops)
+
+        d = pd.DataFrame(
+            {  "FLOPS_until_threshold" : FLOPS_until_threshold,
+
+               }
+        )
+
+        if all_df is None:
+            all_df = d
+        else:
+            all_df = pd.concat((all_df, d), ignore_index=True)
+
+        print('Here are the statistic for sparse flops until threshold {}'.format(threshold))
+        new_df = all_df.agg(['mean','std','count'])
+        ci95_hi = []
+        ci95_lo = []
+
+
+        m = float(new_df.T["mean"])
+        s = float(new_df.T["std"])
+        c = float(new_df.T["count"])
+        print(new_df)
+        ci95_hi = m + 1.96 * s / math.sqrt(c)
+        ci95_lo = m - 1.96 * s / math.sqrt(c)
+        print("[{},{}]".format(ci95_lo,ci95_hi))
 def LeMain(args):
     cfg = omegaconf.DictConfig({
         "population": args["population"],
@@ -6323,31 +6491,26 @@ if __name__ == '__main__':
     #     "epochs": 24
     # })
     # run_traditional_training(cfg_training)
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # args = vars(parser.parse_args())
-    # LeMain(args)
 
     cfg = omegaconf.DictConfig({
-        "population": 1,
+        "population": 10,
         "generations": 10,
         "epochs": 100,
         "short_epochs": 10,
-        # "architecture": "VGG19",
+        "dataset": "cifar100",
         "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "architecture": "resnet18",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        #  "solution": "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "exclude_layers": ["conv1", "fc"],
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "global",
         "model_type": "alternative",
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -6357,10 +6520,10 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.011,
+        "sigma": 0.002,
         "noise_after_pruning":0,
-        "amount": 0.9,
-        "dataset": "cifar10",
+        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+        "amount": 0.9 , # For resnet18
         "batch_size": 512,
         # "batch_size": 128,
         "num_workers": 0,
@@ -6368,58 +6531,160 @@ if __name__ == '__main__':
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
     })
+
+    ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
+
+    # stochastic_pruning_against_deterministic_pruning(cfg)
+
+    ############################## Epsilon experiments for the boxplots ################################################
+
     identifier = f"{time.time():14.5f}".replace(" ", "")
-    population_sweeps_transfer_mask_rank_experiments(identifier='1678152343.18253')
-    # plot_val_accuracy_wandb("val_accuracy_iterative_erk_pr_0.9_sigma_manual_10_percentile_30-12-2022-.csv",
-    #                         "val_acc_plot.pdf",
-    #                         "generation", "iterative_erk_pr_0.9_sigma_manual_10_percentile - val_set_accuracy",
-    #                         "Generations", "Accuracy")
-    # task_run.shfilepaths = ["stochastic_global_fine_tuning_testset.csv","stochastic_lamp_fine_tuning_testset.csv"]
-    # legends = ["Stochatic Global Pruning","Stochastic LAMP Pruning"]
-    # filepaths = ["stochastic_global_fine_tuning_testset.csv"]
-    # legends = ["Stochatic Global Pruning"]
-    # plot_test_accuracy_wandb(filepaths,legends, "stochastic_pruning_fine_tuning_testset.pdf",
-    #                          "sparse_flops", "architecture: resnet18 - test_set_accuracy", "architecture: resnet18 - "
-    #                                                                                        "test_set_accuracy__MIN",
-    #                          "architecture: resnet18 - test_set_accuracy__MAX", "FLOPS", "Tet set accuracy", "Accuracy")
-    #
-    # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # test_sigma_experiment_selector()
-    # experiment_selector(cfg, 4)
-    # experiment_selector(cfg, 6)
-    # experiment_selector(cfg,6)
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.0,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #
-    # })
-    # for sig in sigma_values:
-    #     cfg.sigma = sig
-    #     gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
-    # unify_sigma_datasets(sigma_values,cfg)
-    # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
-    #
-    # df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    population_sweeps_transfer_mask_rank_experiments(cfg,identifier=identifier)
 
-    # scatter_plot_all_sigmas(df,file="global_scatter.pdf")
-    # df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # df2 = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # deterministic_lamp_df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # deterministic_glbal_df = pd.read_csv("gradientflow_deterministic_global_pr0.9.csv",sep = ",",header = 0, index_col = False)
+     ########### All epsilon stochastic pruning #######################
+    # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
     #
-    # sigmas = [0.001,0.0021,0.005]
+    # # fp = "epsilon_experiments_lamp_full.csv"
     #
-    # scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-    #                     det_label2='Deter. Global', file="lamp_scatter.pdf", sigmas_to_show=sigmas)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.9])
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.8])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.5])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.5])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.8])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.9])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.5])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.8])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.9])
 
+    # ##############################################################################
+    #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
+    # ##############################################################################
+
+
+#     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+#     parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+#     parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+#     parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+#     parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+#     parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+#     parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+#     parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+#     parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+#     parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+#     parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+#     parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+#
+#
+#     args = vars(parser.parse_args())
+#     LeMain(args)
+#
+#
+#     ###  Stochastic pruning with pruner, dataset, sigma, and pruning rate present on cfg
+#     #  Also if measure GF is true in cfg then it measures the gradientflow, flops and other measurements  for the particlar
+#
+#     experiment_selector(cfg,number_experiment=11)
+#
+#     ################# Unify sigma experiments results for gradient flow measurement ####################################
+#
+#
+#     sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
+#     cfg = omegaconf.DictConfig({
+#         "sigma":0.0,
+#         "amount":0.9,
+#         "architecture":"resnet18",
+#         "dataset": "cifar10",
+#
+#     })
+#     for sig in sigma_values:
+#         cfg.sigma = sig
+#         gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+#     unify_sigma_datasets(sigma_values,cfg)
+#
+#
+#     ########################## Scatter plots for the  ########################################################
+#
+#     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
+#     #
+#     df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     scatter_plot_all_sigmas(df,file="global_scatter.pdf")
+#     df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     df2 = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_lamp_df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_glbal_df = pd.read_csv("gradientflow_deterministic_global_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     sigmas = [0.001,0.0021,0.005]
+#
+#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+#                         det_label2='Deter. Global', file="lamp_scatter.pdf", sigmas_to_show=sigmas)
+#
+#
+#
+#
+#
+#
+#
+# ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
+#     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
+#
+#
+#     ##########################  Last table  Flops count for LAMP  ######################################################
+#
+#     print("Lamp stochastic")
+#     df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     get_statistics_on_FLOPS_until_threshold(df,92)
+#
+#     df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     print("Now lamp deterministic")
+#
+#
+#     ##########################  Last table  Flops count for GMP ######################################################
+#
+#     print("Global stochastic")
+#     df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     get_statistics_on_FLOPS_until_threshold(df,92)
+#
+#     df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#
+#     print("Now global deterministic")
+#     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+#
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
     # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
     # get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
     # get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
     # experiment_selector(cfg, 11)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
@@ -6433,28 +6698,7 @@ if __name__ == '__main__':
     ############ Stchastic pruning VS Deterministic Pruning ###########
     # stochastic_pruning_against_deterministic_pruning(cfg)
 
-    ########### All epsilon stochastic pruning #######################
-    # fp = "data/epsilon_experiments_t_1-33_full.csv"
-    #
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.9])
-    #
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.5])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.5])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.9])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.5])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.9])
+
 
     # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
 
