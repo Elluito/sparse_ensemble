@@ -610,10 +610,11 @@ def copy_buffers(from_net: nn.Module, to_net: nn.Module):
     for name, m in iter_1:
         with torch.no_grad():
             if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
-                    isinstance(m, nn.BatchNorm3d) and "weight_mask" in list(dict(from_net.named_modules())[
-                                                                                name].named_buffers()):
-                weight_mask = dict(dict(from_net.named_modules())[name].named_buffers())["weight_mask"]
-                m.weight.data.mul_(weight_mask)
+                    isinstance(m, nn.BatchNorm3d):
+                temp_dict = dict(dict(from_net.named_modules())[name].named_buffers())
+                if len(list(temp_dict.items()))==1:
+                    weight_mask = dict(temp_dict)["weight_mask"]
+                    m.weight.data.mul_(weight_mask)
 
 
 def heatmap2_mean_decrease_maskTransfer_exp(cfg):
@@ -6497,14 +6498,16 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 100,
         "short_epochs": 10,
-        "dataset": "mnist",
+        # "dataset": "mnist",
+        "dataset": "cifar100",
+
         "architecture": "resnet18",
         # "architecture": "resnet18",
-        "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         #  "solution": "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "exclude_layers": ["conv1", "fc"],
         "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
