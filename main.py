@@ -2725,12 +2725,15 @@ def get_model(cfg: omegaconf.DictConfig):
                 load_model(net, cfg.solution)
             if "alternative" == cfg.model_type:
                 from alternate_models.vgg import VGG
-                net = VGG(cfg.architecture)
+                if cfg.dataset== "cifar100":
+                    net = VGG(cfg.architecture,num_classes=100)
+                if cfg.dataset== "cifar10":
+                    net = VGG(cfg.architecture)
                 load_model(net, cfg.solution)
             if "hub"== cfg.model_type:
-                if model.datset== "cifar100":
+                if cfg.dataset== "cifar100":
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
-                if model.datset== "cifar10":
+                if cfg.dataset== "cifar10":
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
             return net
 
@@ -2992,8 +2995,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
 
     original_performance = test(net, use_cuda, testloader)
 
-    df_temp = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
-    df = df_temp[df_temp["Type"]!= "Stochastic GMP"]
+    df = pd.read_csv(filepath_or_buffer=filepath, sep=",", header=0)
+    # df = df_temp[df_temp["Type"]!= "Stochastic GMP"]
     num_col = len(specific_pruning_rates)
     # pylustrator.start()
     # num_col = 3
@@ -3062,6 +3065,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                         current_pr, current_sigma, type, number_of_elements_above_GLOBAL_determinstic,
                         number_of_elements_above_GLOBAL_determinstic / total_observations))
 
+
             axj = sns.boxplot(x='Type',
                               y='Accuracy',
                               hue="Type",
@@ -3071,7 +3075,11 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                               )
 
             adjust_box_widths(fig, 2)
-            axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic LAMP")
+
+            if cfg.pruner == "global":
+                axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic GMP")
+            else:
+                axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic LAMP")
             # axj.axhline(LAMP_deterministic_performance, c="xkcd:greeny yellow", linewidth=2.5, label="LAMP "
             #                                                                                          "Deterministic "
             #                                                                                          "Pruning")
@@ -3169,8 +3177,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         # plt.show()
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_{}_blue.png".format(pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
-        plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}_{}_blue.pdf".format(pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.png".format(cfg.dataset,cfg.architecture,pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
+        plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pdf".format(cfg.dataset,cfg.architecture,pr_string, current_sigma,cfg.pruner), bbox_inches="tight")
 
 
 def plot_val_accuracy_wandb(filepath, save_path, x_variable, y_variable, xlabel, ylabel):
@@ -3389,7 +3397,11 @@ def population_sweeps_transfer_mask_rank_experiments(cfg,identifier=""):
     Ns = [ 10,50,100]
     sigmas = np.linspace(start=0.001, stop=0.005, num=3)
     # sigmas = [0.005]
-    pruning_rates = [0.5, 0.8, 0.9]
+    if cfg.architecture == "resnet18":
+        pruning_rates = [0.5, 0.8,0.9]
+    if cfg.architecture == "VGG19":
+        pruning_rates = [0.72,0.88,0.94]
+
     df = pd.DataFrame(columns=["Epsilon", "Population", "Type", "Pruning Rate", "sigma"])
     # result = time.localtime(time.time())
     file_path = f"data/epsilon_experiments_{cfg.dataset}_{cfg.architecture}_{cfg.pruner}_{identifier}"
@@ -6498,19 +6510,19 @@ if __name__ == '__main__':
         "generations": 10,
         "epochs": 100,
         "short_epochs": 10,
-        "dataset": "mnist",
-        # "dataset": "cifar100",
+        # "dataset": "mnist",
+        "dataset": "cifar100",
 
-        "architecture": "resnet18",
         # "architecture": "resnet18",
-        "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        "architecture": "VGG19",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
         #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        #  "solution": "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+         "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "exclude_layers": ["conv1", "fc"],
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
+        # "exclude_layers": ["conv1", "linear"],
+        "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "global",
         "model_type": "alternative",
@@ -6547,11 +6559,13 @@ if __name__ == '__main__':
      ########### All epsilon stochastic pruning #######################
     # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
     #
-    # # fp = "epsilon_experiments_lamp_full.csv"
-    #
+    # fp = "epsilon_experiments_lamp_full.csv"
+    # fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
+    # fp = "data/epsilon_experiments_mnist_resnet18_global_1680114120.50534_full.csv"
+    # 
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
     #                                           specific_pruning_rates=[0.9])
-    #
+    # 
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
     #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
