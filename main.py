@@ -6449,19 +6449,49 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:flo
         ci95_lo = m - 1.96 * s / math.sqrt(c)
         print("[{},{}]".format(ci95_lo,ci95_hi))
 def LeMain(args):
+    solution=""
+    exclude_layers = []
+
+
+
+    # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+    # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+    # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+    # "exclude_layers": ["conv1", "fc"],
+    # "exclude_layers": ["conv1", "linear"],
+    # "exclude_layers": ["features.0", "classifier"],
+
+
+
+    if args["dataset"]=="cifar10":
+        if args["architecture"]== "resnet18":
+            solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+            exclude_layers =["conv1", "linear"],
+        if args["architecture"]== "VGG19":
+            solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
+            exclude_layers = ["features.0", "classifier"],
+    if args["dataset"]=="cifar100":
+        if args["architecture"]== "resnet18":
+            solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
+            exclude_layers =["conv1", "linear"],
+        if args["architecture"]== "VGG19":
+            solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+            exclude_layers = ["features.0", "classifier"],
     cfg = omegaconf.DictConfig({
         "population": args["population"],
         "generations": 10,
         "epochs": 100,
         "short_epochs": 10,
         # "architecture": "VGG19",
-        "architecture": "resnet18",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "architecture": args["architecture"],
+        "solution":solution,
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": args["pruner"],
         "model_type": "alternative",
-        "exclude_layers": ["conv1", "linear"],
+        "exclude_layers":exclude_layers,
         # "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
@@ -6511,14 +6541,14 @@ if __name__ == '__main__':
         "epochs": 100,
         "short_epochs": 10,
         # "dataset": "mnist",
-        "dataset": "cifar100",
+        "dataset": "cifar10",
 
         # "architecture": "resnet18",
         "architecture": "VGG19",
         # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-         "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+         "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "exclude_layers": ["conv1", "fc"],
         # "exclude_layers": ["conv1", "linear"],
@@ -6562,49 +6592,50 @@ if __name__ == '__main__':
     # fp = "epsilon_experiments_lamp_full.csv"
     # fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
     # fp = "data/epsilon_experiments_mnist_resnet18_global_1680114120.50534_full.csv"
-    # 
+    # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
+    # [0.72, 0.88, 0.94]
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.9])
-    # 
+    #                                           specific_pruning_rates=[0.94])
+    #
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.8])
+    #                                           specific_pruning_rates=[0.88])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.5])
+    #                                           specific_pruning_rates=[0.72])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.5])
+    #                                           specific_pruning_rates=[0.72])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.8])
+    #                                           specific_pruning_rates=[0.88])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.9])
+    #                                           specific_pruning_rates=[0.94])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.5])
+    #                                           specific_pruning_rates=[0.72])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.8])
+    #                                           specific_pruning_rates=[0.88])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.9])
+    #                                           specific_pruning_rates=[0.94])
 
     # ##############################################################################
     #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # ##############################################################################
 
+    #
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    #
+    #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
-#     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-#     parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-#     parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-#     parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-#     parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-#     parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-#     parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-#     parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-#     parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-#     parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-#     parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-#     parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-#
-#
-#     args = vars(parser.parse_args())
-#     LeMain(args)
-#
 #
 #     ###  Stochastic pruning with pruner, dataset, sigma, and pruning rate present on cfg
 #     #  Also if measure GF is true in cfg then it measures the gradientflow, flops and other measurements  for the particlar
