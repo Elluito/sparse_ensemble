@@ -6450,7 +6450,7 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:flo
         print("[{},{}]".format(ci95_lo,ci95_hi))
 def LeMain(args):
     solution=""
-    exclude_layers = []
+    exclude_layers = None
     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
     #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
@@ -6462,17 +6462,17 @@ def LeMain(args):
     if args["dataset"]=="cifar10":
         if args["architecture"]== "resnet18":
             solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-            exclude_layers =["conv1", "linear"],
+            exclude_layers = ["conv1", "linear"]
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
-            exclude_layers = ["features.0", "classifier"],
+            exclude_layers = ["features.0", "classifier"]
     if args["dataset"]=="cifar100":
         if args["architecture"]== "resnet18":
             solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
-            exclude_layers =["conv1", "linear"],
+            exclude_layers =["conv1", "linear"]
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
-            exclude_layers = ["features.0", "classifier"],
+            exclude_layers = ["features.0", "classifier"]
     cfg = omegaconf.DictConfig({
         "population": args["population"],
         "generations": 10,
@@ -6485,7 +6485,7 @@ def LeMain(args):
         "noise": "gaussian",
         "pruner": args["pruner"],
         "model_type": "alternative",
-        "exclude_layers":exclude_layers,
+        # "exclude_layers": exclude_layers,
         # "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
@@ -6508,6 +6508,9 @@ def LeMain(args):
         "gradient_cliping": True,
         "use_wandb": True
     })
+    cfg.exclude_layers = exclude_layers
+    # for i,elem  in enumerate(exclude_layers):
+    #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     experiment_selector(cfg,args["experiment"])
 
 
