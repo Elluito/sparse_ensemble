@@ -461,7 +461,15 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     val_dict = {}
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
     #TODO: The number of calsses should by automated based on the dataset
-    hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    if cfg.dataset == "cifar100":
+        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
+
+    if cfg.dataset == "imagenet":
+        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+
     grad_vect = parameters_to_vector(grad)
     hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)

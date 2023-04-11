@@ -1763,6 +1763,41 @@ def get_cifar_datasets(cfg:omegaconf.DictConfig):
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
+def create_beton_database_ImageNet():
+    current_directory = Path().cwd()
+    data_path = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "datasets"
+    traindir = data_path + 'imagene/' + 'train'
+    valdir = data_path + 'imagene/' + 'val'
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    train_dataset = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+    val_loader = torch.utils.data.DataLoader(
+        datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])),
+        batch_size=cfg.batch_size, shuffle=False,
+        num_workers=cfg.workers, pin_memory=True)
+
+
+
+
 def get_datasets(cfg:omegaconf.DictConfig):
     if "cifar" in cfg.dataset:
         return get_cifar_datasets(cfg)
@@ -1805,6 +1840,48 @@ def get_datasets(cfg:omegaconf.DictConfig):
             testset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
         return trainloader,valloader,testloader
     if 'imagenet'== cfg.dataset:
+        # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
+        # Data loading code
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        traindir = data_path+'imagene/'+'train'
+        valdir =  data_path+'imagene/'+'val'
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+
+        train_dataset = datasets.ImageFolder(
+            traindir,
+            transforms.Compose([
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+        val_loader = torch.utils.data.DataLoader(
+            datasets.ImageFolder(valdir, transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ])),
+            batch_size=cfg.batch_size, shuffle=False,
+            num_workers=cfg.workers, pin_memory=True)
+
+
+
+
+
+
+
+
+
+
         raise NotImplementedError("Get_dataset not yet implemeneted for ImageNet")
 
 def main(cfg: omegaconf.DictConfig):
