@@ -164,7 +164,12 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     if cfg.gradient_cliping:
         grad_clip = 0.1
     names, weights = zip(*get_layer_dict(pruned_model))
-    accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar100":
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+    if cfg.dataset == "imagenet":
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
     mask_dict = get_mask(model=pruned_model)
     for name in exclude_layers:
@@ -185,6 +190,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
         if  Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+        if Path(gradient_flow_file_prefix).owner() == "luisaam":
+            weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"
 
         weights_path = Path(weights_file_path)
         weights_path .mkdir(parents=True)
@@ -460,22 +467,20 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     # Calculate everything with respect to the validation set
     val_dict = {}
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
-    #TODO: The number of calsses should by automated based on the dataset
-
-    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
-    if cfg.dataset == "cifar100":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
-
-    if cfg.dataset == "imagenet":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+    #
+    # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    # if cfg.dataset == "cifar100":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
+    # if cfg.dataset == "imagenet":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
 
     grad_vect = parameters_to_vector(grad)
-    hg_vect = parameters_to_vector(hg)
+    # hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)
-    norm_hg = torch.norm(hg_vect)
-    val_dict["val_set_gradient_magnintude"] = [float(norm_grad.cpu().detach().numpy())]
-    val_dict["val_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
+    # norm_hg = torch.norm(hg_vect)
+    val_dict["val_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+    # val_dict["val_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
     # criterion = nn.CrossEntropyLoss()
     # hessian_comp = pyhes.hessian(model,
     #                            criterion,
@@ -497,20 +502,22 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     # Calculate everything with respect to the test set
     test_dict = {}
     grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=testLoader)
-    #TODO: The number of calsses should by automated based on the dataset
-    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
-    if cfg.dataset == "cifar100":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
-
-    if cfg.dataset == "imagenet":
-        hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+    # t0 = time.time()
+    # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    # if cfg.dataset == "cifar100":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
+    #
+    # if cfg.dataset == "imagenet":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+    # t1 = time.time()
+    # print("Time to calculate Hg: {} s".format(t1-t0))
     grad_vect = parameters_to_vector(grad)
-    hg_vect = parameters_to_vector(hg)
+    # hg_vect = parameters_to_vector(hg)
     norm_grad = torch.norm(grad_vect)
-    norm_hg = torch.norm(hg_vect)
+    # norm_hg = torch.norm(hg_vect)
     test_dict["test_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
-    test_dict["test_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
+    # test_dict["test_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
 
     # criterion = nn.CrossEntropyLoss()
     # hessian_comp = pyhes.hessian(model,

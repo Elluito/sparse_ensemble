@@ -5148,7 +5148,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
     pruned_model = get_model(cfg)
     best_model = None
-    best_accuracy = 0
+    best_accuracy = -1
     initial_flops = 0
     data_loader_iterator = cycle(iter(valloader))
     data, y = next(data_loader_iterator)
@@ -6543,14 +6543,14 @@ def LeMain(args):
     # "exclude_layers": ["conv1", "fc"],
     # "exclude_layers": ["conv1", "linear"],
     # "exclude_layers": ["features.0", "classifier"],
-    if args["dataset"]=="cifar10":
+    if args["dataset"] == "cifar10":
         if args["architecture"]== "resnet18":
             solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
             exclude_layers = ["conv1", "linear"]
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
             exclude_layers = ["features.0", "classifier"]
-    if args["dataset"]=="cifar100":
+    if args["dataset"] == "cifar100":
         if args["architecture"]== "resnet18":
             solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
             exclude_layers =["conv1", "linear"]
