@@ -6723,24 +6723,24 @@ if __name__ == '__main__':
 #     ###  Stochastic pruning with pruner, dataset, sigma, and pruning rate present on cfg
 #     #  Also if measure GF is true in cfg then it measures the gradientflow, flops and other measurements  for the particlar
 #
-#     experiment_selector(cfg,number_experiment=11)
+#     experiment_selector(cfg,number_experiment=6)
 #
 #     ################# Unify sigma experiments results for gradient flow measurement ####################################
 #
 #
-#     sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-#     cfg = omegaconf.DictConfig({
-#         "sigma":0.0,
-#         "amount":0.9,
-#         "architecture":"resnet18",
-#         "dataset": "cifar10",
-#
-#     })
-#     for sig in sigma_values:
-#         cfg.sigma = sig
-#         gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-#     unify_sigma_datasets(sigma_values,cfg)
-#
+    # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "dataset": "cifar10",
+    #
+    # })
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
+
 #
 #     ########################## Scatter plots for the  ########################################################
 #
@@ -6870,4 +6870,3 @@ if __name__ == '__main__':
     # for pr in pruning_rates:
     #     cfg.amount = pr
     #     main(cfg)
-
