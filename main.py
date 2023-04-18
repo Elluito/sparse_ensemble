@@ -5126,7 +5126,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             notes="This run is to see if gradient clipping is hindering stochastic pruning",
             reinit=True,
         )
-       ################################## Gradient flow measure############################################
+       ################################## Gradient flow measure###############test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)#############################
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
 
@@ -5217,8 +5217,27 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             best_model = current_model
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
     initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+
+    torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+
+    if cfg.pruner == "lamp":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+                        type="layer-wise",
+                        pruner=cfg.pruner)
+
+    remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    perfor = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    torch.save({"model_state":pruned_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_deterministic_{cfg.pruner}_pr{cfg.amount}.pth")
+
+    return
     if cfg.use_wandb:
         wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_test_performance":
             initial_test_performance})
@@ -6590,7 +6609,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": True
+        "use_wandb": False
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
@@ -6701,23 +6720,27 @@ if __name__ == '__main__':
     # ##############################################################################
 
     #
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    #
-    #
-    args = vars(parser.parse_args())
-    LeMain(args)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # #
+    # #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
+
+
+
+
 
 #
 #     ###  Stochastic pruning with pruner, dataset, sigma, and pruning rate present on cfg
@@ -6729,17 +6752,18 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.0,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "dataset": "cifar10",
-    #
-    # })
-    # for sig in sigma_values:
-    #     cfg.sigma = sig
-    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    # unify_sigma_datasets(sigma_values,cfg)
+    sigma_values = [0.001,0.003,0.005]
+    cfg = omegaconf.DictConfig({
+        "sigma":0.0,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "dataset": "cifar100",
+
+    })
+    for sig in sigma_values:
+        cfg.sigma = sig
+        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    unify_sigma_datasets(sigma_values,cfg)
 
 #
 #     ########################## Scatter plots for the  ########################################################
