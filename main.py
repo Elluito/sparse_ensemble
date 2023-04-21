@@ -5935,8 +5935,8 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     first_sigma = sigmas.pop()
 
-    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
-    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset }_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
     for sigma in sigmas:
         lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
@@ -5945,8 +5945,8 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
         combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
         combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_pr{cfg.amount}.csv",header=True ,index=False)
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
@@ -5975,7 +5975,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_deterministic_GOBAL_DF = pd.concat((combine_deterministic_GOBAL_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_global_pr{cfg.amount}.csv",header=True,index=False)
+    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################### Lamp Deterministic  ########################################
 
@@ -5988,7 +5988,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_pr{cfg.amount}.csv",header=True,index=False)
+    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
@@ -6001,7 +6001,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -6016,7 +6016,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
 
 def plot_gradientFlow_data(filepath,title=""):
     data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
@@ -6615,7 +6615,36 @@ def LeMain(args):
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     experiment_selector(cfg,args["experiment"])
+def curve_plot(filepath,filename):
+    curve = np.load(filepath)
+    curve = dict(curve)
+    plt.figure()
+    x = curve["ts"]
+    y = curve["tr_loss"]
+    plt.plot(x,y,label="Bezier Curve")
+    plt.legend()
+    plt.savefig(f"{filename}_tr_loss.pdf")
 
+    plt.figure()
+    x = curve["ts"]
+    y = curve["te_loss"]
+    plt.plot(x,y,label="Bezier Curve")
+    plt.legend()
+    plt.savefig(f"{filename}_te_loss.pdf")
+
+    plt.figure()
+    x = curve["ts"]
+    y = curve["tr_nll"]
+    plt.plot(x,y,label="Bezier Curve")
+    plt.legend()
+    plt.savefig(f"{filename}_tr_nll.pdf")
+
+    plt.figure()
+    x = curve["ts"]
+    y = curve["te_nll"]
+    plt.plot(x,y,label="Bezier Curve")
+    plt.legend()
+    plt.savefig(f"{filename}_te_nll.pdf")
 
 
 if __name__ == '__main__':
@@ -6764,7 +6793,7 @@ if __name__ == '__main__':
         cfg.sigma = sig
         gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
     unify_sigma_datasets(sigma_values,cfg)
-
+    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/curve.npz","deter_vs_sto_GLOBAL_Sig_0.005_one_shot")
 #
 #     ########################## Scatter plots for the  ########################################################
 #

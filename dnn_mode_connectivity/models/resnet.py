@@ -64,7 +64,7 @@ class BasicBlock(nn.Module):
             else:
                 out = l(out, coef_tt)
         return out
-    def forward(self, x,coef_tt):
+    def forward(self, x,coef_tt=None):
         if self.is_curve:
             out = F.relu(self.bn1(self.conv1(x,coef_tt),coef_tt))
             out = self.bn2(self.conv2(out,coef_tt),coef_tt)
