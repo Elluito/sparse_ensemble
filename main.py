@@ -5935,10 +5935,10 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     first_sigma = sigmas.pop()
 
-    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
     combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset }_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
     for sigma in sigmas:
-        lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+        lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
         global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
