@@ -6116,7 +6116,7 @@ def same_image_pareto_analysis(dataFrame:pd.DataFrame,file:str):
     new_data = temp_dataframe[not_first_pareto_set]
     second_pareto_front =  paretoset.paretoset(costs=new_data,sense=['max','max'])
     second_pareto_front_finetuning =  paretoset.paretoset(costs=new_data_after_finetuning,sense=['max','max'])
-    
+
     #Before Finetunig
     scattter =  plt.scatter(x= temp_dataframe[pareto_indexes_pre]['initial_GF_valset'] ,
                             y= temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'],color='cyan',
@@ -6312,9 +6312,9 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     average_val_improvement_rate = []
     for elem in dataFrame["individual"].unique():
         temp_df = dataFrame[dataFrame["individual"]==elem]
-        initial_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1]))
+        initial_val_set_GF.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1]))
         initial_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1]))
-        final_val_set_GF.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==90]))
+        final_val_set_GF.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==90]))
         final_test_set_GF.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==90]))
         final_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==90]))
         initial_test_performance.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
@@ -6402,12 +6402,12 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
             # One-shot data
             temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
 
-            gradient_flow.append(float(temp_df['val_set_gradient_magnintude'][temp_df["Epoch"]==-1].iloc[0]))
+            gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
             accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
             type.append("One-Shot")
             sigma_list.append(sigma)
             # Now the fine-tuned data
-            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnintude"]))
+            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
             print(temp_df["Epoch"])
             accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
             type.append("Fine-tuned")
@@ -6443,8 +6443,8 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # Deterministic dataframe 1
     deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == 0]
 
-    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnintude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnintude"])
+    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
     deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
     deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
     plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='^',s=40,c='crimson',edgecolors='crimson',label=f"One-shot {det_label1}")
@@ -6452,8 +6452,8 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # Deterministic dataframe 2
     deterministic_dataframe = deterministic_dataframe2[deterministic_dataframe2["individual"] == 0]
 
-    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnintude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnintude"])
+    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
     deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
     deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
 
@@ -6466,7 +6466,7 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0.1)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
-    plt.xlim(0,2.5)
+    # plt.xlim(0,2.5)
     plt.savefig(file)
 def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
     if not is_det:
@@ -6610,7 +6610,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": False
+        "use_wandb": True
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
@@ -6796,23 +6796,21 @@ if __name__ == '__main__':
     # unify_sigma_datasets(sigma_values,cfg)
     # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/curve.npz","deter_vs_sto_GLOBAL_Sig_0.005_one_shot")
 #
-#     ########################## Scatter plots for the  ########################################################
+#     ########################## Scatter plots for the accucacy vs GF ########################################################
 #
 #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 #     #
-#     df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-#
-#     scatter_plot_all_sigmas(df,file="global_scatter.pdf")
-#     df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-#     df2 = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
-#     deterministic_lamp_df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
-#     deterministic_glbal_df = pd.read_csv("gradientflow_deterministic_global_pr0.9.csv",sep = ",",header = 0, index_col = False)
-#
-#     sigmas = [0.001,0.0021,0.005]
-#
-#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+
+#     df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_resnet18_cifar100_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     df2 = pd.read_csv("gradientflow_stochastic_global_all_sigmas_resnet18_cifar100_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_lamp_df = pd.read_csv("gradientflow_deterministic_lamp_resnet18_cifar100_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_glbal_df = pd.read_csv("gradientflow_deterministic_global_resnet18_cifar100_pr0.9.csv",sep = ",",header = 0, index_col = False)
+# #
+#     sigmas = [0.001,0.003,0.005]
+# #
+#     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
 #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-#                         det_label2='Deter. Global', file="lamp_scatter.pdf", sigmas_to_show=sigmas)
+#                         det_label2='Deter. Global', file="global_scatter_restnet18_cifar100.pdf", sigmas_to_show=sigmas)
 #
 #
 #
@@ -6827,26 +6825,33 @@ if __name__ == '__main__':
 #     ##########################  Last table  Flops count for LAMP  ######################################################
 #
 #     print("Lamp stochastic")
-#     df = pd.read_csv("gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
+#     fp = "gradientflow_stochastic_lamp_all_sigmas_resnet18_cifar100_pr0.9.csv"
+#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
 #
-#     get_statistics_on_FLOPS_until_threshold(df,92)
-#
-#     df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     get_statistics_on_FLOPS_until_threshold(df,64)
+#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+#     fp = "gradientflow_deterministic_lamp_resnet18_cifar100_pr0.9.csv"
+#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
 #
 #     print("Now lamp deterministic")
 #
-#
+#     get_statistics_on_FLOPS_until_threshold(df,64,is_det=True)
+
 #     ##########################  Last table  Flops count for GMP ######################################################
 #
 #     print("Global stochastic")
-#     df = pd.read_csv("gradientflow_stochastic_global_all_sigmas_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+#     fp = "gradientflow_stochastic_global_all_sigmas_resnet18_cifar100_pr0.9.csv"
+#     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
 #
-#     get_statistics_on_FLOPS_until_threshold(df,92)
-#
-#     df = pd.read_csv("gradientflow_deterministic_lamp_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     get_statistics_on_FLOPS_until_threshold(df,64)
+#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+#     fp = "gradientflow_deterministic_global_resnet18_cifar100_pr0.9.csv"
+#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
 #
 #     print("Now global deterministic")
-#     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+#     get_statistics_on_FLOPS_until_threshold(df,64,is_det=True)
 #
     # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
     # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
