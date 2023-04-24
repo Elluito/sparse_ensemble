@@ -6782,18 +6782,22 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # sigma_values = [0.001,0.003,0.005]
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.0,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "dataset": "cifar100",
-    #
-    # })
-    # for sig in sigma_values:
-    #     cfg.sigma = sig
-    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    # unify_sigma_datasets(sigma_values,cfg)
+    sigma_values = [0.001,0.005]
+    cfg = omegaconf.DictConfig({
+        "sigma":0.0,
+        "amount":0.94,
+        "architecture":"VGG19",
+        "dataset": "cifar100",
+
+    })
+
+    for sig in sigma_values:
+        cfg.sigma = sig
+        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    unify_sigma_datasets(sigma_values,cfg)
+
+
+
     # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/curve.npz","deter_vs_sto_GLOBAL_Sig_0.005_one_shot")
 #
 #     ########################## Scatter plots for the accucacy vs GF ########################################################
