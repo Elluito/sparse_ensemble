@@ -145,7 +145,11 @@ def _set_momenta(module, momenta):
     if isbatchnorm(module):
         module.momentum = momenta[module]
 
-
+def prepare_check_point_dict(checkpoint:dict):
+    if "model_state" in checkpoint.keys():
+        return checkpoint
+    else:
+        return {"model_state": checkpoint}
 def update_bn(loader, model, **kwargs):
     if not check_bn(model):
         return

@@ -6781,7 +6781,7 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    sigma_values = [0.001,0.005]
+    # sigma_values = [0.001,0.005]
     cfg = omegaconf.DictConfig({
         "sigma":0.0,
         "amount":0.94,
@@ -6789,11 +6789,11 @@ if __name__ == '__main__':
         "dataset": "cifar10",
 
     })
-
-    for sig in sigma_values:
-        cfg.sigma = sig
-        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    unify_sigma_datasets(sigma_values,cfg)
+    #
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
 
 
 
@@ -6804,18 +6804,18 @@ if __name__ == '__main__':
 #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 #     #
 
-#     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 # #
 #     sigmas = [0.001,0.005]
 # #
-#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+#     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
 #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-#                         det_label2='Deter. Global', file="lamp_scatter_VGG19_cifar100.pdf", sigmas_to_show=sigmas)
-#
-#
+#                         det_label2='Deter. Global', file="global_scatter_VGG19_cifar10.pdf", sigmas_to_show=sigmas)
+# #
+# #
 #
 #
 #
@@ -6826,42 +6826,36 @@ if __name__ == '__main__':
 #
 #
 #     ##########################  Last table  Flops count for LAMP  ######################################################
-#
-#     print("Lamp stochastic")
-#     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
-#     fp = "gradientflow_stochastic_lamp_all_sigmas_resnet18_cifar100_pr0.9.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     get_statistics_on_FLOPS_until_threshold(df,64)
-#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-#     fp = "gradientflow_deterministic_lamp_resnet18_cifar100_pr0.9.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     print("Now lamp deterministic")
-#
-#     get_statistics_on_FLOPS_until_threshold(df,64,is_det=True)
 
-#     ##########################  Last table  Flops count for GMP ######################################################
-#
-#     print("Global stochastic")
-#     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
-#     fp = "gradientflow_stochastic_global_all_sigmas_resnet18_cifar100_pr0.9.csv"
-#     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
-#
-#     get_statistics_on_FLOPS_until_threshold(df,64)
-#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-#     fp = "gradientflow_deterministic_global_resnet18_cifar100_pr0.9.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     print("Now global deterministic")
-#     get_statistics_on_FLOPS_until_threshold(df,64,is_det=True)
-#
-    # plot_gradientFlow_data("gradientflow_stochastic_global.csv","Global Stochastic")
-    # stochastic_lamp_df = pd.read_csv("gradientflow_stochastic_lamp.csv", header=0, index_col=False)
-    # stochastic_global_df = pd.read_csv("gradientflow_stochastic_global.csv", header=0, index_col=False)
-    # get_first_epoch_GF_last_epoch_accuracy(stochastic_global_df,"Global Stochastic","images_global_stochastic")
-    # get_first_epoch_GF_last_epoch_accuracy(stochastic_lamp_df,"Lamp Stochastic","images_lamp_stochastic")
-    # experiment_selector(cfg, 11)
+    print("Lamp stochastic")
+    # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
+    fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+
+    get_statistics_on_FLOPS_until_threshold(df,92)
+    # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+
+    print("Now lamp deterministic")
+
+    get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+
+    ##########################  Last table  Flops count for GMP ######################################################
+
+    print("Global stochastic")
+    # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+    fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
+
+    get_statistics_on_FLOPS_until_threshold(df,92)
+    # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+
+    print("Now global deterministic")
+    get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+
 
 
 

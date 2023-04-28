@@ -27,4 +27,4 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python train.py --dir=curves --dataset=CIFAR10 --use_test --transform=ResNet --data_path=/nobackup/sclaam/data/CIFAR10 --model=ResNet18 --curve=Bezier --num_bends=3 --init_start=$1  --init_end=$2 --epochs=200 --lr=0.03 --wd=3e-4 --fix_end --fix_start
+python train.py --dir=curves --dataset=CIFAR10 --use_test --transform=ResNet --data_path=/nobackup/sclaam/data/CIFAR10 --model=ResNet18 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_GLOBAL/resnet18/sigma0.0021/pr0.9/1677548381.96440/weigths/epoch_90.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_GLOBAL/resnet18/0.9/1676918518.39/weigths/ --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start
