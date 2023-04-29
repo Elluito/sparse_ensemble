@@ -149,6 +149,8 @@ def prepare_check_point_dict(checkpoint:dict):
     if "model_state" in checkpoint.keys():
         return checkpoint
     else:
+        # best_model_state_dict = torch.load()
+        # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
         return {"model_state": checkpoint}
 def update_bn(loader, model, **kwargs):
     if not check_bn(model):
