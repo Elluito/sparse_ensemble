@@ -26,8 +26,8 @@ parser.add_argument('--data_path', type=str, default=None, metavar='PATH',
                     help='path to datasets location (default: None)')
 parser.add_argument('--batch_size', type=int, default=128, metavar='N',
                     help='input batch size (default: 128)')
-parser.add_argument('--num-workers', type=int, default=4, metavar='N',
-                    help='number of workers (default: 4)')
+parser.add_argument('--num_workers', type=int, default=0, metavar='N',
+                    help='number of workers (default: 0)')
 
 parser.add_argument('--model', type=str, default=None, metavar='MODEL', required=True,
                     help='model name (default: None)')
