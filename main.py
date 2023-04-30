@@ -504,9 +504,9 @@ def heatmap1_exp(cfg):
         # Here I just prune once for the deterministic pruning
 
         pruned_original = copy.deepcopy(net)
-        weights_to_prune = weights_to_prune(pruned_original)
+        weights_to_prunes = weights_to_prune(pruned_original)
         prune.global_unstructured(
-            weights_to_prune,
+            weights_to_prunes,
             pruning_method=prune.L1Unstructured,
             amount=pruning_percentage
         )
