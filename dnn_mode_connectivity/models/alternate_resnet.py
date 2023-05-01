@@ -11,7 +11,7 @@ import typing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import curses
+import curves
 
 class BasicBlock(nn.Module):
     expansion = 1
