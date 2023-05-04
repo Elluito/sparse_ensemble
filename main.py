@@ -65,6 +65,7 @@ from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
 from itertools import cycle
 from matplotlib.patches import PathPatch
+import matplotlib.transforms as mtransforms
 # import pylustrator
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
@@ -2821,6 +2822,35 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
             return net
 
+    if cfg.architecture == "resnet50":
+        if not cfg.solution:
+            if "csgmcmc" == cfg.type:
+                net = ResNet50()
+                return net
+            if "alternative" == cfg.model_type:
+                from alternate_models.resnet import ResNet18
+                net = ResNet50()
+                return net
+        else:
+            if "csgmcmc" == cfg.model_type:
+                net = ResNet50()
+                load_model(net, cfg.solution)
+            if "alternative" == cfg.model_type:
+                from alternate_models.resnet import ResNet50
+                if cfg.dataset=="cifar10":
+                    net = ResNet50()
+                if cfg.dataset == "cifar100":
+                    net = ResNet50(num_classes=100)
+                if cfg.dataset=="mnist":
+                    net = ResNet50()
+
+                load_model(net, cfg.solution)
+            if "hub"== cfg.model_type:
+                if cfg.dataset== "cifar100":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+                if cfg.dataset== "cifar10":
+                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+            return net
     else:
         raise NotImplementedError("Not implemented for architecture:{}".format(cfg.architecture))
 
@@ -6569,6 +6599,9 @@ def LeMain(args):
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
             exclude_layers = ["features.0", "classifier"]
+        if args["architecture"]== "resnet50":
+            solution = "trained_models/cifar10/resnet50_cifar10.pth"
+            exclude_layers = ["conv1", "linear"]
     if args["dataset"] == "cifar100":
         if args["architecture"]== "resnet18":
             solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
@@ -6576,6 +6609,9 @@ def LeMain(args):
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
             exclude_layers = ["features.0", "classifier"]
+        if args["architecture"]== "resnet50":
+            solution = "trained_models/cifar100/resnet50_cifar100.pth"
+            exclude_layers = ["conv1", "linear"]
     cfg = omegaconf.DictConfig({
         "population": args["population"],
         "generations": 10,
@@ -6609,45 +6645,103 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": True
+        "use_wandb": False
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     experiment_selector(cfg,args["experiment"])
-def curve_plot(filepath,filename):
+def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
     curve = dict(curve)
-    plt.figure()
+    fig = plt.figure()
+    fig ,ax =plt.subplots()
+    trans_offset1 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                           x=0.05, y=0.10, units='inches')
+    trans_offset2 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=-0.05, y=-0.10, units='inches')
     x = curve["ts"]
     y = curve["tr_loss"]
     plt.plot(x,y,label="Bezier Curve")
+    plt.xlabel("$t$")
+    plt.ylabel("$\mathcal{L}(w)$")
     plt.legend()
+
+    plt.axvline(0,linewidth=1, color='r',linestyle="--")
+    plt.axvline(1,linewidth=1, color='r',linestyle="--")
+    plt.axhline(min(y),linewidth=1, color='k',linestyle="--")
+    ax.annotate('Stochastic', (0.05, 0.9),c="r", xycoords='axes fraction')
+    ax.annotate('Deterministic', (0.75, 0.9),c="r", xycoords='axes fraction')
+    plt.title(title)
     plt.savefig(f"{filename}_tr_loss.pdf")
 
-    plt.figure()
+    fig = plt.figure()
+    fig ,ax =plt.subplots()
+    trans_offset1 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=0.05, y=0.10, units='inches')
+    trans_offset2 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=-0.05, y=-0.10, units='inches')
     x = curve["ts"]
     y = curve["te_loss"]
     plt.plot(x,y,label="Bezier Curve")
+    plt.xlabel("$t$")
+    plt.ylabel("$\mathcal{L}(w)$")
     plt.legend()
+
+    plt.axvline(0,linewidth=1, color='r',linestyle="--")
+    plt.axvline(1,linewidth=1, color='r',linestyle="--")
+    plt.axhline(min(y),linewidth=1, color='k',linestyle="--")
+    ax.annotate('Stochastic', (0.05, 0.9),c="r", xycoords='axes fraction')
+    ax.annotate('Deterministic', (0.75, 0.9),c="r", xycoords='axes fraction')
+    plt.title(title)
     plt.savefig(f"{filename}_te_loss.pdf")
 
-    plt.figure()
+    fig = plt.figure()
+    fig ,ax =plt.subplots()
+    trans_offset1 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=0.05, y=0.10, units='inches')
+    trans_offset2 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=-0.05, y=-0.10, units='inches')
     x = curve["ts"]
     y = curve["tr_nll"]
     plt.plot(x,y,label="Bezier Curve")
     plt.legend()
+    plt.xlabel("$t$")
+    plt.ylabel("$\mathcal{L}(w)$")
+    plt.axvline(0,linewidth=1, color='r',linestyle="--")
+    plt.axvline(1,linewidth=1, color='r',linestyle="--")
+    plt.axhline(min(y),linewidth=1, color='k',linestyle="--")
+    ax.annotate('Stochastic', (0.05, 0.9),c="r", xycoords='axes fraction')
+    ax.annotate('Deterministic', (0.75, 0.9),c="r", xycoords='axes fraction')
+    plt.title(title)
     plt.savefig(f"{filename}_tr_nll.pdf")
 
-    plt.figure()
+    fig = plt.figure()
+    fig ,ax =plt.subplots()
+    trans_offset1 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=0.05, y=0.10, units='inches')
+    trans_offset2 = mtransforms.offset_copy(ax.transData, fig=fig,
+                                            x=-0.05, y=-0.10, units='inches')
     x = curve["ts"]
     y = curve["te_nll"]
     plt.plot(x,y,label="Bezier Curve")
     plt.legend()
+    plt.xlabel("$t$")
+    plt.ylabel("$\mathcal{L}(w)$")
+    plt.axvline(0,linewidth=1, color='r',linestyle="--")
+    plt.axvline(1,linewidth=1, color='r',linestyle="--")
+    plt.axhline(min(y),linewidth=1, color='k',linestyle="--")
+    ax.annotate('Stochastic', (0.05, 0.9),c="r", xycoords='axes fraction')
+    ax.annotate('Deterministic', (0.75, 0.9),c="r", xycoords='axes fraction')
+    # plt.text(0, y[0], ''  , transform=trans_offset1)
+    # plt.text(1, y[1], '' , transform=trans_offset2)
+    plt.title(title)
     plt.savefig(f"{filename}_te_nll.pdf")
 
 
 if __name__ == '__main__':
+
+
     # cfg_training = omegaconf.DictConfig({
     #     "architecture": "resnet18",
     #     "batch_size": 512,
@@ -6749,23 +6843,23 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
-    # #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    #
+    #
+    args = vars(parser.parse_args())
+    LeMain(args)
     #
 
 
@@ -6782,13 +6876,13 @@ if __name__ == '__main__':
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
     # sigma_values = [0.001,0.005]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.0,
-        "amount":0.94,
-        "architecture":"VGG19",
-        "dataset": "cifar10",
-
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.94,
+    #     "architecture":"VGG19",
+    #     "dataset": "cifar10",
+    #
+    # })
     #
     # for sig in sigma_values:
     #     cfg.sigma = sig
@@ -6797,14 +6891,14 @@ if __name__ == '__main__':
 
 
 
-    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/curve.npz","deter_vs_sto_GLOBAL_Sig_0.005_one_shot")
+    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/resnet18/lamp/fine_tuned/curve.npz","deter_vs_sto_LAMP_Sig_0.005_fine_tuned","CIFAR10")
 #
 #     ########################## Scatter plots for the accucacy vs GF ########################################################
 #
 #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 #     #
 
-    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
@@ -6827,34 +6921,34 @@ if __name__ == '__main__':
 #
 #     ##########################  Last table  Flops count for LAMP  ######################################################
 
-    print("Lamp stochastic")
-    # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
-    fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-
-    get_statistics_on_FLOPS_until_threshold(df,92)
-    # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-    fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-
-    print("Now lamp deterministic")
-
-    get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+    # print("Lamp stochastic")
+    # # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
+    # fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    # df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    # get_statistics_on_FLOPS_until_threshold(df,92)
+    # # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    # fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    # df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    # print("Now lamp deterministic")
+    #
+    # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
 
     ##########################  Last table  Flops count for GMP ######################################################
 
-    print("Global stochastic")
-    # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
-    fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
-
-    get_statistics_on_FLOPS_until_threshold(df,92)
-    # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-    fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-
-    print("Now global deterministic")
-    get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+    # print("Global stochastic")
+    # # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+    # fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    # df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
+    #
+    # get_statistics_on_FLOPS_until_threshold(df,92)
+    # # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    # fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    # df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    # print("Now global deterministic")
+    # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
 
 
 
