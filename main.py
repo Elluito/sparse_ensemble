@@ -6893,7 +6893,7 @@ if __name__ == '__main__':
         "sigma":0.0,
         "amount":0.9,
         "architecture":"resnet50",
-        "dataset": "cifar100",
+        "dataset": "cifar10",
 
     })
 
