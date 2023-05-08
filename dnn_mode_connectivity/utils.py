@@ -248,7 +248,7 @@ def prepare_check_point_dict(checkpoint:dict,architecture:str,dataset:str):
         if architecture == "VGG19":
             layers_to_exclude = ["features.0","classifier"]
             if dataset == "CIFAR10":
-                temp_model = VGG("19",num_classes=10)
+                temp_model = VGG("VGG19",num_classes=10)
                 if temp_model.state_dict().keys()<=checkpoint.keys():
                     temp_model.load_state_dict(checkpoint)
                 else:
@@ -258,7 +258,7 @@ def prepare_check_point_dict(checkpoint:dict,architecture:str,dataset:str):
                 # remove_reparametrization(temp_model,exclude_layer_list=layers_to_exclude)
                 state_dict=temp_model.state_dict()
             if dataset == "CIFAR100":
-                temp_model = VGG("19",num_classes=100)
+                temp_model = VGG("VGG19",num_classes=100)
                 if temp_model.state_dict().keys()<=checkpoint.keys():
                     temp_model.load_state_dict(checkpoint)
                 else:

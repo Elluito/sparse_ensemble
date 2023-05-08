@@ -33,21 +33,32 @@ which python
 #python eval_curve.py --dir=evaluate_curve/cifar10/resnet18/global/fine_tuned --dataset=CIFAR10 --data_path=datasets --transform=ResNet --model=ResNet18 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar10/resnet18/global/fine_tuned/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
 
 # This is for the plane on cifar10 on resnet for global
-python
---dir=evaluate_plane/cifar10/resnet18/global/fine_tuned
---dataset=CIFAR10
---data_path=/nobackup/sclaam/data/CIFAR10
---transform=ResNet
---model=ResNet18
---wd=5e-4
---curve=Bezier
---num_bends=3
---ckpt=curves/cifar10/resnet18/global/checkpoint-200.pt
---curve_points=60
---use_test
 
 
 # For  comparing fine tuned resnet18 on cifar10 with lamp pruning
 #python train.py --dir=curves/cifar10/resnet18/lamp/fine_tuned --dataset=CIFAR10 --use_test --transform=ResNet --data_path=/nobackup/sclaam/data/CIFAR10 --model=ResNet18 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/resnet18/0.9/1676842555.46/weigths/epoch_90.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_LAMP/resnet18/sigma0.0/pr0.9/1677677439.38/weigths/epoch_90.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
 #python eval_curve.py --dir=evaluate_curve/cifar10/resnet18/lamp/fine_tuned --dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10  --transform=ResNet --model=ResNet18 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar10/resnet18/lamp/fine_tuned/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
 # This is for the plane on cifar10 on resnet for lamp
+
+
+
+# Evaluating plane of resnet18 global cifar10
+#python plane.py --dir=evaluate_plane/cifar10/resnet18/global/fine_tuned --dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10 --transform=ResNet --model=ResNet18 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar10/resnet18/global/checkpoint-200.pt --curve_points=60 --use_test
+
+# VGG19 on CIFAR10
+
+#/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_GLOBAL/VGG19/sigma0.001/pr0.94/1682352848.15739/weigths/epoch_90.pth
+
+#/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_GLOBAL/VGG19/sigma0.005/pr0.94/1682367758.87520/weigths/epoch_90.pth
+
+#/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_GLOBAL/VGG19/sigma0.0/pr0.94/1682283729.46/weigths/epoch_90.pth
+
+# For  comparing fine tuned VGG on cifar10 with global pruning
+python train.py --dir=curves/cifar10/vgg19/global/fine_tuned/s0.005 --dataset=CIFAR10 --use_test --transform=VGG--data_path=/nobackup/sclaam/data/CIFAR10 --model=VGG19 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_GLOBAL/VGG19/sigma0.005/pr0.94/1682367758.87520/weigths/epoch_90.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_GLOBAL/VGG19/sigma0.0/pr0.94/1682283729.46/weigths/epoch_90.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
+python eval_curve.py --dir=evaluate_curve/cifar10/vgg19/global/fine_tuned/s0.005--dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10 --transform=VGG --model=VGG19 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar10/vgg19/global/fine_tuned/s0.005/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
+
+# For  comparing fine tuned VGG on cifar10 with lamp pruning
+# sigma0.005 /nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/VGG19/sigma0.005/pr0.94/1682458386.92052/weigths/epoch_90.pth
+# sigma0.001 /nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/VGG19/sigma0.001/pr0.94/1682357810.56177/weigths/epoch_90.pth
+# python train.py --dir=curves/cifar10/vgg19/lamp/fine_tuned/s0.005 --dataset=CIFAR10 --use_test --transform=VGG--data_path=/nobackup/sclaam/data/CIFAR10 --model=VGG19 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/VGG19/sigma0.005/pr0.94/1682458386.92052/weigths/epoch_90.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_LAMP/VGG19/sigma0.0/pr0.94/1682284485.05/weigths/epoch_90.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
+# python eval_curve.py --dir=evaluate_curve/cifar10/vgg19/lamp/fine_tuned/s0.005 --dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10 --transform=VGG --model=VGG19 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar10/vgg19/lamp/fine_tuned/s0.005/checkpoint-200.pt --num_points=60 --use_test --num_workers=0

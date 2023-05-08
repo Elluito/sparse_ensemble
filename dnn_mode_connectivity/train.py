@@ -83,7 +83,11 @@ loaders, num_classes = data.loaders(
     args.use_test
 )
 
-architecture = getattr(models, args.model)
+if args.model == "VGG19":
+    from models.alternate_vgg import VGG19
+    architecture = VGG19
+else:
+    architecture = getattr(models, args.model)
 
 if args.curve is None:
     model = architecture.base(num_classes=num_classes, **architecture.kwargs)
