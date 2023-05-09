@@ -6508,7 +6508,7 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0.1)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
-    # plt.xlim(0,2.5)
+    plt.xlim(0,2.5)
     plt.savefig(file)
 def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
     if not is_det:
@@ -6856,23 +6856,23 @@ if __name__ == '__main__':
     # ##############################################################################
 
     #
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
-    # #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    #
+    #
+    args = vars(parser.parse_args())
+    LeMain(args)
     #
 
 
@@ -6888,19 +6888,19 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    sigma_values = [0.001,0.003,0.005]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.0,
-        "amount":0.9,
-        "architecture":"resnet50",
-        "dataset": "cifar10",
+    # sigma_values = [0.001,0.003,0.005]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.9,
+    #     "architecture":"resnet50",
+    #     "dataset": "cifar10",
+    #
+    # })
 
-    })
-
-    for sig in sigma_values:
-        cfg.sigma = sig
-        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    unify_sigma_datasets(sigma_values,cfg)
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
 
     #
 
@@ -6917,12 +6917,12 @@ if __name__ == '__main__':
 #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 # #
-#     sigmas = [0.001,0.005]
-# #
-#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-#                         det_label2='Deter. Global', file="lamp_scatter_VGG19_cifar100.pdf", sigmas_to_show=sigmas)
-# #
+#     sigmas = [0.001,0.002,0.003,0.005]
+#
+    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+                        det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
+#
 # #
 #
 #
