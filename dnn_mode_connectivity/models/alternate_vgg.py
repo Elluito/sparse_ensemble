@@ -55,14 +55,19 @@ class VGGCurve(nn.Module):
         out = None
         for l in layer :
             if out is None:
+
                 out = l(x,coef_tt)
             else:
-                out = l(out,coef_tt)
+                if isinstance(l,curves.Conv2d) or isinstance(l,curves.Linear) or isinstance(l,curves.BatchNorm2d):
+                    out = l(out,coef_tt)
+                else:
+                    out = l(out)
         return out
 
     def _make_layers(self, cfg):
         layers = nn.ModuleList()
         in_channels = 3
+        #mid_l
         for x in cfg:
             if x == 'M':
                 layers +=[nn.MaxPool2d(kernel_size=2, stride=2)]
