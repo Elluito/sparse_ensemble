@@ -111,7 +111,7 @@ else:
                 checkpoint = torch.load(path)
                 print('Loading %s as point #%d' % (path, k))
                 checkpoint = utils.prepare_check_point_dict(checkpoint,args.model,args.dataset)
-                print(checkpoint)
+                #print(checkpoint)
                 base_model.load_state_dict(checkpoint['model_state'])
                 model.import_base_parameters(base_model, k)
         if args.init_linear:

@@ -55,8 +55,12 @@ class VGGCurve(nn.Module):
         out = None
         for l in layer :
             if out is None:
+                print("out:{}".format(out))
+                print("coef_tt:{}".format(coef_tt))
                 out = l(x,coef_tt)
             else:
+                print("out:{}".format(out))
+                print("coef_tt:{}".format(coef_tt))
                 out = l(out,coef_tt)
         return out
 
