@@ -6919,9 +6919,9 @@ if __name__ == '__main__':
 # #
 #     sigmas = [0.001,0.002,0.003,0.005]
 #
-    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-                        det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
+    # scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+    #                     det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
 #
 # #
 #
