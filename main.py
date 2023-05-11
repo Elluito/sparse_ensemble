@@ -6891,7 +6891,7 @@ if __name__ == '__main__':
     sigma_values = [0.001,0.003,0.005]
     cfg = omegaconf.DictConfig({
         "sigma":0.0,
-        "amount":0.9,
+        "amount":0.9528,
         "architecture":"resnet50",
         "dataset": "cifar100",
 
