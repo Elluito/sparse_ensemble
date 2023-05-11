@@ -59,8 +59,11 @@ loaders, num_classes = data.loaders(
     args.use_test,
     shuffle_train=False
 )
-
-architecture = getattr(models, args.model)
+if args.model == "VGG19":
+    from models.alternate_vgg import VGG19
+    architecture = VGG19
+else:
+    architecture = getattr(models, args.model)
 curve = getattr(curves, args.curve)
 model = curves.CurveNet(
     num_classes,
