@@ -6468,7 +6468,8 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     if not sigmas_to_show:
         g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type", palette="deep", legend="full", edgecolor=None, linewidth=0)
     else:
-        bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
+        # bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
+        bool_index_vector = np.zeros(len(all_df1))
         for s in sigmas_to_show:
             bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
         sigma_df = all_df1[bool_index_vector]
@@ -6508,7 +6509,7 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0.1)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
-    plt.xlim(0,2.5)
+    # plt.xlim(0,2.5)
     plt.savefig(file)
 def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
     if not is_det:
@@ -6897,10 +6898,10 @@ if __name__ == '__main__':
 
     })
 
-    for sig in sigma_values:
-        cfg.sigma = sig
-        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    unify_sigma_datasets(sigma_values,cfg)
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
 
     #
 
@@ -6912,16 +6913,19 @@ if __name__ == '__main__':
 #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 #     #
 #
-#     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-#     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-#     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-#     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 # #
-#     sigmas = [0.001,0.002,0.003,0.005]
-#
-    # scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-    #                     det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
+    sigmas = [0.001,0.003,0.005]
+
+    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+                        det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
+    scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+                        det_label2='Deter. Global', file=f"global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
 #
 # #
 #

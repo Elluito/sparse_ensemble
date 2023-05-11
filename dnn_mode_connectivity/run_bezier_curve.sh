@@ -62,4 +62,22 @@ which python
 # sigma0.001 /nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/VGG19/sigma0.001/pr0.94/1682357810.56177/weigths/epoch_90.pth
 
 # python train.py --dir=/nobackup/sclaam/curves/cifar10/vgg19/lamp/fine_tuned/s0.005 --dataset=CIFAR10 --use_test --transform=VGG --data_path=/nobackup/sclaam/data/CIFAR10 --model=VGG19 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar10/stochastic_LAMP/VGG19/sigma0.005/pr0.94/1682458386.92052/weigths/epoch_90.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar10/deterministic_LAMP/VGG19/sigma0.0/pr0.94/1682284485.05/weigths/epoch_90.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
- python eval_curve.py --dir=evaluate_curve/cifar10/vgg19/lamp/fine_tuned/s0.005 --dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10 --transform=VGG --model=VGG19 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=/nobackup/sclaam/curves/cifar10/vgg19/lamp/fine_tuned/s0.005/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
+# python eval_curve.py --dir=evaluate_curve/cifar10/vgg19/lamp/fine_tuned/s0.005 --dataset=CIFAR10 --data_path=/nobackup/sclaam/data/CIFAR10 --transform=VGG --model=VGG19 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=/nobackup/sclaam/curves/cifar10/vgg19/lamp/fine_tuned/s0.005/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
+
+
+# RESNET18 ON CIFAR100
+# LAMP
+# Sigma 0.001 /nobackup/sclaam/gradient_flow_data/cifar100/stochastic_LAMP/resnet18/sigma0.001/pr0.9/1681334666.23798/weigths/epoch_100.pth
+# deterministic /nobackup/sclaam/gradient_flow_data/cifar100/deterministic_LAMP/resnet18/sigma0.0/pr0.9/1681330063.39/weigths/epoch_100.pth
+python train.py --dir=curves/cifar100/resnet18/lamp/fine_tuned --dataset=CIFAR100 --use_test --transform=ResNet --data_path=/nobackup/sclaam/data/CIFAR100 --model=ResNet18 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar100/stochastic_LAMP/resnet18/sigma0.001/pr0.9/1681334666.23798/weigths/epoch_100.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar100/deterministic_LAMP/resnet18/sigma0.0/pr0.9/1681330063.39/weigths/epoch_100.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
+python eval_curve.py --dir=evaluate_curve/cifar100/resnet18/lamp/fine_tuned --dataset=CIFAR100 --data_path=/nobackup/sclaam/data/CIFAR100 --transform=ResNet --model=ResNet18 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar100/resnet18/lamp/fine_tuned/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
+
+# GLOBAL
+# Sigma 0.001 /nobackup/sclaam/gradient_flow_data/cifar100/stochastic_GLOBAL/resnet18/sigma0.001/pr0.9/1681333033.73189/weigths/epoch_100.pth
+# deterministic /nobackup/sclaam/gradient_flow_data/cifar100/deterministic_GLOBAL/resnet18/sigma0.0/pr0.9/1681329773.24/weigths/epoch_100.pth
+
+python train.py --dir=curves/cifar100/resnet18/global/fine_tuned --dataset=CIFAR100 --use_test --transform=ResNet --data_path=/nobackup/sclaam/data/CIFAR100 --model=ResNet18 --curve=Bezier --num_bends=3 --init_start=/nobackup/sclaam/gradient_flow_data/cifar100/stochastic_GLOBAL/resnet18/sigma0.001/pr0.9/1681333033.73189/weigths/epoch_100.pth --init_end=/nobackup/sclaam/gradient_flow_data/cifar100/deterministic_GLOBAL/resnet18/sigma0.0/pr0.9/1681329773.24/weigths/epoch_100.pth --epochs=200 --lr=0.03 --wd=5e-4 --fix_end --fix_start --num_workers=0
+python eval_curve.py --dir=evaluate_curve/cifar100/resnet18/global/fine_tuned --dataset=CIFAR100 --data_path=/nobackup/sclaam/data/CIFAR100 --transform=ResNet --model=ResNet18 --wd=5e-4 --curve=Bezier --num_bends=3 --ckpt=curves/cifar100/resnet18/global/fine_tuned/checkpoint-200.pt --num_points=60 --use_test --num_workers=0
+
+
+
