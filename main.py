@@ -70,6 +70,7 @@ import matplotlib.transforms as mtransforms
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
 import argparse
+from decimal import Decimal
 # enable cuda devices
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -6425,7 +6426,7 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
-def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",sigmas_to_show=[]):
+def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
     all_df1 : pd.DataFrame = None
     all_df2 : pd.DataFrame = None
     for sigma in dataFrame1["sigma"].unique():
@@ -6439,17 +6440,29 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
         for elem in sigma_temp_df["individual"].unique():
             # One-shot data
             temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
+            if use_set == "val":
+                gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+                type.append("One-Shot")
+                sigma_list.append(sigma)
+                # Now the fine-tuned data
+                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
+                print(temp_df["Epoch"])
+                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                type.append("Fine-tuned")
+                sigma_list.append(sigma)
+            elif use_set== "test":
+                gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
+                type.append("One-Shot")
+                sigma_list.append(sigma)
+                # Now the fine-tuned data
+                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["test_set_gradient_magnitude"]))
+                print(temp_df["Epoch"])
+                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                type.append("Fine-tuned")
+                sigma_list.append(sigma)
 
-            gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
-            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
-            type.append("One-Shot")
-            sigma_list.append(sigma)
-            # Now the fine-tuned data
-            gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
-            print(temp_df["Epoch"])
-            accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
-            type.append("Fine-tuned")
-            sigma_list.append(sigma)
 
         d = pd.DataFrame(
             {   "Gradient Magnitude":gradient_flow,
@@ -6484,21 +6497,36 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # Get first row using row position
     individual_1 =  deterministic_dataframe1.iloc[0]["individual"]
     deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == individual_1 ]
+    if use_set == "val":
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
 
-    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
-    deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-    deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+    elif use_set=="test":
+
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+
     plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='^',s=40,c='crimson',edgecolors='crimson',label=f"One-shot {det_label1}")
     plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='crimson',label=f"Fine-Tuned {det_label1}")
+
     # Deterministic dataframe 2
     individual_2 =  deterministic_dataframe2.iloc[0]["individual"]
     deterministic_dataframe = deterministic_dataframe2[deterministic_dataframe2["individual"] == individual_2]
 
-    deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-    deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
-    deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-    deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+    if use_set == "val":
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+    elif use_set=="test":
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
 
     plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='v',s=40,c='dodgerblue',edgecolors='dodgerblue',label=f"One-shot {det_label2}")
     plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='dodgerblue',label=f"Fine-Tuned {det_label2}")
@@ -6506,11 +6534,11 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
 
 
 
-    plt.legend(bbox_to_anchor=(1, 1), loc='upper right', borderaxespad=0.1)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
-    plt.savefig(file)
+    plt.savefig(file,bbox_inches="tight")
 def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
     if not is_det:
         all_df : pd.DataFrame = None
@@ -6586,15 +6614,13 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:flo
         new_df = all_df.agg(['mean','std','count'])
         ci95_hi = []
         ci95_lo = []
-
-
         m = float(new_df.T["mean"])
         s = float(new_df.T["std"])
         c = float(new_df.T["count"])
         print(new_df)
         ci95_hi = m + 1.96 * s / math.sqrt(c)
         ci95_lo = m - 1.96 * s / math.sqrt(c)
-        print("[{},{}]".format(ci95_lo,ci95_hi))
+        print("[{:.3E},{:.3E}]".format(ci95_lo,ci95_hi))
 def LeMain(args):
     solution=""
     exclude_layers = None
@@ -6665,6 +6691,7 @@ def LeMain(args):
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     experiment_selector(cfg,args["experiment"])
+
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
     curve = dict(curve)
@@ -6751,7 +6778,6 @@ def curve_plot(filepath,filename,title:str):
     # plt.text(1, y[1], '' , transform=trans_offset2)
     plt.title(title)
     plt.savefig(f"{filename}_te_nll.pdf")
-
 
 if __name__ == '__main__':
 
@@ -6856,24 +6882,24 @@ if __name__ == '__main__':
     #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # ##############################################################################
 
+
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
     #
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
-    # #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+
+    args = vars(parser.parse_args())
+    LeMain(args)
     #
 
 
@@ -6889,14 +6915,15 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    sigma_values = [0.001,0.003,0.005]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.0,
-        "amount":0.9528,
-        "architecture":"resnet50",
-        "dataset": "cifar100",
-
-    })
+    # sigma_values = [0.001,0.003,0.005]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "dataset": "cifar100",
+    #     "set":"test"
+    #
+    # })
 
     # for sig in sigma_values:
     #     cfg.sigma = sig
@@ -6906,38 +6933,39 @@ if __name__ == '__main__':
     #
 
 
-    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar10/resnet18/lamp/fine_tuned/curve.npz","deter_vs_sto_LAMP_Sig_0.005_fine_tuned","CIFAR10")
 #
-#     ########################## Scatter plots for the accuracy vs GF ########################################################
+#     ########################## Scatter plots for the accuracy vs GF ##################################################
 #
 #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 #     #
 #
-    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 # #
-    sigmas = [0.001,0.003,0.005]
+#     sigmas = [0.001,0.003,0.005]
+    #
 
-    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-                        det_label2='Deter. Global', file=f"lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
-    scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
-                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-                        det_label2='Deter. Global', file=f"global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.pdf", sigmas_to_show=sigmas)
+    # directory = "gradient_flow_results_test_set/"
+
+    # scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+    #                     det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
+    # scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+    #                     deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+    #                     det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
 #
 # #
+# ################################## CURVE PLOTS #######################################################################
 #
-#
-#
-#
+    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
 #
 # ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
 #     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
 #
 #
-#     ##########################  Last table  Flops count for LAMP  ######################################################
+#     ##########################  Last table  Flops count for LAMP  ####################################################
 
     # print("Lamp stochastic")
     # # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
@@ -6953,7 +6981,7 @@ if __name__ == '__main__':
     #
     # get_statistics_on_FLOPS_until_threshold(df,60,is_det=True)
     #
-    # #########################  Last table  Flops count for GMP ######################################################
+    # #########################  Last table  Flops count for GMP #######################################################
     #
     # print("Global stochastic")
     # # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
@@ -6983,58 +7011,3 @@ if __name__ == '__main__':
 
 
 
-
-
-    # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
-
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-    # cfg.sigma = 0.002
-    # cfg.amount = 0.8
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-
-    ########### Mask Transfer experiments #############################
-    # transfer_mask_rank_experiments(cfg)
-    ############ Stchastic pruning VS Deterministic Pruning ###########
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-
-
-
-    # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
-
-    # stochastic_pruning_with_sigma_optimization_with_erk_layer_wise_prunig_rates(cfg)
-    # stochastic_pruning_with_sigma_and_pr_optimization(cfg)
-    # stochastic_pruning_with_sigma_optimization(cfg)
-    # transfer_mask_rank_experiments_plot_adaptive_noise(cfg)
-
-    # transfer_mask_rank_experiments(cfg,eval_set="val")
-    # weights_analysis_per_weight(cfg)
-    # pruning_rates = [ 0.9, 0.8, 0.5]
-    # # thresholds = []
-    # for pr in pruning_rates:
-    #     cfg.amount = pr
-    #     threshold = check_noise_impact_in_weights_by_layer(cfg)
-
-    # thresholds.append(threshold)
-    # df = pd.DataFrame({"Pruning Rate": pruning_rates, "Threshold": thresholds})
-    # df.to_csv("data/analysis_per_layer/pruning_thesholds_per_layer_traditional_trained.csv", sep=",", index=False)
-    # check_sigma_normalization_against_weights(cfg)
-    # fp = "data/epsilon_experiments_t_1-33_full.csv"
-    # statistics_of_epsilon_for_stochastic_pruning(fp, cfg)
-    # sigmas = [0.001,0.002,0.005]
-    # for sig in sigmas:
-    #     cfg.sigma = sig
-    #     check_sigma_normalization_againts_weights(cfg)
-
-    # file_path = population_sweeps_transfer_mask_rank_experiments()
-    # fp = "data/epsilon_experiments_all_N_sig_0.001_pr_0.9.csv"
-    # df1 = pd.read_csv("data/epsilon_experiments_t_1-33pop_10_sig_0.001_pr_0.8.csv",sep=",",header=0)
-    # df1 = df1.append(pd.read_csv("data/epsilon_experiments_t_1-33pop_50_sig_0.001_pr_0.8.csv",sep=",",header=0))
-    # df1 = df1.append(pd.read_csv("data/epsilon_experiments_t_1-33pop_100_sig_0.001_pr_0.8.csv",sep=",",header=0))
-    # df1.to_csv(fp,sep=",", index=False)
-    # single_statistics_of_epsilon_for_stochastic_pruning(fp)
-    # statistics_of_epsilon_for_stochastic_pruning("data/epsilon_experiments_t_1-33_full.csv", cfg)
-
-    # pruning_rates = [0.95,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1]
-    # for pr in pruning_rates:
-    #     cfg.amount = pr
-    #     main(cfg)
