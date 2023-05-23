@@ -155,6 +155,141 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                                        epochs=1,
                                        FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
                                        fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                       gradient_flow_file_prefix="", cfg=None,):
+    # optimizer = torch.optim.SGD()
+    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    grad_clip = 0
+    if cfg.gradient_cliping:
+        grad_clip = 0.1
+    names, weights = zip(*get_layer_dict(pruned_model))
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar100":
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+    if cfg.dataset == "imagenet":
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
+
+    mask_dict = get_mask(model=pruned_model)
+    for name in exclude_layers:
+        if name in list(mask_dict.keys()):
+            mask_dict.pop(name)
+    total_FLOPS = initial_flops
+    total_sparse_FLOPS = initial_flops
+    # This is for the first batch of the training. The forward pass is sparse but the backward pass is dense and then subsequent
+    #  forward and backward passes are dense.
+    first_time = 1
+
+    data, y = next(iter(dataLoader))
+    forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+
+    file_path = None
+    weights_path = ""
+    if gradient_flow_file_prefix != "":
+        file_path = gradient_flow_file_prefix
+        file_path +=  "recordings.csv"
+
+        if  Path(gradient_flow_file_prefix).owner() == "sclaam":
+            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+        if Path(gradient_flow_file_prefix).owner() == "luisaam":
+            weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"
+
+        weights_path = Path(weights_file_path)
+        weights_path .mkdir(parents=True)
+        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS+forward_pass_sparse_flops+2*forward_pass_sparse_flops,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+
+    pruned_model.cuda()
+    pruned_model.train()
+    disable_bn(pruned_model)
+    if not fine_tune_exclude_layers:
+        disable_exclude_layers(pruned_model, exclude_layers)
+    if not fine_tune_non_zero_weights:
+        disable_all_except(pruned_model, exclude_layers)
+
+    criterion = nn.CrossEntropyLoss()
+    for epoch in range(epochs):
+        for batch_idx, (data, target) in enumerate(dataLoader):
+            data, target = data.cuda(), target.cuda()
+            optimizer.zero_grad()
+            # first forward-backward step
+            predictions = pruned_model(data)
+            # enable_bn(model)
+            loss = criterion(predictions, target)
+            loss.backward()
+            backward_flops_sparse = 2 * forward_pass_sparse_flops
+            backward_flops_dense = 2 * forward_pass_dense_flops
+            batch_dense_flops = forward_pass_dense_flops + backward_flops_dense
+            batch_sparse_flops = forward_pass_sparse_flops + backward_flops_sparse
+            total_FLOPS += batch_dense_flops
+            total_sparse_FLOPS += batch_sparse_flops
+            accuracy.update(preds=predictions.cuda(), target=target.cuda())
+            # mask_gradient(pruned_model, mask_dict=mask_dict)
+
+            if grad_clip:
+                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+
+            optimizer.step()
+            lr_scheduler.step()
+            if use_wandb:
+                acc = accuracy.compute()
+                test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
+                                     one_batch=True)
+                wandb.log({
+                    "val_set_accuracy": acc * 100,
+                    "dense_flops": total_FLOPS,
+                    "test_set_accuracy": test_accuracy,
+                    "sparsity": sparsity(pruned_model)
+                })
+            if batch_idx % 10 == 0 or FLOP_limit != 0:
+                acc = accuracy.compute()
+                flops_sparse = '%.3E' % Decimal(total_FLOPS)
+                print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                      f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
+
+                if FLOP_limit != 0 and FLOP_limit > total_FLOPS:
+                    break
+        # if gradient_flow_file_prefix != "":
+
+        if epoch%10 == 0 and gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total__FLOPS,epoch,
+                                             mask_dict=mask_dict
+                                             ,use_wandb=use_wandb)
+            state_dict = pruned_model.state_dict()
+            temp_name = weights_path / "epoch_{}.pth".format(epoch)
+            torch.save(state_dict,temp_name)
+        if FLOP_limit != 0:
+            if total_FLOPS > FLOP_limit:
+                break
+    if gradient_flow_file_prefix != "":
+
+        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS,epochs,
+                                         mask_dict=mask_dict
+                                         ,use_wandb=use_wandb)
+
+    test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+
+    if use_wandb:
+        if gradient_flow_file_prefix != "":
+            df = pd.read_csv(file_path,sep=",", header=0 , index_col=False)
+            table = wandb.Table(data=df)
+            wandb.log({"Gradient Flow results": table})
+        wandb.log({
+            "test_set_accuracy": test_set_performance,
+            "dense_flops": total_FLOPS,
+            "final_accuracy": test_set_performance
+        })
+
+
+    return total_FLOPS
+    # msg_perormance = f"{performance:.2f}".replace(".", ",")
+
+
+def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+                                       testLoader: torch.utils.data.DataLoader,
+                                       epochs=1,
+                                       FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
+                                       fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
                                        gradient_flow_file_prefix="", cfg=None):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
@@ -184,6 +319,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     file_path = None
     weights_path = ""
+    #TODO: Here I need to be carefull of how I do the recording since this model is unrestricted
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
         file_path +=  "recordings.csv"
@@ -280,9 +416,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
 
     return total_sparse_FLOPS
-    # msg_perormance = f"{performance:.2f}".replace(".", ",")
-
-
 #
 # from .counting.ops import get_inference_FLOPs
 #
@@ -355,13 +488,19 @@ def get_buffer_dict(model: torch.nn.Module):
     return layer_dict
 
 
-def get_mask(model):
-    try:
-        return dict(get_buffer_dict(model))
-    except:
-        temp = lambda w: (w != 0).type(torch.float)
+def get_mask(model,dense=False):
+    if not dense:
+        try:
+            return dict(get_buffer_dict(model))
+        except:
+            temp = lambda w: (w != 0).type(torch.float)
+            names, weights = zip(*get_layer_dict(model))
+            masks = list(map(temp, weights))
+            mask_dict = dict(zip(names, masks))
+            return mask_dict
+    else:
         names, weights = zip(*get_layer_dict(model))
-        masks = list(map(temp, weights))
+        masks = list(map(torch.ones_like, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
 
