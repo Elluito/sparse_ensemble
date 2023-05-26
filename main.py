@@ -5276,15 +5276,15 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
     # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
 
-    if cfg.pruner == "global":
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-
-    if cfg.pruner == "lamp":
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
-                        type="layer-wise",
-                        pruner=cfg.pruner)
-
-    remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+    # if cfg.pruner == "global":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    #
+    # if cfg.pruner == "lamp":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+    #                     type="layer-wise",
+    #                     pruner=cfg.pruner)
+    #
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
 
     # perfor = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     # torch.save({"model_state":pruned_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_deterministic_{cfg.pruner}_pr{cfg.amount}.pth")
@@ -6714,8 +6714,8 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
-    weights_analysis_per_weight(cfg)
-    # experiment_selector(cfg,args["experiment"])
+    # weights_analysis_per_weight(cfg)
+    experiment_selector(cfg,args["experiment"])
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)

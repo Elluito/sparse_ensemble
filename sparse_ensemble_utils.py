@@ -332,6 +332,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         weights_path = Path(weights_file_path)
         weights_path .mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+        state_dict = pruned_model.state_dict()
+        temp_name = weights_path / "epoch_{}.pth".format(epochs-1)
+        torch.save(state_dict,temp_name)
 
     pruned_model.cuda()
     pruned_model.train()
@@ -389,9 +392,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
                                              mask_dict=mask_dict
                                              ,use_wandb=use_wandb)
-            state_dict = pruned_model.state_dict()
-            temp_name = weights_path / "epoch_{}.pth".format(epoch)
-            torch.save(state_dict,temp_name)
+            # state_dict = pruned_model.state_dict()
+            # temp_name = weights_path / "epoch_{}.pth".format(epoch)
+            # torch.save(state_dict,temp_name)
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:
                 break
@@ -400,6 +403,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epochs,
                                          mask_dict=mask_dict
                                          ,use_wandb=use_wandb)
+        state_dict = pruned_model.state_dict()
+        temp_name = weights_path / "epoch_{}.pth".format(epochs-1)
+        torch.save(state_dict,temp_name)
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
