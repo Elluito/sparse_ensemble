@@ -3029,12 +3029,22 @@ def gradient_decent_on_sigma_pr():
 def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
-    average_magnitude = lambda w: torch.abs(w).mean()
-    average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
-    number_param = lambda w: w.nelement()
-    elements = np.array(list(map(number_param, weights)))
-    ratios = average_magnitudes_by_layer / cfg.sigma
-    sorted_idexes_by_ratios = np.flip(np.argsort(ratios))
+    vector = torch.abs(parameters_to_vector(weights))
+    new_vector = (vector)/max(torch.abs(vector))
+    del vector
+    sort_index = torch.argsort(new_vector)
+    index = torch.arange(1,len(new_vector)+1,1)/len(new_vector)
+    plt.plot(index,new_vector[sort_index])
+
+    # plt.hist(new_vector, normed=True, cumulative=True, label='CDF',
+    #         histtype='step', alpha=0.8)
+    plt.savefig("cdf.pdf")
+    # average_magnitude = lambda w: torch.abs(w).mean()
+    # average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
+    # number_param = lambda w: w.nelement()
+    # elements = np.array(list(map(number_param, weights)))
+    # ratios = average_magnitudes_by_layer / cfg.sigma
+    # sorted_idexes_by_ratios = np.flip(np.argsort(ratios))
     # weights_magnitude_by_size = [np.abs(weights[i].flatten().detach().numpy()) for i in sorted_idexes_by_size]
     # names_by_size = [names[i] for i in sorted_idexes_by_size]
     # n = np.array([],dtype=str)
@@ -3047,28 +3057,28 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     # df.to_csv(
     #     "data/weights_by_size.csv", sep=",", index=False
     # )
-    df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
+    # df = pd.read_csv("data/weights_by_size.csv", header=0, sep=",")
     # # plot_ridge_plot(df, "data/figures/original_weights_ridgeplot.png".format(cfg.sigma))
-    df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
-    df["Weight magnitude"] = df['Weight magnitude'].apply(lambda x: np.abs(x))
-    print(df)
-
-    def q25(x):
-        return x.quantile(0.25)
-
-    def q50(x):
-        return x.quantile(0.50)
-
-    def q75(x):
-        return x.quantile(0.75)
-
-    # vals = {'Weight magnitude': [q25, q50, q75]}
-    # quantile_df = df.groupby('Layer Name').agg(vals)
-    # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
-    plot_histograms_per_group(df, "Weight magnitude", "Layer Name")
-    fancy_bloxplot(df, x="Layer Name", y="Weight magnitude", rot=90)
-    # print(quantile_df)
-    # quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", index=True)
+    # df.rename(columns={"g": "Layer Name", "x": "Weight magnitude"}, inplace=True)
+    # df["Weight magnitude"] = df['Weight magnitude'].apply(lambda x: np.abs(x))
+    # print(df)
+    #
+    # def q25(x):
+    #     return x.quantile(0.25)
+    #
+    # def q50(x):
+    #     return x.quantile(0.50)
+    #
+    # def q75(x):
+    #     return x.quantile(0.75)
+    #
+    # # vals = {'Weight magnitude': [q25, q50, q75]}
+    # # quantile_df = df.groupby('Layer Name').agg(vals)
+    # # quantile_df = df.groupby("").quantile([0.25,0.5,0.75])
+    # plot_histograms_per_group(df, "Weight magnitude", "Layer Name")
+    # fancy_bloxplot(df, x="Layer Name", y="Weight magnitude", rot=90)
+    # # print(quantile_df)
+    # # quantile_df.to_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", index=True)
 
     ########################## This is double bar plot ################################################
 
@@ -5637,6 +5647,10 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 12:
         lamp_scenario_2_cheap_evaluation(cfg)
 
+    # if number_experiment == 13:
+
+
+
 
 def pruning_rate_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 1:
@@ -6698,6 +6712,7 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
+    # weights_analysis_per_weight(cfg)
     experiment_selector(cfg,args["experiment"])
 
 def curve_plot(filepath,filename,title:str):
@@ -6891,23 +6906,23 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
     #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+
+    args = vars(parser.parse_args())
+    LeMain(args)
 
 
 
@@ -6923,20 +6938,20 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    sigma_values = [0.001,0.003,0.005]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.0,
-        "amount":0.94,
-        "architecture":"VGG19",
-        "dataset": "cifar10",
-        "set":"test"
-
-    })
-
-    for sig in sigma_values:
-        cfg.sigma = sig
-        gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    unify_sigma_datasets(sigma_values,cfg)
+    # sigma_values = [0.001,0.003,0.005]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.94,
+    #     "architecture":"VGG19",
+    #     "dataset": "cifar10",
+    #     "set":"test"
+    #
+    # })
+    #
+    # for sig in sigma_values:
+    #     cfg.sigma = sig
+    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    # unify_sigma_datasets(sigma_values,cfg)
 
 
 
