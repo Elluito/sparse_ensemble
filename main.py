@@ -3030,15 +3030,17 @@ def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
     net = get_model(cfg)
     names, weights = zip(*get_layer_dict(net))
     vector = torch.abs(parameters_to_vector(weights))
-    new_vector = (vector)/max(torch.abs(vector))
+    new_vector = (vector)/torch.max(torch.abs(vector))
     del vector
     sort_index = torch.argsort(new_vector)
     index = torch.arange(1,len(new_vector)+1,1)/len(new_vector)
     plt.plot(index,new_vector[sort_index])
 
-    # plt.hist(new_vector, normed=True, cumulative=True, label='CDF',
-    #         histtype='step', alpha=0.8)
     plt.savefig("cdf.pdf")
+    plt.figure()
+    plt.hist(new_vector, normed=True, cumulative=True, label='CDF',
+             histtype='step', alpha=0.8)
+    plt.savefig("cdf2.pdf")
     # average_magnitude = lambda w: torch.abs(w).mean()
     # average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
     # number_param = lambda w: w.nelement()
@@ -6712,8 +6714,8 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
-    # weights_analysis_per_weight(cfg)
-    experiment_selector(cfg,args["experiment"])
+    weights_analysis_per_weight(cfg)
+    # experiment_selector(cfg,args["experiment"])
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
