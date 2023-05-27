@@ -34,7 +34,7 @@ fi
 #echo
 
 #qsub -N "${sigma}${pr}${model}${dataset}${pruner}"
-task_run.sh "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"
+./task_run.sh "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"
 
 done
 done
