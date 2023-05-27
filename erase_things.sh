@@ -36,7 +36,7 @@ fi
 
 if [[ $(find . -type f -name "${model}${dataset}${pruner}-${sigma}-${pr}*" | wc -l) -ne 0 ]]; then
 
-echo "${model}${dataset}${pruner}-${sigma}-${pr}"
+erase "${model}${dataset}${pruner}-${sigma}-${pr}"
 
 else
  echo "no file found"
@@ -45,7 +45,7 @@ fi
 
 if [[ $(find . -type f -name "${model}${dataset}${pruner}-deterministic-${pr}*" | wc -l) -ne 0 ]]; then
 
-echo "${model}${dataset}${pruner}-deterministic-${pr}"
+erase "${model}${dataset}${pruner}-deterministic-${pr}"
 
 else
  echo "no file found"
