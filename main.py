@@ -3027,20 +3027,53 @@ def gradient_decent_on_sigma_pr():
 
 
 def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
-    net = get_model(cfg)
-    names, weights = zip(*get_layer_dict(net))
-    vector = torch.abs(parameters_to_vector(weights))
-    new_vector = (vector)/torch.max(torch.abs(vector))
-    del vector
-    sort_index = torch.argsort(new_vector)
-    index = torch.arange(1,len(new_vector)+1,1)/len(new_vector)
-    plt.plot(index,new_vector[sort_index])
 
-    plt.savefig("cdf.pdf")
-    plt.figure()
-    plt.hist(new_vector, normed=True, cumulative=True, label='CDF',
-             histtype='step', alpha=0.8)
-    plt.savefig("cdf2.pdf")
+    net = get_model(cfg)
+    param_vector = torch.abs(parameters_to_vector(net.parameters()))
+    # param_vector= param_vector/max(param_vector)
+    pruning_rates = [0.8,0.85,0.9,0.95]
+    dataset_string = cfg.dataset.upper()
+    architecture_string = ""
+    if cfg.architecture == "resnet18":
+        architecture_string= "ResNet18"
+    if cfg.architecture == "resnet50":
+        architecture_string= "ResNet50"
+    if cfg.architecture == "VGG19":
+        architecture_string= "VGG19"
+
+
+    colors = ["m","g","r","c"]
+    count, bin_counts = torch.histogram(param_vector,bins=len(param_vector),range=(0.,0.03))
+    # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]))
+    # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]), density=True)
+    pdf = count / torch.sum(count)
+    cdf = torch.cumsum(pdf,dim=0)
+    plt.plot(bin_counts[1:].detach().numpy(), cdf.detach().numpy(), label="CDF")
+    names, weights = zip(*get_layer_dict(net))
+
+    for i , pr in enumerate(pruning_rates):
+        threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights,pruning_rate=pr)
+        plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold for pruning rate: {pr}")
+
+    plt.title(f"{architecture_string} on {dataset_string}")
+    plt.legend()
+    plt.savefig(f"cdf_{cfg.architecture}_{cfg.dataset}.pdf")
+    # plt.show()
+
+
+    # names, weights = zip(*get_layer_dict(net))
+    # vector = torch.abs(parameters_to_vector(weights))
+    # new_vector = (vector)/torch.max(torch.abs(vector))
+    # del vector
+    # sort_index = torch.argsort(new_vector)
+    # index = torch.arange(1,len(new_vector)+1,1)/len(new_vector)
+    # plt.plot(index,new_vector[sort_index])
+    #
+    # plt.savefig("cdf.pdf")
+    # plt.figure()
+    # plt.hist(new_vector, normed=True, cumulative=True, label='CDF',
+    #          histtype='step', alpha=0.8)
+    # plt.savefig("cdf2.pdf")
     # average_magnitude = lambda w: torch.abs(w).mean()
     # average_magnitudes_by_layer = np.array(list(map(average_magnitude, weights)))
     # number_param = lambda w: w.nelement()
