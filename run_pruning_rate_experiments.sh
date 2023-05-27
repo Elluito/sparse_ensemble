@@ -10,7 +10,7 @@ models=("resnet18" "resnet50" "VGG19")
 #Datasets
 datasets=("cifar10" "cifar100")
 #Pruning methods
-pruner=("global" "lamp")
+pruners=("global" "lamp")
 
 
 
@@ -24,8 +24,8 @@ for model in ${models[@]};do
 # For over  datasets
 for dataset in ${datasets[@]};do
 # For over pruning methods
-for pruner in ${pruner[@]};do
-if [ "${pr}" = "0.8" ];then
+for pruner in ${pruners[@]};do
+if [ "${pr}" = "0.8" ] && [ "${sigma}" = "0.01" ]; then
   continue
 fi
 if [ "${pr}" = "0.9" ] && [  "${model}" = "resnet18" ]; then
