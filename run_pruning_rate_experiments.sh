@@ -33,7 +33,7 @@ if [ "${pr}" = "0.9" ] && [  "${model}" = "resnet18" ]; then
 fi
 #echo
 
-qsub -N "${sigma}${pr}${model}${dataset}${pruner}" task_run.sh "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"
+qsub -N "${model}${dataset}${pruner}-${sigma}-${pr}" task_run.sh "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"
 
 done
 done
