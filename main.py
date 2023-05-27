@@ -5157,10 +5157,10 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
 
 
 def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
+
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
-
     ################################## WANDB configuration ############################################
     exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
     non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
@@ -5623,6 +5623,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
 
 
 def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
+
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
     if number_experiment == 2:
