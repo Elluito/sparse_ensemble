@@ -6079,6 +6079,218 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
 
 ############################# Scatter plots #############################################################
+
+def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
+    all_df1 : pd.DataFrame = None
+    all_df2 : pd.DataFrame = None
+    for sigma in dataFrame1["sigma"].unique():
+        sigma_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
+        gradient_flow = []
+        accuracy = []
+        type = []
+        sigma_list = []
+        for elem in sigma_temp_df["individual"].unique():
+            # One-shot data
+            temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
+            if use_set == "val":
+                gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+                type.append("One-Shot")
+                sigma_list.append(sigma)
+                # Now the fine-tuned data
+                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
+                print(temp_df["Epoch"])
+                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                type.append("Fine-tuned")
+                sigma_list.append(sigma)
+            elif use_set== "test":
+                gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
+                type.append("One-Shot")
+                sigma_list.append(sigma)
+                # Now the fine-tuned data
+                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["test_set_gradient_magnitude"]))
+                print(temp_df["Epoch"])
+                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                type.append("Fine-tuned")
+                sigma_list.append(sigma)
+
+
+        d = pd.DataFrame(
+            {   "Gradient Magnitude":gradient_flow,
+                "Accuracy":accuracy,
+                "Type" : type,
+                "Sigma" :sigma
+
+                }
+        )
+
+        if all_df1 is None:
+            all_df1 = d
+        else:
+            all_df1 = pd.concat((all_df1, d), ignore_index=True)
+    plt.figure()
+    if not sigmas_to_show:
+        g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type", palette="deep", legend="full", edgecolor=None, linewidth=0)
+    else:
+        # bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
+        bool_index_vector = np.zeros(len(all_df1))
+        for s in sigmas_to_show:
+            bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
+        sigma_df = all_df1[bool_index_vector]
+        g = sns.scatterplot(data=sigma_df,x="Gradient Magnitude",y="Accuracy",hue="Sigma",style="Type",palette="deep",legend="full",edgecolor="black",linewidth=0.1)
+
+    # plt.xlabel(fontsize=20)
+    # plt.ylabel(fontsize=20)
+    # plt.scatter(,label="")
+    plt.title("")
+
+    # Deterministic dataframe 1
+
+    # Get first row using row position
+    individual_1 =  deterministic_dataframe1.iloc[0]["individual"]
+    deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == individual_1 ]
+    if use_set == "val":
+
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+
+    elif use_set=="test":
+
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+
+    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='^',s=40,c='crimson',edgecolors='crimson',label=f"One-shot {det_label1}")
+    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='crimson',label=f"Fine-Tuned {det_label1}")
+
+    # Deterministic dataframe 2
+    individual_2 =  deterministic_dataframe2.iloc[0]["individual"]
+    deterministic_dataframe = deterministic_dataframe2[deterministic_dataframe2["individual"] == individual_2]
+
+    if use_set == "val":
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+    elif use_set=="test":
+        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
+        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
+        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
+        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
+
+    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='v',s=40,c='dodgerblue',edgecolors='dodgerblue',label=f"One-shot {det_label2}")
+    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='dodgerblue',label=f"Fine-Tuned {det_label2}")
+
+
+
+
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
+    # fig = matplotlib.pyplot.gcf()
+    # fig.set_size_inches(10, 10)
+    # plt.xlim(0,2.5)
+    plt.savefig(file,bbox_inches="tight")
+def gradient_flow_correlation_analysis(prefix:str,cfg):
+    # prefix = Path(prefix)
+
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
+
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
+
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+    combine_deterministic_GOBAL_DF: pd.DataFrame = None
+    combine_deterministic_LAMP_DF: pd.DataFrame = None
+
+    ########################### Global Determinisitc ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_global_root+"*/",recursive=True)):
+        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<11:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [0] * len_df
+        individual_df["Pruner"] = ["GMP"] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_deterministic_GOBAL_DF is None:
+            combine_deterministic_GOBAL_DF = individual_df
+        else:
+            combine_deterministic_GOBAL_DF = pd.concat((combine_deterministic_GOBAL_DF,individual_df),ignore_index=True)
+
+    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
+
+    ########################### Lamp Deterministic  ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
+        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<11:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [0] * len_df
+        individual_df["Pruner"] = ["LAMP"] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_deterministic_LAMP_DF is None:
+            combine_deterministic_LAMP_DF = individual_df
+        else:
+            combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
+
+    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
+
+    ########################## first Global stochatic #######################################
+    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
+        individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<11:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Pruner"] = ["GMP"] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_stochastic_GLOBAL_DF is None:
+            combine_stochastic_GLOBAL_DF = individual_df
+        else:
+            combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
+
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
+    ########################## Second LAMP stochatic #######################################
+
+
+
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
+        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<11:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        individual_df["Pruner"] = ["LAMP"] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_stochastic_LAMP_DF is None:
+            combine_stochastic_LAMP_DF = individual_df
+        else:
+            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
+
+
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
+
 def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
@@ -6112,9 +6324,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
     combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
     combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
-
-    #Loop over all values of e
-
+    #Loop over all values of everything
     for sigma in sigmas:
         for arch in architectures:
             for dataset in datasets:
@@ -6129,6 +6339,106 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
+def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
+    # Dataframe 1 has every training trace for every individual for every combination of dataset, architecture pruning rate and sigma
+    #I just want to have a dataframe that has an extra colum with one-shot and fine-tuned values called stage
+    individual_df["individual"] = [index] * len_df
+    individual_df["sigma"] = [cfg.sigma] * len_df
+    individual_df["Pruner"] = ["LAMP"] * len_df
+    individual_df["Architecture"] = [cfg.architecture] * len_df
+    individual_df["Dataset"] = [cfg.dataset] * len_df
+    individual_df["Pruning Rate"] = [cfg.amount] * len_df
+    for sigma in dataFrame1["sigma"].unique():
+        for pruner in dataFrame1["Pruner"].unique():
+            for arch in dataFrame1["Architecture"].unique():
+                for dataset in dataFrame1["Dataset"].unique():
+                    for pr in dataFrame1["Pruning Rate"].unique():
+
+                        first_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
+                        first_temp_df = first_temp_df[first_temp_df["Pruner"] == pruner]
+                        first_temp_df = first_temp_df[first_temp_df["Architecture"] == arch]
+                        first_temp_df = first_temp_df[first_temp_df["Dataset"] == dataset]
+                        first_temp_df = first_temp_df[first_temp_df["Pruning Rate"] == pr]
+                        accuracy = []
+                        stage = []
+                        id = []
+                        sigma_list = []
+                        pruner_list = []
+                        arch_list = []
+                        dataset_list = []
+                        pr_list = []
+
+                        for elem in first_temp_df["individual"].unique():
+                            # One-shot data
+                            temp_df = sigma_temp_df[first_temp_df["individual"]==elem]
+                            if use_set == "val":
+                                gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
+                                stage.append("One-Shot")
+                                id.append(elem)
+                                sigma_list.append(sigma)
+                                pruner_list.append(pruner)
+                                arch_list.append(arch)
+                                dataset_list.append(dataset)
+                                pr_list.append(pr)
+                                # Now the fine-tuned data
+                                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
+                                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                                stage.append("Fine-tuned")
+                                sigma_list.append(sigma)
+                                id.append(elem)
+                                sigma_list.append(sigma)
+                                pruner_list.append(pruner)
+                                arch_list.append(arch)
+                                dataset_list.append(dataset)
+                                pr_list.append(pr)
+
+                            elif use_set== "test":
+
+                                gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
+                                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
+                                stage.append("One-Shot")
+                                id.append(elem)
+                                sigma_list.append(sigma)
+                                pruner_list.append(pruner)
+                                arch_list.append(arch)
+                                dataset_list.append(dataset)
+                                pr_list.append(pr)
+                                # Now the fine-tuned data
+                                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["test_set_gradient_magnitude"]))
+                                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
+                                stage.append("Fine-tuned")
+                                sigma_list.append(sigma)
+                                pruner_list.append(pruner)
+                                arch_list.append(arch)
+                                dataset_list.append(dataset)
+                                pr_list.append(pr)
+
+
+        d = pd.DataFrame(
+            {
+                "Accuracy":accuracy,
+                "Stage" :stage,
+                r"$\sigma$":sigma,
+                "Pruner":pruner_list,
+                "Architecture":arch_list,
+                "Dataset" :dataset_list,
+                "Pruning rate" :pr_list,
+
+                }
+        )
+
+        g = sns.objects.Plot(
+               penguins, y="Accuracy",x="Pruning rate",
+               color=r"$\sigma$", alpha="Pruing rate",fill="Pruner", edgestyle="Architecture",
+           ).add(sns.objects.Bar(edgewidth=2), sns.objects.Hist(), sns.objects.Dodge("fill")
+
+                 ).add(sns.objects.Range(), sns.objects.Est(errorbar="sd"), sns.objects.Dodge())
+
+        plt.savefig("barplot,pdf")
+
+
+
 def save_predictions_of_individual(folder:str,dataloader:DataLoader,model:nn.Module,cfg):
     if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
         accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
@@ -6196,86 +6506,6 @@ def ensemble_predictions(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
-def gradient_flow_correlation_analysis(prefix:str,cfg):
-    # prefix = Path(prefix)
-
-    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
-
-    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
-
-    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-
-    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-
-
-    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
-    combine_stochastic_LAMP_DF: pd.DataFrame = None
-    combine_deterministic_GOBAL_DF: pd.DataFrame = None
-    combine_deterministic_LAMP_DF: pd.DataFrame = None
-
-    ########################### Global Determinisitc ########################################
-
-    for index, individual in enumerate(glob.glob(deterministic_global_root+"*/",recursive=True)):
-        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df<11:
-            continue
-        individual_df["individual"] = [index] * len_df
-        if combine_deterministic_GOBAL_DF is None:
-            combine_deterministic_GOBAL_DF = individual_df
-        else:
-            combine_deterministic_GOBAL_DF = pd.concat((combine_deterministic_GOBAL_DF,individual_df),ignore_index=True)
-
-    combine_deterministic_GOBAL_DF.to_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
-
-    ########################### Lamp Deterministic  ########################################
-
-    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
-        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df<11:
-            continue
-        individual_df["individual"] = [index] * len_df
-        if combine_deterministic_LAMP_DF is None:
-            combine_deterministic_LAMP_DF = individual_df
-        else:
-            combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
-
-    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
-
-    ########################## first Global stochatic #######################################
-    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
-        individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df<11:
-            continue
-        individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [cfg.sigma] * len_df
-        if combine_stochastic_GLOBAL_DF is None:
-            combine_stochastic_GLOBAL_DF = individual_df
-        else:
-            combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
-
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
-    ########################## Second LAMP stochatic #######################################
-
-
-
-    for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
-        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df<11:
-            continue
-        individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [cfg.sigma] * len_df
-        if combine_stochastic_LAMP_DF is None:
-            combine_stochastic_LAMP_DF = individual_df
-        else:
-            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
-
-
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
-
 def plot_gradientFlow_data(filepath,title=""):
     data_frame= pd.read_csv(filepath,sep=",",header=0,index_col=False)
 
@@ -6643,119 +6873,7 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame,title,file):
     plt.tight_layout()
     plt.title(title,fontsize=20)
     plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
-def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
-    all_df1 : pd.DataFrame = None
-    all_df2 : pd.DataFrame = None
-    for sigma in dataFrame1["sigma"].unique():
-        sigma_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
-        gradient_flow = []
-        accuracy = []
-        type = []
-        sigma_list = []
 
-
-        for elem in sigma_temp_df["individual"].unique():
-            # One-shot data
-            temp_df = sigma_temp_df[sigma_temp_df["individual"]==elem]
-            if use_set == "val":
-                gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
-                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
-                type.append("One-Shot")
-                sigma_list.append(sigma)
-                # Now the fine-tuned data
-                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["val_set_gradient_magnitude"]))
-                print(temp_df["Epoch"])
-                accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
-                type.append("Fine-tuned")
-                sigma_list.append(sigma)
-            elif use_set== "test":
-                gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
-                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
-                type.append("One-Shot")
-                sigma_list.append(sigma)
-                # Now the fine-tuned data
-                gradient_flow.append(float(temp_df.iloc[len(temp_df)-1]["test_set_gradient_magnitude"]))
-                print(temp_df["Epoch"])
-                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==temp_df["Epoch"].max()].iloc[0]))
-                type.append("Fine-tuned")
-                sigma_list.append(sigma)
-
-
-        d = pd.DataFrame(
-            {   "Gradient Magnitude":gradient_flow,
-                "Accuracy":accuracy,
-                "Type" : type,
-                "Sigma" :sigma
-
-            }
-        )
-
-        if all_df1 is None:
-            all_df1 = d
-        else:
-            all_df1 = pd.concat((all_df1, d), ignore_index=True)
-    plt.figure()
-    if not sigmas_to_show:
-        g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type", palette="deep", legend="full", edgecolor=None, linewidth=0)
-    else:
-        # bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
-        bool_index_vector = np.zeros(len(all_df1))
-        for s in sigmas_to_show:
-            bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
-        sigma_df = all_df1[bool_index_vector]
-        g = sns.scatterplot(data=sigma_df,x="Gradient Magnitude",y="Accuracy",hue="Sigma",style="Type",palette="deep",legend="full",edgecolor="black",linewidth=0.1)
-
-    # plt.xlabel(fontsize=20)
-    # plt.ylabel(fontsize=20)
-    # plt.scatter(,label="")
-    plt.title("")
-    # Deterministic dataframe 1
-
-    # Get first row using row position
-    individual_1 =  deterministic_dataframe1.iloc[0]["individual"]
-    deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == individual_1 ]
-    if use_set == "val":
-        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
-        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
-
-    elif use_set=="test":
-
-        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
-        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
-
-    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='^',s=40,c='crimson',edgecolors='crimson',label=f"One-shot {det_label1}")
-    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='crimson',label=f"Fine-Tuned {det_label1}")
-
-    # Deterministic dataframe 2
-    individual_2 =  deterministic_dataframe2.iloc[0]["individual"]
-    deterministic_dataframe = deterministic_dataframe2[deterministic_dataframe2["individual"] == individual_2]
-
-    if use_set == "val":
-        deterministic_initial_gradient_fow = float(deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["val_set_gradient_magnitude"])
-        deterministic_initial_accuracy = float(deterministic_dataframe ["val_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-        deterministic_final_accuracy  = float( deterministic_dataframe["val_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
-    elif use_set=="test":
-        deterministic_initial_gradient_fow = float(deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"]==-1].iloc[0])
-        deterministic_final_gradient_fow = float(deterministic_dataframe .iloc[len(deterministic_dataframe )-1]["test_set_gradient_magnitude"])
-        deterministic_initial_accuracy = float(deterministic_dataframe ["test_accuracy"][ deterministic_dataframe["Epoch"]==-1])
-        deterministic_final_accuracy  = float( deterministic_dataframe["test_accuracy"][ deterministic_dataframe ["Epoch"]== deterministic_dataframe["Epoch"].max()].iloc[0])
-
-    plt.scatter(x=deterministic_initial_gradient_fow,y=deterministic_initial_accuracy,marker='v',s=40,c='dodgerblue',edgecolors='dodgerblue',label=f"One-shot {det_label2}")
-    plt.scatter(x=deterministic_final_gradient_fow,y=deterministic_final_accuracy,marker='x',s=40,c='dodgerblue',label=f"Fine-Tuned {det_label2}")
-
-
-
-
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
-    # fig = matplotlib.pyplot.gcf()
-    # fig.set_size_inches(10, 10)
-    # plt.xlim(0,2.5)
-    plt.savefig(file,bbox_inches="tight")
 def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:float,is_det=False):
     if not is_det:
         all_df : pd.DataFrame = None
