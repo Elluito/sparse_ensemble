@@ -150,7 +150,7 @@ def check_for_layers_collapse(model):
             raise Exception("Layer {} has 0 weights different form 0 the layer has collapsed".format(names[indx]))
 
 
-def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
                                        FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
@@ -181,6 +181,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     #  forward and backward passes are dense.
     first_time = 1
 
+    #TODO: Here I need to be carefull of how I do the recording since this model is unrestricted
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
@@ -252,7 +253,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         # if gradient_flow_file_prefix != "":
 
         if epoch%10 == 0 and gradient_flow_file_prefix != "":
-            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total__FLOPS,epoch,
+            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS,epoch,
                                              mask_dict=mask_dict
                                              ,use_wandb=use_wandb)
             state_dict = pruned_model.state_dict()
@@ -319,7 +320,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     file_path = None
     weights_path = ""
-    #TODO: Here I need to be carefull of how I do the recording since this model is unrestricted
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
         file_path +=  "recordings.csv"

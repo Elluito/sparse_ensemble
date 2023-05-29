@@ -6129,6 +6129,73 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
+def save_predictions_of_individual(folder:str,dataloader:DataLoader,model:nn.Module,cfg):
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar100":
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+    if cfg.dataset == "imagenet":
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
+
+    model.eval()
+
+    predictions = None
+
+    for batch_idx, (data, target) in enumerate(dataloader):
+        data, target = data.cuda(), target.cuda()
+        batch_prediction = model(data)
+        batch_prediction = batch_prediction.detach().numpy()
+        if predictions is None:
+            predictions = batch_prediction
+        else:
+            predictions = np.vstack((predictions,batch_prediction))
+
+    with open(folder+"predictions.npy",) as f:
+        np.save(f,predictions)
+
+     
+
+def ensemble_predictions(prefix:str,cfg):
+
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    predictions_place_holder = []
+
+    model_place_holder: nn.Module = get_model(cfg)
+
+    max_individuals = 10
+
+    train,val,test = get_datasets(cfg)
+
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+
+    ########################## first Global stochatic #######################################
+    ind_number = 0
+    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
+        #Load the individuals
+        try:
+            model_place_holder.load_state_dict(torch.load(individual +"/weights/epoch_90.pth"))
+
+        except Exception as err:
+            print(E)
+            return
+            continue
+
+        save_predictions_of_individual(individual,test,model_place_holder,cfg)
+
+        len_df = individual_df.shape[0]
+        if len_df<11:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        if combine_stochastic_GLOBAL_DF is None:
+            combine_stochastic_GLOBAL_DF = individual_df
+        else:
+            combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
@@ -6383,7 +6450,6 @@ def same_image_pareto_analysis(dataFrame:pd.DataFrame,file:str):
     plt.figure()
     g = sns.scatterplot(data=temp_dataframe3,x='initial_val_accuracy',y='final_val_accuracy',color='blue')
     plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file),bbox_inches='tight')
-    pass
 def pareto_analysis(dataFrame:pd.DataFrame,file:str):
     # Before fine-tuning pareto set
     temp_dataframe = dataFrame[["initial_GF_valset","initial_val_accuracy"]]
@@ -6836,9 +6902,8 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
-    cfg
-    weights_analysis_per_weight(cfg)
-    # experiment_selector(cfg,args["experiment"])
+    # weights_analysis_per_weight(cfg)
+    experiment_selector(cfg,args["experiment"])
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
@@ -7066,22 +7131,22 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # #
     #
-
-    args = vars(parser.parse_args())
+    # args = vars(parser.parse_args())
     # LeMain(args)
 
 
