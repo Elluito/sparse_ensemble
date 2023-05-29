@@ -3026,39 +3026,99 @@ def gradient_decent_on_sigma_pr():
     pass
 
 
-def weights_analysis_per_weight(cfg: omegaconf.DictConfig):
+def weights_analysis_per_weight(cfg:omegaconf.DictConfig=None,cfg2:omegaconf.DictConfig=None,config_list = []):
+    if cfg2 is None:
+        net = get_model(cfg)
+        param_vector = torch.abs(parameters_to_vector(net.parameters()))
+        # param_vector= param_vector/max(param_vector)
+        pruning_rates = [0.8,0.85,0.9,0.95]
+        dataset_string = cfg.dataset.upper()
+        architecture_string = ""
+        if cfg.architecture == "resnet18":
+            architecture_string= "ResNet18"
+        if cfg.architecture == "resnet50":
+            architecture_string= "ResNet50"
+        if cfg.architecture == "VGG19":
+            architecture_string= "VGG19"
 
-    net = get_model(cfg)
-    param_vector = torch.abs(parameters_to_vector(net.parameters()))
-    # param_vector= param_vector/max(param_vector)
-    pruning_rates = [0.8,0.85,0.9,0.95]
-    dataset_string = cfg.dataset.upper()
-    architecture_string = ""
-    if cfg.architecture == "resnet18":
-        architecture_string= "ResNet18"
-    if cfg.architecture == "resnet50":
-        architecture_string= "ResNet50"
-    if cfg.architecture == "VGG19":
-        architecture_string= "VGG19"
+
+        colors = ["m","g","r","c"]
+        count, bin_counts = torch.histogram(param_vector,bins=len(param_vector))
+        # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]))
+        # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]), density=True)
+        pdf = count / torch.sum(count)
+        cdf = torch.cumsum(pdf,dim=0)
+        plt.plot(bin_counts[1:].detach().numpy(), cdf.detach().numpy(), label="CDF")
+        names, weights = zip(*get_layer_dict(net))
+
+        for i , pr in enumerate(pruning_rates):
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold for pruning rate: {pr}")
+
+        plt.title(f"{architecture_string} on {dataset_string}")
+        plt.legend()
+        plt.savefig(f"cdf_{cfg.architecture}_{cfg.dataset}.pdf")
+    if cfg2 is not None:
+
+        net1 = get_model(cfg)
+        net2 = get_model(cfg2)
+        param_vector1 = torch.abs(parameters_to_vector(net1.parameters()))
+        param_vector2 = torch.abs(parameters_to_vector(net2.parameters()))
+
+        # param_vector= param_vector/max(param_vector)
+        pruning_rates = [0.9,0.95]
+        dataset_string = cfg.dataset.upper()
+
+        assert dataset_string == cfg2.dataset.upper(),"The solutions are not trained on the same dataset. {} is trained on {} and {} is trained on  {}".format(cfg.architecture,cfg.dataset,cfg2.architecure,cfg2.dataset)
+
+        architecture_string1 = ""
+        architecture_string2 = ""
+        if cfg.architecture == "resnet18":
+            architecture_string1= "ResNet18"
+        if cfg.architecture == "resnet50":
+            architecture_string1= "ResNet50"
+        if cfg.architecture == "VGG19":
+            architecture_string1= "VGG19"
+
+        if cfg2.architecture == "resnet18":
+            architecture_string2= "ResNet18"
+        if cfg2.architecture == "resnet50":
+            architecture_string2= "ResNet50"
+        if cfg2.architecture == "VGG19":
+            architecture_string2= "VGG19"
 
 
-    colors = ["m","g","r","c"]
-    count, bin_counts = torch.histogram(param_vector,bins=len(param_vector),range=(0.,0.03))
-    # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]))
-    # torch.histogram(torch.tensor([1., 2, 1]), bins=4, range=(0., 3.), weight=torch.tensor([1., 2., 4.]), density=True)
-    pdf = count / torch.sum(count)
-    cdf = torch.cumsum(pdf,dim=0)
-    plt.plot(bin_counts[1:].detach().numpy(), cdf.detach().numpy(), label="CDF")
-    names, weights = zip(*get_layer_dict(net))
+        colors = ["m","g","r","c"]
+        # For net 1
+        count1, bin_counts1 = torch.histogram(param_vector1,bins=len(param_vector1),range=(0,0.09))
+        pdf1 = count1 / torch.sum(count1)
+        cdf1 = torch.cumsum(pdf1,dim=0)
+        plt.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string1}")
+        # For net 2
+        count2, bin_counts2 = torch.histogram(param_vector2,bins=len(param_vector2),range=(0,0.09))
+        pdf2 = count2 / torch.sum(count2)
+        cdf2 = torch.cumsum(pdf2,dim=0)
+        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(), label=f"{architecture_string2}")
 
-    for i , pr in enumerate(pruning_rates):
-        threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights,pruning_rate=pr)
-        plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold for pruning rate: {pr}")
+        names1, weights1 = zip(*get_layer_dict(net1))
+        names2, weights2 = zip(*get_layer_dict(net2))
 
-    plt.title(f"{architecture_string} on {dataset_string}")
-    plt.legend()
-    plt.savefig(f"cdf_{cfg.architecture}_{cfg.dataset}.pdf")
-    # plt.show()
+        for i , pr in enumerate(pruning_rates):
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights1,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold @ pr {pr} for {architecture_string1}")
+
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights2,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="dotted",label=f"Threshold @ pr {pr} for {architecture_string2}")
+
+        plt.title(f"{architecture_string1} and {architecture_string2} on {dataset_string}")
+        plt.legend()
+        plt.savefig(f"cdf_{cfg.architecture}_{cfg2.architecture}_{cfg.dataset}.pdf")
+
+
+    if config_list:
+       names = []
+
+
 
 
     # names, weights = zip(*get_layer_dict(net))
@@ -6036,6 +6096,39 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
+def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:list,datasets:list,cfg:omegaconf.DictConfig):
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+    # First of everything
+    first_sigma = sigmas.pop()
+    first_architecture = architectures.pop()
+    first_pruning_rate =pruning_rates.pop()
+    first_dataset =datasets.pop()
+
+
+
+
+
+
+    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
+
+    #Loop over all values of e
+
+    for sigma in sigmas:
+        for arch in architectures:
+            for dataset in datasets:
+                for pr in pruning_rates:
+
+                    lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+
+                    global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+
+                    combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
+                    combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
+
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
 def gradient_flow_correlation_analysis(prefix:str,cfg):
     # prefix = Path(prefix)
 
@@ -6679,6 +6772,7 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:flo
         ci95_hi = m + 1.96 * s / math.sqrt(c)
         ci95_lo = m - 1.96 * s / math.sqrt(c)
         print("[{:.3E},{:.3E}]".format(ci95_lo,ci95_hi))
+
 def LeMain(args):
     solution=""
     exclude_layers = None
@@ -6715,15 +6809,11 @@ def LeMain(args):
         "generations": 10,
         "epochs": 101,
         "short_epochs": 10,
-        # "architecture": "VGG19",
         "architecture": args["architecture"],
         "solution":solution,
-        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         "noise": "gaussian",
         "pruner": args["pruner"],
         "model_type": "alternative",
-        # "exclude_layers": exclude_layers,
-        # "exclude_layers": ["features.0", "classifier"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -6732,13 +6822,11 @@ def LeMain(args):
         "measure_gradient_flow":True,
         "full_fine_tune": False,
         "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
         "sigma": args["sigma"],
         "noise_after_pruning":0,
         "amount": args["pruning_rate"],
         "dataset": args["dataset"],
         "batch_size": args["batch_size"],
-        # "batch_size": 128,
         "num_workers": 0,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
@@ -6748,8 +6836,9 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
-    # weights_analysis_per_weight(cfg)
-    experiment_selector(cfg,args["experiment"])
+    cfg
+    weights_analysis_per_weight(cfg)
+    # experiment_selector(cfg,args["experiment"])
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
@@ -6837,6 +6926,41 @@ def curve_plot(filepath,filename,title:str):
     # plt.text(1, y[1], '' , transform=trans_offset2)
     plt.title(title)
     plt.savefig(f"{filename}_te_nll.pdf")
+def compare_architecture_distributions(arc1="",arc2=""):
+    
+    cfg1 = omegaconf.DictConfig({
+        "sigma":0.0,
+        "amount":0.9528,
+        "architecture":"resnet50",
+        "model_type": "alternative",
+        "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+        "dataset": "cifar10",
+        "set":"test"
+
+    })
+
+    cfg2 = omegaconf.DictConfig({
+        "sigma":0.0,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "alternative",
+        "solution":"trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "dataset":"cifar10",
+        "set":"test"
+
+    })
+    # cfg2 = omegaconf.DictConfig({
+    #     "sigma":0.0,
+    #     "amount":0.9,
+    #     "architecture":"VGG19",
+    #     "model_type": "alternative",
+    #     "solution":"trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     "dataset":"cifar10",
+    #     "set":"test"
+    #
+    # })
+
+    # weights_analysis_per_weight(cfg1,cfg2)
 
 if __name__ == '__main__':
 
@@ -6958,8 +7082,7 @@ if __name__ == '__main__':
     #
 
     args = vars(parser.parse_args())
-    LeMain(args)
-
+    # LeMain(args)
 
 
 
@@ -6974,20 +7097,29 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # sigma_values = [0.001,0.003,0.005]
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.0,
-    #     "amount":0.94,
-    #     "architecture":"VGG19",
-    #     "dataset": "cifar10",
-    #     "set":"test"
-    #
-    # })
-    #
-    # for sig in sigma_values:
-    #     cfg.sigma = sig
-    #     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
-    # unify_sigma_datasets(sigma_values,cfg)
+    sigma_values = [0.001,0.003,0.005]
+    pruning_rate_values = [0.8,0.85,0.9,0.95]
+    architecture_values = ["VGG19","resnet50","resnet18"]
+    dataset_values = ["cifar10","cifar100"]
+
+    cfg = omegaconf.DictConfig({
+        "sigma":0.0,
+        "amount":0.94,
+        "architecture":"VGG19",
+        "dataset": "cifar10",
+        "set":"test"
+
+    })
+    for dataset in dataset_values:
+        cfg.dataset = dataset
+        for pruning_rate in pruning_rate_values:
+            cfg.amount = pruning_rate
+            for arch in architecture_values:
+                cfg.architecture = arch
+                for sig in sigma_values:
+                    cfg.sigma = sig
+                    gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+    unify_all_variables_datasets(sigmas=sigma_values,architectures=architecture_values,pruning_rates=pruning_rate_values,datasets=dataset_values)
 
 
 
