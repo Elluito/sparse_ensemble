@@ -6096,7 +6096,7 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
-def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:list,datasets:list,cfg:omegaconf.DictConfig):
+def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:list,datasets:list):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     # First of everything
