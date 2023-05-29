@@ -6251,6 +6251,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
     combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
+    print()
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
@@ -7301,6 +7302,7 @@ if __name__ == '__main__':
                 cfg.architecture = arch
                 for sig in sigma_values:
                     cfg.sigma = sig
+                    print(cfg)
                     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
     unify_all_variables_datasets(sigmas=sigma_values,architectures=architecture_values,pruning_rates=pruning_rate_values,datasets=dataset_values)
 
