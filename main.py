@@ -6343,12 +6343,14 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
     # Dataframe 1 has every training trace for every individual for every combination of dataset, architecture pruning rate and sigma
     #I just want to have a dataframe that has an extra colum with one-shot and fine-tuned values called stage
-    individual_df["individual"] = [index] * len_df
-    individual_df["sigma"] = [cfg.sigma] * len_df
-    individual_df["Pruner"] = ["LAMP"] * len_df
-    individual_df["Architecture"] = [cfg.architecture] * len_df
-    individual_df["Dataset"] = [cfg.dataset] * len_df
-    individual_df["Pruning Rate"] = [cfg.amount] * len_df
+    accuracy = []
+    stage = []
+    id = []
+    sigma_list = []
+    pruner_list = []
+    arch_list = []
+    dataset_list = []
+    pr_list = []
     for sigma in dataFrame1["sigma"].unique():
         for pruner in dataFrame1["Pruner"].unique():
             for arch in dataFrame1["Architecture"].unique():
@@ -6360,14 +6362,6 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
                         first_temp_df = first_temp_df[first_temp_df["Architecture"] == arch]
                         first_temp_df = first_temp_df[first_temp_df["Dataset"] == dataset]
                         first_temp_df = first_temp_df[first_temp_df["Pruning Rate"] == pr]
-                        accuracy = []
-                        stage = []
-                        id = []
-                        sigma_list = []
-                        pruner_list = []
-                        arch_list = []
-                        dataset_list = []
-                        pr_list = []
 
                         for elem in first_temp_df["individual"].unique():
                             # One-shot data
@@ -6416,27 +6410,27 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
                                 pr_list.append(pr)
 
 
-        d = pd.DataFrame(
-            {
-                "Accuracy":accuracy,
-                "Stage" :stage,
-                r"$\sigma$":sigma,
-                "Pruner":pruner_list,
-                "Architecture":arch_list,
-                "Dataset" :dataset_list,
-                "Pruning rate" :pr_list,
+    d = pd.DataFrame(
+        {
+     "Accuracy":accuracy,
+     "Stage" :stage,
+     r"$\sigma$":sigma,
+     "Pruner":pruner_list,
+     "Architecture":arch_list,
+     "Dataset" :dataset_list,
+     "Pruning rate" :pr_list,
 
-                }
-        )
+        }
+    )
 
-        g = sns.objects.Plot(
-               penguins, y="Accuracy",x="Pruning rate",
-               color=r"$\sigma$", alpha="Pruing rate",fill="Pruner", edgestyle="Architecture",
-           ).add(sns.objects.Bar(edgewidth=2), sns.objects.Hist(), sns.objects.Dodge("fill")
+    g = sns.objects.Plot(
+           penguins, y="Accuracy",x="Pruning rate",
+           color=r"$\sigma$", alpha="Pruing rate",fill="Pruner", edgestyle="Architecture",
+       ).add(sns.objects.Bar(edgewidth=2), sns.objects.Hist()
 
-                 ).add(sns.objects.Range(), sns.objects.Est(errorbar="sd"), sns.objects.Dodge())
+             ).add(sns.objects.Range(), sns.objects.Est(errorbar="sd"), sns.objects.Dodge())
 
-        plt.savefig("barplot,pdf")
+    plt.savefig("barplot,pdf")
 
 
 
