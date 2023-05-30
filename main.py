@@ -6251,7 +6251,6 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
     combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
 
     ########################## first Global stochatic #######################################
-    print()
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
@@ -6324,7 +6323,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
 
     combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
-    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{first_architecture}_{first_dataset}_sigma{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
     #Loop over all values of everything
     for sigma in sigmas:
         for arch in architectures:
@@ -6333,7 +6332,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
                     lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
 
-                    global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+                    global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
 
                     combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
                     combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
@@ -7298,6 +7297,7 @@ if __name__ == '__main__':
                     cfg.sigma = sig
                     print(cfg)
                     gradient_flow_correlation_analysis(f"gradient_flow_data/{cfg.dataset}/",cfg)
+
     unify_all_variables_datasets(sigmas=sigma_values,architectures=architecture_values,pruning_rates=pruning_rate_values,datasets=dataset_values)
 
 
