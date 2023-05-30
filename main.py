@@ -6326,6 +6326,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
     combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{first_architecture}_{first_dataset}_sigma{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
     #Loop over all values of everything
     for sigma in sigmas:
+        first_time = 1
         for arch in architectures:
             for dataset in datasets:
                 for pr in pruning_rates:
@@ -6333,12 +6334,21 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
                     lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
 
                     global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
-
-                    combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
+                    combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
                     combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
+                    if first_time:
+                        deter_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{arch}_{dataset}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+                        combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF,deter_lamp_df),ignore_index=True)
+                        deter_global_df = pd.read_csv(f"gradientflow_deterministic_global_{arch}_{dataset}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+                        combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,deter_global_df),ignore_index=True)
+                        first_time = 0
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
     combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
+
+    combine_all =  pd.concat((combine_stochastic_GLOBAL_DF,combine_stochastic_LAMP_DF),ignore_index=True)
+    combine_all.to_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
+
 def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
     # Dataframe 1 has every training trace for every individual for every combination of dataset, architecture pruning rate and sigma
     #I just want to have a dataframe that has an extra colum with one-shot and fine-tuned values called stage
