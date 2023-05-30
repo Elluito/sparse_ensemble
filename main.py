@@ -56,6 +56,7 @@ from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from matplotlib.axes import SubplotBase
 from itertools import chain, combinations
 import seaborn as sns
+import seaborn.objects as so
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
@@ -6349,13 +6350,14 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
     combine_all =  pd.concat((combine_stochastic_GLOBAL_DF,combine_stochastic_LAMP_DF),ignore_index=True)
     combine_all.to_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",header=True ,index=False)
 
-def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,deterministic_dataframe1:pd.DataFrame,deterministic_dataframe2:pd.DataFrame,det_label1:str,det_label2:str,title:str="",file:str="",use_set="val",sigmas_to_show=[]):
+def bar_plot_every_experiment(dataFrame1:pd.DataFrame,use_set="val",sigmas_to_show=[]):
     # Dataframe 1 has every training trace for every individual for every combination of dataset, architecture pruning rate and sigma
     #I just want to have a dataframe that has an extra colum with one-shot and fine-tuned values called stage
     accuracy = []
     stage = []
     id = []
     sigma_list = []
+    gradient_flow= []
     pruner_list = []
     arch_list = []
     dataset_list = []
@@ -6374,7 +6376,7 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
 
                         for elem in first_temp_df["individual"].unique():
                             # One-shot data
-                            temp_df = sigma_temp_df[first_temp_df["individual"]==elem]
+                            temp_df = first_temp_df[first_temp_df["individual"]==elem]
                             if use_set == "val":
                                 gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
                                 accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"]==-1]))
@@ -6400,7 +6402,7 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
                             elif use_set== "test":
 
                                 gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"]==-1].iloc[0]))
-                                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1]))
+                                accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"]==-1].iloc[0]))
                                 stage.append("One-Shot")
                                 id.append(elem)
                                 sigma_list.append(sigma)
@@ -6423,7 +6425,7 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
         {
      "Accuracy":accuracy,
      "Stage" :stage,
-     r"$\sigma$":sigma,
+     "sigma":sigma_list,
      "Pruner":pruner_list,
      "Architecture":arch_list,
      "Dataset" :dataset_list,
@@ -6432,14 +6434,25 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,de
         }
     )
 
-    g = sns.objects.Plot(
-           penguins, y="Accuracy",x="Pruning rate",
-           color=r"$\sigma$", alpha="Pruing rate",fill="Pruner", edgestyle="Architecture",
-       ).add(sns.objects.Bar(edgewidth=2), sns.objects.Hist()
-
-             ).add(sns.objects.Range(), sns.objects.Est(errorbar="sd"), sns.objects.Dodge())
-
-    plt.savefig("barplot,pdf")
+    # g = (so.Plot(
+    #         d ,y="Accuracy",x="Pruning rate",
+    #        color="sigma",edgestyle="Architecture",
+    #    ).add(so.Bar(edgewidth=0.9),so.Dodge("fill")
+    #
+    #          ).add(so.Agg("median"),so.Dodge()).add(so.Est("sd"),so.Doge()))
+    g = sns.barplot(d,y="Accuracy",x="Pruning rate",
+           hue="sigma", errorbar="sd")
+    f=(
+        so.Plot(
+            sns.load_dataset("penguins"), x="species",
+            color="sex", alpha="sex", edgestyle="sex",
+        )
+        .add(so.Bar(edgewidth=2), so.Hist(), so.Dodge("fill"))
+    )
+    f.save("barplot_test.pdf",bbox_inches='tight')
+    g.set_yscale("log")
+    plt.savefig("barplot.pdf", bbox_inches="tight")
+    # g.save("barplot.png",bbox_inches='tight')
 
 
 
@@ -7312,7 +7325,6 @@ if __name__ == '__main__':
 
 
 
-
 #
 #     ########################## Scatter plots for the accuracy vs GF ##################################################
 #
@@ -7337,6 +7349,17 @@ if __name__ == '__main__':
 #                         det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
 # #
 # #
+# ################################## Barplot with all results #######################################################################
+
+    df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",sep = ",",header = 0, index_col = False)
+    bar_plot_every_experiment(df,use_set="test")
+
+
+
+
+
+
+
 # ################################## CURVE PLOTS #######################################################################
 #
     # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
