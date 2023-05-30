@@ -6268,7 +6268,7 @@ def gradient_flow_correlation_analysis(prefix:str,cfg):
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -6298,11 +6298,11 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
     first_sigma = sigmas.pop()
 
     combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
-    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset }_sigma{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset }_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
     for sigma in sigmas:
         lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
-        global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+        global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
         combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
         combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
@@ -6324,7 +6324,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
 
     combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
-    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{first_architecture}_{first_dataset}_sigma{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{first_architecture}_{first_dataset}_sigma_{first_sigma}_pr{first_pruning_rate}.csv",sep= ",",header=0,index_col=False)
     #Loop over all values of everything
     for sigma in sigmas:
         first_time = 1
@@ -6334,7 +6334,7 @@ def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:li
 
                     lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
 
-                    global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
+                    global_tem_df = pd.read_csv(f"gradientflow_stochastic_global_{arch}_{dataset}_sigma_{sigma}_pr{pr}.csv",sep= ",",header=0,index_col=False)
                     combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
                     combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
                     if first_time:
@@ -7351,8 +7351,8 @@ if __name__ == '__main__':
 # #
 # ################################## Barplot with all results #######################################################################
 
-    df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",sep = ",",header = 0, index_col = False)
-    bar_plot_every_experiment(df,use_set="test")
+    # df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",sep = ",",header = 0, index_col = False)
+    # bar_plot_every_experiment(df,use_set="test")
 
 
 

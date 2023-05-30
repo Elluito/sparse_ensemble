@@ -39,8 +39,7 @@ for sigma in ${noise[@]}; do
 git add "gradientflow_stochastic_${pruner}_${model}_${dataset}_sigma_${sigma}_pr${pr}.csv"
 
 done
-git add "gradientflow_deterministic_${pruner}_${model}_${dataset}_sigma_${sigma}_pr${pr}.csv"
-
+git add "gradientflow_deterministic_${pruner}_${model}_${dataset}_pr${pr}.csv"
 done
 done
 done
