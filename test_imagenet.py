@@ -56,11 +56,11 @@ def accuracy(output, target, topk=(1,)):
 current_directory = Path().cwd()
 data_path = ""
 if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-    data_path = "/nobackup/sclaam/data"
+    data_path = "/nobackup/sclaam/data/"
 elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
 elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-    data_path = "datasets"
+    data_path = "datasets/"
 traindir = data_path+'imagenet/'+'train'
 testdir=  data_path+'imagenet/'+'val'
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
