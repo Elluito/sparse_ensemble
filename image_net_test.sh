@@ -18,4 +18,4 @@
 module add anaconda
 module add cuda/11.1.1
 conda activate work
-python test_imagenet.sh
+python test_imagenet.py
