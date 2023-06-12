@@ -50,9 +50,12 @@ def prune_weights_global(model, amount):
     prune.global_unstructured(parameters_to_prune, pruning_method=prune.L1Unstructured, amount=amount)
 
 
-def prune_weights_lamp(model, amount, exclude_layers: list = [],return_amounts=False):
+def prune_weights_lamp(model, amount, exclude_layers: list = [], return_amounts=False, is_stochastic: bool = False,noise_type="gaussian",noise_amplitude=0.001):
     assert amount <= 1
-    amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers)
+    amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers, is_stochastic=is_stochastic,noise_type=noise_type,noise_amplitude=noise_amplitude)
+
+
+
     prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
     if return_amounts:
         return amounts
@@ -182,7 +185,7 @@ def _amounts_from_eps(unmaskeds, ers_dict, amount):
     return dict(zip(names, amounts))
 
 
-def _compute_lamp_amounts(model, amount, exclude_layers):
+def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = False,noise_type="gaussian",noise_amplitude=0.001):
     """
     Compute normalization schemes.
     """
@@ -194,6 +197,15 @@ def _compute_lamp_amounts(model, amount, exclude_layers):
                                                                                                         exclude_layers).items()])
 
     concat_scores = torch.cat(tuple(flattened_scores_dict.values()), dim=0)
+    if is_stochastic:
+        if noise_type == "gaussian":
+            noise = torch.normal(mean=torch.zeros_like(concat_scores), std=noise_amplitude)
+            concat_scores =concat_scores+noise
+            concat_scores = torch.abs(concat_scores)
+            concat_scores = concat_scores/torch.max(concat_scores)
+        elif noise_type == "geogaussian":
+            noise = torch.normal(mean=torch.ones_like(concat_scores), std=noise_amplitude)
+            concat_scores = concat_scores*noise
     topks, _ = torch.topk(concat_scores, num_surv)
     threshold = topks[-1]
 
