@@ -95,7 +95,7 @@ test_loader = torch.utils.data.DataLoader(
     num_workers=0, pin_memory=True)
 
 net = resnet50()
-net.load_state_dict(torch.load("nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
+net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
 
 net.cuda()
 
