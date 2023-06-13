@@ -129,9 +129,9 @@ for batch_idx, (data, target) in enumerate(val_loader):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data[0], data.size(0))
-        top1.update(prec1[0], data.size(0))
-        top5.update(prec5[0], data.size(0))
+        losses.update(loss.data.item(), data.size(0))
+        top1.update(prec1.item(), data.size(0))
+        top5.update(prec5.item(), data.size(0))
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
