@@ -2887,6 +2887,7 @@ def layers_to_vector(layers_params: typing.List[torch.Tensor]):
     return full_vector
 
 
+
 def get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers: typing.List[torch.Tensor], pruning_rate: float):
     full_vector = layers_to_vector(list_of_layers)
     magnitudes = torch.abs(full_vector)
@@ -7388,13 +7389,13 @@ if __name__ == '__main__':
         "epochs": 100,
         "short_epochs": 10,
         # "dataset": "mnist",
-        # "dataset": "cifar10",
-        "dataset": "imagenet",
-        "architecture": "resnet50",
+        "dataset": "cifar10",
+        # "dataset": "imagenet",
+        "architecture": "resnet18",
         # "architecture": "VGG19",
         # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
@@ -7404,8 +7405,8 @@ if __name__ == '__main__':
         # "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "lamp",
-        # "model_type": "alternative",
-        "model_type": "hub",
+        "model_type": "alternative",
+        # "model_type": "hub",
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -7430,9 +7431,11 @@ if __name__ == '__main__':
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
     # stochastic_pruning_against_deterministic_pruning(cfg)
-    # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
-    #
-    save_onnx(cfg,"imagenet")
+    stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
+
+
+    # save_onnx(cfg,"imagenet")
+
     ############################## Epsilon experiments for the boxplots ################################################
 
     # identifier = f"{time.time():14.5f}".replace(" ", "")

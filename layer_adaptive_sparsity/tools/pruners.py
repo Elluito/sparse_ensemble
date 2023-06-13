@@ -2,8 +2,17 @@ import torch
 from torch.nn.utils import prune
 from .utils import get_weights, get_modules
 import numpy as np
+# code added by me
+import math
 
 
+# Piece of code addede by me
+def get_threshold_from_vector(vector, pruning_rate: float):
+    total = len(vector)
+    sorted_index = torch.argsort(vector)
+    index_of_threshold = math.floor(total * pruning_rate)
+    threshold = vector[sorted_index[index_of_threshold]]
+    return threshold
 def weight_pruner_loader(pruner_string):
     """
     Gives you the pruning methods: LAMP, Glob, Unif, Unif+, and ERK
@@ -187,8 +196,11 @@ def _amounts_from_eps(unmaskeds, ers_dict, amount):
 
 def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = False,noise_type="gaussian",noise_amplitude=0.001):
     """
-    Compute normalization schemes.
-    """
+    Compute normalization schemes. LUIS: I adapted this code, so I can prune only the layers I want to. This is done
+    with a dictionary. the original implementation uses all weights and only lists.
+    The original implementation is from the authors of the LAMP paper.
+        """
+
     unmaskeds_dict = _count_unmasked_weights(model, exclude_layers)
     unmaskeds = torch.FloatTensor(list(unmaskeds_dict.values()))
     num_surv = int(np.round(unmaskeds.sum() * (1.0 - amount)))
@@ -197,10 +209,19 @@ def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = F
                                                                                                         exclude_layers).items()])
 
     concat_scores = torch.cat(tuple(flattened_scores_dict.values()), dim=0)
+    quantiles = torch.quantile(concat_scores, torch.tensor([0.25, 0.5, 0.75]))
+
+    print("Quantiles for the LAMP scores {}".format(quantiles))
+
+    threshold = get_threshold_from_vector(vector=concat_scores , pruning_rate=amount)
+
+    print("The threshold for the pruning rate of {} : {}".format(amount, threshold))
+
+
     if is_stochastic:
         if noise_type == "gaussian":
             noise = torch.normal(mean=torch.zeros_like(concat_scores), std=noise_amplitude)
-            concat_scores =concat_scores+noise
+            concat_scores = concat_scores+noise
             concat_scores = torch.abs(concat_scores)
             concat_scores = concat_scores/torch.max(concat_scores)
         elif noise_type == "geogaussian":
