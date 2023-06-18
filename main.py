@@ -7257,7 +7257,7 @@ def LeMain(args):
         "solution":solution,
         "noise": "gaussian",
         "pruner": args["pruner"],
-        "model_type": args["model_type"],
+        "model_type": args["modeltype"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
