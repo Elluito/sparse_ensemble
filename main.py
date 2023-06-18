@@ -1863,7 +1863,7 @@ def get_datasets(cfg:omegaconf.DictConfig):
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
 
-        whole_train_dataset = datasets.ImageFolder(
+        whole_train_dataset = torchvision.datasets.ImageFolder(
             traindir,
             transforms.Compose([
                 transforms.RandomResizedCrop(224),
@@ -1905,7 +1905,7 @@ def get_datasets(cfg:omegaconf.DictConfig):
             val_dataset, batch_size=cfg.batch_size, shuffle=True,
             num_workers=cfg.num_workers, pin_memory=True, sampler=None)
         test_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(testdir, transforms.Compose([
+            torchvision.datasets.ImageFolder(testdir, transforms.Compose([
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
