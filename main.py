@@ -7275,7 +7275,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": False
+        "use_wandb": True
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
