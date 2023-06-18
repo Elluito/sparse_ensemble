@@ -9,6 +9,12 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
 import time
+# from ffcv.writer import DatasetWriter
+# from ffcv.fields import RGBImageField, IntField
+# from ffcv.loader import Loader, OrderOption
+# from ffcv.transforms import ToTensor, ToDevice, ToTorchImage, Cutout
+# from ffcv.fields.decoders import IntDecoder, RandomResizedCropRGBImageDecoder
+# Your dataset (`torch.utils.data.Dataset`) of (image, label) pairs
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -78,6 +84,27 @@ print(f"Length of dataset: {len(whole_train_dataset)}")
 
 train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
+my_dataset = val_dataset
+write_path = data_path + "imagenet/valSplit_dataset.beton"
+
+
+# For the validation set that I use to recover accuracy
+
+# # Pass a type for each data field
+# writer = DatasetWriter(write_path, {
+#     # Tune options to optimize dataset size, throughput at train-time
+#     'image': RGBImageField(
+#         max_resolution=256,
+#         jpeg_quality=90
+#     ),
+#     'label': IntField()
+# })
+# # Write dataset
+# writer.from_indexed_dataset(my_dataset)
+
+
+# For the validation set that I use to recover accuracy
+
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=128, shuffle=True,
     num_workers=0, pin_memory=True, sampler=None)
@@ -99,6 +126,7 @@ net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagene
 
 net.cuda()
 
+net.train()
 
 optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
@@ -116,11 +144,8 @@ top5 = AverageMeter()
 end = time.time()
 
 for batch_idx, (data, target) in enumerate(val_loader):
-
-        data ,target = data.cuda(),target.cuda()
-
-    # switch to train mode
-
+        data , target = data.cuda(), target.cuda()
+        # switch to train mode
         # measure data loading time
         data_time.update(time.time() - end)
         # compute output
@@ -152,6 +177,8 @@ for batch_idx, (data, target) in enumerate(val_loader):
                 1, batch_idx, len(val_loader), batch_time=batch_time,
                 data_time=data_time, loss=losses, top1=top1, top5=top5))
 
-
-
-
+total_time = time.time() -end
+hours_float = total_time/3600
+decimal_part = hours_float - total_time//3600
+minutes = decimal_part*60
+print("Total time was {} hours and {} minutes".format(total_time//3600,minutes))

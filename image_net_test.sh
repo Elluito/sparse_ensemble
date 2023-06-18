@@ -14,6 +14,8 @@
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=8G
+# Send emails when job starts and ends
+#$ -m e
 
 module add anaconda
 module add cuda/11.1.1

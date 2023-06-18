@@ -13,9 +13,9 @@
 #$ -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=8G
+#$ -l h_vmem=16G
 # Tell SGE that this is an array job, with "tasks" numbered from 1 to 10
-#$ -t 1-20
+#$ -t 1-10
 #  -tc 20
 # -pe smp 3
 # Send emails when job starts and ends
@@ -31,7 +31,7 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py -exp 11 -bs 128 --sigma $1 --pruner $2 --architecture $3 --dataset $4 --pruning_rate $5
+python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 #echo "${1}${2}${3}${4}${5}"
 
 #&& python main.py && python main.py

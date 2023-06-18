@@ -149,7 +149,7 @@ def check_for_layers_collapse(model):
         if torch.count_nonzero(w) == 0:
             raise Exception("Layer {} has 0 weights different form 0 the layer has collapsed".format(names[indx]))
 
-
+#COMMENT: THIS IS FOR THE EXPERIMENTS OF FINE-TUNING UNRESTRICTED AN then compare the final solution to the deterministic to see if they are on a different basin still.
 def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
@@ -295,7 +295,12 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    if "cifar" in cfg.dataset:
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    else:
+
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
     grad_clip = 0
     if cfg.gradient_cliping:
         grad_clip = 0.1
@@ -324,7 +329,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         file_path = gradient_flow_file_prefix
         file_path +=  "recordings.csv"
 
-        if  Path(gradient_flow_file_prefix).owner() == "sclaam":
+        if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
             weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"

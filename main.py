@@ -1845,18 +1845,19 @@ def get_datasets(cfg:omegaconf.DictConfig):
             testset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
         return trainloader,valloader,testloader
     if 'imagenet'== cfg.dataset:
-        cfg.dataset="cifar10"
-        return get_cifar_datasets(cfg)
+        # cfg.dataset="cifar10"
+        # return get_cifar_datasets(cfg)
         # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
         # Data loading code
+
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data"
+            data_path = "/nobackup/sclaam/data/"
         elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
             data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-            data_path = "datasets"
+            data_path = "datasets/"
         traindir = data_path+'imagenet/'+'train'
         testdir=  data_path+'imagenet/'+'val'
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -1870,22 +1871,39 @@ def get_datasets(cfg:omegaconf.DictConfig):
                 transforms.ToTensor(),
                 normalize,
             ]))
+        print(f"Length of dataset: {len(whole_train_dataset)}")
 
-        train, val, test = torch.utils.data.random_split(whole_train_dataset, [3459, 432, 432])
+        train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
+        # This code is to transform it into the "fast" format of ffcv
+
+        # my_dataset = val_dataset
+        # write_path = data_path + "imagenet/valSplit_dataset.beton"
+
+
+        # For the validation set that I use to recover accuracy
+
+        # # Pass a type for each data field
+        # writer = DatasetWriter(write_path, {
+        #     # Tune options to optimize dataset size, throughput at train-time
+        #     'image': RGBImageField(
+        #         max_resolution=256,
+        #         jpeg_quality=90
+        #     ),
+        #     'label': IntField()
+        # })
+        # # Write dataset
+        # writer.from_indexed_dataset(my_dataset)
+
+
+        # For the validation set that I use to recover accuracy
+
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.num_workers, pin_memory=True, sampler=None)
         val_loader = torch.utils.data.DataLoader(
-            val, batch_size=128, shuffle=True,
-            num_workers=0, pin_memory=True, sampler=None)
-
-        train_dataset = datasets.ImageFolder(
-            traindir,
-            transforms.Compose([
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalize,
-            ]))
-
+            val_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.num_workers, pin_memory=True, sampler=None)
         test_loader = torch.utils.data.DataLoader(
             datasets.ImageFolder(testdir, transforms.Compose([
                 transforms.Resize(256),
@@ -1894,7 +1912,9 @@ def get_datasets(cfg:omegaconf.DictConfig):
                 normalize,
             ])),
             batch_size=cfg.batch_size, shuffle=False,
-            num_workers=cfg.workers, pin_memory=True)
+            num_workers=cfg.num_workers, pin_memory=True)
+
+        return train_loader,val_loader,test_loader
 
 
 
@@ -1905,7 +1925,6 @@ def get_datasets(cfg:omegaconf.DictConfig):
 
 
 
-        raise NotImplementedError("Get_dataset not yet implemeneted for ImageNet")
 
 def main(cfg: omegaconf.DictConfig):
     print("torch version: {}".format(torch.__version__))
@@ -2806,14 +2825,41 @@ def get_model(cfg: omegaconf.DictConfig):
                 load_model(net, cfg.solution)
             if "hub"== cfg.model_type:
                 if cfg.dataset== "cifar100":
-                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+                    from torchvision import resnet18
+                    net = resnet18()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features,100)
+                    net.load_state_dict(cfg,solution)
                 if cfg.dataset== "cifar10":
-                    net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+                    from torchvision.models import resnet18
+                    net = resnet18()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features,10)
+
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k,item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.","")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
                 if cfg.dataset == "imagenet":
+
                     from torchvision.models import resnet18, ResNet18_Weights
+
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k,item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.","")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
                     # Using pretrained weights:
-                    net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
-                    net = resnet18(weights="IMAGENET1K_V1")
+                    # net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+                    # net = resnet18(weights="IMAGENET1K_V1")
+
             return net
     if cfg.architecture == "VGG19":
         if not cfg.solution:
@@ -5293,7 +5339,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         identifier = f"{time.time():14.5f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/{}/stochastic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_LAMP/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -5301,7 +5347,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -5806,7 +5852,7 @@ def test_sigma_experiment_selector():
 
 ############################### Plot of stochastic pruning against deterministic pruning ###############################
 
-def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test"):
+def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test",name:str=""):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
     evaluation_set = select_eval_set(cfg, eval_set)
@@ -5828,7 +5874,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                             pruner=cfg.pruner)
 
 
-    # remove_reparametrization(pruned_original)
+    remove_reparametrization(pruned_original,exclude_layer_list=cfg.exclude_layers)
     print("pruned_performance of pruned original")
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     pop.append(pruned_original)
@@ -5837,8 +5883,6 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     # stochastic_dense_performances.append(original_performance)
     for n in range(N):
         current_model = get_noisy_sample_sigma_per_layer(net,cfg,sigma_per_layer=sigma_per_layer)
-
-
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         print("Stochastic dense performance")
         StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
@@ -5868,6 +5912,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     # index 0 of pruned_performance.
     assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
                                                    f"{len(labels)}!={len(pruned_performance)}"
+
     ranked_index = np.flip(np.argsort(pruned_performance))
     index_of_pruned_original = list(ranked_index).index(0)
     all_index = np.ones(len(ranked_index),dtype=bool)
@@ -5936,10 +5981,10 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     plt.savefig(
         f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}.pdf")
+        f"_{cfg.population}_{eval_set}_{name}.pdf")
     plt.savefig(f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-                f"_{cfg.population}_{eval_set}.png")
+                f"_{cfg.population}_{eval_set}_{name}.png")
 
 
 # def stochastic_pruning_global_against_LAMP_deterministic_pruning():
@@ -7179,27 +7224,10 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame:pd.DataFrame,threshold:flo
 def LeMain(args):
     solution=""
     exclude_layers = None
-    # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-    # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #  "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-    # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-    # "exclude_layers": ["conv1", "fc"],
-    # "exclude_layers": ["conv1", "linear"],
-    # "exclude_layers": ["features.0", "classifier"],
-    if args["dataset"] == "cifar10":
-        if args["architecture"]== "resnet18":
-            solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-            exclude_layers = ["conv1", "linear"]
-        if args["architecture"]== "VGG19":
-            solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
-            exclude_layers = ["features.0", "classifier"]
-        if args["architecture"]== "resnet50":
-            solution = "trained_models/cifar10/resnet50_cifar10.pth"
-            exclude_layers = ["conv1", "linear"]
+
     if args["dataset"] == "cifar100":
         if args["architecture"]== "resnet18":
-            solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
+            solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
             exclude_layers =["conv1", "linear"]
         if args["architecture"]== "VGG19":
             solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
@@ -7207,16 +7235,29 @@ def LeMain(args):
         if args["architecture"]== "resnet50":
             solution = "trained_models/cifar100/resnet50_cifar100.pth"
             exclude_layers = ["conv1", "linear"]
+    if args["dataset"] == "imagenet":
+        if args["architecture"] == "resnet18":
+            solution = "/nobackup/sclaam/trained_modes/resnet18_imagenet.pth"
+            exclude_layers = ["conv1", "fc"]
+        if args["architecture"] == "VGG19":
+            solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+            exclude_layers = ["features.0", "classifier"]
+        if args["architecture"] == "resnet50":
+            solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
+            exclude_layers = ["conv1", "fc"]
+
+
+
     cfg = omegaconf.DictConfig({
         "population": args["population"],
         "generations": 10,
-        "epochs": 101,
+        "epochs": args["epochs"],
         "short_epochs": 10,
         "architecture": args["architecture"],
         "solution":solution,
         "noise": "gaussian",
         "pruner": args["pruner"],
-        "model_type": "alternative",
+        "model_type": args["model_type"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -7383,58 +7424,61 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "generations": 10,
-        "epochs": 100,
-        "short_epochs": 10,
-        # "dataset": "mnist",
-        "dataset": "cifar10",
-        # "dataset": "imagenet",
-        "architecture": "resnet18",
-        # "architecture": "VGG19",
-        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-        # "solution": "cifar10_resnet20",
-        "exclude_layers": ["conv1", "fc"],
-        # "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
-       "noise": "gaussian",
-       "pruner": "lamp",
-        "model_type": "alternative",
-        # "model_type": "hub",
-        "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": True,
-        "sampler": "tpe",
-        "flop_limit": 0,
-        "one_batch": True,
-        "measure_gradient_flow":True,
-        "full_fine_tune": False,
-        "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
-        "noise_after_pruning":0,
-        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-        "amount": 0.9 , # For resnet18
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-        "save_model_path": "stochastic_pruning_models/",
-        "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "generations": 10,
+    #     "epochs": 100,
+    #     "short_epochs": 10,
+    #     # "dataset": "mnist",
+    #     "dataset": "cifar10",
+    #     # "dataset": "imagenet",
+    #     "architecture": "resnet18",
+    #     # "architecture": "VGG19",
+    #     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+    #     # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+    #     "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
+    #     # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+    #     # "solution": "cifar10_resnet20",
+    #     # "exclude_layers": ["conv1", "fc"],
+    #     # "exclude_layers": [],
+    #     "exclude_layers": ["conv1", "linear"],
+    #     # "exclude_layers": ["features.0", "classifier"],
+    #    "noise": "gaussian",
+    #    "pruner": "global",
+    #     "model_type": "alternative",
+    #     # "model_type": "hub",
+    #     "fine_tune_exclude_layers": True,
+    #     "fine_tune_non_zero_weights": True,
+    #     "sampler": "tpe",
+    #     "flop_limit": 0,
+    #     "one_batch": True,
+    #     "measure_gradient_flow":True,
+    #     "full_fine_tune": False,
+    #     "use_stochastic": True,
+    #     # "sigma": 0.0021419609859022197,
+    #     "sigma": 0.005,
+    #     "noise_after_pruning":0,
+    #     # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+    #     "amount": 0.9 , # For resnet18
+    #     "batch_size": 128,
+    #     # "batch_size": 128,
+    #     "num_workers": 0,
+    #     "save_model_path": "stochastic_pruning_models/",
+    #     "save_data_path": "stochastic_pruning_data/",
+    #     "use_wandb": True
+    # })
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    # stochastic_pruning_against_deterministic_pruning(cfg)
-    stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_1")
+    # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
-    # save_onnx(cfg,"imagenet")
+    # save_onnx(cfg)
 
     ############################## Epsilon experiments for the boxplots ################################################
 
@@ -7475,23 +7519,24 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the', required=False)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
     #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+
+    args = vars(parser.parse_args())
+    LeMain(args)
 
 
 
