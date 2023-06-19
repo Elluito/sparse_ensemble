@@ -2848,13 +2848,8 @@ def get_model(cfg: omegaconf.DictConfig):
 
                     from torchvision.models import resnet18, ResNet18_Weights
 
-                    temp_dict = torch.load(cfg.solution)["net"]
-                    real_dict = {}
-                    for k,item in temp_dict.items():
-                        if k.startswith('module'):
-                            new_key = k.replace("module.","")
-                            real_dict[new_key] = item
-                    net.load_state_dict(real_dict)
+                    temp_dict = torch.load(cfg.solution)
+                    net.load_state_dict(temp_dict)
 
                     # Using pretrained weights:
                     # net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
