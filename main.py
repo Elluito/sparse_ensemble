@@ -7243,7 +7243,7 @@ def LeMain(args):
             exclude_layers = ["conv1", "linear"]
     if args["dataset"] == "imagenet":
         if args["architecture"] == "resnet18":
-            solution = "/nobackup/sclaam/trained_modes/resnet18_imagenet.pth"
+            solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
             exclude_layers = ["conv1", "fc"]
         if args["architecture"] == "VGG19":
             solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
