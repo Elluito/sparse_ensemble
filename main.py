@@ -5427,8 +5427,14 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
 
 
+
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+
+    end = time.time()
     initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    total = time.time()-end
+    print("Time for testing: {} s".format(total))
+
 
     # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
 
