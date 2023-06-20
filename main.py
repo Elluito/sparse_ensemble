@@ -6268,18 +6268,18 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_
     present in the prefix string
     '''
     # prefix = Path(prefix)
-    middle_string = ""
+    middle_string = cfg.model_type
     # if cfg.model_type == "hub" :
     #     middle_string = "/hub"
 
     assert cfg.dataset in prefix,"Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset,prefix)
-    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}{middle_string}/sigma0.0/pr{cfg.amount}/"
+    deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
 
-    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}{middle_string}/sigma0.0/pr{cfg.amount}/"
+    deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
 
-    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}{middle_string}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
-    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}{middle_string}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
