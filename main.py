@@ -4800,7 +4800,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/{}/deterministic_LAMP/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_LAMP/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -4808,7 +4808,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # else:
                 # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -7603,10 +7603,10 @@ if __name__ == '__main__':
 #
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-#     sigma_values = [0.001,0.003,0.005]
-#     pruning_rate_values = [0.8,0.85,0.9,0.95]
-#     architecture_values = ["VGG19","resnet50","resnet18"]
-#     dataset_values = ["cifar10","cifar100"]
+    # sigma_values = [0.001,0.003,0.005]
+    # pruning_rate_values = [0.8,0.85,0.9,0.95]
+    # architecture_values = ["VGG19","resnet50","resnet18"]
+    # dataset_values = ["cifar10","cifar100"]
 #
     sigma_values = [0.001]
     dataset_values = ["imagenet"]
@@ -7631,6 +7631,12 @@ if __name__ == '__main__':
                 for sig in sigma_values:
                     gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg)
     unify_sigma_datasets(sigmas=sigma_values)
+    ################################################# Ensemble predictions ############################################
+    # sigma_values = [0.001,0.003,0.005]
+    # pruning_rate_values = [0.8,0.85,0.9,0.95]
+    # architecture_values = ["VGG19","resnet50","resnet18"]
+    # dataset_values = ["cifar10","cifar100"]
+    # create_ensemble_dataframe(cfg,)
 #
 #     accuracy = []
 #     stage = []
