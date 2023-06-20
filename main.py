@@ -6259,7 +6259,7 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
     plt.savefig(file,bbox_inches="tight")
-def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
+def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_epochs=11):
     '''
     This function is for unifying the results of a particular exp
     @rtype: object
@@ -6292,7 +6292,7 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
     for index, individual in enumerate(glob.glob(deterministic_global_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
-        if len_df<11:
+        if len_df<min_epochs:
             continue
         individual_df["individual"] = [index] * len_df
         individual_df["sigma"] = [0] * len_df
@@ -6312,7 +6312,7 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
     for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
-        if len_df<11:
+        if len_df<min_epochs:
             continue
         individual_df["individual"] = [index] * len_df
         individual_df["sigma"] = [0] * len_df
@@ -6331,7 +6331,7 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
-        if len_df<11:
+        if len_df<min_epochs:
             continue
         individual_df["individual"] = [index] * len_df
         individual_df["sigma"] = [cfg.sigma] * len_df
@@ -6352,7 +6352,7 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
     for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
         individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
-        if len_df<11:
+        if len_df<min_epochs:
             continue
         individual_df["individual"] = [index] * len_df
         individual_df["sigma"] = [cfg.sigma] * len_df
@@ -7629,7 +7629,7 @@ if __name__ == '__main__':
             for arch in architecture_values:
                 cfg.architecture = arch
                 for sig in sigma_values:
-                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg)
+                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg,3)
     unify_sigma_datasets(sigmas=sigma_values)
     ################################################# Ensemble predictions ############################################
     # sigma_values = [0.001,0.003,0.005]
