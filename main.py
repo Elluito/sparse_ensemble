@@ -6259,9 +6259,17 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
     plt.savefig(file,bbox_inches="tight")
-def gradient_flow_correlation_analysis(prefix:str,cfg):
+def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
+    '''
+    This function is for unifying the results of a particular exp
+    @rtype: object
+    @param prefix:This is the folder were deterministic LAMP/GLOBAL and stochastic LAMP/GLOBAL folders (with all the subfolder struceture) reside. Should contain the same dataset name as in cfg.
+    @param cfg: Configuration for a particular architceture X sigma X pruning rate combination to create a dataframe with all individuals results. The dataset is
+    present in the prefix string
+    '''
     # prefix = Path(prefix)
 
+    assert cfg.dataset in prefix,"Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset,prefix)
     deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
 
     deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/sigma0.0/pr{cfg.amount}/"
@@ -7521,24 +7529,24 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # #
     #
-
-    args = vars(parser.parse_args())
-    LeMain(args)
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
 
 
@@ -7558,14 +7566,28 @@ if __name__ == '__main__':
 #     architecture_values = ["VGG19","resnet50","resnet18"]
 #     dataset_values = ["cifar10","cifar100"]
 #
-#     cfg = omegaconf.DictConfig({
-#         "sigma":0.0,
-#         "amount":0.94,
-#         "architecture":"VGG19",
-#         "dataset": "cifar10",
-#         "set":"test"
-#
-#     })
+    sigma_values = [0.001]
+    dataset_values = ["imagenet"]
+    pruning_rate_values = [0.9]
+    architecture_values = ["resnet18"]
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "dataset": "imagenet",
+        "set":"test"
+    })
+
+
+    for dataset in dataset_values:
+        cfg.dataset = dataset
+        for pruning_rate in pruning_rate_values:
+            cfg.amount = pruning_rate
+            for arch in architecture_values:
+                cfg.architecture = arch
+                for sig in sigma_values:
+                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/")
+    unify_sigma_datasets(sigmas=sigma_values)
 #
 #     accuracy = []
 #     stage = []
@@ -7608,13 +7630,7 @@ if __name__ == '__main__':
 #     # )
 #     #
 #
-#     # "Accuracy":accuracy,
-#     # "Stage" :stage,
-#     # r"$\sigma$":sigma_list,
-#     # "Pruner":pruner_list,
-#     # "Architecture":arch_list,
-#     # "Dataset" :dataset_list,
-#     # "Pruning rate" :pr_list,
+
 #     # unify_all_variables_datasets(sigmas=sigma_values,architectures=architecture_values,pruning_rates=pruning_rate_values,datasets=dataset_values)
 #     #
 #
