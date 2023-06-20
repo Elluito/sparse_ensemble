@@ -2848,6 +2848,7 @@ def get_model(cfg: omegaconf.DictConfig):
 
                     from torchvision.models import resnet18, ResNet18_Weights
 
+                    net = resnet18()
                     temp_dict = torch.load(cfg.solution)
                     net.load_state_dict(temp_dict)
 
