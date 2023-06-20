@@ -6269,8 +6269,8 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg):
     '''
     # prefix = Path(prefix)
     middle_string = ""
-    if cfg.model_type == "hub" :
-        middle_string = "/hub"
+    # if cfg.model_type == "hub" :
+    #     middle_string = "/hub"
 
     assert cfg.dataset in prefix,"Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset,prefix)
     deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}{middle_string}/sigma0.0/pr{cfg.amount}/"
@@ -7637,6 +7637,7 @@ if __name__ == '__main__':
     # architecture_values = ["VGG19","resnet50","resnet18"]
     # dataset_values = ["cifar10","cifar100"]
     # create_ensemble_dataframe(cfg,)
+
 #
 #     accuracy = []
 #     stage = []
