@@ -7630,7 +7630,7 @@ if __name__ == '__main__':
                 cfg.architecture = arch
                 for sig in sigma_values:
                     gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg,3)
-    unify_sigma_datasets(sigmas=sigma_values)
+    unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
     ################################################# Ensemble predictions ############################################
     # sigma_values = [0.001,0.003,0.005]
     # pruning_rate_values = [0.8,0.85,0.9,0.95]
