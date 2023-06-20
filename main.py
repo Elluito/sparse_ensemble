@@ -6707,6 +6707,7 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy = Accuracy(task="multiclass", num_classes=100).to("cpu")
     if cfg.dataset == "imagenet":
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cpu")
+
     accuracy.update(preds=pred_mean, target=labels)
     mean_accuracy = accuracy.compute()
     accuracy.update(preds=pred_voting, target=labels)
@@ -6771,7 +6772,7 @@ def ensemble_predictions(prefix:str,cfg):
 
     return global_results,lamp_results
 
-def create_ensemble_dataframe(sigmas:list,architectures:list,pruning_rates:list,datasets:list):
+def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,architecture_values:list,pruning_rate_values:list,dataset_values:list):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     #Loop over all values of everything
@@ -6780,6 +6781,44 @@ def create_ensemble_dataframe(sigmas:list,architectures:list,pruning_rates:list,
             for dataset in datasets:
                 for sigma in sigmas:
                     ensemble_predictions
+
+    for dataset in dataset_values:
+        cfg.dataset = dataset
+        for pruning_rate in pruning_rate_values:
+            cfg.amount = pruning_rate
+            for arch in architecture_values:
+                cfg.architecture = arch
+                for sig in sigma_values:
+                    cfg.sigma = sig
+                    print(cfg)
+                    global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
+                    # For Global
+                    accuracy.append(global_ensemble_results["voting"])
+                    stage.append("Voting")
+                    sigma_list.append(sig)
+                    pruner_list.append("GMP")
+                    accuracy.append(global_ensemble_results["mean"])
+                    # For LAMP
+                    accuracy.append(lamp_ensemble_results["voting"])
+                    stage.append("Voting")
+                    sigma_list.append(sig)
+                    pruner_list.append("LAMP")
+                    accuracy.append(lamp_ensemble_results["mean"])
+
+
+    ensemble_dataframe = pd.DataFrame(
+        {
+            "Accuracy":accuracy,
+            "Stage" :stage,
+            r"$\sigma$":sigma_list,
+            "Pruner":pruner_list,
+            "Architecture":arch_list,
+            "Dataset" :dataset_list,
+            "Pruning rate" :pr_list,
+
+        }
+    )
+    ensemble_dataframe.to_csv(f"gradientflow_stochastic_ensemble_for_all_datasets_architectures_pruning_rates.csv",header=True ,index=False)
 
 
 def plot_gradientFlow_data(filepath,title=""):
@@ -7590,7 +7629,7 @@ if __name__ == '__main__':
             for arch in architecture_values:
                 cfg.architecture = arch
                 for sig in sigma_values:
-                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/")
+                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg)
     unify_sigma_datasets(sigmas=sigma_values)
 #
 #     accuracy = []
@@ -7603,37 +7642,8 @@ if __name__ == '__main__':
 #     dataset_list = []
 #     pr_list = []
 #
-#
-#     # for dataset in dataset_values:
-#     #     cfg.dataset = dataset
-#     #     for pruning_rate in pruning_rate_values:
-#     #         cfg.amount = pruning_rate
-#     #         for arch in architecture_values:
-#     #             cfg.architecture = arch
-#     #             for sig in sigma_values:
-#     #                 cfg.sigma = sig
-#     #                 print(cfg)
-#     #                 global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
-#     #
-#     #                 accuracy.append(global_ensemble_results["voting"])
-#     #                 stage.append("Voting")
-#     #                 sigma_list.append(sig)
-#     #                 pruner_list.append("GMP")
-#     #                 accuracy.append(global_ensemble_results["mean"])
-#     # d = pd.DataFrame(
-#     #     {
-#     #         "Accuracy":accuracy,
-#     #         "Stage" :stage,
-#     #         r"$\sigma$":sigma_list,
-#     #         "Pruner":pruner_list,
-#     #         "Architecture":arch_list,
-#     #         "Dataset" :dataset_list,
-#     #         "Pruning rate" :pr_list,
-#     #
-#     #     }
-#     # )
-#     #
-#
+
+
 
 #     # unify_all_variables_datasets(sigmas=sigma_values,architectures=architecture_values,pruning_rates=pruning_rate_values,datasets=dataset_values)
 #     #
