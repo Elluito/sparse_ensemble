@@ -47,6 +47,65 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
+def get_layer_dict(model: torch.nn.Module):
+    """
+    :param model:
+    :return: The name of the modules that are not batch norm and their correspondent weight with original shape.
+    """
+    iter_1 = model.named_modules()
+    layer_dict = []
+
+    for name, m in iter_1:
+        with torch.no_grad():
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                    isinstance(m, nn.BatchNorm3d):
+                layer_dict.append((name, m.weight.data.cpu().detach()))
+                # if "shortcut" in name:
+                #     print(f"{name}:{m.weight.data}")
+                # if not isinstance(m, nn.Conv2d):
+                #     print(f"{name}:{m.weight.data}")
+
+    return layer_dict
+
+
+def get_buffer_dict(model: torch.nn.Module):
+    """
+    :param model:
+    :return: The name of the modules that are not batch norm and their correspondent weight with original shape.
+    """
+    iter_1 = model.named_modules()
+    layer_dict = []
+
+    for name, m in iter_1:
+        with torch.no_grad():
+            if hasattr(m, 'weight_mask') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                    isinstance(m, nn.BatchNorm3d):
+                layer_dict.append((name, m.weight_mak.data.cpu().detach()))
+                # if "shortcut" in name:
+                #     print(f"{name}:{m.weight.data}")
+                # if not isinstance(m, nn.Conv2d):
+                #     print(f"{name}:{m.weight.data}")
+    if len(layer_dict) == 0:
+        raise Exception("Model needs to have weight_maks attributes on modules")
+    # assert len(layer_dict)!=0, "Model needs to have weight_maks attributes on modules"
+    return layer_dict
+
+
+def get_mask(model,dense=False):
+    if not dense:
+        try:
+            return dict(get_buffer_dict(model))
+        except:
+            temp = lambda w: (w != 0).type(torch.float)
+            names, weights = zip(*get_layer_dict(model))
+            masks = list(map(temp, weights))
+            mask_dict = dict(zip(names, masks))
+            return mask_dict
+    else:
+        names, weights = zip(*get_layer_dict(model))
+        masks = list(map(torch.ones_like, weights))
+        mask_dict = dict(zip(names, masks))
+        return mask_dict
 
 
 
@@ -64,6 +123,7 @@ def accuracy(output, target, topk=(1,)):
     # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
     parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
     parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    parser.add_argument('-acc', '--accelerate',type=bool,default=False, help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility', required=False)
     #
 
     args = vars(parser.parse_args())
@@ -146,7 +206,7 @@ net.cuda()
 
 net.train()
 
-optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
 
 criterion = nn.CrossEntropyLoss()
 

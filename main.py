@@ -7632,6 +7632,15 @@ if __name__ == '__main__':
     pruning_rate_values = [0.8,0.85,0.9,0.95]
     architecture_values = ["VGG19","resnet50","resnet18"]
     dataset_values = ["cifar10","cifar100"]
+
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "hub",
+        "dataset": "imagenet",
+        "set":"test"
+    })
     create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
 #
