@@ -6659,6 +6659,7 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
     for inputs,targets in test:
+        inputs,targets =inputs.cuda(),targets.cuda()
         predictions_mean = None
         predictions_voting = None
         counter_for_mean_individuals = 2
@@ -6739,6 +6740,7 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
     for inputs,targets in test:
+        inputs,targets =inputs.cuda(),targets.cuda()
         predictions_mean = None
         predictions_voting = None
         counter_for_mean_individuals = 2
