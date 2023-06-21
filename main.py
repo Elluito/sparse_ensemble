@@ -6619,22 +6619,13 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,use_set="val",sigmas_to_sh
     g.save("barplot.pdf",bbox_inches='tight')
     g.save("barplot.eps",bbox_inches='tight')
 
-def save_predictions_of_individual(folder:str,dataloader:DataLoader,model:nn.Module,cfg):
+def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,torch.Tensor],model:nn.Module,cfg):
     model.eval()
-    predictions = None
-    for batch_idx, (data, target) in enumerate(dataloader):
-        data, target = data.cuda(), target.cuda()
-        batch_prediction = model(data)
-        batch_prediction = batch_prediction.detach().numpy()
-        if predictions is None:
-            predictions = batch_prediction
-        else:
-            predictions = np.vstack((predictions,batch_prediction))
-
-    # with open(folder+"predictions.npy","wb") as f:
-    #     vj
-    #     np.save(f,predictions)
-    return  predictions
+    model.cuda()
+    data, target = batch
+    batch_prediction = model(data)
+    batch_prediction = batch_prediction.detach().numpy()
+    return batch_prediction
 
 def ensemble_predictions(prefix:str,cfg):
 
@@ -6652,122 +6643,173 @@ def ensemble_predictions(prefix:str,cfg):
     for _ , targets in test:
         if labels is None:
 
-            labels = targets.detach().numpy()
+            labels = targets
         else:
-            labels = np.vstack(labels,target.detach().numpy())
+            labels = labels,target
 
 
 
     ########################## first Global stochatic #######################################
-    predictions_mean = None
-    predictions_voting = None
-    counter_for_mean = 2
 
     model_place_holder: nn.Module = get_model(cfg)
-
-    ind_number = 0
-    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
-        #Load the individuals
-        try:
-            if Path(individual +"weights/epoch_90.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
-            elif Path(individual +"weights/epoch_100.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
-            elif Path(individual +"weights/epoch_101.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
-        except Exception as err:
-            print(individual)
-            print(err)
-            return
-            continue
-
-        predictions = save_predictions_of_individual(individual,test,model_place_holder,cfg)
-
-        if predictions_mean is None:
-            predictions_mean = predictions
-        else:
-            predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
-            counter_for_mean +=1
-        if  predictions_voting is None:
-            predictions_voting = torch.argmax(predictions,dim=1)
-        else:
-            predictions_voting = torc.stack((predictions_voting,predictions),dim = 1)
-
-        if ind_number>max_individuals:
-            break
-        ind_number += 1
-    # Now I'm going to actually make the predictions first by averaging and second by voting
-    temp_variable = torch.mode(predictions_voting,dim=1)
-    pred_voting = temp_variable.values
-    pred_mean = torch.argmax(predictions_mean,dim=1)
-
+    full_mean_mean_accuracy = None
+    full_voting_mean_accuracy = None
+    counter_for_mean_mean = 2
+    counter_for_mean_voting = 2
     if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
-        accuracy = Accuracy(task="multiclass", num_classes=10).to("cpu")
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "cifar100":
-        accuracy = Accuracy(task="multiclass", num_classes=100).to("cpu")
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
     if cfg.dataset == "imagenet":
-        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cpu")
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
-    accuracy.update(preds=pred_mean, target=labels)
-    mean_accuracy = accuracy.compute()
-    accuracy.update(preds=pred_voting, target=labels)
-    voting_accuracy = accuracy.compute()
-    global_results = {"voting":voting_accuracy,"mean":mean_accuracy}
+    for inputs,targets in test:
+        predictions_mean = None
+        predictions_voting = None
+        counter_for_mean_individuals = 2
+        ind_number = 0
+        for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
+
+            #Load the individuals
+            try:
+                if Path(individual +"weights/epoch_90.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
+                elif Path(individual +"weights/epoch_100.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
+                elif Path(individual +"weights/epoch_101.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
+            except Exception as err:
+                print(individual)
+                print(err)
+                return 0
+
+                # break
+            # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
+            # despues del for.
+
+            individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+
+            if predictions_mean is None:
+                predictions_mean = predictions
+            else:
+                predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
+                counter_for_mean +=1
+            if  predictions_voting is None:
+                predictions_voting = torch.argmax(predictions,dim=1)
+            else:
+                predictions_voting = torch.stack((predictions_voting,predictions),dim = 1)
+
+            if ind_number>max_individuals:
+                break
+            ind_number += 1
+
+        # Now I'm going to actually make the predictions first by averaging and second by voting
+        temp_variable = torch.mode(predictions_voting,dim=1)
+        pred_voting = temp_variable.values
+        pred_mean = torch.argmax(predictions_mean,dim=1)
+
+        accuracy.update(preds=pred_mean, target=labels)
+        mean_accuracy = accuracy.compute()
+        accuracy.update(preds=pred_voting, target=labels)
+        voting_accuracy = accuracy.compute()
+        # Update the mean of the whole dataset for this particular batch for the two ensemble methods
+        # For mean method
+        if full_mean_mean_accuracy is None:
+            full_mean_mean_accuracy = mean_accuracy
+        else:
+            full_mean_mean_accuracy+= full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
+            counter_for_mean_mean +=1
+        # For voting method
+        if full_voting_mean_accuracy is None:
+            full_voting_mean_accuracy = voting_accuracy
+        else:
+            full_voting_mean_accuracy += full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
+            counter_for_mean_voting+=1
+
+    global_results = {"voting":full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
+    print(cfg)
+    print(global_results)
 
     ########################## LAMP stochatic #######################################
 
-    predictions_mean = None
-    predictions_voting = None
-    counter_for_mean = 2
-
     model_place_holder: nn.Module = get_model(cfg)
-    ind_number = 0
-    for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
-        #Load the individuals
-        try:
-            if Path(individual +"weights/epoch_90.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
-            elif Path(individual +"weights/epoch_100.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
-            elif Path(individual +"weights/epoch_101.pth").is_file():
-                model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
-        except Exception as err:
-            print(individual)
-            print(err)
-            return
-            continue
-
-        predictions = save_predictions_of_individual(individual,test,model_place_holder,cfg)
-
-        if predictions_mean is None:
-            predictions_mean = predictions
-        else:
-            predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
-            counter_for_mean +=1
-        if  predictions_voting is None:
-            predictions_voting = torch.argmax(predictions,dim=1)
-        else:
-            predictions_voting = torc.stack((predictions_voting,predictions),dim = 1)
-
-        if ind_number>max_individuals:
-            break
-        ind_number += 1
-    # Now I'm going to actually make the predictions first by averaging and second by voting
-    temp_variable = torch.mode(predictions_voting,dim=1)
-    pred_voting = temp_variable.values
-    pred_mean = torch.argmax(predictions_mean,dim=1)
-
+    full_mean_mean_accuracy = None
+    full_voting_mean_accuracy = None
+    counter_for_mean_mean = 2
+    counter_for_mean_voting = 2
     if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
-        accuracy = Accuracy(task="multiclass", num_classes=10).to("cpu")
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "cifar100":
-        accuracy = Accuracy(task="multiclass", num_classes=100).to("cpu")
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
     if cfg.dataset == "imagenet":
-        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cpu")
-    accuracy.update(preds=pred_mean, target=labels)
-    mean_accuracy = accuracy.compute()
-    accuracy.update(preds=pred_voting, target=labels)
-    voting_accuracy = accuracy.compute()
-    lamp_results = {"voting":voting_accuracy,"mean":mean_accuracy}
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
+
+    for inputs,targets in test:
+        predictions_mean = None
+        predictions_voting = None
+        counter_for_mean_individuals = 2
+        ind_number = 0
+        for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
+
+            #Load the individuals
+            try:
+                if Path(individual +"weights/epoch_90.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
+                elif Path(individual +"weights/epoch_100.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
+                elif Path(individual +"weights/epoch_101.pth").is_file():
+                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
+            except Exception as err:
+                print(individual)
+                print(err)
+                return 0
+
+                # break
+            # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
+            # despues del for.
+
+            individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+
+            if predictions_mean is None:
+                predictions_mean = predictions
+            else:
+                predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
+                counter_for_mean +=1
+            if  predictions_voting is None:
+                predictions_voting = torch.argmax(predictions,dim=1)
+            else:
+                predictions_voting = torch.stack((predictions_voting,predictions),dim = 1)
+
+            if ind_number>max_individuals:
+                break
+            ind_number += 1
+
+        # Now I'm going to actually make the predictions first by averaging and second by voting
+        temp_variable = torch.mode(predictions_voting,dim=1)
+        pred_voting = temp_variable.values
+        pred_mean = torch.argmax(predictions_mean,dim=1)
+
+        accuracy.update(preds=pred_mean, target=labels)
+        mean_accuracy = accuracy.compute()
+        accuracy.update(preds=pred_voting, target=labels)
+        voting_accuracy = accuracy.compute()
+        # Update the mean of the whole dataset for this particular batch for the two ensemble methods
+        # For mean method
+        if full_mean_mean_accuracy is None:
+            full_mean_mean_accuracy = mean_accuracy
+        else:
+            full_mean_mean_accuracy+= full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
+            counter_for_mean_mean +=1
+        # For voting method
+        if full_voting_mean_accuracy is None:
+            full_voting_mean_accuracy = voting_accuracy
+        else:
+            full_voting_mean_accuracy += full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
+            counter_for_mean_voting+=1
+
+    lamp_results = {"voting": full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
+    print(cfg)
+    print(lamp_results)
 
 
     return global_results,lamp_results
@@ -7470,53 +7512,53 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
-    # cfg = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "generations": 10,
-    #     "epochs": 100,
-    #     "short_epochs": 10,
-    #     # "dataset": "mnist",
-    #     "dataset": "cifar10",
-    #     # "dataset": "imagenet",
-    #     "architecture": "resnet18",
-    #     # "architecture": "VGG19",
-    #     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-    #     # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-    #     "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
-    #     # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #     #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-    #     # "solution": "cifar10_resnet20",
-    #     # "exclude_layers": ["conv1", "fc"],
-    #     # "exclude_layers": [],
-    #     "exclude_layers": ["conv1", "linear"],
-    #     # "exclude_layers": ["features.0", "classifier"],
-    #    "noise": "gaussian",
-    #    "pruner": "global",
-    #     "model_type": "alternative",
-    #     # "model_type": "hub",
-    #     "fine_tune_exclude_layers": True,
-    #     "fine_tune_non_zero_weights": True,
-    #     "sampler": "tpe",
-    #     "flop_limit": 0,
-    #     "one_batch": True,
-    #     "measure_gradient_flow":True,
-    #     "full_fine_tune": False,
-    #     "use_stochastic": True,
-    #     # "sigma": 0.0021419609859022197,
-    #     "sigma": 0.005,
-    #     "noise_after_pruning":0,
-    #     # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-    #     "amount": 0.9 , # For resnet18
-    #     "batch_size": 128,
-    #     # "batch_size": 128,
-    #     "num_workers": 0,
-    #     "save_model_path": "stochastic_pruning_models/",
-    #     "save_data_path": "stochastic_pruning_data/",
-    #     "use_wandb": True
-    # })
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "generations": 10,
+        "epochs": 100,
+        "short_epochs": 10,
+        # "dataset": "mnist",
+        "dataset": "cifar10",
+        # "dataset": "imagenet",
+        "architecture": "resnet18",
+        # "architecture": "VGG19",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+        "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
+        # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "cifar10_resnet20",
+        # "exclude_layers": ["conv1", "fc"],
+        # "exclude_layers": [],
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
+       "noise": "gaussian",
+       "pruner": "global",
+        "model_type": "alternative",
+        # "model_type": "hub",
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow":True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.005,
+        "noise_after_pruning":0,
+        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+        "amount": 0.9 , # For resnet18
+        "batch_size": 128,
+        # "batch_size": 128,
+        "num_workers": 0,
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
+        "use_wandb": True
+    })
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
@@ -7639,7 +7681,10 @@ if __name__ == '__main__':
         "architecture":"resnet18",
         "model_type": "hub",
         "dataset": "imagenet",
-        "set":"test"
+        "set":"test",
+        "batch_size": 128,
+        # "batch_size": 128,
+        "num_workers": 0,
     })
     create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
