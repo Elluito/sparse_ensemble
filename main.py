@@ -6640,12 +6640,6 @@ def ensemble_predictions(prefix:str,cfg):
 
     labels = None
 
-    for _ , targets in test:
-        if labels is None:
-
-            labels = targets
-        else:
-            labels = labels,target
 
 
 
@@ -6708,9 +6702,9 @@ def ensemble_predictions(prefix:str,cfg):
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
-        accuracy.update(preds=pred_mean, target=labels)
+        accuracy.update(preds=pred_mean, target=targets)
         mean_accuracy = accuracy.compute()
-        accuracy.update(preds=pred_voting, target=labels)
+        accuracy.update(preds=pred_voting, target=targets)
         voting_accuracy = accuracy.compute()
         # Update the mean of the whole dataset for this particular batch for the two ensemble methods
         # For mean method
@@ -6789,9 +6783,9 @@ def ensemble_predictions(prefix:str,cfg):
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
-        accuracy.update(preds=pred_mean, target=labels)
+        accuracy.update(preds=pred_mean, target=targets)
         mean_accuracy = accuracy.compute()
-        accuracy.update(preds=pred_voting, target=labels)
+        accuracy.update(preds=pred_voting, target=targets)
         voting_accuracy = accuracy.compute()
         # Update the mean of the whole dataset for this particular batch for the two ensemble methods
         # For mean method
