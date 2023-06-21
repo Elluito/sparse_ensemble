@@ -293,6 +293,10 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                                        fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
                                        gradient_flow_file_prefix="", cfg=None):
     # optimizer = torch.optim.SGD()
+    #################### Best accuracy yet ################################
+
+
+    ####################
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
     if "cifar" in cfg.dataset:
@@ -319,6 +323,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
     # first_time = 1
+
 
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
@@ -397,6 +402,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
                                              mask_dict=mask_dict
                                              ,use_wandb=use_wandb)
+
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
             # torch.save(state_dict,temp_name)

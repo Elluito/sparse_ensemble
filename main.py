@@ -7608,35 +7608,37 @@ if __name__ == '__main__':
     # architecture_values = ["VGG19","resnet50","resnet18"]
     # dataset_values = ["cifar10","cifar100"]
 #
-    sigma_values = [0.001]
-    dataset_values = ["imagenet"]
-    pruning_rate_values = [0.9]
-    architecture_values = ["resnet18"]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.001,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "hub",
-        "dataset": "imagenet",
-        "set":"test"
-    })
+    # sigma_values = [0.001]
+    # dataset_values = ["imagenet"]
+    # pruning_rate_values = [0.9]
+    # architecture_values = ["resnet18"]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.001,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "model_type": "hub",
+    #     "dataset": "imagenet",
+    #     "set":"test"
+    # })
+    #
+    #
+    # for dataset in dataset_values:
+    #     cfg.dataset = dataset
+    #     for pruning_rate in pruning_rate_values:
+    #         cfg.amount = pruning_rate
+    #         for arch in architecture_values:
+    #             cfg.architecture = arch
+    #             for sig in sigma_values:
+    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg,3)
+    # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
-    for dataset in dataset_values:
-        cfg.dataset = dataset
-        for pruning_rate in pruning_rate_values:
-            cfg.amount = pruning_rate
-            for arch in architecture_values:
-                cfg.architecture = arch
-                for sig in sigma_values:
-                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg,3)
-    unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
     ################################################# Ensemble predictions ############################################
-    # sigma_values = [0.001,0.003,0.005]
-    # pruning_rate_values = [0.8,0.85,0.9,0.95]
-    # architecture_values = ["VGG19","resnet50","resnet18"]
-    # dataset_values = ["cifar10","cifar100"]
-    # create_ensemble_dataframe(cfg,)
+    sigma_values = [0.001,0.003,0.005]
+    pruning_rate_values = [0.8,0.85,0.9,0.95]
+    architecture_values = ["VGG19","resnet50","resnet18"]
+    dataset_values = ["cifar10","cifar100"]
+    create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
 #
 #     accuracy = []
@@ -7662,22 +7664,22 @@ if __name__ == '__main__':
 # #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
 # #     #
 # #
-# #     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-# #     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-# #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-# #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 # # # # #
-# # #     sigmas = [0.001,0.003,0.005]
+#     sigmas = [0.001]
 # #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
-# #
-# #     directory = "gradient_flow_results_test_set/"
+#
+#     directory = "gradient_flow_results_test_set/"
 # # #
-# #     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-# #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-# #                         det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
-# #     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
-# #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-# #                         det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
+#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+#                         det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
+#     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+#                         det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
 # # #
 # # #
 # # ################################## Barplot with all results #######################################################################
