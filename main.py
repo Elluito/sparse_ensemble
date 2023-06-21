@@ -6726,7 +6726,6 @@ def ensemble_predictions(prefix:str,cfg):
 
     ########################## LAMP stochatic #######################################
 
-    model_place_holder: nn.Module = get_model(cfg)
     full_mean_mean_accuracy = None
     full_voting_mean_accuracy = None
     counter_for_mean_mean = 2
@@ -7673,9 +7672,10 @@ if __name__ == '__main__':
         "sigma":0.001,
         "amount":0.9,
         "architecture":"resnet18",
-        "model_type": "hub",
+        "model_type": "alternative",
         "dataset": "imagenet",
         "set":"test",
+        "solution":"",
         "batch_size": 128,
         # "batch_size": 128,
         "num_workers": 0,
