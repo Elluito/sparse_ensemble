@@ -6776,12 +6776,6 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     #Loop over all values of everything
-    for pr in pruning_rates:
-        for arch in architectures:
-            for dataset in datasets:
-                for sigma in sigmas:
-                    ensemble_predictions
-
     for dataset in dataset_values:
         cfg.dataset = dataset
         for pruning_rate in pruning_rate_values:

@@ -371,6 +371,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             total_FLOPS += batch_dense_flops
             total_sparse_FLOPS += batch_sparse_flops
             accuracy.update(preds=predictions.cuda(), target=target.cuda())
+            # Mask the grad_
             mask_gradient(pruned_model, mask_dict=mask_dict)
 
             if grad_clip:
@@ -378,6 +379,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
             optimizer.step()
             lr_scheduler.step()
+
+            # W&B Logging
             if use_wandb:
                 acc = accuracy.compute()
                 test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
