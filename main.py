@@ -37,7 +37,8 @@ import platform
 from functools import partial
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Accuracy, Loss
+import ignite.metrics as igm
+from torchmetrics import Accuracy
 import array as pyarr
 import matplotlib
 matplotlib.use('Agg')
@@ -2063,10 +2064,10 @@ def manual_train(model: nn.Module, train_loader, val_loader, save_name, epochs, 
 
     # trainer = create_supervised_trainer(model, optimizer, criterion, device="cuda")
     val_metrics = {
-        "accuracy": Accuracy(),
-        "nll": Loss(criterion)
+        "accuracy": igm.Accuracy(),
+        "nll": igm.Loss(criterion)
     }
-    accuracy = Accuracy()
+    accuracy = igm.Accuracy()
 
     if solution_accuracy:
         best_accuracy = solution_accuracy
@@ -2182,8 +2183,8 @@ def train(model: nn.Module, train_loader, val_loader, save_name, epochs, learnin
 
     trainer = create_supervised_trainer(model, optimizer, criterion, device="cuda")
     val_metrics = {
-        "accuracy": Accuracy(),
-        "nll": Loss(criterion)
+        "accuracy": igm.Accuracy(),
+        "nll": igm.Loss(criterion)
     }
     evaluator = create_supervised_evaluator(model, metrics=val_metrics, device="cuda")
 
