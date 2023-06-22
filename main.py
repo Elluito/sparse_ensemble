@@ -6625,7 +6625,6 @@ def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,tor
     model.cuda()
     data, target = batch
     batch_prediction = model(data)
-    batch_prediction = batch_prediction.detach().numpy()
     return batch_prediction
 
 def ensemble_predictions(prefix:str,cfg):
@@ -6722,7 +6721,7 @@ def ensemble_predictions(prefix:str,cfg):
             full_voting_mean_accuracy += full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
             counter_for_mean_voting+=1
 
-    global_results = {"voting":full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
+    global_results = {"voting": full_voting_mean_accuracy,"mean": full_mean_mean_accuracy}
     print(cfg)
     print(global_results)
 

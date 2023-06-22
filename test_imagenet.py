@@ -111,25 +111,25 @@ def get_mask(model,dense=False):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    parser.add_argument('-acc', '--accelerate',type=bool,default=False, help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility', required=False)
+    # parser = argparse.ArgumentParser(description='')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser.add_argument('-acc', '--accelerate',type=bool,default=False, help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility', required=False)
     #
 
-    args = vars(parser.parse_args())
-
+    # args = vars(parser.parse_args())
+    args = {"accelerate",True}
     current_directory = Path().cwd()
     data_path = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -204,7 +204,12 @@ def main():
     criterion = nn.CrossEntropyLoss()
 
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    accelerator = None
     if args["accelerate"]:
+        accelerator = Accelerator(mixed_precision="fp16")
+    net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
+        net, optimizer, val_loader, lr_scheduler
+    )
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -212,10 +217,12 @@ def main():
     top1 = AverageMeter()
     top5 = AverageMeter()
 
+    begining = time.time()
     end = time.time()
 
     for batch_idx, (data, target) in enumerate(val_loader):
-            data , target = data.cuda(), target.cuda()
+            if not args["accelerate"]:
+                data , target = data.cuda(), target.cuda()
             # switch to train mode
             # measure data loading time
             data_time.update(time.time() - end)
@@ -231,7 +238,11 @@ def main():
 
             # compute gradient and do SGD step
             optimizer.zero_grad()
-            loss.backward()
+            if args["accelerate"]:
+                accelerator.backward(loss)
+            else:
+                loss.backward()
+
             optimizer.step()
 
             # measure elapsed time
@@ -248,7 +259,7 @@ def main():
                     1, batch_idx, len(val_loader), batch_time=batch_time,
                     data_time=data_time, loss=losses, top1=top1, top5=top5))
 
-    total_time = time.time() -end
+    total_time = time.time() -begining
     hours_float = total_time/3600
     decimal_part = hours_float - total_time//3600
     minutes = decimal_part*60
