@@ -6666,6 +6666,9 @@ def ensemble_predictions(prefix:str,cfg):
         for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
 
             #Load the individuals
+            print("Individual:{}".format(individual))
+            print("Contents of the weight folder")
+            print("")
             try:
                 if Path(individual +"weights/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
@@ -7507,57 +7510,57 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "generations": 10,
-        "epochs": 100,
-        "short_epochs": 10,
-        # "dataset": "mnist",
-        "dataset": "cifar10",
-        # "dataset": "imagenet",
-        "architecture": "resnet18",
-        # "architecture": "VGG19",
-        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-        "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
-        # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-        # "solution": "cifar10_resnet20",
-        # "exclude_layers": ["conv1", "fc"],
-        # "exclude_layers": [],
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
-       "noise": "gaussian",
-       "pruner": "global",
-        "model_type": "alternative",
-        # "model_type": "hub",
-        "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": True,
-        "sampler": "tpe",
-        "flop_limit": 0,
-        "one_batch": True,
-        "measure_gradient_flow":True,
-        "full_fine_tune": False,
-        "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
-        "noise_after_pruning":0,
-        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-        "amount": 0.9 , # For resnet18
-        "batch_size": 128,
-        # "batch_size": 128,
-        "num_workers": 0,
-        "save_model_path": "stochastic_pruning_models/",
-        "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "population": 10,
+    #     "generations": 10,
+    #     "epochs": 100,
+    #     "short_epochs": 10,
+    #     # "dataset": "mnist",
+    #     "dataset": "cifar10",
+    #     # "dataset": "imagenet",
+    #     "architecture": "resnet18",
+    #     # "architecture": "VGG19",
+    #     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+    #     # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+    #     "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+    #     # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+    #     # "solution": "cifar10_resnet20",
+    #     # "exclude_layers": ["conv1", "fc"],
+    #     # "exclude_layers": [],
+    #     "exclude_layers": ["conv1", "linear"],
+    #     # "exclude_layers": ["features.0", "classifier"],
+    #    "noise": "gaussian",
+    #    "pruner": "lamp",
+    #     "model_type": "alternative",
+    #     # "model_type": "hub",
+    #     "fine_tune_exclude_layers": True,
+    #     "fine_tune_non_zero_weights": True,
+    #     "sampler": "tpe",
+    #     "flop_limit": 0,
+    #     "one_batch": True,
+    #     "measure_gradient_flow":True,
+    #     "full_fine_tune": False,
+    #     "use_stochastic": True,
+    #     # "sigma": 0.0021419609859022197,
+    #     "sigma": 0.005,
+    #     "noise_after_pruning":0,
+    #     # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+    #     "amount": 0.9 , # For resnet18
+    #     "batch_size": 128,
+    #     # "batch_size": 128,
+    #     "num_workers": 4,
+    #     "save_model_path": "stochastic_pruning_models/",
+    #     "save_data_path": "stochastic_pruning_data/",
+    #     "use_wandb": True
+    # })
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_1")
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
