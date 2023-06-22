@@ -6688,14 +6688,14 @@ def ensemble_predictions(prefix:str,cfg):
             individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
 
             if predictions_mean is None:
-                predictions_mean = predictions
+                predictions_mean = individual_predictions
             else:
                 predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
                 counter_for_mean +=1
             if  predictions_voting is None:
-                predictions_voting = torch.argmax(predictions,dim=1)
+                predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,predictions),dim = 1)
+                predictions_voting = torch.stack((predictions_voting,individual_predictions),dim = 1)
 
             if ind_number>max_individuals:
                 break
@@ -6769,14 +6769,14 @@ def ensemble_predictions(prefix:str,cfg):
             individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
 
             if predictions_mean is None:
-                predictions_mean = predictions
+                predictions_mean = individual_predictions
             else:
                 predictions_mean += predictions_mean + (predictions-predictions_mean)/counter_for_mean
                 counter_for_mean +=1
             if  predictions_voting is None:
-                predictions_voting = torch.argmax(predictions,dim=1)
+                predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,predictions),dim = 1)
+                predictions_voting = torch.stack((predictions_voting,individual_predictions),dim = 1)
 
             if ind_number>max_individuals:
                 break
