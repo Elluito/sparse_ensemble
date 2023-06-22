@@ -129,7 +129,7 @@ def main():
     #
 
     # args = vars(parser.parse_args())
-    args = {"accelerate",True}
+    args = {"accelerate": True}
     current_directory = Path().cwd()
     data_path = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -195,9 +195,9 @@ def main():
     net = resnet50()
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
 
-    net.cuda()
+    # net.cuda()
 
-    net.train()
+    # net.train()
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
 
