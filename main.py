@@ -2887,7 +2887,9 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
                 if cfg.dataset== "cifar10":
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models",cfg.solution, pretrained=True)
+
             return net
+
 
     if cfg.architecture == "resnet50":
         if not cfg.solution:
@@ -2895,7 +2897,7 @@ def get_model(cfg: omegaconf.DictConfig):
                 net = ResNet50()
                 return net
             if "alternative" == cfg.model_type:
-                from alternate_models.resnet import ResNet18
+                from alternate_models.resnet import ResNet50
                 net = ResNet50()
                 return net
         else:
@@ -7750,7 +7752,7 @@ if __name__ == '__main__':
         "solution":"",
         "batch_size": 128,
         # "batch_size": 128,
-        "num_workers": 0,
+        "num_workers": 16,
     })
     create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
