@@ -73,9 +73,13 @@ from shrinkbench.metrics.flops import flops
 from pathlib import Path
 import argparse
 from decimal import Decimal
+
+# For different epsilon
+plt.rcParams["mathtext.fontset"] = "cm"
+
 # enable cuda devices
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # matplotlib.use('TkAgg')
@@ -5856,6 +5860,7 @@ def test_sigma_experiment_selector():
 ############################### Plot of stochastic pruning against deterministic pruning ###############################
 
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test",name:str=""):
+
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
     evaluation_set = select_eval_set(cfg, eval_set)
@@ -5973,19 +5978,27 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     plt.ylim(0, 100)
 
     ax2 = ax.twinx()
-    epsilon_ticks = original_performance - np.linspace(0, 100, 9)
-    ax2.set_yticks(epsilon_ticks, minor=False)
-    ax2.set_ylabel("$Accuracy degradation$", fontsize=20)
-    ax2.spines['right'].set_color('red')
-    ax2.tick_params(axis="y", colors="red")
-    ax2.yaxis.label.set_color('red')
+
+    ytickslocs = ax.get_yticks()
+    _, ymx = ax.get_ylim()
+
+
+    y_ticks = ax.transData.transform([(tick,ymx) for tick in ytickslocs])
+
+    epsilon_ticks =  np.linspace(original_performance, 0, len(y_ticks)-1)
+
+    ax2.set_yticks(ticks=epsilon_ticks, minor=False)
+    ax2.set_yticklabels(epsilon_ticks)
+    ax2.set_ylabel(r"Accuracy degradation-$\epsilon$ ", fontsize=20)
+    # ax2.spines['right'].set_color('red')
+    # ax2.tick_params(axis="y", colors="red")
+    # ax2.yaxis.label.set_color('red')
     ax2.invert_yaxis()
 
     plt.tight_layout()
-    plt.savefig(
-        f"data/figures/stochastic_deterministic_{cfg.noise}_sigma_"
-        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}_{name}.pdf")
+    plt.savefig(f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+                f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+                f"_{cfg.population}_{eval_set}_{name}.pdf")
     plt.savefig(f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
                 f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
                 f"_{cfg.population}_{eval_set}_{name}.png")
@@ -6694,16 +6707,16 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
                 counter_for_mean_individuals+=1
             if  predictions_voting is None:
-                predictions_voting = torch.argmax(individual_predictions,dim=1)
+                predictions_voting =torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))
             else:
-                predictions_voting = torch.cat((predictions_voting, torch.argmax(individual_predictions,dim=1)), dim = 0)
+                predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number>max_individuals:
                 break
             ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
-        temp_variable = torch.mode(predictions_voting,dim=0)
+        temp_variable = torch.mode(predictions_voting,dim=1)
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
@@ -6775,16 +6788,16 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
                 counter_for_mean_individuals +=1
             if  predictions_voting is None:
-                predictions_voting = torch.argmax(individual_predictions,dim=1)
+                predictions_voting =torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))
             else:
-                predictions_voting = torch.cat((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 0)
+                predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number>max_individuals:
                 break
             ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
-        temp_variable = torch.mode(predictions_voting,dim=0)
+        temp_variable = torch.mode(predictions_voting,dim=1)
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
@@ -7523,9 +7536,9 @@ if __name__ == '__main__':
     #     # "architecture": "VGG19",
     #     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
     #     # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-    #     "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+    #     # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
     #     # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
     #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
     #     #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
     #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
@@ -7535,7 +7548,7 @@ if __name__ == '__main__':
     #     "exclude_layers": ["conv1", "linear"],
     #     # "exclude_layers": ["features.0", "classifier"],
     #    "noise": "gaussian",
-    #    "pruner": "lamp",
+    #    "pruner": "global",
     #     "model_type": "alternative",
     #     # "model_type": "hub",
     #     "fine_tune_exclude_layers": True,
@@ -7561,7 +7574,7 @@ if __name__ == '__main__':
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
