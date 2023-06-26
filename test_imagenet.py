@@ -274,14 +274,18 @@ def test_num_workers():
     for num_workers in range(2, mp.cpu_count(), 2):
 
         args = {'num_workers':num_workers}
-        train_loader,val_loader,test_loader = load_imageNet()
-
+        train_loader,val_loader,test_loader = load_imageNet(args)
+        accelerator = Accelerator()
+        val_loader= accelerator.prepare(
+            val_loader
+        )
         start = time()
         for epoch in range(1, 3):
-            for i, data in enumerate(train_loader, 0):
+            for i, data in enumerate(val_loader, 0):
                 pass
         end = time()
         print("Finish with:{} second, num_workers={}".format(end - start, num_workers))
 
 if __name__ == '__main__':
-    main()
+    # main()
+    test_num_workers()
