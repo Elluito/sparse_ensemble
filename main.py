@@ -6695,7 +6695,7 @@ def ensemble_predictions(prefix:str,cfg):
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 1)
+                predictions_voting = torch.cat((predictions_voting, torch.argmax(individual_predictions,dim=1)), dim = 0)
 
             if ind_number>max_individuals:
                 break
@@ -6766,7 +6766,7 @@ def ensemble_predictions(prefix:str,cfg):
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
             # despues del for.
 
-            individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+            individual_predictions: torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
 
             if predictions_mean is None:
                 predictions_mean = individual_predictions
@@ -6776,7 +6776,7 @@ def ensemble_predictions(prefix:str,cfg):
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 1)
+                predictions_voting = torch.cat((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 0)
 
             if ind_number>max_individuals:
                 break
