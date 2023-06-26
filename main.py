@@ -1585,6 +1585,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
     if type == "global":
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
         if criterion == "l1":
+
             prune.global_unstructured(
                 weights,
                 pruning_method=prune.L1Unstructured,

@@ -100,7 +100,7 @@ def get_mask(model,dense=False):
         try:
             return dict(get_buffer_dict(model))
         except:
-            temp = lambda w: (w != 0).type(torch.float)
+            temp = lambda w: (w != 0).type(torch.float).to('cuda')
             names, weights = zip(*get_layer_dict(model))
             masks = list(map(temp, weights))
             mask_dict = dict(zip(names, masks))
@@ -199,10 +199,11 @@ def main():
     train_loader, val_loader ,test_loader = load_imageNet(args)
     net = resnet50()
     net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
-    prune_with_rate(net,0.9,type="global")
+    prune_with_rate(net, 0.9, type="global")
     remove_reparametrization(net)
+
     mask = get_mask(model=net)
-    apply_mask_with_hook(net,mask)
+    apply_mask_with_hook(net, mask)
 
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
