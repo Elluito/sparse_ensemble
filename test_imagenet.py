@@ -271,6 +271,8 @@ def test_num_workers():
     from time import time
     import multiprocessing as mp
 
+    print("mp.cpu_count(): {}".format(mp.cpu_count()))
+
     for num_workers in range(2, mp.cpu_count(), 2):
 
         args = {'num_workers':num_workers}
@@ -279,11 +281,16 @@ def test_num_workers():
         val_loader = accelerator.prepare(
             val_loader
         )
+        limit = 100
         start = time()
-        for epoch in range(1, 3):
-            for i, data in enumerate(val_loader, 0):
+        for i, data in enumerate(val_loader, 0):
+            if i < limit :
                 pass
+            else:
+                break
+
         end = time()
+
         print("Finish with:{} second, num_workers={}".format(end - start, num_workers))
 
 if __name__ == '__main__':

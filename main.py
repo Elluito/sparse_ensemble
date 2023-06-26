@@ -5971,10 +5971,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
     plt.ylim(0, 100)
+
     ax2 = ax.twinx()
     epsilon_ticks = original_performance - np.linspace(0, 100, 9)
     ax2.set_yticks(epsilon_ticks, minor=False)
-    ax2.set_ylabel(r"$\epsilon$", fontsize=20)
+    ax2.set_ylabel("$Accuracy degradation$", fontsize=20)
     ax2.spines['right'].set_color('red')
     ax2.tick_params(axis="y", colors="red")
     ax2.yaxis.label.set_color('red')
@@ -7560,7 +7561,7 @@ if __name__ == '__main__':
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
+    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
