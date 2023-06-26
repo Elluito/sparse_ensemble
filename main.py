@@ -6695,7 +6695,7 @@ def ensemble_predictions(prefix:str,cfg):
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,individual_predictions),dim = 1)
+                predictions_voting = torch.stack((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 1)
 
             if ind_number>max_individuals:
                 break
@@ -6776,7 +6776,7 @@ def ensemble_predictions(prefix:str,cfg):
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
-                predictions_voting = torch.stack((predictions_voting,individual_predictions),dim = 1)
+                predictions_voting = torch.stack((predictions_voting,torch.argmax(individual_predictions,dim=1)),dim = 1)
 
             if ind_number>max_individuals:
                 break

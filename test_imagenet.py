@@ -108,28 +108,7 @@ def get_mask(model,dense=False):
         masks = list(map(torch.ones_like, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
-
-def main():
-
-    # parser = argparse.ArgumentParser(description='')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # parser.add_argument('-acc', '--accelerate',type=bool,default=False, help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility', required=False)
-    #
-
-    # args = vars(parser.parse_args())
-    args = {"accelerate": True ,'num_workers': 4}
+def load_imageNet(args):
     current_directory = Path().cwd()
     data_path = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -152,6 +131,7 @@ def main():
             normalize,
         ]))
     print(f"Length of dataset: {len(whole_train_dataset)}")
+    print(args)
 
     train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
@@ -178,10 +158,10 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=128, shuffle=True,
-        num_workers=0, pin_memory=True, sampler=None)
+        num_workers=args['num_workers'], pin_memory=True, sampler=None)
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=128, shuffle=True,
-        num_workers=4, pin_memory=True, sampler=None)
+        num_workers=args['num_workers'], pin_memory=True, sampler=None)
     test_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(testdir, transforms.Compose([
             transforms.Resize(256),
@@ -190,8 +170,31 @@ def main():
             normalize,
         ])),
         batch_size=128, shuffle=False,
-        num_workers=4, pin_memory=True)
+        num_workers=args['num_workers'], pin_memory=True)
+    return train_loader,val_loader,test_loader
+def main():
 
+    # parser = argparse.ArgumentParser(description='')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser.add_argument('-acc', '--accelerate',type=bool,default=False, help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility', required=False)
+    #
+
+    # args = vars(parser.parse_args())
+    args = {"accelerate": True, 'num_workers': 24}
+
+    train_loader, val_loader ,test_loader = load_imageNet(args)
     net = resnet50()
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
 
@@ -264,6 +267,21 @@ def main():
     decimal_part = hours_float - total_time//3600
     minutes = decimal_part*60
     print("Total time was {} hours and {} minutes".format(total_time//3600,minutes))
+def test_num_workers():
+    from time import time
+    import multiprocessing as mp
+
+    for num_workers in range(2, mp.cpu_count(), 2):
+
+        args = {'num_workers':num_workers}
+        train_loader,val_loader,test_loader = load_imageNet()
+
+        start = time()
+        for epoch in range(1, 3):
+            for i, data in enumerate(train_loader, 0):
+                pass
+        end = time()
+        print("Finish with:{} second, num_workers={}".format(end - start, num_workers))
 
 if __name__ == '__main__':
     main()
