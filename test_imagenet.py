@@ -129,7 +129,7 @@ def main():
     #
 
     # args = vars(parser.parse_args())
-    args = {"accelerate": True}
+    args = {"accelerate": True ,'num_workers': 4}
     current_directory = Path().cwd()
     data_path = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -181,7 +181,7 @@ def main():
         num_workers=0, pin_memory=True, sampler=None)
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=128, shuffle=True,
-        num_workers=1, pin_memory=True, sampler=None)
+        num_workers=4, pin_memory=True, sampler=None)
     test_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(testdir, transforms.Compose([
             transforms.Resize(256),
@@ -190,7 +190,7 @@ def main():
             normalize,
         ])),
         batch_size=128, shuffle=False,
-        num_workers=0, pin_memory=True)
+        num_workers=4, pin_memory=True)
 
     net = resnet50()
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))

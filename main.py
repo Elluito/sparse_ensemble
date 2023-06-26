@@ -6691,7 +6691,7 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_mean = individual_predictions
             else:
                 predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
-                counter_for_mean +=1
+                counter_for_mean_individuals+=1
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
@@ -6772,7 +6772,7 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_mean = individual_predictions
             else:
                 predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
-                counter_for_mean +=1
+                counter_for_mean_individuals +=1
             if  predictions_voting is None:
                 predictions_voting = torch.argmax(individual_predictions,dim=1)
             else:
