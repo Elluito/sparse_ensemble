@@ -7561,7 +7561,7 @@ if __name__ == '__main__':
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed_2")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
