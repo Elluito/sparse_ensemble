@@ -6702,7 +6702,7 @@ def ensemble_predictions(prefix:str,cfg):
             ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
-        temp_variable = torch.mode(predictions_voting,dim=1)
+        temp_variable = torch.mode(predictions_voting,dim=0)
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
@@ -6783,7 +6783,7 @@ def ensemble_predictions(prefix:str,cfg):
             ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
-        temp_variable = torch.mode(predictions_voting,dim=1)
+        temp_variable = torch.mode(predictions_voting,dim=0)
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 

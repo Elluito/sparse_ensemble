@@ -276,7 +276,7 @@ def test_num_workers():
         args = {'num_workers':num_workers}
         train_loader,val_loader,test_loader = load_imageNet(args)
         accelerator = Accelerator()
-        val_loader= accelerator.prepare(
+        val_loader = accelerator.prepare(
             val_loader
         )
         start = time()
