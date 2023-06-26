@@ -2891,7 +2891,7 @@ def get_model(cfg: omegaconf.DictConfig):
 
     if cfg.architecture == "resnet50":
         if not cfg.solution:
-            if "csgmcmc" == cfg.type:
+            if "csgmcmc" == cfg.model_type:
                 net = ResNet50()
                 return net
             if "alternative" == cfg.model_type:
@@ -5975,22 +5975,22 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    plt.ylim(0, 100)
-
-    ax2 = ax.twinx()
-
-    ytickslocs = ax.get_yticks()
-    _, ymx = ax.get_ylim()
-
-
-    y_ticks = ax.transData.transform([(tick,_) for tick in ytickslocs])
-
-
-    epsilon_ticks =  np.linspace(original_performance, 0, len(y_ticks)-1)
-
-    ax2.set_yticks(ticks=epsilon_ticks, minor=False)
-    ax2.set_yticklabels(epsilon_ticks)
-    ax2.set_ylabel(r"Accuracy degradation-$\epsilon$ ", fontsize=20)
+    # plt.ylim(0, 100)
+    #
+    # ax2 = ax.twinx()
+    #
+    # ytickslocs = ax.get_yticks()
+    # _, ymx = ax.get_ylim()
+    #
+    #
+    # y_ticks = ax.transData.transform([(tick,_) for tick in ytickslocs])
+    #
+    #
+    # epsilon_ticks =  np.linspace(original_performance, 0, len(y_ticks)-1)
+    #
+    # ax2.set_yticks(ticks=epsilon_ticks, minor=False)
+    # ax2.set_yticklabels(epsilon_ticks)
+    # ax2.set_ylabel(r"Accuracy degradation-$\epsilon$ ", fontsize=20)
     # ax2.spines['right'].set_color('red')
     # ax2.tick_params(axis="y", colors="red")
     # ax2.yaxis.label.set_color('red')
@@ -6700,7 +6700,7 @@ def ensemble_predictions(prefix:str,cfg):
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
             # despues del for.
 
-            individual_predictions:torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+            individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
 
             if predictions_mean is None:
                 predictions_mean = individual_predictions
@@ -6844,7 +6844,38 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                 cfg.architecture = arch
                 for sig in sigma_values:
                     cfg.sigma = sig
-                    print(cfg)
+                    # if cfg.dataset == "cifar10":
+                    #     if cfg.architecture == "resnet18":
+                    #         solution = "trained_modes/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                    #         exclude_layers =["conv1", "linear"]
+                    #     if cfg.architecture == "VGG19":
+                    #         solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
+                    #         exclude_layers = ["features.0", "classifier"]
+                    #     if cfg.architecture == "resnet50":
+                    #         solution = "trained_models/cifar10/resnet50_cifar10.pth"
+                    #         exclude_layers = ["conv1", "linear"]
+                    # if cfg.dataset == "cifar100":
+                    #     if cfg.architecture == "resnet18":
+                    #         cfg.solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
+                    #         exclude_layers =["conv1", "linear"]
+                    #     if cfg.architecture == "VGG19":
+                    #         cfg.solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+                    #         exclude_layers = ["features.0", "classifier"]
+                    #     if cfg.architecture  == "resnet50":
+                    #         cfg.solution = "trained_models/cifar100/resnet50_cifar100.pth"
+                    #         exclude_layers = ["conv1", "linear"]
+                    # if cfg.dataset== "imagenet":
+                    #     if cfg.architecture == "resnet18":
+                    #         cfg.solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
+                    #         exclude_layers = ["conv1", "fc"]
+                    #     if cfg.architecture == "VGG19":
+                    #         cfg.solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+                    #         exclude_layers = ["features.0", "classifier"]
+                    #     if  args["architecture"] == "resnet50":
+                    #         cfg.solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
+                    #         exclude_layers = ["conv1", "fc"]
+                    #     print(cfg)
+                    #
                     global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
                     # For Global
                     accuracy.append(global_ensemble_results["voting"])
@@ -7332,25 +7363,41 @@ def LeMain(args):
     exclude_layers = None
 
     if args["dataset"] == "cifar100":
-        if args["architecture"]== "resnet18":
-            solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
-            exclude_layers =["conv1", "linear"]
-        if args["architecture"]== "VGG19":
-            solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
-            exclude_layers = ["features.0", "classifier"]
-        if args["architecture"]== "resnet50":
-            solution = "trained_models/cifar100/resnet50_cifar100.pth"
-            exclude_layers = ["conv1", "linear"]
+        if args["modeltype"]=="alternative":
+            if args["architecture"]== "resnet18":
+                solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
+                exclude_layers =["conv1", "linear"]
+            if args["architecture"]== "VGG19":
+                solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"]== "resnet50":
+                solution = "trained_models/cifar100/resnet50_cifar100.pth"
+                exclude_layers = ["conv1", "linear"]
+    if args["dataset"] == "cifar10":
+        if args["modeltype"]=="alternative":
+            if args["architecture"]== "resnet18":
+                solution = "trained_modes/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                exclude_layers =["conv1", "linear"]
+            if args["architecture"]== "VGG19":
+                solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"]== "resnet50":
+                solution = "trained_models/cifar10/resnet50_cifar10.pth"
+                exclude_layers = ["conv1", "linear"]
     if args["dataset"] == "imagenet":
-        if args["architecture"] == "resnet18":
-            solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
-            exclude_layers = ["conv1", "fc"]
-        if args["architecture"] == "VGG19":
-            solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
-            exclude_layers = ["features.0", "classifier"]
-        if args["architecture"] == "resnet50":
-            solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
-            exclude_layers = ["conv1", "fc"]
+
+        if args["modeltype"]=="hub":
+
+            if args["architecture"] == "resnet18":
+                solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
+                exclude_layers = ["conv1", "fc"]
+            if args["architecture"] == "VGG19":
+                raise NotImplementedError("Not implemented")
+                solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"] == "resnet50":
+                solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
+                exclude_layers = ["conv1", "fc"]
 
 
 

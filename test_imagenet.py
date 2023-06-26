@@ -272,11 +272,11 @@ def test_num_workers():
     import multiprocessing as mp
 
     print("mp.cpu_count(): {}".format(mp.cpu_count()))
+    list_num_workers = [0, 18, 20, 22, 24]
+    for num_workers in list_num_workers:
 
-    for num_workers in range(2, mp.cpu_count(), 2):
-
-        args = {'num_workers':num_workers}
-        train_loader,val_loader,test_loader = load_imageNet(args)
+        args = {'num_workers': num_workers}
+        train_loader, val_loader, test_loader = load_imageNet(args)
         accelerator = Accelerator()
         val_loader = accelerator.prepare(
             val_loader
@@ -284,9 +284,12 @@ def test_num_workers():
         limit = 100
         start = time()
         for i, data in enumerate(val_loader, 0):
-            if i < limit :
+            if i < limit:
+
                 pass
+
             else:
+
                 break
 
         end = time()
