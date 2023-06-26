@@ -6685,7 +6685,10 @@ def ensemble_predictions(prefix:str,cfg):
             #Load the individuals
             print("Individual:{}".format(individual))
             print("Contents of the weight folder")
-            print("")
+            p = Path(individual).glob('**/*')
+            files = [x for x in p if x.is_file()]
+            print("{}".format(files))
+
             try:
                 if Path(individual +"weights/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
@@ -6707,7 +6710,7 @@ def ensemble_predictions(prefix:str,cfg):
             if predictions_mean is None:
                 predictions_mean = individual_predictions
             else:
-                predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
+                predictions_mean = predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
                 counter_for_mean_individuals+=1
             if  predictions_voting is None:
                 predictions_voting =torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))
@@ -6738,7 +6741,7 @@ def ensemble_predictions(prefix:str,cfg):
         if full_voting_mean_accuracy is None:
             full_voting_mean_accuracy = voting_accuracy
         else:
-            full_voting_mean_accuracy += full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
+            full_voting_mean_accuracy = full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
             counter_for_mean_voting+=1
 
     global_results = {"voting": full_voting_mean_accuracy,"mean": full_mean_mean_accuracy}
@@ -6767,6 +6770,11 @@ def ensemble_predictions(prefix:str,cfg):
         for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
 
             #Load the individuals
+            print("Individual:{}".format(individual))
+            print("Contents of the weight folder")
+            p = Path(individual).glob('**/*')
+            files = [x for x in p if x.is_file()]
+            print("{}".format(files))
             try:
                 if Path(individual +"weights/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
@@ -6788,10 +6796,10 @@ def ensemble_predictions(prefix:str,cfg):
             if predictions_mean is None:
                 predictions_mean = individual_predictions
             else:
-                predictions_mean += predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
+                predictions_mean = predictions_mean + (individual_predictions-predictions_mean)/counter_for_mean_individuals
                 counter_for_mean_individuals +=1
             if  predictions_voting is None:
-                predictions_voting =torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))
+                predictions_voting = torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))
             else:
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
@@ -6806,21 +6814,23 @@ def ensemble_predictions(prefix:str,cfg):
 
         accuracy.update(preds=pred_mean, target=targets)
         mean_accuracy = accuracy.compute()
+        print("mean accuracy for batch: {} ".format(voting_accuracy))
         accuracy.update(preds=pred_voting, target=targets)
         voting_accuracy = accuracy.compute()
+        print("voting accuracy for batch: {} ".format(voting_accuracy))
         # Update the mean of the whole dataset for this particular batch for the two ensemble methods
         # For mean method
         if full_mean_mean_accuracy is None:
             full_mean_mean_accuracy = mean_accuracy
         else:
-            full_mean_mean_accuracy+= full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
+            full_mean_mean_accuracy = full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
             counter_for_mean_mean +=1
         # For voting method
         if full_voting_mean_accuracy is None:
             full_voting_mean_accuracy = voting_accuracy
         else:
-            full_voting_mean_accuracy += full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
-            counter_for_mean_voting+=1
+            full_voting_mean_accuracy = full_voting_mean_accuracy + (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
+            counter_for_mean_voting += 1
 
     lamp_results = {"voting": full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
     print(cfg)
@@ -6878,6 +6888,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     #         exclude_layers = ["conv1", "fc"]
                     #     print(cfg)
                     #
+                    print(cfg)
                     global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
                     # For Global
                     accuracy.append(global_ensemble_results["voting"])
@@ -7739,7 +7750,7 @@ if __name__ == '__main__':
     ################################################# Ensemble predictions ############################################
     sigma_values = [0.001,0.003,0.005]
     pruning_rate_values = [0.8,0.85,0.9,0.95]
-    architecture_values = ["VGG19","resnet50","resnet18"]
+    architecture_values = ["VGG19","resnet18","resnet50"]
     dataset_values = ["cifar10","cifar100"]
 
     cfg = omegaconf.DictConfig({
@@ -7809,48 +7820,48 @@ if __name__ == '__main__':
 
 
 
-# ################################## CURVE PLOTS #######################################################################
-#
-    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
-#
-# ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
-#     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
-#
-#
-#     ##########################  Last table  Flops count for LAMP  ####################################################
-#     print(f"FLOPS results for {cfg.architecture} on {cfg.dataset} with pruning rate {cfg.amount}")
-#     print("Lamp stochastic")
-#     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
-#     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     get_statistics_on_FLOPS_until_threshold(df,92)
-#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-#     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     print("Now lamp deterministic")
-#
-    # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-#
-#     #########################  Last table  Flops count for GMP #######################################################
-#
-#     print("Global stochastic")
-#     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
-#     fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
-#
-#     get_statistics_on_FLOPS_until_threshold(df,92)
-#     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-#     fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#
-#     print("Now global deterministic")
-#     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-#
-#
-#
-#
+    # ################################## CURVE PLOTS #######################################################################
+    #
+        # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
+    #
+    # ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
+    #     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
+    #
+    #
+    #     ##########################  Last table  Flops count for LAMP  ####################################################
+    #     print(f"FLOPS results for {cfg.architecture} on {cfg.dataset} with pruning rate {cfg.amount}")
+    #     print("Lamp stochastic")
+    #     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
+    #     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    #     get_statistics_on_FLOPS_until_threshold(df,92)
+    #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    #     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    #     print("Now lamp deterministic")
+    #
+        # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+    #
+    #     #########################  Last table  Flops count for GMP #######################################################
+    #
+    #     print("Global stochastic")
+    #     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+    #     fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    #     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
+    #
+    #     get_statistics_on_FLOPS_until_threshold(df,92)
+    #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+    #     fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+    #
+    #     print("Now global deterministic")
+    #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+    #
+    #
+    #
+    #
 
 
 
