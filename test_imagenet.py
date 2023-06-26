@@ -11,6 +11,8 @@ import torchvision.datasets as datasets
 from pathlib import Path
 import time
 from accelerate import Accelerator
+from main import prune_with_rate,remove_reparametrization
+from sparse_ensemble_utils import apply_mask, get_mask,apply_mask_with_hook,sparsity
 # from ffcv.writer import DatasetWriter
 # from ffcv.fields import RGBImageField, IntField
 # from ffcv.loader import Loader, OrderOption
@@ -196,20 +198,26 @@ def main():
 
     train_loader, val_loader ,test_loader = load_imageNet(args)
     net = resnet50()
-    # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
+    net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
+    prune_with_rate(net,0.9,type="global")
+    remove_reparametrization(net)
+    mask = get_mask(model=net)
+    apply_mask_with_hook(net,mask)
+
+    print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
     # net.cuda()
 
     # net.train()
 
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum=0.9, weight_decay=5e-4)
 
     criterion = nn.CrossEntropyLoss()
 
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     accelerator = None
     if args["accelerate"]:
-        accelerator = Accelerator(mixed_precision="fp16")
+        accelerator = Accelerator()
     net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
         net, optimizer, val_loader, lr_scheduler
     )
@@ -245,7 +253,8 @@ def main():
                 accelerator.backward(loss)
             else:
                 loss.backward()
-
+            unwraped_model = accelerator.unwrap_model(net)
+            print("sparsity of model after being unwrapped: {}".format(sparsity(unwraped_model)))
             optimizer.step()
 
             # measure elapsed time
@@ -297,5 +306,5 @@ def test_num_workers():
         print("Finish with:{} second, num_workers={}".format(end - start, num_workers))
 
 if __name__ == '__main__':
-    # main()
-    test_num_workers()
+    main()
+    # test_num_workers()

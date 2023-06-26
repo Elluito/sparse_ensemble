@@ -529,7 +529,17 @@ def apply_mask(model:nn.Module,mask_dict:dict):
     for name,module in model.named_modules():
         if name in mask_dict.keys():
             module.weight.data.mul_(mask_dict[name])
+@torch.no_grad()
+def apply_mask_with_hook(model:nn.Module,mask_dict:dict):
+    '''
 
+    @param model: model to mask
+    @param mask_dict:dict of module names and mask
+    @return:
+    '''
+    for name, module in model.named_modules():
+        if name in mask_dict.keys():
+            module.weight.register_hook(lambda grad: grad.mul(mask_dict[name]))
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
 def random_perm(a: torch.Tensor) -> torch.Tensor:
     """

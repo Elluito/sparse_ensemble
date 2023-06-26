@@ -10,7 +10,7 @@
 #$ -l h_rt=02:50:00
 
 # ASk for some GPU
-#$ -l coproc_k80=1
+#$ -l coproc_k80=2
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
@@ -21,4 +21,4 @@ module add anaconda
 module add cuda/11.1.1
 conda activate work
 #python test_imagenet.py
-accelerate launch --num_processes=1 test_imagenet.py
+accelerate launch --multi_gpu --mixed_precision=fp16 --num_processes=2 test_imagenet.py

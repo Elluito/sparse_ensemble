@@ -5814,6 +5814,8 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         fine_tune_after_stochatic_pruning_experiment(cfg)
     if number_experiment == 12:
         lamp_scenario_2_cheap_evaluation(cfg)
+    if number_experiment == 13:
+        continued_fined_tuning_imagnet(cfg)
 
     # if number_experiment == 13:
 
@@ -7571,6 +7573,8 @@ def compare_architecture_distributions(arc1="",arc2=""):
 
     # weights_analysis_per_weight(cfg1,cfg2)
 
+def continued_fined_tuning_imagnet(cfg):
+    pass
 if __name__ == '__main__':
 
 
