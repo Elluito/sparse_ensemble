@@ -6887,7 +6887,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     #         cfg.solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
                     #         exclude_layers = ["conv1", "fc"]
                     #     print(cfg)
-                    #
+
                     print(cfg)
                     global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
                     # For Global
@@ -7761,9 +7761,9 @@ if __name__ == '__main__':
         "dataset": "imagenet",
         "set":"test",
         "solution":"",
-        "batch_size": 128,
+        "batch_size": 64,
         # "batch_size": 128,
-        "num_workers": 16,
+        "num_workers": 24,
     })
     create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
