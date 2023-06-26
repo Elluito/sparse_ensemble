@@ -5983,7 +5983,8 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     _, ymx = ax.get_ylim()
 
 
-    y_ticks = ax.transData.transform([(tick,ymx) for tick in ytickslocs])
+    y_ticks = ax.transData.transform([(tick,_) for tick in ytickslocs])
+
 
     epsilon_ticks =  np.linspace(original_performance, 0, len(y_ticks)-1)
 
@@ -6829,6 +6830,11 @@ def ensemble_predictions(prefix:str,cfg):
 def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,architecture_values:list,pruning_rate_values:list,dataset_values:list):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
+    accuracy = []
+    stage = []
+    sigma_list = []
+    pruner_list = []
+
     #Loop over all values of everything
     for dataset in dataset_values:
         cfg.dataset = dataset
@@ -7574,7 +7580,7 @@ if __name__ == '__main__':
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
 
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="")
+    stochastic_pruning_against_deterministic_pruning(cfg,name="")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
