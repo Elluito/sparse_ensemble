@@ -10,7 +10,7 @@
 #$ -l h_rt=02:50:00
 
 # ASk for some GPU
-#$ -l coproc_k80=2
+#$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
