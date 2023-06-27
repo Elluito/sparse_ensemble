@@ -6744,7 +6744,7 @@ def ensemble_predictions(prefix:str,cfg):
         if full_mean_mean_accuracy is None:
             full_mean_mean_accuracy = mean_accuracy
         else:
-            full_mean_mean_accuracy+= full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
+            full_mean_mean_accuracy= full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
             counter_for_mean_mean +=1
         # For voting method
         if full_voting_mean_accuracy is None:

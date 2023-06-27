@@ -539,7 +539,7 @@ def apply_mask_with_hook(model:nn.Module,mask_dict:dict):
     '''
     for name, module in model.named_modules():
         if name in mask_dict.keys():
-            def hook(module, grad_input, grad_output) -> tuple(torch.Tensor) or None:
+            def hook(module, grad_input, grad_output) -> tuple[torch.Tensor] or None:
                 module.weight.data.mul_(mask_dict[name])
             module.register_forward_pre_hook(hook)
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
