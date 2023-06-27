@@ -2808,7 +2808,7 @@ def get_model(cfg: omegaconf.DictConfig):
     net = None
     if cfg.architecture == "resnet18":
         if not cfg.solution:
-            if "csgmcmc" == cfg.type:
+            if "csgmcmc" == cfg.model_type:
                 net = ResNet18()
                 return net
             if "alternative" == cfg.model_type:
