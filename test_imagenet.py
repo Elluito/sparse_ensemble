@@ -11,8 +11,9 @@ import torchvision.datasets as datasets
 from pathlib import Path
 import time
 from accelerate import Accelerator
-from main import prune_with_rate,remove_reparametrization
+from main import prune_with_rate,remove_reparametrization,get_cifar_datasets
 from sparse_ensemble_utils import apply_mask, apply_mask_with_hook,sparsity
+import omegaconf
 # from ffcv.writer import DatasetWriter
 # from ffcv.fields import RGBImageField, IntField
 # from ffcv.loader import Loader, OrderOption
@@ -195,10 +196,20 @@ def main():
 
     # args = vars(parser.parse_args())
     args = {"accelerate": True, 'num_workers': 18}
+    cfg = omegaconf.DictConfig({
+        "dataset": "cifar10",
+        "batch_size": 64,
+        "num_workers": 0,
 
-    train_loader, val_loader ,test_loader = load_imageNet(args)
+    })
+    # train_loader, val_loader ,test_loader = load_imageNet(args)
+    train_loader,val_loader,tes_loader = get_cifar_datasets(cfg)
     net = resnet50()
-    net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
+    in_features = net.fc.in_features
+
+    net.fc = nn.Linear(in_features,10)
+
+    # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
     prune_with_rate(net, 0.9, type="global")
     remove_reparametrization(net)
 
@@ -218,7 +229,7 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     accelerator = None
     if args["accelerate"]:
-        accelerator = Accelerator()
+        accelerator = Accelerator(mixed_precision='fp16')
         net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler
         )
@@ -260,7 +271,7 @@ def main():
             optimizer.step()
 
             unwraped_model = accelerator.unwrap_model(net)
-
+            # accelerator.prepare()
             print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
 
             # measure elapsed time

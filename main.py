@@ -6756,7 +6756,7 @@ def ensemble_predictions(prefix:str,cfg):
     global_results = {"voting": full_voting_mean_accuracy,"mean": full_mean_mean_accuracy}
     print(cfg)
     print(global_results)
-
+    # torch.cuda.empty_cache()
     ########################## LAMP stochatic #######################################
 
     full_mean_mean_accuracy = None
@@ -6903,6 +6903,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
 
                     print(cfg)
                     global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
+                    torch.cuda.empty_cache()
                     # For Global
                     accuracy.append(global_ensemble_results["voting"])
                     stage.append("Voting")
