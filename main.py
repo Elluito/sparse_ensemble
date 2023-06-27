@@ -6640,7 +6640,7 @@ def bar_plot_every_experiment(dataFrame1:pd.DataFrame,use_set="val",sigmas_to_sh
     g.save("barplot.pdf",bbox_inches='tight')
     g.save("barplot.eps",bbox_inches='tight')
 
-@torch.no_grad
+@torch.no_grad()
 def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,torch.Tensor],model:nn.Module,cfg):
     model.eval()
     model.cuda()
