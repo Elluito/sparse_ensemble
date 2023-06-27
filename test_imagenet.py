@@ -203,7 +203,7 @@ def main():
     remove_reparametrization(net)
 
     mask = get_mask(model=net)
-    apply_mask_with_hook(net, mask)
+    # apply_mask_with_hook(net, mask)
 
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
