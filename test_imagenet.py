@@ -254,9 +254,9 @@ def main():
                 accelerator.backward(loss)
             else:
                 loss.backward()
-            unwraped_model = accelerator.unwrap_model(net)
-            print("sparsity of model after being unwrapped: {}".format(sparsity(unwraped_model)))
             optimizer.step()
+            unwraped_model = accelerator.unwrap_model(net)
+            print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
