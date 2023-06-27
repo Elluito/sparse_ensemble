@@ -6685,7 +6685,7 @@ def ensemble_predictions(prefix:str,cfg):
         predictions_mean = None
         predictions_voting = None
         counter_for_mean_individuals = 2
-        ind_number = 0
+        # ind_number = 0
         for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
 
             #Load the individuals
@@ -6726,9 +6726,9 @@ def ensemble_predictions(prefix:str,cfg):
             else:
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
-            if ind_number>max_individuals:
+            if index >max_individuals:
                 break
-            ind_number += 1
+            # ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
         temp_variable = torch.mode(predictions_voting,dim=1)
@@ -7776,7 +7776,7 @@ if __name__ == '__main__':
         "dataset": "imagenet",
         "set":"test",
         "solution":"",
-        "batch_size": 64,
+        "batch_size": 32,
         # "batch_size": 128,
         "num_workers": 24,
     })

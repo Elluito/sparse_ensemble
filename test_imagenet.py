@@ -12,7 +12,7 @@ from pathlib import Path
 import time
 from accelerate import Accelerator
 from main import prune_with_rate,remove_reparametrization
-from sparse_ensemble_utils import apply_mask, get_mask,apply_mask_with_hook,sparsity
+from sparse_ensemble_utils import apply_mask, apply_mask_with_hook,sparsity
 # from ffcv.writer import DatasetWriter
 # from ffcv.fields import RGBImageField, IntField
 # from ffcv.loader import Loader, OrderOption
@@ -203,7 +203,7 @@ def main():
     remove_reparametrization(net)
 
     mask = get_mask(model=net)
-    # apply_mask_with_hook(net, mask)
+    apply_mask_with_hook(net, mask)
 
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
@@ -255,14 +255,16 @@ def main():
             else:
                 loss.backward()
             optimizer.step()
+
             unwraped_model = accelerator.unwrap_model(net)
+
             print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if batch_idx % 1 == 0:
+            if batch_idx % 10 == 0:
                 print('Epoch: [{0}][{1}/{2}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
