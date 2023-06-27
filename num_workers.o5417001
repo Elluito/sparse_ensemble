@@ -1,0 +1,42 @@
+## WARNING!
+## The current directory is in your home directory. Please use the high-performance
+## cluster filesystem /nobackup. See documentation for information.
+## WARNING!
+
+## Hosts assigned to job 5417001.1:
+##
+## db12gpu7.arc3.leeds.ac.uk 6 slots
+##
+## Resources granted:
+##
+## h_vmem = 11453246122 (per slot)
+## h_rt   = 02:50:00
+## disk   = 1G (per slot)
+
+mp.cpu_count(): 24
+Length of dataset: 1281167
+{'num_workers': 2}
+Finish with:590.6327049732208 second, num_workers=2
+Length of dataset: 1281167
+{'num_workers': 4}
+Finish with:356.6095943450928 second, num_workers=4
+Length of dataset: 1281167
+{'num_workers': 6}
+Finish with:335.25252652168274 second, num_workers=6
+Length of dataset: 1281167
+{'num_workers': 8}
+Finish with:268.75525093078613 second, num_workers=8
+Length of dataset: 1281167
+{'num_workers': 10}
+Finish with:258.3561909198761 second, num_workers=10
+Length of dataset: 1281167
+{'num_workers': 12}
+Finish with:252.19728088378906 second, num_workers=12
+Length of dataset: 1281167
+{'num_workers': 14}
+Finish with:253.58252954483032 second, num_workers=14
+Length of dataset: 1281167
+{'num_workers': 16}
+Finish with:231.62259721755981 second, num_workers=16
+Length of dataset: 1281167
+{'num_workers': 18}
