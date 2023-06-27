@@ -6786,14 +6786,14 @@ def ensemble_predictions(prefix:str,cfg):
             print("{}".format(files))
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
                     print("I loaded the weights!")
 
                 elif Path(individual +"weigths/epoch_100.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
                     print("I loaded the weights!")
                 elif Path(individual +"weigths/epoch_101.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
                     print("I loaded the weights!")
             except Exception as err:
                 print(individual)
