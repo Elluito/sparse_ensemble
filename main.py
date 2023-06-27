@@ -6672,9 +6672,11 @@ def ensemble_predictions(prefix:str,cfg):
     counter_for_mean_mean = 2
     counter_for_mean_voting = 2
     if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
-        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+        accuracy_mean = Accuracy(task="multiclass", num_classes=10).to("cuda")
+        accuracy_voting = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "cifar100":
-        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+        accuracy_mean = Accuracy(task="multiclass", num_classes=10).to("cuda")
+        accuracy_voting = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "imagenet":
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
@@ -6695,11 +6697,14 @@ def ensemble_predictions(prefix:str,cfg):
 
             try:
                 if Path(individual +"weights/epoch_90.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_90.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
+                    print("I loaded the weights!")
                 elif Path(individual +"weights/epoch_100.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_100.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
+                    print("I loaded the weights!")
                 elif Path(individual +"weights/epoch_101.pth").is_file():
-                    model_place_holder.load_state_dict(torch.load(individual +"weights/epoch_101.pth"))
+                    model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
+                    print("I loaded the weights!")
             except Exception as err:
                 print(individual)
                 print(err)
@@ -6730,10 +6735,10 @@ def ensemble_predictions(prefix:str,cfg):
         pred_voting = temp_variable.values
         pred_mean = torch.argmax(predictions_mean,dim=1)
 
-        accuracy.update(preds=pred_mean, target=targets)
-        mean_accuracy = accuracy.compute()
-        accuracy.update(preds=pred_voting, target=targets)
-        voting_accuracy = accuracy.compute()
+        accuracy_mean.update(preds=pred_mean, target=targets)
+        mean_accuracy = accuracy_mean.compute()
+        accuracy_voting.update(preds=pred_voting, target=targets)
+        voting_accuracy = accuracy_voting.compute()
         # Update the mean of the whole dataset for this particular batch for the two ensemble methods
         # For mean method
         if full_mean_mean_accuracy is None:
