@@ -194,7 +194,7 @@ def main():
     #
 
     # args = vars(parser.parse_args())
-    args = {"accelerate": True, 'num_workers': 24}
+    args = {"accelerate": True, 'num_workers': 18}
 
     train_loader, val_loader ,test_loader = load_imageNet(args)
     net = resnet50()
@@ -219,9 +219,9 @@ def main():
     accelerator = None
     if args["accelerate"]:
         accelerator = Accelerator()
-    net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
-        net, optimizer, val_loader, lr_scheduler
-    )
+        net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
+            net, optimizer, val_loader, lr_scheduler
+        )
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -240,6 +240,9 @@ def main():
             data_time.update(time.time() - end)
             # compute output
             output = net(data)
+
+            unwraped_model = accelerator.unwrap_model(net)
+            print("Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(sparsity(unwraped_model)))
             loss = criterion(output,target)
 
             # measure accuracy and record loss
