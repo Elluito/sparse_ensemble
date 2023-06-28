@@ -6697,7 +6697,7 @@ def ensemble_predictions(prefix:str,cfg):
             files = [x for x in p if x.is_file()]
             print("{}".format(files))
 
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
@@ -7787,7 +7787,7 @@ if __name__ == '__main__':
         "solution":"",
         "batch_size": 16,
         # "batch_size": 128,
-        "num_workers": 24,
+        "num_workers": 12,
     })
     create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 

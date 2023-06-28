@@ -20,6 +20,8 @@ from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
 import pyhessian as pyhes
 from torch.nn.utils import vector_to_parameters,parameters_to_vector
+from accelerate import Accelerator
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
@@ -292,6 +294,9 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                                        fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
                                        gradient_flow_file_prefix="", cfg=None):
 
+
+    accelerator = Accelerator()
+    disable_bn(pruned_model)
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
     if "cifar" in cfg.dataset:
@@ -312,9 +317,15 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
     mask_dict = get_mask(model=pruned_model)
+
+
+
     for name in exclude_layers:
         if name in list(mask_dict.keys()):
             mask_dict.pop(name)
+
+    apply_mask_with_hook(pruned_model,mask_dict)
+
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
     # first_time = 1
@@ -341,9 +352,10 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         # temp_name = weights_path / "epoch_{}.pth".format(-1)
         # torch.save(state_dict,temp_name)
 
-    pruned_model.cuda()
-    pruned_model.train()
-    disable_bn(pruned_model)
+    # pruned_model.cuda()
+    # pruned_model.train()
+
+
     if not fine_tune_exclude_layers:
         disable_exclude_layers(pruned_model, exclude_layers)
     if not fine_tune_non_zero_weights:
@@ -352,6 +364,7 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
     criterion = nn.CrossEntropyLoss()
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
+
             data, target = data.cuda(), target.cuda()
             optimizer.zero_grad()
             # first forward-backward step
