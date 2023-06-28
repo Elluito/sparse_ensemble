@@ -7766,7 +7766,7 @@ if __name__ == '__main__':
     ################################################# Ensemble predictions ############################################
     sigma_values = [0.001,0.003,0.005]
     pruning_rate_values = [0.8,0.85,0.9,0.95]
-    architecture_values = ["VGG19","resnet18","resnet50"]
+    architecture_values = ["resnet18","resnet50","VGG19"]
     dataset_values = ["cifar10","cifar100"]
 
     cfg = omegaconf.DictConfig({
