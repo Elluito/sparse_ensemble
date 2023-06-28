@@ -6645,6 +6645,8 @@ def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,tor
     model.eval()
     model.cuda()
     data, target = batch
+    print("T")
+    print("")
     batch_prediction = model(data)
     return batch_prediction
 
@@ -7777,7 +7779,7 @@ if __name__ == '__main__':
         "dataset": "imagenet",
         "set":"test",
         "solution":"",
-        "batch_size": 32,
+        "batch_size": 16,
         # "batch_size": 128,
         "num_workers": 24,
     })
