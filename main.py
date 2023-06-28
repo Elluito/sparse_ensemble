@@ -80,7 +80,7 @@ plt.rcParams["mathtext.fontset"] = "cm"
 # enable cuda devices
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["CUDA_LAUNCH_BLOCKING"]=1
+os.environ["CUDA_LAUNCH_BLOCKING"]="1"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # matplotlib.use('TkAgg')
 
