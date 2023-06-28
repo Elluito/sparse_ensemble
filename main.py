@@ -6687,7 +6687,7 @@ def ensemble_predictions(prefix:str,cfg):
         predictions_mean = None
         predictions_voting = None
         counter_for_mean_individuals = 2
-        # ind_number = 0
+        ind_number = 0
         for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
 
             #Load the individuals
@@ -6715,8 +6715,13 @@ def ensemble_predictions(prefix:str,cfg):
                 # break
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
             # despues del for.
+            try:
+                individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+            except Exception as e:
+                print("There was the follwing error but im going to continue beacuse I only need 10 individuals")
+                print(e)
+                continue
 
-            individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
 
             if predictions_mean is None:
                 predictions_mean = individual_predictions
@@ -6728,9 +6733,9 @@ def ensemble_predictions(prefix:str,cfg):
             else:
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
-            if index >max_individuals:
+            if ind_number > max_individuals:
                 break
-            # ind_number += 1
+            ind_number += 1
 
         # Now I'm going to actually make the predictions first by averaging and second by voting
         temp_variable = torch.mode(predictions_voting,dim=1)
