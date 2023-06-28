@@ -78,9 +78,9 @@ from decimal import Decimal
 plt.rcParams["mathtext.fontset"] = "cm"
 
 # enable cuda devices
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
+os.envirion["CUDA_LAUNCH_BLOCKING"]=1
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # matplotlib.use('TkAgg')
 
@@ -6683,7 +6683,7 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
     for inputs,targets in test:
-        inputs,targets =inputs.cuda(),targets.cuda()
+        inputs,targets = inputs.cuda(),targets.cuda()
         predictions_mean = None
         predictions_voting = None
         counter_for_mean_individuals = 2
@@ -6697,6 +6697,7 @@ def ensemble_predictions(prefix:str,cfg):
             files = [x for x in p if x.is_file()]
             print("{}".format(files))
 
+            torch.cuda.empty_cache()
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
@@ -6718,7 +6719,7 @@ def ensemble_predictions(prefix:str,cfg):
             try:
                 individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
             except Exception as e:
-                print("There was the follwing error but im going to continue beacuse I only need 10 individuals")
+                print("There was the follwing error but im going to continue because I only need 10 individuals")
                 print(e)
                 continue
 
