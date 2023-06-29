@@ -249,9 +249,10 @@ def main():
     train_loader, val_loader ,test_loader = load_imageNet(args)
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
-    in_features = net.fc.in_features
 
-    net.fc = nn.Linear(in_features, 10)
+    # in_features = net.fc.in_features
+    #
+    # net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
     prune_with_rate(net, 0.9, type="global")
@@ -271,7 +272,7 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     accelerator = None
     if args["accelerate"]:
-        accelerator = Accelerator(mixed_precision='fp16')
+        accelerator = Accelerator()
         net, optimizer, val_loader, lr_scheduler, test_loader = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
