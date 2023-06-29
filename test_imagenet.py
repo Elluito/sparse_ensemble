@@ -18,6 +18,7 @@ from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, me
     measure_and_record_gradient_flow_with_ACCELERATOR
 import omegaconf
 from shrinkbench.metrics.flops import flops
+from accelerate.state import PartialState, AcceleratorState
 
 
 # from ffcv.writer import DatasetWriter
@@ -55,7 +56,7 @@ def model_params(model):
     return params
 
 
-def cal_grad_ACCELERATOR(net: nn.Module, trainloader: accelerate.DistributedType[torch.utils.dat], device,
+def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
                          num_stop=5000, T=1, criterion=nn.CrossEntropyLoss):
     num_data = 0  # count the number of datum points in the dataloader
     base_params = model_params(net)
@@ -245,8 +246,8 @@ def main():
         "num_workers": 0,
 
     })
-    # train_loader, val_loader ,test_loader = load_imageNet(args)
-    train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
+    train_loader, val_loader ,test_loader = load_imageNet(args)
+    # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
     in_features = net.fc.in_features
 
@@ -261,14 +262,6 @@ def main():
 
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
-    # net.cuda()
-    t0 = time.time()
-    data, y = next(iter(val_loader))
-    _, unit_sparse_flops = flops(net, data)
-    t1 = time.time()
-    print("Time for calculating batch flops: {}s".format(t1 - t0))
-    # net.train()
-
     total_sparse_flops = 0
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum=0.9, weight_decay=5e-4)
@@ -282,6 +275,14 @@ def main():
         net, optimizer, val_loader, lr_scheduler, test_loader = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
+    state = AcceleratorState()
+    # net.cuda()
+    t0 = time.time()
+    data, y = next(iter(val_loader))
+    _, unit_sparse_flops = flops(net, data)
+    t1 = time.time()
+    print("Time for calculating batch flops: {}s".format(t1 - t0))
+    # net.train()
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -303,9 +304,9 @@ def main():
         output = net(data)
 
         unwraped_model = accelerator.unwrap_model(net)
-        print(
-            "Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(
-                sparsity(unwraped_model)))
+        # print(
+        #     "Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(
+        #         sparsity(unwraped_model)))
         loss = criterion(output, target)
 
         # measure accuracy and record loss
@@ -323,9 +324,8 @@ def main():
         optimizer.step()
         total_sparse_flops += 3 * unit_sparse_flops
 
-        unwraped_model = accelerator.unwrap_model(net)
         # accelerator.prepare()
-        print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
+        # print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -347,7 +347,9 @@ def main():
     minutes = decimal_part * 60
     print("Total time was {} hours and {} minutes".format(total_time // 3600, minutes))
 
+
     t0 = time.time()
+
     measure_and_record_gradient_flow_with_ACCELERATOR(net, accelerator, val_loader, test_loader,
                                                       "imagenet_measure_record_test.csv", total_sparse_flops, 0,
                                                       use_wandb=False)
@@ -356,14 +358,15 @@ def main():
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
-    print("Time for measure gradient: {}h and {} minutes".format(total_time//3600,minutes))
-#####################################################################
+    print("Time for measure gradient: {}h and {} minutes".format(total_time // 3600, minutes))
+    #####################################################################
     end_of_time = time.time()
-    total_time = end_of_time-bigining_of_time
+    total_time = end_of_time - bigining_of_time
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
-    print("Total execution time: {}h and {} minutes".format(total_time//3600,minutes))
+    print("Total execution time: {}h and {} minutes".format(total_time // 3600, minutes))
+
 
 def test_num_workers():
     from time import time
