@@ -1,19 +1,25 @@
 import argparse
+
+import accelerate
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import torchvision
-from torchvision.models import resnet18,ResNet18_Weights,resnet50,ResNet50_Weights
+from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
 import time
 from accelerate import Accelerator
-from main import prune_with_rate,remove_reparametrization,get_cifar_datasets
-from sparse_ensemble_utils import apply_mask, apply_mask_with_hook,sparsity
+from main import prune_with_rate, remove_reparametrization, get_cifar_datasets
+from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, measure_and_record_gradient_flow, \
+    measure_and_record_gradient_flow_with_ACCELERATOR
 import omegaconf
+from shrinkbench.metrics.flops import flops
+
+
 # from ffcv.writer import DatasetWriter
 # from ffcv.fields import RGBImageField, IntField
 # from ffcv.loader import Loader, OrderOption
@@ -22,6 +28,7 @@ import omegaconf
 # Your dataset (`torch.utils.data.Dataset`) of (image, label) pairs
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 
@@ -37,6 +44,39 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+
+def model_params(model):
+    params = []
+    grads = []
+    for param in model.parameters():
+        if not param.requires_grad:
+            continue
+        params.append(param)
+    return params
+
+
+def cal_grad_ACCELERATOR(net: nn.Module, trainloader: accelerate.DistributedType[torch.utils.dat], device,
+                         num_stop=5000, T=1, criterion=nn.CrossEntropyLoss):
+    num_data = 0  # count the number of datum points in the dataloader
+    base_params = model_params(net)
+    gbase = [torch.zeros(p.size()).to(device) for p in base_params]
+    for inputs, targets in trainloader:
+        if (num_data >= num_stop):
+            break
+        net.zero_grad()
+        tmp_num_data = inputs.size(0)
+        outputs = net(inputs) / T
+        loss = criterion(outputs, targets)
+        gradsH = torch.autograd.grad(loss, base_params, create_graph=False)
+        ### update
+        gbase = [gbase1 + g1.detach().clone() * float(tmp_num_data) for gbase1, g1 in zip(gbase, gradsH)]
+        num_data += float(tmp_num_data)
+
+    gbase = [gbase1 / num_data for gbase1 in gbase]
+
+    return gbase
+
+
 def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
     maxk = max(topk)
@@ -44,13 +84,14 @@ def accuracy(output, target, topk=(1,)):
 
     _, pred = output.topk(maxk, 1, True, True)
     pred = pred.t()
-    correct:torch.Tensor = pred.eq(target.view(1, -1).expand_as(pred))
+    correct: torch.Tensor = pred.eq(target.view(1, -1).expand_as(pred))
 
     res = []
     for k in topk:
         correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
 
 def get_layer_dict(model: torch.nn.Module):
     """
@@ -96,7 +137,7 @@ def get_buffer_dict(model: torch.nn.Module):
     return layer_dict
 
 
-def get_mask(model,dense=False):
+def get_mask(model, dense=False):
     if not dense:
         try:
             return dict(get_buffer_dict(model))
@@ -111,6 +152,8 @@ def get_mask(model,dense=False):
         masks = list(map(torch.ones_like, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
+
+
 def load_imageNet(args):
     current_directory = Path().cwd()
     data_path = ""
@@ -120,8 +163,8 @@ def load_imageNet(args):
         data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "datasets/"
-    traindir = data_path+'imagenet/'+'train'
-    testdir=  data_path+'imagenet/'+'val'
+    traindir = data_path + 'imagenet/' + 'train'
+    testdir = data_path + 'imagenet/' + 'val'
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
@@ -141,7 +184,6 @@ def load_imageNet(args):
     my_dataset = val_dataset
     write_path = data_path + "imagenet/valSplit_dataset.beton"
 
-
     # For the validation set that I use to recover accuracy
 
     # # Pass a type for each data field
@@ -155,7 +197,6 @@ def load_imageNet(args):
     # })
     # # Write dataset
     # writer.from_indexed_dataset(my_dataset)
-
 
     # For the validation set that I use to recover accuracy
 
@@ -174,9 +215,10 @@ def load_imageNet(args):
         ])),
         batch_size=128, shuffle=False,
         num_workers=args['num_workers'], pin_memory=True)
-    return train_loader,val_loader,test_loader
-def main():
+    return train_loader, val_loader, test_loader
 
+
+def main():
     # parser = argparse.ArgumentParser(description='')
     # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
     # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
@@ -195,6 +237,7 @@ def main():
     #
 
     # args = vars(parser.parse_args())
+    bigining_of_time = time.time()
     args = {"accelerate": True, 'num_workers': 18}
     cfg = omegaconf.DictConfig({
         "dataset": "cifar10",
@@ -203,11 +246,11 @@ def main():
 
     })
     # train_loader, val_loader ,test_loader = load_imageNet(args)
-    train_loader,val_loader,tes_loader = get_cifar_datasets(cfg)
+    train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
     in_features = net.fc.in_features
 
-    net.fc = nn.Linear(in_features,10)
+    net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
     prune_with_rate(net, 0.9, type="global")
@@ -219,8 +262,14 @@ def main():
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
     # net.cuda()
-
+    t0 = time.time()
+    data, y = next(iter(val_loader))
+    _, unit_sparse_flops = flops(net, data)
+    t1 = time.time()
+    print("Time for calculating batch flops: {}s".format(t1 - t0))
     # net.train()
+
+    total_sparse_flops = 0
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum=0.9, weight_decay=5e-4)
 
@@ -230,8 +279,8 @@ def main():
     accelerator = None
     if args["accelerate"]:
         accelerator = Accelerator(mixed_precision='fp16')
-        net, optimizer, val_loader, lr_scheduler = accelerator.prepare(
-            net, optimizer, val_loader, lr_scheduler
+        net, optimizer, val_loader, lr_scheduler, test_loader = accelerator.prepare(
+            net, optimizer, val_loader, lr_scheduler, test_loader
         )
 
     batch_time = AverageMeter()
@@ -241,58 +290,81 @@ def main():
     top5 = AverageMeter()
 
     begining = time.time()
+
     end = time.time()
 
     for batch_idx, (data, target) in enumerate(val_loader):
-            if not args["accelerate"]:
-                data , target = data.cuda(), target.cuda()
-            # switch to train mode
-            # measure data loading time
-            data_time.update(time.time() - end)
-            # compute output
-            output = net(data)
+        if not args["accelerate"]:
+            data, target = data.cuda(), target.cuda()
+        # switch to train mode
+        # measure data loading time
+        data_time.update(time.time() - end)
+        # compute output
+        output = net(data)
 
-            unwraped_model = accelerator.unwrap_model(net)
-            print("Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(sparsity(unwraped_model)))
-            loss = criterion(output,target)
+        unwraped_model = accelerator.unwrap_model(net)
+        print(
+            "Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(
+                sparsity(unwraped_model)))
+        loss = criterion(output, target)
 
-            # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-            losses.update(loss.data.item(), data.size(0))
-            top1.update(prec1.item(), data.size(0))
-            top5.update(prec5.item(), data.size(0))
+        # measure accuracy and record loss
+        prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+        losses.update(loss.data.item(), data.size(0))
+        top1.update(prec1.item(), data.size(0))
+        top5.update(prec5.item(), data.size(0))
 
-            # compute gradient and do SGD step
-            optimizer.zero_grad()
-            if args["accelerate"]:
-                accelerator.backward(loss)
-            else:
-                loss.backward()
-            optimizer.step()
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
+        if args["accelerate"]:
+            accelerator.backward(loss)
+        else:
+            loss.backward()
+        optimizer.step()
+        total_sparse_flops += 3 * unit_sparse_flops
 
-            unwraped_model = accelerator.unwrap_model(net)
-            # accelerator.prepare()
-            print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
+        unwraped_model = accelerator.unwrap_model(net)
+        # accelerator.prepare()
+        print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
 
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-            if batch_idx % 10 == 0:
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                    1, batch_idx, len(val_loader), batch_time=batch_time,
-                    data_time=data_time, loss=losses, top1=top1, top5=top5))
+        if batch_idx % 10 == 0:
+            print('Epoch: [{0}][{1}/{2}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                  'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                1, batch_idx, len(val_loader), batch_time=batch_time,
+                data_time=data_time, loss=losses, top1=top1, top5=top5))
 
-    total_time = time.time() -begining
-    hours_float = total_time/3600
-    decimal_part = hours_float - total_time//3600
-    minutes = decimal_part*60
-    print("Total time was {} hours and {} minutes".format(total_time//3600,minutes))
+    total_time = time.time() - begining
+    hours_float = total_time / 3600
+    decimal_part = hours_float - total_time // 3600
+    minutes = decimal_part * 60
+    print("Total time was {} hours and {} minutes".format(total_time // 3600, minutes))
+
+    t0 = time.time()
+    measure_and_record_gradient_flow_with_ACCELERATOR(net, accelerator, val_loader, test_loader,
+                                                      "imagenet_measure_record_test.csv", total_sparse_flops, 0,
+                                                      use_wandb=False)
+    t1 = time.time()
+    total_time = t1 - t0
+    hours_float = total_time / 3600
+    decimal_part = hours_float - total_time // 3600
+    minutes = decimal_part * 60
+    print("Time for measure gradient: {}h and {} minutes".format(total_time//3600,minutes))
+#####################################################################
+    end_of_time = time.time()
+    total_time = end_of_time-bigining_of_time
+    hours_float = total_time / 3600
+    decimal_part = hours_float - total_time // 3600
+    minutes = decimal_part * 60
+    print("Total execution time: {}h and {} minutes".format(total_time//3600,minutes))
+
 def test_num_workers():
     from time import time
     import multiprocessing as mp
@@ -321,6 +393,7 @@ def test_num_workers():
         end = time()
 
         print("Finish with:{} second, num_workers={}".format(end - start, num_workers))
+
 
 if __name__ == '__main__':
     main()

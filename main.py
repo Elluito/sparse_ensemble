@@ -2813,7 +2813,12 @@ def get_model(cfg: omegaconf.DictConfig):
                 return net
             if "alternative" == cfg.model_type:
                 from alternate_models.resnet import ResNet18
-                net = ResNet18()
+                if cfg.dataset=="cifar10":
+                    net = ResNet18()
+                if cfg.dataset == "cifar100":
+                    net = ResNet18(num_classes=100)
+                if cfg.dataset=="mnist":
+                    net = ResNet18()
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
@@ -6709,9 +6714,10 @@ def ensemble_predictions(prefix:str,cfg):
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
                     print("I loaded the weights!")
             except Exception as err:
-                print(individual)
+                print("There was the follwing error but im going to continue because I only need 10 individuals")
+                print("")
                 print(err)
-                return 0
+                continue
 
                 # break
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
@@ -6720,6 +6726,7 @@ def ensemble_predictions(prefix:str,cfg):
                 individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
             except Exception as e:
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
+                print("")
                 print(e)
                 continue
 
@@ -6737,7 +6744,7 @@ def ensemble_predictions(prefix:str,cfg):
             if ind_number > max_individuals:
                 break
             ind_number += 1
-
+        assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
         # Now I'm going to actually make the predictions first by averaging and second by voting
         temp_variable = torch.mode(predictions_voting,dim=1)
         pred_voting = temp_variable.values
@@ -7592,8 +7599,8 @@ def compare_architecture_distributions(arc1="",arc2=""):
     # })
 
     # weights_analysis_per_weight(cfg1,cfg2)
-
-def continued_fined_tuning_imagnet(cfg):
+#TODO: Implement this function
+def continued_fined_tuning_imagenet(cfg):
     pass
 if __name__ == '__main__':
 

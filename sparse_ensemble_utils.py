@@ -2,14 +2,12 @@ import copy
 import logging
 import time
 import typing
-from functools import partial
-from typing import TYPE_CHECKING
+import accelerate
 import omegaconf
 # from main import get_layer_dict
 import optuna.samplers
 import pandas as pd
 from pathlib import Path
-from einops import repeat
 import numpy as np
 import torch
 from torch import nn
@@ -17,13 +15,54 @@ from shrinkbench.metrics.flops import flops
 from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
-from flowandprune.imp_estimator import cal_grad,cal_grad_fisher,cal_hg
-import pyhessian as pyhes
-from torch.nn.utils import vector_to_parameters,parameters_to_vector
+from flowandprune.imp_estimator import cal_grad
+from torch.nn.utils import vector_to_parameters, parameters_to_vector
 from accelerate import Accelerator
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
+
+
+def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
+    criterion = nn.CrossEntropyLoss()
+    test_loss = 0
+    correct = 0
+    total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True, batch_flops must be non-zero"
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
+
+
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     if use_cuda:
         net.cuda()
@@ -32,6 +71,8 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
     test_loss = 0
     correct = 0
     total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
 
     sparse_flops = 0
     first_time = 1
@@ -151,13 +192,14 @@ def check_for_layers_collapse(model):
         if torch.count_nonzero(w) == 0:
             raise Exception("Layer {} has 0 weights different form 0 the layer has collapsed".format(names[indx]))
 
-#COMMENT: THIS IS FOR THE EXPERIMENTS OF FINE-TUNING UNRESTRICTED AN then compare the final solution to the deterministic to see if they are on a different basin still.
+
+# COMMENT: THIS IS FOR THE EXPERIMENTS OF FINE-TUNING UNRESTRICTED AN then compare the final solution to the deterministic to see if they are on a different basin still.
 def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
-                                       testLoader: torch.utils.data.DataLoader,
-                                       epochs=1,
-                                       FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
-                                       fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
-                                       gradient_flow_file_prefix="", cfg=None,):
+                                         testLoader: torch.utils.data.DataLoader,
+                                         epochs=1,
+                                         FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
+                                         fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                         gradient_flow_file_prefix="", cfg=None, ):
     # optimizer = torch.optim.SGD()
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -183,7 +225,7 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
     #  forward and backward passes are dense.
     first_time = 1
 
-    #TODO: Here I need to be carefull of how I do the recording since this model is unrestricted
+    # TODO: Here I need to be carefull of how I do the recording since this model is unrestricted
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
@@ -191,16 +233,18 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
     weights_path = ""
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
-        file_path +=  "recordings.csv"
+        file_path += "recordings.csv"
 
-        if  Path(gradient_flow_file_prefix).owner() == "sclaam":
+        if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
-            weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
 
         weights_path = Path(weights_file_path)
-        weights_path .mkdir(parents=True)
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS+forward_pass_sparse_flops+2*forward_pass_sparse_flops,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+        weights_path.mkdir(parents=True)
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path,
+                                         total_FLOPS + forward_pass_sparse_flops + 2 * forward_pass_sparse_flops, -1,
+                                         mask_dict=mask_dict, use_wandb=use_wandb)
 
     pruned_model.cuda()
     pruned_model.train()
@@ -254,27 +298,26 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
                     break
         # if gradient_flow_file_prefix != "":
 
-        if epoch%10 == 0 and gradient_flow_file_prefix != "":
-            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS,epoch,
+        if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_FLOPS, epoch,
                                              mask_dict=mask_dict
-                                             ,use_wandb=use_wandb)
+                                             , use_wandb=use_wandb)
             state_dict = pruned_model.state_dict()
             temp_name = weights_path / "epoch_{}.pth".format(epoch)
-            torch.save(state_dict,temp_name)
+            torch.save(state_dict, temp_name)
         if FLOP_limit != 0:
             if total_FLOPS > FLOP_limit:
                 break
     if gradient_flow_file_prefix != "":
-
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_FLOPS,epochs,
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_FLOPS, epochs,
                                          mask_dict=mask_dict
-                                         ,use_wandb=use_wandb)
+                                         , use_wandb=use_wandb)
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
         if gradient_flow_file_prefix != "":
-            df = pd.read_csv(file_path,sep=",", header=0 , index_col=False)
+            df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
             table = wandb.Table(data=df)
             wandb.log({"Gradient Flow results": table})
         wandb.log({
@@ -283,19 +326,19 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
             "final_accuracy": test_set_performance
         })
 
-
     return total_FLOPS
     # msg_perormance = f"{performance:.2f}".replace(".", ",")
 
-def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
-                                       testLoader: torch.utils.data.DataLoader,
-                                       epochs=1,
-                                       FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
-                                       fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
-                                       gradient_flow_file_prefix="", cfg=None):
 
-
-    accelerator = Accelerator()
+def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Module,
+                                                            dataLoader: torch.utils.data.DataLoader,
+                                                            testLoader: torch.utils.data.DataLoader,
+                                                            epochs=1,
+                                                            FLOP_limit: float = 0, initial_flops=0, use_wandb=False,
+                                                            exclude_layers=[],
+                                                            fine_tune_exclude_layers=False,
+                                                            fine_tune_non_zero_weights=True,
+                                                            gradient_flow_file_prefx="", cfg=None):
     disable_bn(pruned_model)
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
@@ -318,18 +361,18 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
     mask_dict = get_mask(model=pruned_model)
 
-
-
     for name in exclude_layers:
         if name in list(mask_dict.keys()):
             mask_dict.pop(name)
 
-    apply_mask_with_hook(pruned_model,mask_dict)
-
+    apply_mask_with_hook(pruned_model, mask_dict)
+    ######################## Prepare with the accelerator##############################
+    accelerator = Accelerator(mixed_precision="fp16")
+    pruned_model, optimizer, dataLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer, dataLoader,
+                                                                            lr_scheduler)
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
     # first_time = 1
-
 
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
@@ -338,23 +381,23 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
     weights_path = ""
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
-        file_path +=  "recordings.csv"
+        file_path += "recordings.csv"
 
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
-            weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
 
         weights_path = Path(weights_file_path)
-        weights_path .mkdir(parents=True)
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+        weights_path.mkdir(parents=True)
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
+                                         mask_dict=mask_dict, use_wandb=use_wandb)
         # state_dict = pruned_model.state_dict()
         # temp_name = weights_path / "epoch_{}.pth".format(-1)
         # torch.save(state_dict,temp_name)
 
     # pruned_model.cuda()
     # pruned_model.train()
-
 
     if not fine_tune_exclude_layers:
         disable_exclude_layers(pruned_model, exclude_layers)
@@ -409,10 +452,11 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                     break
         # if gradient_flow_file_prefix != "":
 
-        if epoch%10 == 0 and gradient_flow_file_prefix != "":
-            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
+        if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                             epoch,
                                              mask_dict=mask_dict
-                                             ,use_wandb=use_wandb)
+                                             , use_wandb=use_wandb)
 
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
@@ -421,19 +465,19 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
             if total_sparse_FLOPS > FLOP_limit:
                 break
     if gradient_flow_file_prefix != "":
-
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epochs,
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                         epochs,
                                          mask_dict=mask_dict
-                                         ,use_wandb=use_wandb)
+                                         , use_wandb=use_wandb)
         state_dict = pruned_model.state_dict()
-        temp_name = weights_path / "epoch_{}.pth".format(epochs-1)
-        torch.save(state_dict,temp_name)
+        temp_name = weights_path / "epoch_{}.pth".format(epochs - 1)
+        torch.save(state_dict, temp_name)
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
         if gradient_flow_file_prefix != "":
-            df = pd.read_csv(file_path,sep=",", header=0 , index_col=False)
+            df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
             table = wandb.Table(data=df)
             wandb.log({"Gradient Flow results": table})
         wandb.log({
@@ -441,7 +485,6 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
             "sparse_flops": total_sparse_FLOPS,
             "final_accuracy": test_set_performance
         })
-
 
     return total_sparse_FLOPS
 
@@ -454,7 +497,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                                        gradient_flow_file_prefix="", cfg=None):
     # optimizer = torch.optim.SGD()
     #################### Best accuracy yet ################################
-
 
     ####################
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
@@ -484,7 +526,6 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     total_sparse_FLOPS = initial_flops
     # first_time = 1
 
-
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
@@ -492,16 +533,17 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     weights_path = ""
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
-        file_path +=  "recordings.csv"
+        file_path += "recordings.csv"
 
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
-            weights_file_path =  "GF_data/"+ gradient_flow_file_prefix + "weigths/"
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
 
         weights_path = Path(weights_file_path)
-        weights_path .mkdir(parents=True)
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,-1,mask_dict=mask_dict,use_wandb=use_wandb)
+        weights_path.mkdir(parents=True)
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
+                                         mask_dict=mask_dict, use_wandb=use_wandb)
         # state_dict = pruned_model.state_dict()
         # temp_name = weights_path / "epoch_{}.pth".format(-1)
         # torch.save(state_dict,temp_name)
@@ -561,10 +603,11 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                     break
         # if gradient_flow_file_prefix != "":
 
-        if epoch%10 == 0 and gradient_flow_file_prefix != "":
-            measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epoch,
+        if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                             epoch,
                                              mask_dict=mask_dict
-                                             ,use_wandb=use_wandb)
+                                             , use_wandb=use_wandb)
 
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
@@ -573,19 +616,19 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             if total_sparse_FLOPS > FLOP_limit:
                 break
     if gradient_flow_file_prefix != "":
-
-        measure_and_record_gradient_flow(pruned_model,dataLoader,testLoader,cfg,file_path,total_sparse_FLOPS,epochs,
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                         epochs,
                                          mask_dict=mask_dict
-                                         ,use_wandb=use_wandb)
+                                         , use_wandb=use_wandb)
         state_dict = pruned_model.state_dict()
-        temp_name = weights_path / "epoch_{}.pth".format(epochs-1)
-        torch.save(state_dict,temp_name)
+        temp_name = weights_path / "epoch_{}.pth".format(epochs - 1)
+        torch.save(state_dict, temp_name)
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
     if use_wandb:
         if gradient_flow_file_prefix != "":
-            df = pd.read_csv(file_path,sep=",", header=0 , index_col=False)
+            df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
             table = wandb.Table(data=df)
             wandb.log({"Gradient Flow results": table})
         wandb.log({
@@ -594,8 +637,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             "final_accuracy": test_set_performance
         })
 
-
     return total_sparse_FLOPS
+
+
 #
 # from .counting.ops import get_inference_FLOPs
 #
@@ -668,7 +712,7 @@ def get_buffer_dict(model: torch.nn.Module):
     return layer_dict
 
 
-def get_mask(model,dense=False):
+def get_mask(model, dense=False):
     if not dense:
         try:
             return dict(get_buffer_dict(model))
@@ -684,13 +728,16 @@ def get_mask(model,dense=False):
         mask_dict = dict(zip(names, masks))
         return mask_dict
 
+
 @torch.no_grad()
-def apply_mask(model:nn.Module,mask_dict:dict):
-    for name,module in model.named_modules():
+def apply_mask(model: nn.Module, mask_dict: dict):
+    for name, module in model.named_modules():
         if name in mask_dict.keys():
             module.weight.data.mul_(mask_dict[name])
+
+
 @torch.no_grad()
-def apply_mask_with_hook(model:nn.Module,mask_dict:dict):
+def apply_mask_with_hook(model: nn.Module, mask_dict: dict):
     '''
 
     @param model: model to mask
@@ -701,8 +748,11 @@ def apply_mask_with_hook(model:nn.Module,mask_dict:dict):
         if name in mask_dict.keys():
             def hook(module_p, grad_input) -> tuple[torch.Tensor] or None:
                 module_p.weight.data.mul_(module_p.mask)
-            module.register_buffer("mask",mask_dict[name])
+
+            module.register_buffer("mask", mask_dict[name])
             module.register_forward_pre_hook(hook)
+
+
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
 def random_perm(a: torch.Tensor) -> torch.Tensor:
     """
@@ -786,19 +836,21 @@ def get_gradient_norm(model: nn.Module, masked=False):
     return np.sqrt(sum_of_gradients)
 
 
-def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
-                                     mask_dict, use_wandb=False):
-    model = copy.deepcopy(model)
+def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator: accelerate.Accelerator,
+                                                      dataLoader, testLoader, filepath, total_flops, epoch,
+                                                     use_wandb=False):
+    model = accelerator.unwrap_model(wrapped_model)
+
     disable_bn(model)
-    if cfg.fine_tune_exclude_layers:
-        disable_exclude_layers(model, cfg.exclude_layers)
-    if cfg.fine_tune_non_zero_weights:
-        disable_all_except(model, cfg.exclude_layers)
+
     model.to(device=device)
 
     # Calculate everything with respect to the validation set
     val_dict = {}
-    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=dataLoader)
+    t0 = time.time()
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
+    t1 = time.time()
+    print("Gradient calculation on val-set with unwrapped model {}".format(t1-t0))
     #
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
@@ -818,7 +870,127 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #                            criterion,
     #                            dataloader=dataLoader,
     #                            cuda=True if device == "cuda" else False)
-    accuracy = test(model, True if device == "cuda" else False,dataLoader, verbose=0)
+    t0 = time.time()
+    accuracy = test_with_accelerator(wrapped_model, dataLoader, verbose=0)
+    t1 = time.time()
+    print("Evaluation on val-set with wrapped model {}".format(t1-t0))
+
+    # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
+
+    # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
+    # print("Calculating hessian trace on validation set for epoch:{}".format(epoch))
+    # trace = hessian_comp.trace(maxIter=20)
+    # for i,value in enumerate(top_eigenvalues):
+    #     val_dict["val_set_EV{}".format(i)] = [value]
+    # val_dict["val_set_trace"] = [trace]
+    # # density_eigen, density_weight = hessian_comp.density()
+    val_dict["val_accuracy"] = [accuracy]
+
+    # Calculate everything with respect to the test set
+    test_dict = {}
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
+
+    # t0 = time.time()
+    # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    # if cfg.dataset == "cifar100":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
+    #
+    # if cfg.dataset == "imagenet":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+    # t1 = time.time()
+    # print("Time to calculate Hg: {} s".format(t1-t0))
+    grad_vect = parameters_to_vector(grad)
+    # hg_vect = parameters_to_vector(hg)
+    norm_grad = torch.norm(grad_vect)
+    # norm_hg = torch.norm(hg_vect)
+    test_dict["test_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+    # test_dict["test_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
+
+    # criterion = nn.CrossEntropyLoss()
+    # hessian_comp = pyhes.hessian(model,
+    #                              criterion,
+    #                              dataloader=testLoader,
+    #                              cuda=True if device == "cuda" else False)
+    #
+    #
+    accuracy = test_with_accelerator(wrapped_model, testLoader, verbose=0)
+    model.to(device)
+    # print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
+    # start = time.time()
+    # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
+    # stop = time.time()
+    # print("Time elapsed: {}s".format(stop-start))
+    # print("Calculating hessian trace on test set for epoch:{}".format(epoch))
+    # start = time.time()
+    # trace = hessian_comp.trace(maxIter=10)
+    # stop = time.time()
+    # print("Time elapsed: {}s".format(stop-start))
+    # for i,value in enumerate(top_eigenvalues):
+    #     test_dict["test_set_EV{}".format(i)] = [value]
+    # test_dict["test_set_trace"] = [trace]
+    test_dict["test_accuracy"] = [accuracy]
+    print("Test dictionary :\n {}".format(test_dict))
+
+    # print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
+
+    if Path(filepath).is_file():
+        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, mode="a", header=False, index=False)
+    else:
+        # Try to read the file to see if it is
+        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, sep=",", index=False)
+    if use_wandb:
+        log_dict = {"Epoch": epoch, "sparse_flops": total_flops}
+        for n, v in val_dict.items():
+            log_dict[n] = v[0]
+        for n, v in test_dict.items():
+            log_dict[n] = v[0]
+        log_dict.update(val_dict)
+        log_dict.update(test_dict)
+        wandb.log(log_dict)
+
+
+def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
+                                     mask_dict, use_wandb=False):
+    model = copy.deepcopy(model)
+    disable_bn(model)
+    if cfg.fine_tune_exclude_layers:
+        disable_exclude_layers(model, cfg.exclude_layers)
+    if cfg.fine_tune_non_zero_weights:
+        disable_all_except(model, cfg.exclude_layers)
+    model.to(device=device)
+
+    # Calculate everything with respect to the validation set
+    val_dict = {}
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
+    #
+    # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
+    # if cfg.dataset == "cifar100":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=100)
+    # if cfg.dataset == "imagenet":
+    #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=1000)
+
+    grad_vect = parameters_to_vector(grad)
+    # hg_vect = parameters_to_vector(hg)
+    norm_grad = torch.norm(grad_vect)
+    # norm_hg = torch.norm(hg_vect)
+    val_dict["val_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+    # val_dict["val_set_Hg_magnitude"] = [float(norm_hg.cpu().detach().numpy())]
+    # criterion = nn.CrossEntropyLoss()
+    # hessian_comp = pyhes.hessian(model,
+    #                            criterion,
+    #                            dataloader=dataLoader,
+    #                            cuda=True if device == "cuda" else False)
+    accuracy = test(model, True if device == "cuda" else False, dataLoader, verbose=0)
     model.to(device)
     # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
@@ -828,12 +1000,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #     val_dict["val_set_EV{}".format(i)] = [value]
     # val_dict["val_set_trace"] = [trace]
     # # density_eigen, density_weight = hessian_comp.density()
-    val_dict["val_accuracy"] =  [accuracy]
-
+    val_dict["val_accuracy"] = [accuracy]
 
     # Calculate everything with respect to the test set
     test_dict = {}
-    grad:typing.List[torch.Tensor] = cal_grad(model,trainloader=testLoader)
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
     # t0 = time.time()
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
@@ -893,13 +1064,14 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         log_dict = {"Epoch": epoch, "sparse_flops": total_flops}
-        for n,v in val_dict.items():
-            log_dict[n]=v[0]
-        for n,v in test_dict.items():
-            log_dict[n]=v[0]
+        for n, v in val_dict.items():
+            log_dict[n] = v[0]
+        for n, v in test_dict.items():
+            log_dict[n] = v[0]
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
+
 
 def get_erdos_renyi_dist(
         model, names, weights, cfg: omegaconf.DictConfig, is_kernel: bool = True
