@@ -309,7 +309,7 @@ def main():
     begining = time.time()
 
     end = time.time()
-    for e in range(1, 21):
+    for e in range(1):
         for batch_idx, (data, target) in enumerate(val_loader):
             if not args["accelerate"]:
                 data, target = data.cuda(), target.cuda()
