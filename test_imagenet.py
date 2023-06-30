@@ -241,7 +241,7 @@ def main():
 
     # args = vars(parser.parse_args())
     bigining_of_time = time.time()
-    args = {"accelerate": True, 'num_workers': 0}
+    args = {"accelerate": True, 'num_workers': 10}
     cfg = omegaconf.DictConfig({
         "dataset": "cifar10",
         "batch_size": 64,
@@ -253,6 +253,7 @@ def main():
 
     })
     train_loader, val_loader, test_loader = load_imageNet(args)
+    print("Create the datasets")
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
     # disable_bn(net)
@@ -288,6 +289,8 @@ def main():
         net, optimizer, val_loader_accel, lr_scheduler, test_loader_accel = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
+
+    print("Passed accelerating thing")
     state = AcceleratorState()
     print("mixed precision?: {}".format(state.mixed_precision))
     # net.cuda()
