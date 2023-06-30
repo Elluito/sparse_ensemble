@@ -42,6 +42,36 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
+def model_params(model):
+    params = []
+    grads = []
+    for param in model.parameters():
+        if not param.requires_grad:
+            continue
+        params.append(param)
+    return params
+
+
+def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
+                         num_stop=5000, T=1, criterion=nn.CrossEntropyLoss):
+    num_data = 0  # count the number of datum points in the dataloader
+    base_params = model_params(net)
+    gbase = [torch.zeros(p.size()).to(device) for p in base_params]
+    for inputs, targets in trainloader:
+        if (num_data >= num_stop):
+            break
+        net.zero_grad()
+        tmp_num_data = inputs.size(0)
+        outputs = net(inputs) / T
+        loss = criterion(outputs, targets)
+        gradsH = torch.autograd.grad(loss, base_params, create_graph=False)
+        ### update
+        gbase = [gbase1 + g1.detach().clone() * float(tmp_num_data) for gbase1, g1 in zip(gbase, gradsH)]
+        num_data += float(tmp_num_data)
+
+    gbase = [gbase1 / num_data for gbase1 in gbase]
+
+    return gbase
 def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     criterion = nn.CrossEntropyLoss()
     test_loss = 0
@@ -896,7 +926,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
     # Calculate everything with respect to the validation set
     val_dict = {}
     t0 = time.time()
-    grad: typing.List[torch.Tensor] = cal_grad(wrapped_model, trainloader=dataLoader)
+    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=dataLoader,device=torch.device("cuda"))
     t1 = time.time()
     print("Gradient calculation on val-set with unwrapped model {}".format(t1 - t0))
     #
@@ -936,7 +966,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 
     # Calculate everything with respect to the test set
     test_dict = {}
-    grad: typing.List[torch.Tensor] = cal_grad(wrapped_model, trainloader=testLoader)
+    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=testLoader,device=torch.device("cuda"))
 
     # t0 = time.time()
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
