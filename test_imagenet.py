@@ -180,13 +180,15 @@ def load_imageNet(args):
     print(f"Length of dataset: {len(whole_train_dataset)}")
     print(args)
     test_dataset = datasets.ImageFolder(testdir, transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ]))
-    train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 5000])
-    big_test,small_test = torch.utils.data.random_split(whole_train_dataset, [len(test_dataset)-5000, 5000])
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize,
+    ]))
+    # train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 5000])
+    train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset,
+                                                               [len(whole_train_dataset) - 5000, 5000])
+    # big_test,small_test = torch.utils.data.random_split(test_dataset, [len(test_dataset)-5000, 5000])
     my_dataset = val_dataset
     write_path = data_path + "imagenet/valSplit_dataset.beton"
 
@@ -212,10 +214,10 @@ def load_imageNet(args):
     val_loader = torch.utils.data.DataLoader(
         val_dataset, batch_size=64, shuffle=True,
         num_workers=args['num_workers'], pin_memory=True, sampler=None)
-    test_loader = torch.utils.data.DataLoader(small_test
-        ,
-        batch_size=64, shuffle=False,
-        num_workers=args['num_workers'], pin_memory=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset
+                                              ,
+                                              batch_size=64, shuffle=False,
+                                              num_workers=args['num_workers'], pin_memory=True)
     return train_loader, val_loader, test_loader
 
 
@@ -246,7 +248,7 @@ def main():
         "num_workers": 4,
 
     })
-    train_loader, val_loader ,test_loader = load_imageNet(args)
+    train_loader, val_loader, test_loader = load_imageNet(args)
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
 
