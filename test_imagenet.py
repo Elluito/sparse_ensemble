@@ -245,19 +245,27 @@ def main():
     cfg = omegaconf.DictConfig({
         "dataset": "cifar10",
         "batch_size": 64,
-        "num_workers": 4,
+        "num_workers": 0,
+        "fine_tune_exclude_layers":True,
+        "fine_tune_non_zero_weights":True,
+        "exclude_layers": []
+
 
     })
-    train_loader, val_loader, test_loader = load_imageNet(args)
-    # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
+    # train_loader, val_loader, test_loader = load_imageNet(args)
+    train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
-    disable_bn(net)
+    net2 = resnet50()
+    # disable_bn(net)
+    # disable_bn(net2)
 
+    in_features = net2.fc.in_features
+
+    net2.fc = nn.Linear(in_features, 10)
     # j
-    #     in_features = net.fc.in_features
-    #     vjj
-    #
-    #     net.fc = nn.Linear(in_features, 10)
+    in_features = net.fc.in_features
+
+    net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
     prune_with_rate(net, 0.5, type="global")
@@ -278,30 +286,45 @@ def main():
     accelerator = None
     if args["accelerate"]:
         accelerator = Accelerator(mixed_precision="fp16")
-        net, optimizer, val_loader, lr_scheduler, test_loader = accelerator.prepare(
+        net, optimizer, val_loader_accel, lr_scheduler, test_loader_accel = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
     state = AcceleratorState()
     print("mixed precision?: {}".format(state.mixed_precision))
     # net.cuda()
     t0 = time.time()
-    data, y = next(iter(val_loader))
+    data, y = next(iter(val_loader_accel))
     _, unit_sparse_flops = flops(net, data)
     t1 = time.time()
     print("Time for calculating batch flops: {}s".format(t1 - t0))
     # net.train()
 
-    t0 = time.time()
+    # t0 = time.time()
+    #
+    # measure_and_record_gradient_flow_with_ACCELERATOR(net, accelerator, val_loader_accel, test_loader_accel,
+    #                                                   "imagenet_measure_record_test.csv", total_sparse_flops, 0,
+    #                                                   use_wandb=False,criterion=criterion)
+    #
+    # t1 = time.time()
+    # total_time = t1 - t0
+    # hours_float = total_time / 3600
+    # decimal_part = hours_float - total_time // 3600
+    # minutes = decimal_part * 60
+    # print("Time for measure gradient with accelerator: {}h and {} minutes".format(total_time // 3600, minutes))
 
-    measure_and_record_gradient_flow_with_ACCELERATOR(net, accelerator, val_loader, test_loader,
-                                                      "imagenet_measure_record_test.csv", total_sparse_flops, 0,
-                                                      use_wandb=False)
+    t0 = time.time()
+    # net2.load_state_dict(accelerator.unwrap_model(net).state_dict())
+    measure_and_record_gradient_flow(accelerator.unwrap_model(net), val_loader, test_loader,cfg = cfg,
+                                                      filepath="imagenet_measure_record_test.csv", total_flops=total_sparse_flops, epoch=0,
+                                                      use_wandb=False,mask_dict=mask)
     t1 = time.time()
     total_time = t1 - t0
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
-    print("Time for measure gradient: {}h and {} minutes".format(total_time // 3600, minutes))
+    print("Time for measure gradient WITHOUT accelerator: {}h and {} minutes".format(total_time // 3600, minutes))
+
+
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -313,7 +336,7 @@ def main():
 
     end = time.time()
     for e in range(1):
-        for batch_idx, (data, target) in enumerate(val_loader):
+        for batch_idx, (data, target) in enumerate(val_loader_accel):
             if not args["accelerate"]:
                 data, target = data.cuda(), target.cuda()
             # switch to train mode

@@ -61,12 +61,15 @@ def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
     print("Just after creating gbase ")
 
     for inputs, targets in trainloader:
+        # print("Just inside of the training loop with data: {}".format(num_data))
         if (num_data >= num_stop):
             break
         net.zero_grad()
         tmp_num_data = inputs.size(0)
         outputs = net(inputs) / T
+
         loss = criterion(outputs, targets)
+
         gradsH = torch.autograd.grad(loss, base_params, create_graph=False)
         ### update
         gbase = [gbase1 + g1.detach().clone() * float(tmp_num_data) for gbase1, g1 in zip(gbase, gradsH)]
@@ -75,6 +78,8 @@ def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
     gbase = [gbase1 / num_data for gbase1 in gbase]
 
     return gbase
+
+
 def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     criterion = nn.CrossEntropyLoss()
     test_loss = 0
@@ -424,8 +429,9 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         disable_all_except(pruned_model, exclude_layers)
     ######################## Prepare with the accelerator##############################
     accelerator = Accelerator(mixed_precision="fp16")
-    pruned_model, optimizer, dataLoader,testLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer, dataLoader,testLoader,
-                                                                            lr_scheduler)
+    pruned_model, optimizer, dataLoader, testLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer,
+                                                                                        dataLoader, testLoader,
+                                                                                        lr_scheduler)
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
     # first_time = 1
@@ -515,11 +521,12 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         # if gradient_flow_file_prefix != "":
         if epoch % 10 == 0 and gradient_flow_file_prefix != "":
 
-            test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader,
-                                                              file_path,
-                                                              total_sparse_FLOPS,
-                                                              epochs,
-                                                              use_wandb=use_wandb)
+            test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader,
+                                                                              testLoader,
+                                                                              file_path,
+                                                                              total_sparse_FLOPS,
+                                                                              epochs,
+                                                                              use_wandb=use_wandb)
             if best_accuracy < test_accuracy:
                 unwraped_model = accelerator.unwrap_model(pruned_model)
                 state_dict = unwraped_model.state_dict()
@@ -542,13 +549,13 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
     if gradient_flow_file_prefix != "":
 
-        test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader, file_path,
-                                                          total_sparse_FLOPS,
-                                                          epochs,
-                                                          use_wandb=use_wandb)
+        test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader,
+                                                                          testLoader, file_path,
+                                                                          total_sparse_FLOPS,
+                                                                          epochs,
+                                                                          use_wandb=use_wandb)
 
         if best_accuracy < test_accuracy:
-
             unwraped_model = accelerator.unwrap_model(pruned_model)
             state_dict = unwraped_model.state_dict()
             save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epochs}
@@ -920,16 +927,15 @@ def get_gradient_norm(model: nn.Module, masked=False):
 
 def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator: accelerate.Accelerator,
                                                       dataLoader, testLoader, filepath, total_flops, epoch,
-                                                      use_wandb=False):
+                                                      use_wandb=False, criterion=None):
     # model = accelerator.unwrap_model(wrapped_model)
-
-
 
     print("Just before cal_grad call")
     # Calculate everything with respect to the validation set
     val_dict = {}
     t0 = time.time()
-    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=dataLoader,device=torch.device("cuda"))
+    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=dataLoader,
+                                                           device=torch.device("cuda"), criterion=criterion)
     t1 = time.time()
     print("Gradient calculation on val-set with unwrapped model {}".format(t1 - t0))
     #
@@ -969,7 +975,8 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 
     # Calculate everything with respect to the test set
     test_dict = {}
-    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=testLoader,device=torch.device("cuda"))
+    grad: typing.List[torch.Tensor] = cal_grad_ACCELERATOR(wrapped_model, trainloader=testLoader,
+                                                           device=torch.device("cuda"), criterion=criterion)
 
     # t0 = time.time()
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
@@ -1044,9 +1051,9 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
                                      mask_dict, use_wandb=False):
     model = copy.deepcopy(model)
     disable_bn(model)
-    if cfg.fine_tune_exclude_layers:
+    if not cfg.fine_tune_exclude_layers:
         disable_exclude_layers(model, cfg.exclude_layers)
-    if cfg.fine_tune_non_zero_weights:
+    if not cfg.fine_tune_non_zero_weights:
         disable_all_except(model, cfg.exclude_layers)
     model.to(device=device)
 
