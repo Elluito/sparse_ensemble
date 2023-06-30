@@ -1060,6 +1060,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
 
     # Calculate everything with respect to the validation set
     val_dict = {}
+    print("just before cal_grad")
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
     #
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
