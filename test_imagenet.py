@@ -15,7 +15,7 @@ import time
 from accelerate import Accelerator
 from main import prune_with_rate, remove_reparametrization, get_cifar_datasets
 from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, measure_and_record_gradient_flow, \
-    measure_and_record_gradient_flow_with_ACCELERATOR
+    measure_and_record_gradient_flow_with_ACCELERATOR, disable_bn, mask_gradient
 import omegaconf
 from shrinkbench.metrics.flops import flops
 from accelerate.state import PartialState, AcceleratorState
@@ -242,24 +242,26 @@ def main():
     args = {"accelerate": True, 'num_workers': 18}
     cfg = omegaconf.DictConfig({
         "dataset": "cifar10",
-        "batch_size": 64,
-        "num_workers": 0,
+        "batch_size": 128,
+        "num_workers": 4,
 
     })
     train_loader, val_loader ,test_loader = load_imageNet(args)
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
 
-    # in_features = net.fc.in_features
+    # j
+    #     in_features = net.fc.in_features
+    #     vjj
     #
-    # net.fc = nn.Linear(in_features, 10)
+    #     net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
-    prune_with_rate(net, 0.9, type="global")
+    prune_with_rate(net, 0.5, type="global")
     remove_reparametrization(net)
 
     mask = get_mask(model=net)
-    apply_mask_with_hook(net, mask)
+    # apply_mask_with_hook(net, mask)
 
     print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
@@ -272,11 +274,12 @@ def main():
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     accelerator = None
     if args["accelerate"]:
-        accelerator = Accelerator()
+        accelerator = Accelerator(mixed_precision="fp16")
         net, optimizer, val_loader, lr_scheduler, test_loader = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
     state = AcceleratorState()
+    print("mixed precision?: {}".format(state.mixed_precision))
     # net.cuda()
     t0 = time.time()
     data, y = next(iter(val_loader))
@@ -284,70 +287,6 @@ def main():
     t1 = time.time()
     print("Time for calculating batch flops: {}s".format(t1 - t0))
     # net.train()
-
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
-
-    begining = time.time()
-
-    end = time.time()
-
-    for batch_idx, (data, target) in enumerate(val_loader):
-        if not args["accelerate"]:
-            data, target = data.cuda(), target.cuda()
-        # switch to train mode
-        # measure data loading time
-        data_time.update(time.time() - end)
-        # compute output
-        output = net(data)
-
-        unwraped_model = accelerator.unwrap_model(net)
-        # print(
-        #     "Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(
-        #         sparsity(unwraped_model)))
-        loss = criterion(output, target)
-
-        # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.data.item(), data.size(0))
-        top1.update(prec1.item(), data.size(0))
-        top5.update(prec5.item(), data.size(0))
-
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        if args["accelerate"]:
-            accelerator.backward(loss)
-        else:
-            loss.backward()
-        optimizer.step()
-        total_sparse_flops += 3 * unit_sparse_flops
-
-        # accelerator.prepare()
-        # print("Sparsity of model after being unwrapped and gradients applied: {}".format(sparsity(unwraped_model)))
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if batch_idx % 10 == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                  'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                1, batch_idx, len(val_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1, top5=top5))
-
-    total_time = time.time() - begining
-    hours_float = total_time / 3600
-    decimal_part = hours_float - total_time // 3600
-    minutes = decimal_part * 60
-    print("Total time was {} hours and {} minutes".format(total_time // 3600, minutes))
-
 
     t0 = time.time()
 
@@ -360,6 +299,75 @@ def main():
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
     print("Time for measure gradient: {}h and {} minutes".format(total_time // 3600, minutes))
+
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+
+    begining = time.time()
+
+    end = time.time()
+    for e in range(1, 21):
+        for batch_idx, (data, target) in enumerate(val_loader):
+            if not args["accelerate"]:
+                data, target = data.cuda(), target.cuda()
+            # switch to train mode
+            # measure data loading time
+            data_time.update(time.time() - end)
+            # compute output
+            output = net(data)
+
+            # print(
+            #     "Sparsity of model after being unwrapped and forward call done (possibly acctivating the pre-hook): {}".format(
+            #         sparsity(unwraped_model)))
+            loss = criterion(output, target)
+
+            # measure accuracy and record loss
+            prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
+            losses.update(loss.data.item(), data.size(0))
+            top1.update(prec1.item(), data.size(0))
+            top5.update(prec5.item(), data.size(0))
+
+            # compute gradient and do SGD step
+            optimizer.zero_grad()
+            if args["accelerate"]:
+                accelerator.backward(loss)
+            else:
+                loss.backward()
+            mask_gradient(net, mask_dict=mask)
+
+            accelerator.clip_grad_value_(net.parameters(), 0.1)
+            optimizer.step()
+            # apply_mask(net,mask_dict=mask)
+            total_sparse_flops += 3 * unit_sparse_flops
+
+            # accelerator.prepare()
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if batch_idx % 10 == 0:
+                unwraped_model = accelerator.unwrap_model(net)
+                print("Sparsity of model after being unwrapped and gradients applied: {}".format(
+                    sparsity(unwraped_model)))
+                print('Epoch: [{0}][{1}/{2}]\t'
+                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                      'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                    e, batch_idx, len(val_loader), batch_time=batch_time,
+                    data_time=data_time, loss=losses, top1=top1, top5=top5))
+
+    total_time = time.time() - begining
+    hours_float = total_time / 3600
+    decimal_part = hours_float - total_time // 3600
+    minutes = decimal_part * 60
+    print("Total time was {} hours and {} minutes".format(total_time // 3600, minutes))
+
     #####################################################################
     end_of_time = time.time()
     total_time = end_of_time - bigining_of_time

@@ -23,6 +23,25 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 
 
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
 def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
     criterion = nn.CrossEntropyLoss()
     test_loss = 0
@@ -338,8 +357,9 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                                                             exclude_layers=[],
                                                             fine_tune_exclude_layers=False,
                                                             fine_tune_non_zero_weights=True,
-                                                            gradient_flow_file_prefx="", cfg=None):
+                                                            gradient_flow_file_prefix="", cfg=None):
     disable_bn(pruned_model)
+
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
     if "cifar" in cfg.dataset:
@@ -351,7 +371,6 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
     grad_clip = 0
     if cfg.gradient_cliping:
         grad_clip = 0.1
-    names, weights = zip(*get_layer_dict(pruned_model))
     if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
         accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "cifar100":
@@ -365,10 +384,14 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         if name in list(mask_dict.keys()):
             mask_dict.pop(name)
 
-    apply_mask_with_hook(pruned_model, mask_dict)
+    # apply_mask_with_hook(pruned_model, mask_dict)
+    if not fine_tune_exclude_layers:
+        disable_exclude_layers(pruned_model, exclude_layers)
+    if not fine_tune_non_zero_weights:
+        disable_all_except(pruned_model, exclude_layers)
     ######################## Prepare with the accelerator##############################
     accelerator = Accelerator(mixed_precision="fp16")
-    pruned_model, optimizer, dataLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer, dataLoader,
+    pruned_model, optimizer, dataLoader,testLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer, dataLoader,testLoader,
                                                                             lr_scheduler)
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
@@ -376,7 +399,7 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
-
+    ######################### for recor and saving stuf##############################
     file_path = None
     weights_path = ""
     if gradient_flow_file_prefix != "":
@@ -390,45 +413,49 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
-        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
-                                         mask_dict=mask_dict, use_wandb=use_wandb)
+        measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader, file_path,
+                                                          total_sparse_FLOPS, -1,
+                                                          use_wandb=use_wandb)
+
         # state_dict = pruned_model.state_dict()
         # temp_name = weights_path / "epoch_{}.pth".format(-1)
         # torch.save(state_dict,temp_name)
 
     # pruned_model.cuda()
     # pruned_model.train()
-
-    if not fine_tune_exclude_layers:
-        disable_exclude_layers(pruned_model, exclude_layers)
-    if not fine_tune_non_zero_weights:
-        disable_all_except(pruned_model, exclude_layers)
+    #################### for knowing when to save  the model###################
+    best_accuracy = -1
 
     criterion = nn.CrossEntropyLoss()
+    average_accuracy = AverageMeter()
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
 
-            data, target = data.cuda(), target.cuda()
+            # data, target = data.cuda(), target.cuda()
             optimizer.zero_grad()
             # first forward-backward step
             predictions = pruned_model(data)
             # enable_bn(model)
             loss = criterion(predictions, target)
-            loss.backward()
+
+            # loss calculation
+            accelerator.backward(loss)
+
             backward_flops_sparse = 2 * forward_pass_sparse_flops
             backward_flops_dense = 2 * forward_pass_dense_flops
             batch_dense_flops = forward_pass_dense_flops + backward_flops_dense
             batch_sparse_flops = forward_pass_sparse_flops + backward_flops_sparse
             total_FLOPS += batch_dense_flops
             total_sparse_FLOPS += batch_sparse_flops
-            accuracy.update(preds=predictions.cuda(), target=target.cuda())
+            accuracy.update(preds=predictions, target=target)
             # Mask the grad_
             mask_gradient(pruned_model, mask_dict=mask_dict)
 
-            if grad_clip:
-                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+            if cfg.gradient_cliping:
+                accelerator.clip_grad_value_(pruned_model.parameters(), grad_clip)
 
             optimizer.step()
+
             lr_scheduler.step()
 
             # W&B Logging
@@ -444,38 +471,60 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                 })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
+                average_accuracy.update(acc)
                 flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
                 print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
                       f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
 
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
+
         # if gradient_flow_file_prefix != "":
-
         if epoch % 10 == 0 and gradient_flow_file_prefix != "":
-            measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
-                                             epoch,
-                                             mask_dict=mask_dict
-                                             , use_wandb=use_wandb)
 
+            test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader,
+                                                              file_path,
+                                                              total_sparse_FLOPS,
+                                                              epochs,
+                                                              use_wandb=use_wandb)
+            if best_accuracy < test_accuracy:
+                unwraped_model = accelerator.unwrap_model(pruned_model)
+                state_dict = unwraped_model.state_dict()
+                save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epoch}
+                temp_name = weights_path / "net.pth"
+                torch.save(save, temp_name)
+                best_accuracy = test_accuracy
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
             # torch.save(state_dict,temp_name)
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:
                 break
-    if gradient_flow_file_prefix != "":
-        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
-                                         epochs,
-                                         mask_dict=mask_dict
-                                         , use_wandb=use_wandb)
-        state_dict = pruned_model.state_dict()
-        temp_name = weights_path / "epoch_{}.pth".format(epochs - 1)
-        torch.save(state_dict, temp_name)
+        ############ Reset the average counter if  we are not in the last epoch ######################
 
-    test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+        if epoch != epochs - 1:
+            average_accuracy.reset()
+
+    ################################################## Outside of epochs loop ###################
+
+    if gradient_flow_file_prefix != "":
+
+        test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader, file_path,
+                                                          total_sparse_FLOPS,
+                                                          epochs,
+                                                          use_wandb=use_wandb)
+
+        if best_accuracy < test_accuracy:
+
+            unwraped_model = accelerator.unwrap_model(pruned_model)
+            state_dict = unwraped_model.state_dict()
+            save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epochs}
+            temp_name = weights_path / "net.pth"
+            torch.save(save, temp_name)
 
     if use_wandb:
+
+        test_set_performance = test_with_accelerator(pruned_model, testloader=testLoader)
         if gradient_flow_file_prefix != "":
             df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
             table = wandb.Table(data=df)
@@ -746,11 +795,11 @@ def apply_mask_with_hook(model: nn.Module, mask_dict: dict):
     '''
     for name, module in model.named_modules():
         if name in mask_dict.keys():
-            def hook(module_p, grad_input) -> tuple[torch.Tensor] or None:
+            def hook(module_p, grad_input, grad_output) -> tuple[torch.Tensor] or None:
                 module_p.weight.data.mul_(module_p.mask)
 
             module.register_buffer("mask", mask_dict[name])
-            module.register_forward_pre_hook(hook)
+            module.register_full_backward_hook(hook)
 
 
 # Function taken from https://github.com/varun19299/rigl-reproducibility/blob/master/sparselearning/utils/ops.py
@@ -838,7 +887,7 @@ def get_gradient_norm(model: nn.Module, masked=False):
 
 def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator: accelerate.Accelerator,
                                                       dataLoader, testLoader, filepath, total_flops, epoch,
-                                                     use_wandb=False):
+                                                      use_wandb=False):
     model = accelerator.unwrap_model(wrapped_model)
 
     disable_bn(model)
@@ -850,7 +899,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
     t0 = time.time()
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
     t1 = time.time()
-    print("Gradient calculation on val-set with unwrapped model {}".format(t1-t0))
+    print("Gradient calculation on val-set with unwrapped model {}".format(t1 - t0))
     #
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
@@ -873,7 +922,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
     t0 = time.time()
     accuracy = test_with_accelerator(wrapped_model, dataLoader, verbose=0)
     t1 = time.time()
-    print("Evaluation on val-set with wrapped model {}".format(t1-t0))
+    print("Evaluation on val-set with wrapped model {}".format(t1 - t0))
 
     # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
 
@@ -956,6 +1005,8 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
+
+    return accuracy
 
 
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,

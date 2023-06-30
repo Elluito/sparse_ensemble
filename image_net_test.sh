@@ -20,5 +20,5 @@
 module add anaconda
 module add cuda/11.1.1
 conda activate work
-#python test_imagenet.py
-accelerate launch --mixed_precision=fp16 --num_processes=1 test_imagenet.py
+python test_imagenet.py
+#accelerate launch --mixed_precision=fp16 --num_processes=1 test_imagenet.py

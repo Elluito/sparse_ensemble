@@ -64,7 +64,7 @@ from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
-    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask
+    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask,restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops,test_with_accelerator
 from itertools import cycle
 from matplotlib.patches import PathPatch
 import matplotlib.transforms as mtransforms
@@ -5404,7 +5404,6 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
                                                        exclude_layers=cfg.exclude_layers, type="layer-wise",
                                                        pruner="lamp", return_pr_per_layer=True)
-
             if cfg.use_wandb:
                 log_dict = {}
                 for name, elem in individual_prs_per_layer.items():
@@ -5474,6 +5473,156 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        cfg=cfg)
 
 
+def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
+
+    trainloader, valloader, testloader = get_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    ################################## WANDB configuration ############################################
+    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
+    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_dataset_per_generation"
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"fine_tune_stochastic",
+            notes="This is for imageNet experiments",
+            reinit=True,
+        )
+    ################################## Gradient flow measure###############test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)#############################
+    filepath_GF_measure =""
+    if cfg.measure_gradient_flow:
+
+        identifier = f"{time.time():14.5f}".replace(" ", "")
+        if cfg.pruner == "lamp":
+            filepath_GF_measure += "gradient_flow_data/ACCELERATOR/{}/stochastic_LAMP/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+            # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.pruner == "global":
+            filepath_GF_measure += "gradient_flow_data/ACCELERATOR/{}/stochastic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+    pruned_model = get_model(cfg)
+    best_model = None
+    best_accuracy = -1
+    initial_flops = 0
+    data_loader_iterator = cycle(iter(valloader))
+    data, y = next(data_loader_iterator)
+    first_iter = 1
+    unit_sparse_flops = 0
+    evaluation_set = valloader
+    if cfg.one_batch:
+        evaluation_set = [(data, y)]
+    names, weights = zip(*get_layer_dict(pruned_model))
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * len(names)))
+
+    pr_per_layer = prune_with_rate(copy.deepcopy(pruned_model), target_sparsity, exclude_layers=cfg.exclude_layers,
+                                   type="layer-wise",
+                                   pruner="lamp", return_pr_per_layer=True)
+    if cfg.use_wandb:
+        log_dict = {}
+        for name, elem in pr_per_layer.items():
+            log_dict["deterministic_{}_pr".format(name)] = elem
+        wandb.log(log_dict)
+    # Go over the population t
+    for n in range(cfg.population):
+        # current_model = get_noisy_sample(pruned_model, cfg)
+        current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+        copy_of_pruned_model = copy.deepcopy(current_model)
+        # det_mask_transfer_model = copy.deepcopy(current_model)
+        # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        # Dense stochastic performance
+        if cfg.pruner == "global":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+
+        if cfg.pruner == "manual":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner="manual", pr_per_layer=pr_per_layer)
+            individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
+                                                       exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                                       pruner="lamp", return_pr_per_layer=True)
+            if cfg.use_wandb:
+                log_dict = {}
+                for name, elem in individual_prs_per_layer.items():
+                    log_dict["individual_{}_pr".format(name)] = elem
+                wandb.log(log_dict)
+
+        if cfg.pruner == "lamp":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+                            type="layer-wise",
+                            pruner=cfg.pruner)
+        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
+        if first_iter:
+            _, unit_sparse_flops = flops(current_model, data)
+            first_iter = 0
+        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
+                                                                 count_flops=True, batch_flops=unit_sparse_flops)
+        check_for_layers_collapse(current_model)
+        initial_flops += individual_sparse_flops
+        if noisy_sample_performance > best_accuracy:
+            best_accuracy = noisy_sample_performance
+            best_model = current_model
+
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
+
+    # if cfg.pruner == "global":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    #
+    # if cfg.pruner == "lamp":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+    #                     type="layer-wise",
+    #                     pruner=cfg.pruner)
+    #
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # perfor = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    # torch.save({"model_state":pruned_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_deterministic_{cfg.pruner}_pr{cfg.amount}.pth")
+
+    if cfg.use_wandb:
+
+        initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+
+        end = time.time()
+        initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+        total = time.time()-end
+
+
+        print("Time for testing: {} s".format(total))
+
+        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_test_performance":
+            initial_test_performance})
+
+
+    restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
+                                       initial_flops=initial_flops,
+                                       fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                       gradient_flow_file_prefix=filepath_GF_measure,
+                                       cfg=cfg)
 
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
@@ -5821,7 +5970,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 12:
         lamp_scenario_2_cheap_evaluation(cfg)
     if number_experiment == 13:
-        continued_fined_tuning_imagnet(cfg)
+        fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
 
     # if number_experiment == 13:
 
@@ -7418,7 +7567,7 @@ def LeMain(args):
     if args["dataset"] == "cifar10":
         if args["modeltype"]=="alternative":
             if args["architecture"]== "resnet18":
-                solution = "trained_modes/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
                 exclude_layers =["conv1", "linear"]
             if args["architecture"]== "VGG19":
                 solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
@@ -7466,7 +7615,7 @@ def LeMain(args):
         "amount": args["pruning_rate"],
         "dataset": args["dataset"],
         "batch_size": args["batch_size"],
-        "num_workers": 0,
+        "num_workers": args["num_workers"],
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
@@ -7716,24 +7865,25 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # #
-    #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
+
+
+    args = vars(parser.parse_args())
+    LeMain(args)
 
 
 
@@ -7779,24 +7929,24 @@ if __name__ == '__main__':
 
 
     ################################################# Ensemble predictions ############################################
-    sigma_values = [0.001,0.003,0.005]
-    pruning_rate_values = [0.8,0.85,0.9,0.95]
-    architecture_values = ["resnet18","resnet50","VGG19"]
-    dataset_values = ["cifar10","cifar100"]
-
-    cfg = omegaconf.DictConfig({
-        "sigma":0.001,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "alternative",
-        "dataset": "imagenet",
-        "set":"test",
-        "solution":"",
-        "batch_size": 16,
-        # "batch_size": 128,
-        "num_workers": 12,
-    })
-    create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+    # sigma_values = [0.001,0.003,0.005]
+    # pruning_rate_values = [0.8,0.85,0.9,0.95]
+    # architecture_values = ["resnet18","resnet50","VGG19"]
+    # dataset_values = ["cifar10","cifar100"]
+    #
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.001,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "model_type": "alternative",
+    #     "dataset": "imagenet",
+    #     "set":"test",
+    #     "solution":"",
+    #     "batch_size": 16,
+    #     # "batch_size": 128,
+    #     "num_workers": 12,
+    # })
+    # create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
 #
 #     accuracy = []
