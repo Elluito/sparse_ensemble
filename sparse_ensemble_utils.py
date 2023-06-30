@@ -56,7 +56,10 @@ def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
                          num_stop=5000, T=1, criterion=nn.CrossEntropyLoss):
     num_data = 0  # count the number of datum points in the dataloader
     base_params = model_params(net)
+    print("Just before creating gbase ")
     gbase = [torch.zeros(p.size()).to(device) for p in base_params]
+    print("Just after creating gbase ")
+
     for inputs, targets in trainloader:
         if (num_data >= num_stop):
             break
