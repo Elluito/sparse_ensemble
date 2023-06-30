@@ -13,7 +13,7 @@
 #$ -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=64G
+#$ -l h_vmem=120G
 # Send emails when job starts and ends
 #$ -m be
 

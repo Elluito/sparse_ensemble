@@ -251,6 +251,7 @@ def main():
     train_loader, val_loader, test_loader = load_imageNet(args)
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
+    disable_bn(net)
 
     # j
     #     in_features = net.fc.in_features

@@ -888,17 +888,15 @@ def get_gradient_norm(model: nn.Module, masked=False):
 def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator: accelerate.Accelerator,
                                                       dataLoader, testLoader, filepath, total_flops, epoch,
                                                       use_wandb=False):
-    model = accelerator.unwrap_model(wrapped_model)
+    # model = accelerator.unwrap_model(wrapped_model)
 
-    disable_bn(model)
 
-    model.to(device=device)
 
     print("Just before cal_grad call")
     # Calculate everything with respect to the validation set
     val_dict = {}
     t0 = time.time()
-    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
+    grad: typing.List[torch.Tensor] = cal_grad(wrapped_model, trainloader=dataLoader)
     t1 = time.time()
     print("Gradient calculation on val-set with unwrapped model {}".format(t1 - t0))
     #
@@ -938,7 +936,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 
     # Calculate everything with respect to the test set
     test_dict = {}
-    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
+    grad: typing.List[torch.Tensor] = cal_grad(wrapped_model, trainloader=testLoader)
 
     # t0 = time.time()
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
@@ -965,7 +963,6 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
     #
     #
     accuracy = test_with_accelerator(wrapped_model, testLoader, verbose=0)
-    model.to(device)
     # print("Calculating eigenvalues on test set for epoch:{}".format(epoch))
     # start = time.time()
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=2,maxIter=10)
