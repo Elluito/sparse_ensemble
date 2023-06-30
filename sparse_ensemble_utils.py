@@ -388,8 +388,8 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
 
 
 def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Module,
-                                                            dataLoader: torch.utils.data.DataLoader,
-                                                            testLoader: torch.utils.data.DataLoader,
+                                                            dataLoader_p: torch.utils.data.DataLoader,
+                                                            testLoader_p: torch.utils.data.DataLoader,
                                                             epochs=1,
                                                             FLOP_limit: float = 0, initial_flops=0, use_wandb=False,
                                                             exclude_layers=[],
@@ -430,7 +430,7 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
     ######################## Prepare with the accelerator##############################
     accelerator = Accelerator(mixed_precision="fp16")
     pruned_model, optimizer, dataLoader, testLoader, lr_scheduler = accelerator.prepare(pruned_model, optimizer,
-                                                                                        dataLoader, testLoader,
+                                                                                        dataLoader_p, testLoader_p,
                                                                                         lr_scheduler)
     total_FLOPS = 0
     total_sparse_FLOPS = initial_flops
@@ -452,9 +452,10 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
-        measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader, testLoader, file_path,
+        measure_and_record_gradient_flow(accelerator.unwrap_model(pruned_model), dataLoader_p, testLoader_p,cfg ,file_path,
                                                           total_sparse_FLOPS, -1,
                                                           use_wandb=use_wandb)
+
 
         # state_dict = pruned_model.state_dict()
         # temp_name = weights_path / "epoch_{}.pth".format(-1)

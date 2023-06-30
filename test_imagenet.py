@@ -252,20 +252,19 @@ def main():
 
 
     })
-    # train_loader, val_loader, test_loader = load_imageNet(args)
-    train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
+    train_loader, val_loader, test_loader = load_imageNet(args)
+    # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
     net = resnet50()
-    net2 = resnet50()
     # disable_bn(net)
     # disable_bn(net2)
 
-    in_features = net2.fc.in_features
-
-    net2.fc = nn.Linear(in_features, 10)
-    # j
-    in_features = net.fc.in_features
-
-    net.fc = nn.Linear(in_features, 10)
+    # in_features = net2.fc.in_features
+    #
+    # net2.fc = nn.Linear(in_features, 10)
+    # # j
+    # in_features = net.fc.in_features
+    #
+    # net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
     prune_with_rate(net, 0.5, type="global")
