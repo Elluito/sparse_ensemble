@@ -5579,6 +5579,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
         noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
                                                                  count_flops=True, batch_flops=unit_sparse_flops)
         check_for_layers_collapse(current_model)
+
         initial_flops += individual_sparse_flops
         if noisy_sample_performance > best_accuracy:
             best_accuracy = noisy_sample_performance

@@ -894,6 +894,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 
     model.to(device=device)
 
+    print("Just before cal_grad call")
     # Calculate everything with respect to the validation set
     val_dict = {}
     t0 = time.time()
