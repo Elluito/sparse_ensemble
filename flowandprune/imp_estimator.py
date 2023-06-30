@@ -60,7 +60,7 @@ def cal_grad(net, trainloader, num_stop=5000, T=1):
 	net.eval()
 	num_data = 0  # count the number of datum points in the dataloader
 	base_params = model_params(net)
-	print()
+	print("Just before creating Gbase")
 	gbase = [torch.zeros(p.size()).to(device) for p in base_params]
 	for inputs, targets in trainloader:
 		print("Inside Cal_grad_ with num_data = {}".format(num_data))
