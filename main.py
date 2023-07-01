@@ -5625,7 +5625,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
                                        gradient_flow_file_prefix=filepath_GF_measure,
                                        cfg=cfg)
 
-def fine_tune_determiistic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
+def fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
 
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
@@ -6053,7 +6053,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 13:
         fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
     if number_experiment == 14:
-        fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
+        fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg)
 
     # if number_experiment == 13:
 
