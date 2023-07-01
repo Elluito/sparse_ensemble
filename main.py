@@ -4773,7 +4773,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}{post_pruning_noise_string}",
+            name=f"deterministic_fine_tune_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}{post_pruning_noise_string}",
             reinit=True,
         )
     pruned_model = get_model(cfg)
@@ -5472,7 +5472,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                                        gradient_flow_file_prefix=filepath_GF_measure,
                                        cfg=cfg)
 
-
+#################################### ACCELERATOR STOCHASTIC AND DETERMINISTIC FINE-TUNING ##############################
 def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
 
     trainloader, valloader, testloader = get_datasets(cfg)
@@ -5625,6 +5625,86 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
                                        gradient_flow_file_prefix=filepath_GF_measure,
                                        cfg=cfg)
 
+def fine_tune_determiistic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
+
+    trainloader, valloader, testloader = get_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
+    post_pruning_noise_string = "_post_training_noise" if bool(cfg.noise_after_pruning)*cfg.measure_gradient_flow else ""
+
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"deterministic_fine_tune",
+            reinit=True,
+        )
+    pruned_model = get_model(cfg)
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+    remove_reparametrization(pruned_model,exclude_layer_list=cfg.exclude_layers)
+    # Add small noise just to get tiny variations of the deterministic case
+    initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+    print("Original version performance: {}".format(initial_performance))
+    if cfg.noise_after_pruning and cfg.measure_gradient_flow:
+        remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+        mask_dict = get_mask(pruned_model)
+        names,weights = zip(*get_layer_dict(pruned_model))
+        sigma_per_layer = dict(zip(names,[cfg.noise_after_pruning]*len(names)))
+        p2_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+        print("p2_model version 1 performance: {}".format(initial_performance))
+        apply_mask(p2_model,mask_dict)
+        initial_performance = test(p2_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+        print("p2_model version 2 performance: {} with sparsity {}".format(initial_performance,sparsity(p2_model)))
+        pruned_model = p2_model
+
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+    # mask_dict = get_mask(pruned_model)
+    # p2_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+    # print("p2_model version 1 performance: {}".format(initial_performance))
+    # apply_mask(p2_model,mask_dict)
+    # initial_performance = test(p2_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
+    # print("p2_model version 2 performance: {}".format(initial_performance))
+    # return
+    if cfg.use_wandb:
+        wandb.log({"test_set_accuracy": initial_performance, "initial_accuracy": initial_performance})
+    filepath_GF_measure =""
+    if cfg.measure_gradient_flow:
+
+        identifier = f"{time.time():14.2f}".replace(" ", "")
+        if cfg.pruner == "lamp":
+            filepath_GF_measure += "gradient_flow_data/ACCELERATOR/{}/deterministic_LAMP/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+            # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.pruner == "global":
+            filepath_GF_measure += "gradient_flow_data/ACELERATOR/{}/deterministic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+
+
+    restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                                            use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
+                                                            fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                                            fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                                            gradient_flow_file_prefix=filepath_GF_measure,
+                                                            cfg=cfg)
+
+########################################################################################################################
 def one_shot_static_sigma_stochastic_pruning(cfg, eval_set="test", print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
@@ -5971,6 +6051,8 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 12:
         lamp_scenario_2_cheap_evaluation(cfg)
     if number_experiment == 13:
+        fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
+    if number_experiment == 14:
         fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
 
     # if number_experiment == 13:
@@ -7620,7 +7702,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": False
+        "use_wandb": True
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):

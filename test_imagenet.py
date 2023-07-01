@@ -246,8 +246,8 @@ def main():
         "dataset": "cifar10",
         "batch_size": 64,
         "num_workers": 0,
-        "fine_tune_exclude_layers":True,
-        "fine_tune_non_zero_weights":True,
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
         "exclude_layers": []
 
 

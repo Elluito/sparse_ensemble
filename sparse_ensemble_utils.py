@@ -452,10 +452,10 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
-        measure_and_record_gradient_flow(accelerator.unwrap_model(pruned_model), dataLoader_p, testLoader_p,cfg ,file_path,
-                                                          total_sparse_FLOPS, -1,
-                                                          use_wandb=use_wandb)
-
+        measure_and_record_gradient_flow(accelerator.unwrap_model(pruned_model), dataLoader_p, testLoader_p, cfg,
+                                         file_path,
+                                         total_sparse_FLOPS, -1,
+                                         use_wandb=use_wandb, mask_dict=mask_dict)
 
         # state_dict = pruned_model.state_dict()
         # temp_name = weights_path / "epoch_{}.pth".format(-1)
@@ -522,14 +522,11 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
         # if gradient_flow_file_prefix != "":
         if epoch % 10 == 0 and gradient_flow_file_prefix != "":
 
-            test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader,
-                                                                              testLoader,
-                                                                              file_path,
-                                                                              total_sparse_FLOPS,
-                                                                              epochs,
-                                                                              use_wandb=use_wandb)
+            unwraped_model = accelerator.unwrap_model(pruned_model)
+            test_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
+                                                             total_sparse_FLOPS, epoch,
+                                                             use_wandb=use_wandb, mask_dict=mask_dict)
             if best_accuracy < test_accuracy:
-                unwraped_model = accelerator.unwrap_model(pruned_model)
                 state_dict = unwraped_model.state_dict()
                 save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epoch}
                 temp_name = weights_path / "net.pth"
@@ -543,18 +540,16 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                 break
         ############ Reset the average counter if  we are not in the last epoch ######################
 
-        if epoch != epochs - 1:
+        if epoch < epochs - 1:
             average_accuracy.reset()
 
     ################################################## Outside of epochs loop ###################
 
     if gradient_flow_file_prefix != "":
-
-        test_accuracy = measure_and_record_gradient_flow_with_ACCELERATOR(pruned_model, accelerator, dataLoader,
-                                                                          testLoader, file_path,
-                                                                          total_sparse_FLOPS,
-                                                                          epochs,
-                                                                          use_wandb=use_wandb)
+        unwraped_model = accelerator.unwrap_model(pruned_model)
+        test_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
+                                                         total_sparse_FLOPS, epochs,
+                                                         use_wandb=use_wandb, mask_dict=mask_dict)
 
         if best_accuracy < test_accuracy:
             unwraped_model = accelerator.unwrap_model(pruned_model)
@@ -1062,6 +1057,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     val_dict = {}
     print("just before cal_grad")
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
+    print("Just finished cal_grad")
     #
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
@@ -1162,6 +1158,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
+    return accuracy
 
 
 def get_erdos_renyi_dist(
