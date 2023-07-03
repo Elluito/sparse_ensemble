@@ -5611,6 +5611,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
 
             _, unit_sparse_flops = flops(current_model, data)
             print("Counted the flops!!")
+            print("Flops for batch: {}".format(unit_sparse_flops))
             torch.cuda.empty_cache()
             first_iter = 0
         noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,

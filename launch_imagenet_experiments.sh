@@ -28,5 +28,5 @@ which python
 unset GOMP_CPU_AFFINITY
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-CUDA_LAUNCH_BLOCKING=1 python main.py -exp $1 -bs 4 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 4
+CUDA_LAUNCH_BLOCKING=1 python main.py -exp $1 -bs 32--sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 10
  #&& python main.py && python main.py
