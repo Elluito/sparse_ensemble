@@ -1,3 +1,7 @@
+import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
 import paretoset
 import glob
@@ -26,7 +30,6 @@ import hydra
 import torchvision
 import torchvision.transforms as transforms
 import scipy
-import os
 import argparse
 import scipy.optimize as optimize
 from torch.autograd import Variable
@@ -78,9 +81,6 @@ from decimal import Decimal
 plt.rcParams["mathtext.fontset"] = "cm"
 
 # enable cuda devices
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["CUDA_LAUNCH_BLOCKING"]="1"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # matplotlib.use('TkAgg')
 
@@ -2820,6 +2820,38 @@ def get_model(cfg: omegaconf.DictConfig):
                 if cfg.dataset=="mnist":
                     net = ResNet18()
                 return net
+            if "hub"== cfg.model_type:
+                if cfg.dataset== "cifar100":
+                    from torchvision import resnet18
+                    net = resnet18()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features,100)
+                    net.load_state_dict(cfg,solution)
+                if cfg.dataset== "cifar10":
+                    from torchvision.models import resnet18
+                    net = resnet18()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features,10)
+
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k,item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.","")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
+                if cfg.dataset == "imagenet":
+
+                    from torchvision.models import resnet18, ResNet18_Weights
+
+                    net = resnet18()
+                    temp_dict = torch.load(cfg.solution)
+                    net.load_state_dict(temp_dict)
+
+                    # Using pretrained weights:
+                    # net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+                    # net = resnet18(weights="IMAGENET1K_V1")
         else:
             if "csgmcmc" == cfg.model_type:
                 net = ResNet18()
@@ -2985,6 +3017,7 @@ def get_df_pruned_by_layer(names: typing.List[str], weights: typing.List[torch.n
 
 
 def get_df_changes_by_layer(names: typing.List[str], weights: typing.List[torch.nn.Module], vector1: torch.Tensor,
+
                             vector2: torch.Tensor,
                             function:
                             typing.Callable = None):
@@ -5535,11 +5568,11 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
         for name, elem in pr_per_layer.items():
             log_dict["deterministic_{}_pr".format(name)] = elem
         wandb.log(log_dict)
+    del pr_per_layer
     # Go over the population t
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
         current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
-        copy_of_pruned_model = copy.deepcopy(current_model)
         # det_mask_transfer_model = copy.deepcopy(current_model)
         # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
         # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
@@ -5550,6 +5583,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
 
         if cfg.pruner == "manual":
+            copy_of_pruned_model = copy.deepcopy(current_model)
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="manual", pr_per_layer=pr_per_layer)
             individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
@@ -5574,7 +5608,10 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
         if first_iter:
+
             _, unit_sparse_flops = flops(current_model, data)
+            print("Counted the flops!!")
+            torch.cuda.empty_cache()
             first_iter = 0
         noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
                                                                  count_flops=True, batch_flops=unit_sparse_flops)
@@ -5584,6 +5621,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
         if noisy_sample_performance > best_accuracy:
             best_accuracy = noisy_sample_performance
             best_model = current_model
+            del current_model
 
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
 
@@ -5601,7 +5639,7 @@ def fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg: omegaconf.Dict
 
     # perfor = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
     # torch.save({"model_state":pruned_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_deterministic_{cfg.pruner}_pr{cfg.amount}.pth")
-
+    del pruned_model
     if cfg.use_wandb:
 
         initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
@@ -7702,7 +7740,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": True
+        "use_wandb": False
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):

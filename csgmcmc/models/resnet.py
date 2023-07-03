@@ -105,10 +105,13 @@ def ResNet101():
 def ResNet152():
     return ResNet(Bottleneck, [3,8,36,3])
 
+if __name__ == '__main__':
 
-def test():
-    net = ResNet18()
-    y = net(Variable(torch.randn(1,3,32,32)))
-    print(y.size())
+
+    def test():
+        net = ResNet18()
+        y = net(Variable(torch.randn(1,3,32,32)))
+        print(y.size())
+
 
 # test()
