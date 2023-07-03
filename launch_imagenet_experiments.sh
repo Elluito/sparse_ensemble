@@ -9,10 +9,10 @@
 #$ -l h_rt=40:00:00
 
 # ASk for some GPU
-#$ -l coproc_p100=1
+#$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=16G
+#$ -l h_vmem=128G
 # -pe smp 3
 # Send emails when job starts and ends
 #$ -m e
@@ -27,5 +27,5 @@ conda activate work
 which python
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py -exp $1 -bs 64 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 10
+python main.py -exp $1 -bs 16 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 10
  #&& python main.py && python main.py
