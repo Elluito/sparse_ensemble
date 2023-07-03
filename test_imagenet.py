@@ -153,7 +153,108 @@ def get_mask(model, dense=False):
         masks = list(map(torch.ones_like, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
+def test_pin_and_num_workers(args):
+    current_directory = Path().cwd()
+    data_path = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data/"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "datasets/"
+    traindir = data_path + 'imagenet/' + 'train'
+    testdir = data_path + 'imagenet/' + 'val'
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
 
+    whole_train_dataset = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+    print(f"Length of dataset: {len(whole_train_dataset)}")
+    print(args)
+    test_dataset = datasets.ImageFolder(testdir, transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        normalize,
+    ]))
+    # train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 5000])
+    train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset,
+                                                               [len(whole_train_dataset) - 5000, 5000])
+    # big_test,small_test = torch.utils.data.random_split(test_dataset, [len(test_dataset)-5000, 5000])
+    my_dataset = val_dataset
+    write_path = data_path + "imagenet/valSplit_dataset.beton"
+
+    # For the validation set that I use to recover accuracy
+
+    # # Pass a type for each data field
+    # writer = DatasetWriter(write_path, {
+    #     # Tune options to optimize dataset size, throughput at train-time
+    #     'image': RGBImageField(
+    #         max_resolution=256,
+    #         jpeg_quality=90
+    #     ),
+    #     'label': IntField()
+    # })
+    # # Write dataset
+    # writer.from_indexed_dataset(my_dataset)
+
+    # For the validation set that I use to recover accuracy
+
+    import time
+    import multiprocessing
+    use_cuda = torch.cuda.is_available()
+    core_number = multiprocessing.cpu_count()
+    batch_size = 64
+    train_sampler = None
+    best_num_worker = [0, 0]
+    best_time = [99999999, 99999999]
+    print('cpu_count =', core_number)
+
+    def loading_time(num_workers, pin_memory):
+        kwargs = {'num_workers': num_workers, 'pin_memory': pin_memory} if use_cuda else {}
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+            sampler=train_sampler, **kwargs)
+        start = time.time()
+        for epoch in range(4):
+            for batch_idx, (data, target) in enumerate(train_loader):
+                if batch_idx == 15:
+                    break
+                pass
+        end = time.time()
+        print("  Used {} second with num_workers = {}".format(end - start, num_workers))
+        return end - start
+
+    for pin_memory in [False, True]:
+        print("While pin_memory =", pin_memory)
+        for num_workers in range(0, core_number * 2 + 1, 4):
+            current_time = loading_time(num_workers, pin_memory)
+            if current_time < best_time[pin_memory]:
+                best_time[pin_memory] = current_time
+                best_num_worker[pin_memory] = num_workers
+            else:  # assuming its a convex function
+                if best_num_worker[pin_memory] == 0:
+                    the_range = []
+                else:
+                    the_range = list(range(best_num_worker[pin_memory] - 3, best_num_worker[pin_memory]))
+                for num_workers in (
+                        the_range + list(range(best_num_worker[pin_memory] + 1, best_num_worker[pin_memory] + 4))):
+                    current_time = loading_time(num_workers, pin_memory)
+                    if current_time < best_time[pin_memory]:
+                        best_time[pin_memory] = current_time
+                        best_num_worker[pin_memory] = num_workers
+                break
+    if best_time[0] < best_time[1]:
+        print("Best num_workers =", best_num_worker[0], "with pin_memory = False")
+    else:
+        print("Best num_workers =", best_num_worker[1], "with pin_memory = True")
+    return
 
 def load_imageNet(args):
     current_directory = Path().cwd()
