@@ -28,5 +28,5 @@ which python
 unset GOMP_CPU_AFFINITY
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
-python main.py -exp $1 -bs 16 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 6
+python main.py -exp $1 -bs 8 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --num_workers 6
  #&& python main.py && python main.py
