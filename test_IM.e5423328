@@ -1,0 +1,26 @@
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/utils/data/dataloader.py:563: UserWarning: This DataLoader will create 4 worker processes in total. Our suggested max number of worker in current system is 1, which is smaller than what this DataLoader is going to create. Please be aware that excessive worker creation might get DataLoader running slow or even freeze, lower the worker number to avoid potential slowness/freeze if necessary.
+  warnings.warn(_create_warning_msg(
+Traceback (most recent call last):
+  File "/home/home01/sclaam/sparse_ensemble/main.py", line 8007, in <module>
+    LeMain(args)
+  File "/home/home01/sclaam/sparse_ensemble/main.py", line 7749, in LeMain
+    experiment_selector(cfg,args["experiment"])
+  File "/home/home01/sclaam/sparse_ensemble/main.py", line 6092, in experiment_selector
+    fine_tune_after_stochatic_pruning_ACCELERATOR_experiment(cfg)
+  File "/home/home01/sclaam/sparse_ensemble/main.py", line 5616, in fine_tune_after_stochatic_pruning_ACCELERATOR_experiment
+    noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
+  File "/home/home01/sclaam/sparse_ensemble/sparse_ensemble_utils.py", line 141, in test
+    outputs = net(inputs)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torchvision/models/resnet.py", line 285, in forward
+    return self._forward_impl(x)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torchvision/models/resnet.py", line 268, in _forward_impl
+    x = self.conv1(x)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1130, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 457, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 453, in _conv_forward
+    return F.conv2d(input, weight, bias, self.stride,
+RuntimeError: CUDA error: an illegal memory access was encountered
