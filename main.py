@@ -7703,7 +7703,8 @@ def LeMain(args):
 
             if args["architecture"] == "resnet18":
                 solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
-                exclude_layers = ["conv1", "fc"]
+                # exclude_layers = ["conv1", "fc"]
+                exclude_layers = []
             if args["architecture"] == "VGG19":
                 raise NotImplementedError("Not implemented")
                 solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
@@ -7741,7 +7742,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": False
+        "use_wandb": True
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
