@@ -7012,7 +7012,7 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number > max_individuals:
-                print()
+                print("He completado 10 individuos para el batch {}".format(index))
                 break
             ind_number += 1
         assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
