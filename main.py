@@ -6965,13 +6965,12 @@ def ensemble_predictions(prefix:str,cfg):
         counter_for_mean_individuals = 2
         ind_number = 0
         for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
-
             #Load the individuals
-            print("Individual:{}".format(individual))
-            print("Contents of the weight folder")
-            p = Path(individual).glob('**/*')
-            files = [x for x in p if x.is_file()]
-            print("{}".format(files))
+            # print("Individual:{}".format(individual))
+            # print("Contents of the weight folder")
+            # p = Path(individual).glob('**/*')
+            # files = [x for x in p if x.is_file()]
+            # print("{}".format(files))
 
             # torch.cuda.empty_cache()
             try:
@@ -7013,6 +7012,7 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number > max_individuals:
+                print()
                 break
             ind_number += 1
         assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
@@ -7063,7 +7063,6 @@ def ensemble_predictions(prefix:str,cfg):
         counter_for_mean_individuals = 2
         ind_number = 0
         for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
-
             #Load the individuals
             print("Individual:{}".format(individual))
             print("Contents of the weight folder")
@@ -7103,6 +7102,7 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number>max_individuals:
+                print("I break the individuals for-loop")
                 break
             ind_number += 1
 
@@ -8065,7 +8065,7 @@ if __name__ == '__main__':
         "dataset": "imagenet",
         "set":"test",
         "solution":"",
-        "batch_size": 16,
+        "batch_size": 512,
         # "batch_size": 128,
         "num_workers": 0,
     })
