@@ -7987,26 +7987,26 @@ if __name__ == '__main__':
     #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # ##############################################################################
 
-
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
-
-
-    args = vars(parser.parse_args())
-    LeMain(args)
+    #
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
+    #
+    #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
 
 
@@ -8052,26 +8052,26 @@ if __name__ == '__main__':
 
 
     ################################################# Ensemble predictions ############################################
-    # sigma_values = [0.001,0.003,0.005]
-    # pruning_rate_values = [0.8,0.85,0.9,0.95]
-    # architecture_values = ["resnet18","resnet50","VGG19"]
-    # dataset_values = ["cifar10","cifar100"]
-    #
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.001,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "model_type": "alternative",
-    #     "dataset": "imagenet",
-    #     "set":"test",
-    #     "solution":"",
-    #     "batch_size": 16,
-    #     # "batch_size": 128,
-    #     "num_workers": 12,
-    # })
-    # create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+    sigma_values = [0.001,0.003,0.005]
+    pruning_rate_values = [0.8,0.85,0.9,0.95]
+    architecture_values = ["resnet18","resnet50","VGG19"]
+    dataset_values = ["cifar10","cifar100"]
 
-#
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "alternative",
+        "dataset": "imagenet",
+        "set":"test",
+        "solution":"",
+        "batch_size": 16,
+        # "batch_size": 128,
+        "num_workers": 0,
+    })
+    create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+
+
 #     accuracy = []
 #     stage = []
 #     id = []
