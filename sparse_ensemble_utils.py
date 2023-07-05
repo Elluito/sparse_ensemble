@@ -438,9 +438,10 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
     data, y = next(iter(dataLoader))
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
-    ######################### for recor and saving stuf##############################
+    ######################### for record and saving stuf##############################
     file_path = None
     weights_path = ""
+    test_accuracy = -1
     if gradient_flow_file_prefix != "":
         file_path = gradient_flow_file_prefix
         file_path += "recordings.csv"
@@ -452,7 +453,7 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
-        measure_and_record_gradient_flow(accelerator.unwrap_model(pruned_model), dataLoader_p, testLoader_p, cfg,
+        test_accuracy, val_accuracy = measure_and_record_gradient_flow(accelerator.unwrap_model(pruned_model), dataLoader_p, testLoader_p, cfg,
                                          file_path,
                                          total_sparse_FLOPS, -1,
                                          use_wandb=use_wandb, mask_dict=mask_dict)
@@ -498,17 +499,6 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
             lr_scheduler.step()
 
-            # W&B Logging
-            if use_wandb:
-                acc = accuracy.compute()
-                test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
-                                     one_batch=True)
-                wandb.log({
-                    "val_set_accuracy": acc * 100,
-                    "sparse_flops": total_sparse_FLOPS,
-                    "test_set_accuracy": test_accuracy,
-                    "sparsity": sparsity(pruned_model)
-                })
             if batch_idx % 10 == 0 or FLOP_limit != 0:
                 acc = accuracy.compute()
                 average_accuracy.update(acc)
@@ -516,14 +506,34 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                 print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
                       f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
 
+                # W&B Logging
+                if use_wandb:
+                    acc = accuracy.compute()
+                    # test_accuracy = test(accelerator.unwrap_model(pruned_model), use_cuda=True, testloader=[get_random_batch(testLoader)],
+                    #                      one_batch=True,verbose=0)
+                    wandb.log({
+                        "val_set_accuracy": acc * 100,
+                        "sparse_flops": total_sparse_FLOPS,
+                        # "test_set_accuracy": test_accuracy,
+                        "sparsity": sparsity(pruned_model)
+                    })
                 if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
                     break
 
         # if gradient_flow_file_prefix != "":
-        if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+        # After every epoch, save the model
+        if best_accuracy < test_accuracy:
+            unwraped_model = accelerator.unwrap_model(pruned_model)
+            state_dict = unwraped_model.state_dict()
+            save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epoch}
+            temp_name = weights_path / "net.pth"
+            torch.save(save, temp_name)
+            best_accuracy = test_accuracy
+            del unwraped_model
+        if epoch % 5 == 0 and gradient_flow_file_prefix != "":
 
             unwraped_model = accelerator.unwrap_model(pruned_model)
-            test_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
+            test_accuracy, val_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
                                                              total_sparse_FLOPS, epoch,
                                                              use_wandb=use_wandb, mask_dict=mask_dict)
             if best_accuracy < test_accuracy:
@@ -532,6 +542,17 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
                 temp_name = weights_path / "net.pth"
                 torch.save(save, temp_name)
                 best_accuracy = test_accuracy
+            if use_wandb:
+                acc = accuracy.compute()
+                # test_accuracy = test(accelerator.unwrap_model(pruned_model), use_cuda=True, testloader=[get_random_batch(testLoader)],
+                #                      one_batch=True,verbose=0)
+                wandb.log({
+                    "val_set_accuracy": acc * 100,
+                    "sparse_flops": total_sparse_FLOPS,
+                    "test_set_accuracy": test_accuracy,
+                    "sparsity": sparsity(pruned_model)
+                })
+            del unwraped_model
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
             # torch.save(state_dict,temp_name)
@@ -547,17 +568,16 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
 
     if gradient_flow_file_prefix != "":
         unwraped_model = accelerator.unwrap_model(pruned_model)
-        test_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
+        test_accuracy, val_accuracy = measure_and_record_gradient_flow(unwraped_model, dataLoader_p, testLoader_p, cfg, file_path,
                                                          total_sparse_FLOPS, epochs,
                                                          use_wandb=use_wandb, mask_dict=mask_dict)
 
         if best_accuracy < test_accuracy:
-            unwraped_model = accelerator.unwrap_model(pruned_model)
             state_dict = unwraped_model.state_dict()
             save = {"net": state_dict, "test_accuracy": average_accuracy.avg, "epoch": epochs}
             temp_name = weights_path / "net.pth"
             torch.save(save, temp_name)
-
+        del unwraped_model
     if use_wandb:
 
         test_set_performance = test_with_accelerator(pruned_model, testloader=testLoader)
@@ -1046,6 +1066,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
                                      mask_dict, use_wandb=False):
     model = copy.deepcopy(model)
+    t_begining = time.time()
     disable_bn(model)
     if not cfg.fine_tune_exclude_layers:
         disable_exclude_layers(model, cfg.exclude_layers)
@@ -1056,8 +1077,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     # Calculate everything with respect to the validation set
     val_dict = {}
     print("just before cal_grad")
+    t0 = time.time()
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
     print("Just finished cal_grad")
+    t1 = time.time()
+    print("Time in cal_grad valset: {} s".format(t1-t0))
     #
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
@@ -1091,8 +1115,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
 
     # Calculate everything with respect to the test set
     test_dict = {}
+    t0 = time.time()
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
     # t0 = time.time()
+    t1 = time.time()
+    print("Time in cal_grad test_set: {} s".format(t1-t0))
     # if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
     #     hg :typing.List[torch.Tensor] = cal_hg(model,trainloader=dataLoader,n_classes=10)
     # if cfg.dataset == "cifar100":
@@ -1158,7 +1185,9 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         log_dict.update(val_dict)
         log_dict.update(test_dict)
         wandb.log(log_dict)
-    return accuracy
+    t_end = time.time()
+    print("Measure total time: {} s".format(t_end-t_begining))
+    return accuracy, val_dict["val_accuracy"][0]
 
 
 def get_erdos_renyi_dist(

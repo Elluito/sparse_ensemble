@@ -5728,7 +5728,7 @@ def fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg: omegaconf.DictCo
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/ACELERATOR/{}/deterministic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            filepath_GF_measure += "gradient_flow_data/ACCELERATOR/{}/deterministic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
@@ -7703,8 +7703,8 @@ def LeMain(args):
 
             if args["architecture"] == "resnet18":
                 solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
-                # exclude_layers = ["conv1", "fc"]
-                exclude_layers = []
+                exclude_layers = ["conv1", "fc"]
+                # exclude_layers = []
             if args["architecture"] == "VGG19":
                 raise NotImplementedError("Not implemented")
                 solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
