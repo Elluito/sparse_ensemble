@@ -6094,24 +6094,24 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 14:
         fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg)
     if number_experiment== 15:
-           sigma_values = [0.001,0.003,0.005]
-    pruning_rate_values = [0.8,0.85,0.9,0.95]
-    architecture_values = ["resnet18","resnet50","VGG19"]
-    dataset_values = ["cifar10","cifar100"]
+        sigma_values = [0.001,0.003,0.005]
+        pruning_rate_values = [0.8,0.85,0.9,0.95]
+        architecture_values = ["resnet18","resnet50","VGG19"]
+        dataset_values = ["cifar10","cifar100"]
 
-    cfg = omegaconf.DictConfig({
-        "sigma":0.001,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "alternative",
-        "dataset": "imagenet",
-        "set":"test",
-        "solution":"",
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-    })
-    create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+        cfg = omegaconf.DictConfig({
+            "sigma":0.001,
+            "amount":0.9,
+            "architecture":"resnet18",
+            "model_type": "alternative",
+            "dataset": "imagenet",
+            "set":"test",
+            "solution":"",
+            "batch_size": 512,
+            # "batch_size": 128,
+            "num_workers": 18,
+        })
+        create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
 
     # if number_experiment == 13:
