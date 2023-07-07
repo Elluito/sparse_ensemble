@@ -2936,7 +2936,12 @@ def get_model(cfg: omegaconf.DictConfig):
                 return net
             if "alternative" == cfg.model_type:
                 from alternate_models.resnet import ResNet50
-                net = ResNet50()
+                if cfg.dataset=="cifar10":
+                    net = ResNet50()
+                if cfg.dataset == "cifar100":
+                    net = ResNet50(num_classes=100)
+                if cfg.dataset=="mnist":
+                    net = ResNet50()
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
@@ -8057,29 +8062,29 @@ if __name__ == '__main__':
     # architecture_values = ["VGG19","resnet50","resnet18"]
     # dataset_values = ["cifar10","cifar100"]
 #
-    # sigma_values = [0.001]
-    # dataset_values = ["imagenet"]
-    # pruning_rate_values = [0.9]
-    # architecture_values = ["resnet18"]
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.001,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "model_type": "hub",
-    #     "dataset": "imagenet",
-    #     "set":"test"
-    # })
-    #
-    #
-    # for dataset in dataset_values:
-    #     cfg.dataset = dataset
-    #     for pruning_rate in pruning_rate_values:
-    #         cfg.amount = pruning_rate
-    #         for arch in architecture_values:
-    #             cfg.architecture = arch
-    #             for sig in sigma_values:
-    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATE/imagenet/",cfg,2)
-    # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
+    sigma_values = [0.001]
+    dataset_values = ["imagenet"]
+    pruning_rate_values = [0.9]
+    architecture_values = ["resnet18"]
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "hub",
+        "dataset": "imagenet",
+        "set":"test"
+    })
+
+
+    for dataset in dataset_values:
+        cfg.dataset = dataset
+        for pruning_rate in pruning_rate_values:
+            cfg.amount = pruning_rate
+            for arch in architecture_values:
+                cfg.architecture = arch
+                for sig in sigma_values:
+                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATE/imagenet/",cfg,2)
+    unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
     ################################################# Ensemble predictions ############################################
