@@ -8083,7 +8083,7 @@ if __name__ == '__main__':
             for arch in architecture_values:
                 cfg.architecture = arch
                 for sig in sigma_values:
-                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATE/imagenet/",cfg,2)
+                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATOR/imagenet/",cfg,2)
     unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
