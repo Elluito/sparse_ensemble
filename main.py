@@ -6097,7 +6097,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         sigma_values = [0.001,0.003,0.005]
         pruning_rate_values = [0.8,0.85,0.9,0.95]
         architecture_values = ["resnet18","resnet50","VGG19"]
-        dataset_values = ["cifar10","cifar100"]
+        dataset_values = ["cifar100" , "cifar10"]
 
         cfg = omegaconf.DictConfig({
             "sigma":0.001,
@@ -6109,7 +6109,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "solution":"",
             "batch_size": 512,
             # "batch_size": 128,
-            "num_workers": 18,
+            "num_workers": 4,
         })
         create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
 
@@ -6973,8 +6973,8 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy_mean = Accuracy(task="multiclass", num_classes=10).to("cuda")
         accuracy_voting = Accuracy(task="multiclass", num_classes=10).to("cuda")
     if cfg.dataset == "cifar100":
-        accuracy_mean = Accuracy(task="multiclass", num_classes=10).to("cuda")
-        accuracy_voting = Accuracy(task="multiclass", num_classes=10).to("cuda")
+        accuracy_mean = Accuracy(task="multiclass", num_classes=100).to("cuda")
+        accuracy_voting = Accuracy(task="multiclass", num_classes=100).to("cuda")
     if cfg.dataset == "imagenet":
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
 
