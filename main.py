@@ -6941,8 +6941,8 @@ def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,tor
     model.eval()
     model.cuda()
     data, target = batch
-    print("T")
-    print("")
+    # print("T")
+    # print("")
     batch_prediction = model(data)
     return batch_prediction
 
@@ -6977,7 +6977,7 @@ def ensemble_predictions(prefix:str,cfg):
         accuracy_voting = Accuracy(task="multiclass", num_classes=100).to("cuda")
     if cfg.dataset == "imagenet":
         accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
-
+    index_batch = 0
     for inputs,targets in test:
         inputs,targets = inputs.cuda(),targets.cuda()
         predictions_mean = None
@@ -7005,7 +7005,6 @@ def ensemble_predictions(prefix:str,cfg):
                     print("I loaded the weights!")
             except Exception as err:
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
-                print("")
                 print(err)
                 continue
 
@@ -7016,7 +7015,6 @@ def ensemble_predictions(prefix:str,cfg):
                 individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
             except Exception as e:
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
-                print("")
                 print(e)
                 continue
 
@@ -7032,10 +7030,12 @@ def ensemble_predictions(prefix:str,cfg):
                 predictions_voting = torch.cat((predictions_voting,torch.reshape(torch.argmax(individual_predictions,dim=1),(-1,1))), dim = 1)
 
             if ind_number > max_individuals:
-                print("He completado 10 individuos para el batch {}".format(index))
+                print("He completado 10 individuos para el batch {}".format(index_batch))
                 break
             ind_number += 1
         assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
+        index_batch+=1
+
         # Now I'm going to actually make the predictions first by averaging and second by voting
         temp_variable = torch.mode(predictions_voting,dim=1)
         pred_voting = temp_variable.values
@@ -7060,11 +7060,13 @@ def ensemble_predictions(prefix:str,cfg):
             counter_for_mean_voting+=1
 
     global_results = {"voting": full_voting_mean_accuracy,"mean": full_mean_mean_accuracy}
-    print(cfg)
+    print("Global results")
     print(global_results)
     # torch.cuda.empty_cache()
     ########################## LAMP stochatic #######################################
 
+    print(cfg)
+    print("Now for lamp")
     full_mean_mean_accuracy = None
     full_voting_mean_accuracy = None
     counter_for_mean_mean = 2
@@ -7109,7 +7111,16 @@ def ensemble_predictions(prefix:str,cfg):
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
             # despues del for.
 
-            individual_predictions: torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+            # individual_predictions: torch.Tensor= get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+
+            # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
+            # despues del for.
+            try:
+                individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+            except Exception as e:
+                print("There was the follwing error but im going to continue because I only need 10 individuals")
+                print(e)
+                continue
 
             if predictions_mean is None:
                 predictions_mean = individual_predictions
@@ -8067,7 +8078,7 @@ if __name__ == '__main__':
     #         for arch in architecture_values:
     #             cfg.architecture = arch
     #             for sig in sigma_values:
-    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/imagenet/",cfg,3)
+    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATE/imagenet/",cfg,2)
     # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
