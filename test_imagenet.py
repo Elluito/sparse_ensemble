@@ -712,7 +712,7 @@ if __name__ == '__main__':
     parser.add_argument('-acc', '--accelerate', type=bool, default=False,
                         help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility',
                         required=False)
-    parser.add_argument('-fp', '--file_path', type=str, default="/nobacku/sclaam/trained_models/",
+    parser.add_argument('-fp', '--file_path', type=str, default="/nobackup/sclaam/trained_models/",
                         help='Location where the models is going to be saved', required=False)
 
     args = vars(parser.parse_args())
