@@ -80,7 +80,7 @@ def cal_grad_ACCELERATOR(net: nn.Module, trainloader, device,
     return gbase
 
 
-def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
+def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0,accelerator=None):
     criterion = nn.CrossEntropyLoss()
     test_loss = 0
     correct = 0
@@ -94,12 +94,14 @@ def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flo
         for batch_idx, (inputs, targets) in enumerate(testloader):
             outputs = net(inputs)
             loss = criterion(outputs, targets)
+            all_predictions, all_targets = accelerator.gather_for_metrics((outputs, targets))
+
             if count_flops:
                 sparse_flops += batch_flops
             test_loss += loss.data.item()
-            _, predicted = torch.max(outputs.data, 1)
+            _, predicted = torch.max(all_predictions.data, 1)
             total += targets.size(0)
-            correct += predicted.eq(targets.data).cpu().sum()
+            correct += predicted.eq(all_targets.data).cpu().sum()
 
             if batch_idx % 100 == 0:
                 if verbose == 2:

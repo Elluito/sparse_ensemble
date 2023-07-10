@@ -2819,6 +2819,8 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = ResNet18(num_classes=100)
                 if cfg.dataset=="mnist":
                     net = ResNet18()
+                if cfg.dataset == "imagenet":
+                    net = ResNet18(num_classes=1000)
                 return net
             if "hub"== cfg.model_type:
                 if cfg.dataset== "cifar100":
@@ -2942,6 +2944,8 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = ResNet50(num_classes=100)
                 if cfg.dataset=="mnist":
                     net = ResNet50()
+                if cfg.dataset == "imagenet":
+                    net = ResNet50(num_classes=1000)
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
@@ -2955,7 +2959,6 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = ResNet50(num_classes=100)
                 if cfg.dataset=="mnist":
                     net = ResNet50()
-
                 load_model(net, cfg.solution)
             if "hub"== cfg.model_type:
                 if cfg.dataset== "cifar100":
@@ -2966,6 +2969,7 @@ def get_model(cfg: omegaconf.DictConfig):
                     from torchvision.models import resnet50, ResNet50_Weights
                     # Using pretrained weights:
                     net = resnet50(weights="IMAGENET1K_V1")
+
             return net
 
     else:
@@ -7711,8 +7715,8 @@ def LeMain(args):
     solution=""
     exclude_layers = None
 
-    if args["dataset"] == "cifar100":
-        if args["modeltype"]=="alternative":
+    if args["dataset"] == "cifar100" :
+        if args["modeltype"]== "alternative" :
             if args["architecture"]== "resnet18":
                 solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
                 exclude_layers =["conv1", "linear"]
@@ -7929,57 +7933,76 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
-    # cfg = omegaconf.DictConfig({
-    #     "population": 10,
-    #     "generations": 10,
-    #     "epochs": 100,
-    #     "short_epochs": 10,
-    #     # "dataset": "mnist",
-    #     "dataset": "cifar10",
-    #     # "dataset": "imagenet",
-    #     "architecture": "resnet18",
-    #     # "architecture": "VGG19",
-    #     # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-    #     # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-    #     # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
-    #     # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #      # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #     #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-    #     # "solution": "cifar10_resnet20",
-    #     # "exclude_layers": ["conv1", "fc"],
-    #     # "exclude_layers": [],
-    #     "exclude_layers": ["conv1", "linear"],
-    #     # "exclude_layers": ["features.0", "classifier"],
-    #    "noise": "gaussian",
-    #    "pruner": "global",
-    #     "model_type": "alternative",
-    #     # "model_type": "hub",
-    #     "fine_tune_exclude_layers": True,
-    #     "fine_tune_non_zero_weights": True,
-    #     "sampler": "tpe",
-    #     "flop_limit": 0,
-    #     "one_batch": True,
-    #     "measure_gradient_flow":True,
-    #     "full_fine_tune": False,
-    #     "use_stochastic": True,
-    #     # "sigma": 0.0021419609859022197,
-    #     "sigma": 0.005,
-    #     "noise_after_pruning":0,
-    #     # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-    #     "amount": 0.9 , # For resnet18
-    #     "batch_size": 128,
-    #     # "batch_size": 128,
-    #     "num_workers": 4,
-    #     "save_model_path": "stochastic_pruning_models/",
-    #     "save_data_path": "stochastic_pruning_data/",
-    #     "use_wandb": True
-    # })
+    solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
+    exclude_layers = ["conv1", "fc"]
+    cfg = omegaconf.DictConfig({
+        "population": 10,
+        "generations": 10,
+        "epochs": 100,
+        "short_epochs": 10,
+        # "dataset": "mnist",
+        # "dataset": "cifar10",
+        "dataset": "imagenet",
+        "architecture": "resnet18",
+        # "architecture": "VGG19",
+        "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
+        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+        # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+        # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "cifar10_resnet20",
+        # "exclude_layers": ["conv1", "fc"],
+        # "exclude_layers": [],
+        "exclude_layers": ["conv1", "linear"],
+        # "exclude_layers": ["features.0", "classifier"],
+       "noise": "gaussian",
+       "pruner": "global",
+        "model_type": "alternative",
+        # "model_type": "hub",
+        "fine_tune_exclude_layers": True,
+        "fine_tune_non_zero_weights": True,
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow":True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        # "sigma": 0.0021419609859022197,
+        "sigma": 0.005,
+        "noise_after_pruning":0,
+        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+        "amount": 0.9 , # For resnet18
+        "batch_size": 128,
+        # "batch_size": 128,
+        "num_workers": 4,
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
+        "use_wandb": True
+    })
 
     ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
-
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="")
+       # cfg = omegaconf.DictConfig({
+    #     "sigma":0.001,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "model_type": "hub",
+    #     "dataset": "imagenet",
+    #     "set":"test"
+    # })
+    sigmas_ = [0.001,0.003,0.005]
+    pruning_rates_ = [0.6,0.7,0.8]
+    pruners_ =["global","lamp"]
+    for s in  sigmas_:
+        for pr in pruning_rates_:
+            for p in pruners_:
+                cfg.sigma = s
+                cfg.pruning_rate= pr
+                cfg.pruner = p
+                stochastic_pruning_against_deterministic_pruning(cfg,name="")
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
@@ -8023,7 +8046,7 @@ if __name__ == '__main__':
     #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # ##############################################################################
 
-    #
+
     # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
     # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
@@ -8042,7 +8065,7 @@ if __name__ == '__main__':
     #
     #
     # args = vars(parser.parse_args())
-    # LeMain(args)
+    LeMain(args)
     #
 
 
@@ -8062,29 +8085,29 @@ if __name__ == '__main__':
     # architecture_values = ["VGG19","resnet50","resnet18"]
     # dataset_values = ["cifar10","cifar100"]
 #
-    sigma_values = [0.001]
-    dataset_values = ["imagenet"]
-    pruning_rate_values = [0.9]
-    architecture_values = ["resnet18"]
-    cfg = omegaconf.DictConfig({
-        "sigma":0.001,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "hub",
-        "dataset": "imagenet",
-        "set":"test"
-    })
+    # sigma_values = [0.001]
+    # dataset_values = ["imagenet"]
+    # pruning_rate_values = [0.9]
+    # architecture_values = ["resnet18"]
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.001,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "model_type": "hub",
+    #     "dataset": "imagenet",
+    #     "set":"test"
+    # })
 
-
-    for dataset in dataset_values:
-        cfg.dataset = dataset
-        for pruning_rate in pruning_rate_values:
-            cfg.amount = pruning_rate
-            for arch in architecture_values:
-                cfg.architecture = arch
-                for sig in sigma_values:
-                    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATOR/imagenet/",cfg,2)
-    unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
+    #
+    # for dataset in dataset_values:
+    #     cfg.dataset = dataset
+    #     for pruning_rate in pruning_rate_values:
+    #         cfg.amount = pruning_rate
+    #         for arch in architecture_values:
+    #             cfg.architecture = arch
+    #             for sig in sigma_values:
+    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATOR/imagenet/",cfg,2)
+    # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
     ################################################# Ensemble predictions ############################################
@@ -8135,7 +8158,7 @@ if __name__ == '__main__':
 #     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
 #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-# # # # #
+# # # #
 #     sigmas = [0.001]
 # #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
 #

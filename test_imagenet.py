@@ -7,15 +7,16 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import torchvision
+import wandb
 from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
 import time
 from accelerate import Accelerator
-from main import prune_with_rate, remove_reparametrization, get_cifar_datasets
+from main import prune_with_rate, remove_reparametrization, get_cifar_datasets, get_model
 from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, measure_and_record_gradient_flow, \
-    measure_and_record_gradient_flow_with_ACCELERATOR, disable_bn, mask_gradient
+    measure_and_record_gradient_flow_with_ACCELERATOR, disable_bn, mask_gradient, test_with_accelerator
 import omegaconf
 from shrinkbench.metrics.flops import flops
 from accelerate.state import PartialState, AcceleratorState
@@ -27,6 +28,35 @@ from accelerate.state import PartialState, AcceleratorState
 # from ffcv.transforms import ToTensor, ToDevice, ToTorchImage, Cutout
 # from ffcv.fields.decoders import IntDecoder, RandomResizedCropRGBImageDecoder
 # Your dataset (`torch.utils.data.Dataset`) of (image, label) pairs
+
+
+# ImageNet Recipe#################################
+
+# Optimizer & LR scheme
+#   ngpus=8,
+#   batch_size=32,  # per GPU
+#
+#   epochs=90,
+#   opt='sgd',
+#   momentum=0.9,
+#
+#   lr=0.1,
+#   lr_scheduler='steplr',
+#   lr_step_size=30,
+#   lr_gamma=0.1,
+#
+#
+#   # Regularization
+#   weight_decay=1e-4,
+#
+#
+#   # Resizing
+#   interpolation='bilinear',
+#   val_resize_size=256,
+#   val_crop_size=224,
+#   train_crop_size=224,
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -153,6 +183,8 @@ def get_mask(model, dense=False):
         masks = list(map(torch.ones_like, weights))
         mask_dict = dict(zip(names, masks))
         return mask_dict
+
+
 def test_pin_and_num_workers(args):
     current_directory = Path().cwd()
     data_path = ""
@@ -256,6 +288,7 @@ def test_pin_and_num_workers(args):
         print("Best num_workers =", best_num_worker[1], "with pin_memory = True")
     return
 
+
 def load_imageNet(args):
     current_directory = Path().cwd()
     data_path = ""
@@ -310,19 +343,19 @@ def load_imageNet(args):
     # For the validation set that I use to recover accuracy
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=64, shuffle=True,
+        train_dataset, batch_size=args['batch_size'], shuffle=True,
         num_workers=args['num_workers'], pin_memory=True, sampler=None)
     val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=64, shuffle=True,
+        val_dataset, batch_size=args['batch_size'], shuffle=True,
         num_workers=args['num_workers'], pin_memory=True, sampler=None)
     test_loader = torch.utils.data.DataLoader(test_dataset
                                               ,
-                                              batch_size=64, shuffle=False,
+                                              batch_size=args['batch_size'], shuffle=False,
                                               num_workers=args['num_workers'], pin_memory=True)
     return train_loader, val_loader, test_loader
 
 
-def main():
+def main(args):
     # parser = argparse.ArgumentParser(description='')
     # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
     # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
@@ -343,20 +376,117 @@ def main():
     # args = vars(parser.parse_args())
     bigining_of_time = time.time()
     args = {"accelerate": True, 'num_workers': 10}
+
+    solution = ""
+    exclude_layers = None
+    if args["dataset"] == "cifar100":
+        if args["modeltype"] == "alternative":
+            if args["architecture"] == "resnet18":
+                solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
+                exclude_layers = ["conv1", "linear"]
+            if args["architecture"] == "VGG19":
+                solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"] == "resnet50":
+                solution = "trained_models/cifar100/resnet50_cifar100.pth"
+                exclude_layers = ["conv1", "linear"]
+    if args["dataset"] == "cifar10":
+        if args["modeltype"] == "alternative":
+            if args["architecture"] == "resnet18":
+                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                exclude_layers = ["conv1", "linear"]
+            if args["architecture"] == "VGG19":
+                solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"] == "resnet50":
+                solution = "trained_models/cifar10/resnet50_cifar10.pth"
+                exclude_layers = ["conv1", "linear"]
+    if args["dataset"] == "imagenet":
+
+        if args["modeltype"] == "alternative":
+
+            if args["architecture"] == "resnet18":
+                solution = ""
+                exclude_layers = ["conv1", "linear"]
+
+            if args["architecture"] == "VGG19":
+                solution = ""
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"] == "resnet50":
+                solution = ""
+                exclude_layers = ["conv1", "linear"]
+
+        if args["modeltype"] == "hub":
+
+            if args["architecture"] == "resnet18":
+                solution = ""
+                exclude_layers = ["conv1", "linear"]
+                exclude_layers = ["conv1", "fc"]
+                # exclude_layers = []
+            if args["architecture"] == "VGG19":
+                raise NotImplementedError("Not implemented")
+                solution = ""
+                exclude_layers = ["features.0", "classifier"]
+            if args["architecture"] == "resnet50":
+                solution = ""
+                exclude_layers = ["conv1", "fc"]
+
     cfg = omegaconf.DictConfig({
-        "dataset": "cifar10",
-        "batch_size": 64,
-        "num_workers": 0,
+        "population": args["population"],
+        "generations": 10,
+        "epochs": args["epochs"],
+        "short_epochs": 10,
+        "architecture": args["architecture"],
+        "solution": "",
+        "noise": "gaussian",
+        "pruner": args["pruner"],
+        "model_type": args["modeltype"],
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
-        "exclude_layers": []
-
-
+        "sampler": "tpe",
+        "flop_limit": 0,
+        "one_batch": True,
+        "measure_gradient_flow": True,
+        "full_fine_tune": False,
+        "use_stochastic": True,
+        "sigma": args["sigma"],
+        "noise_after_pruning": 0,
+        "amount": args["pruning_rate"],
+        "dataset": args["dataset"],
+        "batch_size": args["batch_size"],
+        "num_workers": args["num_workers"],
+        "save_model_path": "stochastic_pruning_models/",
+        "save_data_path": "stochastic_pruning_data/",
+        "gradient_cliping": True,
+        "use_wandb": True
     })
+    cfg.exclude_layers = exclude_layers
+    # cfg = omegaconf.DictConfig({
+    #     "dataset": "cifar10",
+    #     "batch_size": 64,
+    #     "num_workers": 0,
+    #     "fine_tune_exclude_layers": True,
+    #     "fine_tune_non_zero_weights": True,
+    #     "exclude_layers": []
+    #
+    #
+    # })
+
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"Training_ImageNet",
+            notes="This is for imageNet training",
+            reinit=True,
+        )
     train_loader, val_loader, test_loader = load_imageNet(args)
     print("Create the datasets")
     # train_loader, val_loader, test_loader = get_cifar_datasets(cfg)
-    net = resnet50()
+    net = get_model(cfg)
     # disable_bn(net)
     # disable_bn(net2)
 
@@ -369,37 +499,36 @@ def main():
     # net.fc = nn.Linear(in_features, 10)
 
     # net.load_state_dict(torch.load("/nobackup/sclaam/trained_models/resnet50_imagenet.pth"))
-    prune_with_rate(net, 0.5, type="global")
-    remove_reparametrization(net)
-
-    mask = get_mask(model=net)
+    # prune_with_rate(net, 0.5, type="global")
+    # remove_reparametrization(net)
+    #
+    # mask = get_mask(model=net)
     # apply_mask_with_hook(net, mask)
 
-    print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
+    # print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
-    total_sparse_flops = 0
 
-    optimizer = torch.optim.SGD(net.parameters(), lr=0.0001, momentum=0.9, weight_decay=5e-4)
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
 
     criterion = nn.CrossEntropyLoss()
 
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
     accelerator = None
     if args["accelerate"]:
         accelerator = Accelerator(mixed_precision="fp16")
         net, optimizer, val_loader_accel, lr_scheduler, test_loader_accel = accelerator.prepare(
             net, optimizer, val_loader, lr_scheduler, test_loader
         )
-
+    eval_set = None
     print("Passed accelerating thing")
     state = AcceleratorState()
     print("mixed precision?: {}".format(state.mixed_precision))
     # net.cuda()
-    t0 = time.time()
-    data, y = next(iter(val_loader_accel))
-    _, unit_sparse_flops = flops(net, data)
-    t1 = time.time()
-    print("Time for calculating batch flops: {}s".format(t1 - t0))
+    # t0 = time.time()
+    # data, y = next(iter(val_loader_accel))
+    # _, unit_sparse_flops = flops(net, data)
+    # t1 = time.time()
+    # print("Time for calculating batch flops: {}s".format(t1 - t0))
     # net.train()
 
     # t0 = time.time()
@@ -417,17 +546,15 @@ def main():
 
     t0 = time.time()
     # net2.load_state_dict(accelerator.unwrap_model(net).state_dict())
-    measure_and_record_gradient_flow(accelerator.unwrap_model(net), val_loader, test_loader,cfg = cfg,
-                                                      filepath="imagenet_measure_record_test.csv", total_flops=total_sparse_flops, epoch=0,
-                                                      use_wandb=False,mask_dict=mask)
+    # measure_and_record_gradient_flow(accelerator.unwrap_model(net), val_loader, test_loader,cfg = cfg,
+    #                                                   filepath="imagenet_measure_record_test.csv", total_flops=total_sparse_flops, epoch=0,
+    #                                                   use_wandb=False,mask_dict=mask)
     t1 = time.time()
     total_time = t1 - t0
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
     print("Time for measure gradient WITHOUT accelerator: {}h and {} minutes".format(total_time // 3600, minutes))
-
-
 
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -436,9 +563,9 @@ def main():
     top5 = AverageMeter()
 
     begining = time.time()
-
+    best_accuracy = -1
     end = time.time()
-    for e in range(1):
+    for e in range(args["epochs"]):
         for batch_idx, (data, target) in enumerate(val_loader_accel):
             if not args["accelerate"]:
                 data, target = data.cuda(), target.cuda()
@@ -465,12 +592,12 @@ def main():
                 accelerator.backward(loss)
             else:
                 loss.backward()
-            mask_gradient(net, mask_dict=mask)
+            # mask_gradient(net, mask_dict=mask)
 
             accelerator.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
             # apply_mask(net,mask_dict=mask)
-            total_sparse_flops += 3 * unit_sparse_flops
+            # total_sparse_flops += 3 * unit_sparse_flops
 
             # accelerator.prepare()
 
@@ -491,6 +618,31 @@ def main():
                     e, batch_idx, len(val_loader), batch_time=batch_time,
                     data_time=data_time, loss=losses, top1=top1, top5=top5))
 
+        lr_scheduler.step()
+
+        test_accuracy = test_with_accelerator(net, test_loader_accel, accelerator=accelerator)
+
+        print("Test Accuracy: {}".format(test_accuracy))
+
+        if cfg.use_wandb:
+            wandb.log({"test_accuracy": test_accuracy})
+
+        if best_accuracy < test_accuracy:
+            unwraped_model = accelerator.unwrap_model(net)
+
+            state_dict = unwraped_model.state_dict()
+
+            save = {"net": state_dict, "test_accuracy": test_accuracy, "epoch": e}
+
+            temp_name = args["file_path"] + "{}_{}_{}_dense.pth".format(args["architecture"], args["dataset"],
+                                                                        args["modeltype"])
+
+            torch.save(save, temp_name)
+
+            best_accuracy = test_accuracy
+
+            del unwraped_model
+
     total_time = time.time() - begining
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
@@ -503,6 +655,7 @@ def main():
     hours_float = total_time / 3600
     decimal_part = hours_float - total_time // 3600
     minutes = decimal_part * 60
+
     print("Total execution time: {}h and {} minutes".format(total_time // 3600, minutes))
 
 
@@ -537,5 +690,32 @@ def test_num_workers():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=True)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=False)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=False)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
+    parser.add_argument('-ngpu', '--number_gpus', type=int, default=4, help='Number of workers', required=False)
+    parser.add_argument('-acc', '--accelerate', type=bool, default=False,
+                        help='Use Accelerate package for mixed in precision and multi GPU and MPI library compatibility',
+                        required=False)
+    parser.add_argument('-fp', '--file_path', type=str, default="/nobacku/sclaam/trained_models/",
+                        help='Location where the models is going to be saved', required=False)
+
+    args = vars(parser.parse_args())
+    # LeMain(args)
+    main(args)
     # test_num_workers()
