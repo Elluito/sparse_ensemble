@@ -2866,8 +2866,12 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = ResNet18(num_classes=100)
                 if cfg.dataset=="mnist":
                     net = ResNet18()
+                if cfg.dataset == "imagenet":
+                    net = ResNet18(num_classes=1000)
+
 
                 load_model(net, cfg.solution)
+
             if "hub"== cfg.model_type:
                 if cfg.dataset== "cifar100":
                     from torchvision import resnet18
