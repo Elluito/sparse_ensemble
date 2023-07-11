@@ -6183,8 +6183,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
+
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+
     pruned_original = copy.deepcopy(net)
+
     names,weights = zip(*get_layer_dict(net))
     number_of_layers = len(names)
     sigma_per_layer = dict(zip(names,[cfg.sigma]*number_of_layers))
@@ -6198,8 +6201,12 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
 
     remove_reparametrization(pruned_original,exclude_layer_list=cfg.exclude_layers)
     print("pruned_performance of pruned original")
+    t0 = time.time()
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    pop.append(pruned_original)
+    t1 = time.time()
+    print("Time for test: {}".format(t1-t0))
+    del pruned_original
+    # pop.append(pruned_original)
     # pruned_performance.append(pruned_original_performance)
     labels = []
     # stochastic_dense_performances.append(original_performance)
@@ -6207,7 +6214,10 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         current_model = get_noisy_sample_sigma_per_layer(net,cfg,sigma_per_layer=sigma_per_layer)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         print("Stochastic dense performance")
+        t0 = time.time()
         StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        t1 = time.time()
+        print("Time for test: {}".format(t1-t0))
         # Dense stochastic performance
         stochastic_dense_performances.append(StoDense_performance)
 
@@ -6223,8 +6233,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+
+        print("Time for test: {}".format(t1-t0))
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+        del current_model
 
     # len(pruned performance)-1 because the first one is the pruned original
     labels.extend(["stochastic pruned"] * (len(pruned_performance)))
@@ -7999,15 +8012,17 @@ if __name__ == '__main__':
     #     "set":"test"
     # })
     sigmas_ = [0.001,0.003,0.005]
-    pruning_rates_ = [0.6,0.7,0.8]
+    pruning_rates_ = [0.5,0.6,0.7,0.8]
     pruners_ =["global","lamp"]
     for s in  sigmas_:
         for pr in pruning_rates_:
             for p in pruners_:
                 cfg.sigma = s
-                cfg.pruning_rate= pr
+                cfg.amount = pr
                 cfg.pruner = p
+                print(omegaconf.OmegaConf.to_yaml(cfg))
                 stochastic_pruning_against_deterministic_pruning(cfg,name="")
+
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
 
