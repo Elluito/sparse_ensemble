@@ -25,6 +25,7 @@ module add anaconda
 module add cuda/11.1.1
 conda activate work
 which python
+unset GOMP_CPU_AFFINITY
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
 python main.py #&& python main.py && python main.py

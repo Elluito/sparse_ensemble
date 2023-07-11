@@ -375,7 +375,7 @@ def main(args):
 
     # args = vars(parser.parse_args())
     bigining_of_time = time.time()
-    args = {"accelerate": True, 'num_workers': 10}
+    # args = {"accelerate": True, 'num_workers': 10}
 
     solution = ""
     exclude_layers = None
