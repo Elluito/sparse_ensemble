@@ -7983,7 +7983,7 @@ if __name__ == '__main__':
         "amount": 0.9 , # For resnet18
         "batch_size": 128,
         # "batch_size": 128,
-        "num_workers": 4,
+        "num_workers": 18,
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "use_wandb": True
