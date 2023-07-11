@@ -7918,6 +7918,7 @@ def compare_architecture_distributions(arc1="",arc2=""):
 #TODO: Implement this function
 def continued_fined_tuning_imagenet(cfg):
     pass
+
 if __name__ == '__main__':
 
 
@@ -7965,8 +7966,8 @@ if __name__ == '__main__':
         # "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "global",
-        "model_type": "alternative",
-        # "model_type": "hub",
+        # "model_type": "alternative",
+        "model_type": "hub",
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
