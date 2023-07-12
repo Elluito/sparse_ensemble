@@ -6327,11 +6327,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     #
     # ax2.set_yticks(ticks=epsilon_ticks, minor=False)
     # ax2.set_yticklabels(epsilon_ticks)
-    # ax2.set_ylabel(r"Accuracy degradation-$\epsilon$ ", fontsize=20)
+    # ax2.set_ylabel(r"Accuracy degradation-$\epsilon$ ", fontsize=15)
     # ax2.spines['right'].set_color('red')
     # ax2.tick_params(axis="y", colors="red")
     # ax2.yaxis.label.set_color('red')
-    ax2.invert_yaxis()
+    # ax2.invert_yaxis()
 
     plt.tight_layout()
     plt.savefig(f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
