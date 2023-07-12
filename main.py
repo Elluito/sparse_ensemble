@@ -1892,7 +1892,7 @@ def get_datasets(cfg:omegaconf.DictConfig):
         ]))
 
         big_test , small_test = torch.utils.data.random_split(whole_train_dataset, [len(full_test_dataset)-10000, 10000])
-        
+
         # This code is to transform it into the "fast" format of ffcv
 
         # my_dataset = val_dataset
@@ -1922,15 +1922,21 @@ def get_datasets(cfg:omegaconf.DictConfig):
         val_loader = torch.utils.data.DataLoader(
             val_dataset, batch_size=cfg.batch_size, shuffle=True,
             num_workers=cfg.num_workers, pin_memory=True, sampler=None)
-        test_loader = torch.utils.data.DataLoader(
-            torchvision.datasets.ImageFolder(testdir, transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                normalize,
-            ])),
-            batch_size=cfg.batch_size, shuffle=False,
-            num_workers=cfg.num_workers, pin_memory=True)
+        if cfg.length_test=="small":
+            test_loader = torch.utils.data.DataLoader(
+            small_test  ,
+                batch_size=cfg.batch_size, shuffle=False,
+                num_workers=cfg.num_workers, pin_memory=True)
+        if cfg.length_test=="big":
+            test_loader = torch.utils.data.DataLoader(
+                big_test,
+                batch_size=cfg.batch_size, shuffle=False,
+                num_workers=cfg.num_workers, pin_memory=True)
+        if cfg.length_test=="whole":
+            test_loader = torch.utils.data.DataLoader(
+                big_test,
+                batch_size=cfg.batch_size, shuffle=False,
+                num_workers=cfg.num_workers, pin_memory=True)
 
         return train_loader,val_loader,test_loader
 
@@ -7980,6 +7986,7 @@ if __name__ == '__main__':
         # "dataset": "mnist",
         # "dataset": "cifar10",
         "dataset": "imagenet",
+        "length_test": "small",
         "architecture": "resnet18",
         # "architecture": "VGG19",
         "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
