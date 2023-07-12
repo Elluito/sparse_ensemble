@@ -8035,8 +8035,8 @@ if __name__ == '__main__':
     #     "dataset": "imagenet",
     #     "set":"test"
     # })
-    sigmas_ = [0.001,0.003,0.005]
-    pruning_rates_ = [0.5,0.6,0.7,0.8]
+    sigmas_ = [ 0.001,0.003,0.005 ]
+    pruning_rates_ = [ 0.63,0.65,0.67,0.74 ]
     pruners_ =["global","lamp"]
     for s in  sigmas_:
         for pr in pruning_rates_:
@@ -8044,7 +8044,8 @@ if __name__ == '__main__':
                 cfg.sigma = s
                 cfg.amount = pr
                 cfg.pruner = p
-                print(omegaconf.OmegaConf.to_yaml(cfg))
+                t = {"sigma":s,"amount":pr,"pruner":p}
+                print(t)
                 stochastic_pruning_against_deterministic_pruning(cfg,name="")
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
