@@ -9,7 +9,7 @@
 #$ -l h_rt=10:00:00
 
 # ASk for some GPU
-#$ -l coproc_v100=1
+#$ -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
@@ -29,5 +29,5 @@ unset GOMP_CPU_AFFINITY
 #nvcc --version
 #~python $1 $2 $3 $4 $5 $6
 #&& python main.py && python main.py
- CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 python main.py
+CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py
 
