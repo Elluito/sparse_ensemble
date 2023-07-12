@@ -13,6 +13,8 @@ def get_threshold_from_vector(vector, pruning_rate: float):
     index_of_threshold = math.floor(total * pruning_rate)
     threshold = vector[sorted_index[index_of_threshold]]
     return threshold
+
+
 def weight_pruner_loader(pruner_string):
     """
     Gives you the pruning methods: LAMP, Glob, Unif, Unif+, and ERK
@@ -59,11 +61,11 @@ def prune_weights_global(model, amount):
     prune.global_unstructured(parameters_to_prune, pruning_method=prune.L1Unstructured, amount=amount)
 
 
-def prune_weights_lamp(model, amount, exclude_layers: list = [], return_amounts=False, is_stochastic: bool = False,noise_type="gaussian",noise_amplitude=0.001):
+def prune_weights_lamp(model, amount, exclude_layers: list = [], return_amounts=False, is_stochastic: bool = False,
+                       noise_type="gaussian", noise_amplitude=0.001):
     assert amount <= 1
-    amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers, is_stochastic=is_stochastic,noise_type=noise_type,noise_amplitude=noise_amplitude)
-
-
+    amounts = _compute_lamp_amounts(model, amount, exclude_layers=exclude_layers, is_stochastic=is_stochastic,
+                                    noise_type=noise_type, noise_amplitude=noise_amplitude)
 
     prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
     if return_amounts:
@@ -83,7 +85,7 @@ def prune_weights_unifplus(model, amount):
     prune_weights_l1predefined(model, amounts)
 
 
-def prune_weights_erk(model, amount, exclude_layers=[],return_amounts=False):
+def prune_weights_erk(model, amount, exclude_layers=[], return_amounts=False):
     assert amount <= 1
     amounts = _compute_erk_amounts(model, amount, exclude_layers=exclude_layers)
     prune_weights_l1predefined(model, amounts, exclude_layers=exclude_layers)
@@ -194,7 +196,8 @@ def _amounts_from_eps(unmaskeds, ers_dict, amount):
     return dict(zip(names, amounts))
 
 
-def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = False,noise_type="gaussian",noise_amplitude=0.001):
+def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = False, noise_type="gaussian",
+                          noise_amplitude=0.001):
     """
     Compute normalization schemes. LUIS: I adapted this code, so I can prune only the layers I want to. This is done
     with a dictionary. the original implementation uses all weights and only lists.
@@ -209,24 +212,23 @@ def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = F
                                                                                                         exclude_layers).items()])
 
     concat_scores = torch.cat(tuple(flattened_scores_dict.values()), dim=0)
-    quantiles = torch.quantile(concat_scores, torch.tensor([0.25, 0.5, 0.75]))
+    quantiles = torch.quantile(concat_scores, torch.tensor([0.25, 0.5, 0.75], concat_scores.device))
 
     print("Quantiles for the LAMP scores {}".format(quantiles))
 
-    threshold = get_threshold_from_vector(vector=concat_scores , pruning_rate=amount)
+    threshold = get_threshold_from_vector(vector=concat_scores, pruning_rate=amount)
 
     print("The threshold for the pruning rate of {} : {}".format(amount, threshold))
-
 
     if is_stochastic:
         if noise_type == "gaussian":
             noise = torch.normal(mean=torch.zeros_like(concat_scores), std=noise_amplitude)
-            concat_scores = concat_scores+noise
+            concat_scores = concat_scores + noise
             concat_scores = torch.abs(concat_scores)
-            concat_scores = concat_scores/torch.max(concat_scores)
+            concat_scores = concat_scores / torch.max(concat_scores)
         elif noise_type == "geogaussian":
             noise = torch.normal(mean=torch.ones_like(concat_scores), std=noise_amplitude)
-            concat_scores = concat_scores*noise
+            concat_scores = concat_scores * noise
     topks, _ = torch.topk(concat_scores, num_surv)
     threshold = topks[-1]
 
