@@ -1,0 +1,33 @@
+#!/bin/bash -l
+# Submission script for serial Python job
+# Luis Alfredo Avendano  2021-10-22
+
+# Run from the current directory and with current environment
+#$ -cwd -V
+
+# Ask for some time (hh:mm:ss max of 48:00:00)
+#$ -l h_rt=10:00:00
+
+# ASk for some GPU
+#$ -l coproc_v100=1
+
+# Ask for some memory (by default, 1G, without a request)
+#$ -l h_vmem=16G
+# -pe smp 3
+# Send emails when job starts and ends
+#$ -m e
+#export OMP_NUM_THREADS=3
+#export MKL_NUM_THREADS=3
+#export OPENBLAS_NUM_THREADS=1
+# Now run the job 
+#module load intel openmpi
+module add anaconda
+module add cuda/11.1.1
+conda activate work
+which python
+unset GOMP_CPU_AFFINITY
+#nvcc --version
+#~python $1 $2 $3 $4 $5 $6
+#&& python main.py && python main.py
+CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py
+
