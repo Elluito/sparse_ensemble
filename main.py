@@ -1884,6 +1884,15 @@ def get_datasets(cfg:omegaconf.DictConfig):
 
         train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
+        full_test_dataset = torchvision.datasets.ImageFolder(testdir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+
+        big_test , small_test = torch.utils.data.random_split(whole_train_dataset, [len(full_test_dataset)-10000, 10000])
+        
         # This code is to transform it into the "fast" format of ffcv
 
         # my_dataset = val_dataset

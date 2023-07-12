@@ -197,7 +197,7 @@ def _amounts_from_eps(unmaskeds, ers_dict, amount):
 
 
 def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = False, noise_type="gaussian",
-                          noise_amplitude=0.001):
+                          noise_amplitude=0.001, quantiles=False):
     """
     Compute normalization schemes. LUIS: I adapted this code, so I can prune only the layers I want to. This is done
     with a dictionary. the original implementation uses all weights and only lists.
@@ -212,9 +212,9 @@ def _compute_lamp_amounts(model, amount, exclude_layers, is_stochastic: bool = F
                                                                                                         exclude_layers).items()])
 
     concat_scores = torch.cat(tuple(flattened_scores_dict.values()), dim=0)
-    quantiles = torch.quantile(concat_scores, torch.tensor([0.25, 0.5, 0.75], concat_scores.device))
-
-    print("Quantiles for the LAMP scores {}".format(quantiles))
+    if quantiles:
+        quantiles = torch.quantile(concat_scores, torch.tensor([0.25, 0.5, 0.75]).to(concat_scores.device))
+        print("Quantiles for the LAMP scores {}".format(quantiles))
 
     threshold = get_threshold_from_vector(vector=concat_scores, pruning_rate=amount)
 
