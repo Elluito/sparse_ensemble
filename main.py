@@ -1,7 +1,5 @@
 import os
-
 import accelerate
-
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -1891,7 +1889,7 @@ def get_datasets(cfg:omegaconf.DictConfig):
             normalize,
         ]))
 
-        big_test , small_test = torch.utils.data.random_split(whole_train_dataset, [len(full_test_dataset)-10000, 10000])
+        big_test , small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset)-10000, 10000])
 
         # This code is to transform it into the "fast" format of ffcv
 
@@ -1934,7 +1932,7 @@ def get_datasets(cfg:omegaconf.DictConfig):
                 num_workers=cfg.num_workers, pin_memory=True)
         if cfg.length_test=="whole":
             test_loader = torch.utils.data.DataLoader(
-                big_test,
+                full_test_dataset,
                 batch_size=cfg.batch_size, shuffle=False,
                 num_workers=cfg.num_workers, pin_memory=True)
 
