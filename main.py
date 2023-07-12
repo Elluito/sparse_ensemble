@@ -1,4 +1,7 @@
 import os
+
+import accelerate
+
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -6183,9 +6186,13 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
+    accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    evaluation_set , net = accelerator.prepare(evaluation_set,net)
 
-    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-
+    t0 = time.time()
+    original_performance = test_with_accelerator(net,evaluation_set, verbose=1,accelerator=accelerator)
+    t1 = time.time()
+    print("Time for test: {}".format(t1-t0))
     pruned_original = copy.deepcopy(net)
 
     names,weights = zip(*get_layer_dict(net))
@@ -6205,6 +6212,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     t1 = time.time()
     print("Time for test: {}".format(t1-t0))
+    return
     del pruned_original
     # pop.append(pruned_original)
     # pruned_performance.append(pruned_original_performance)
@@ -6232,12 +6240,14 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
+        torch.cuda.empty_cache()
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
 
         print("Time for test: {}".format(t1-t0))
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         del current_model
+        torch.cuda.empty_cache()
 
     # len(pruned performance)-1 because the first one is the pruned original
     labels.extend(["stochastic pruned"] * (len(pruned_performance)))
@@ -7959,14 +7969,14 @@ if __name__ == '__main__':
         "epochs": 100,
         "short_epochs": 10,
         # "dataset": "mnist",
-        # "dataset": "cifar10",
-        "dataset": "imagenet",
+        "dataset": "cifar10",
+        # "dataset": "imagenet",
         "architecture": "resnet18",
         # "architecture": "VGG19",
-        "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
+        # "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
         # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-        # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+        "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
@@ -7979,8 +7989,8 @@ if __name__ == '__main__':
         # "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "global",
-        # "model_type": "alternative",
-        "model_type": "hub",
+        "model_type": "alternative",
+        # "model_type": "hub",
         "fine_tune_exclude_layers": True,
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
@@ -7994,7 +8004,7 @@ if __name__ == '__main__':
         "noise_after_pruning":0,
         # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
         "amount": 0.9 , # For resnet18
-        "batch_size": 128,
+        "batch_size": 32,
         # "batch_size": 128,
         "num_workers": 18,
         "save_model_path": "stochastic_pruning_models/",
