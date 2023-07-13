@@ -6256,6 +6256,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         print("Stocastic pruning performance")
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
         print("Time for test: {}".format(t1-t0))
+
         return
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
