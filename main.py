@@ -6233,13 +6233,13 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
     for n in range(N):
         current_model = get_noisy_sample_sigma_per_layer(net,cfg,sigma_per_layer=sigma_per_layer)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        print("Stochastic dense performance")
-        t0 = time.time()
-        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        t1 = time.time()
-        print("Time for test: {}".format(t1-t0))
+        # print("Stochastic dense performance")
+        # t0 = time.time()
+        # StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        # t1 = time.time()
+        # print("Time for test: {}".format(t1-t0))
         # Dense stochastic performance
-        stochastic_dense_performances.append(StoDense_performance)
+        # stochastic_dense_performances.append(StoDense_performance)
 
         if cfg.pruner == "global":
             prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
@@ -6258,7 +6258,7 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
         print("Time for test: {}".format(t1-t0))
 
         pruned_performance.append(stochastic_pruned_performance)
-        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+        # stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         del current_model
         torch.cuda.empty_cache()
 
@@ -8062,24 +8062,24 @@ if __name__ == '__main__':
         "epochs": 100,
         "short_epochs": 10,
         # "dataset": "mnist",
-        # "dataset": "cifar10",
-        "dataset": "imagenet",
+        "dataset": "cifar10",
+        # "dataset": "imagenet",
         "length_test": "small",
         "architecture": "resnet18",
         # "architecture": "VGG19",
-        "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
+        # "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
         # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
         # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "solution": "cifar10_resnet20",
-        "exclude_layers": ["conv1", "fc"],
+        # "exclude_layers": ["conv1", "fc"],
         # "exclude_layers": [],
-        # "exclude_layers": ["conv1", "linear"],
+        "exclude_layers": ["conv1", "linear"],
         # "exclude_layers": ["features.0", "classifier"],
        "noise": "gaussian",
        "pruner": "global",
@@ -8150,6 +8150,7 @@ if __name__ == '__main__':
                     print("Best delta so far".format(best_delta))
                     print("Parameters: {}".format(t))
                     print("Delta {} , Deterministic Performance {} , Quantil 50 performance {}".format(delta,deterministic_performance,quantil_50_performance))
+
     df.to_csv("imagenet_pr_sigma_combination.csv")
 
 
