@@ -8015,11 +8015,11 @@ if __name__ == '__main__':
         "full_fine_tune": False,
         "use_stochastic": True,
         # "sigma": 0.0021419609859022197,
-        "sigma": 0.005,
+        "sigma": 0.001,
         "noise_after_pruning":0,
         # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-        "amount": 0.9 , # For resnet18
-        "batch_size": 32,
+        "amount": 0.75 , # For resnet18
+        "batch_size": 16,
         # "batch_size": 128,
         "num_workers": 18,
         "save_model_path": "stochastic_pruning_models/",
@@ -8036,18 +8036,19 @@ if __name__ == '__main__':
     #     "dataset": "imagenet",
     #     "set":"test"
     # })
-    sigmas_ = [ 0.001,0.003,0.005 ]
-    pruning_rates_ = [ 0.63,0.65,0.67,0.74 ]
-    pruners_ =["global","lamp"]
-    for s in  sigmas_:
-        for pr in pruning_rates_:
-            for p in pruners_:
-                cfg.sigma = s
-                cfg.amount = pr
-                cfg.pruner = p
-                t = {"sigma":s,"amount":pr,"pruner":p}
-                print(t)
-                stochastic_pruning_against_deterministic_pruning(cfg,name="")
+    sigmas_ = [ 0.001]
+    pruning_rates_ = [0.75]
+    # pruners_ =["global","lamp"]
+    # for s in  sigmas_:
+    #     for pr in pruning_rates_:
+    #         for p in pruners_:
+    #             cfg.sigma = s
+    #             cfg.amount = pr
+    #             cfg.pruner = p
+    #             t = {"sigma":s,"amount":pr,"pruner":p}
+    #             print(t)
+
+    stochastic_pruning_against_deterministic_pruning(cfg,name="")
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
