@@ -6189,6 +6189,86 @@ def test_sigma_experiment_selector():
 
 ############################### Plot of stochastic pruning against deterministic pruning ###############################
 
+def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaconf.DictConfig, eval_set: str = "test",name:str=""):
+
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    evaluation_set , net = accelerator.prepare(evaluation_set,net)
+
+    t0 = time.time()
+    original_performance = test_with_accelerator(net,evaluation_set, verbose=1,accelerator=accelerator)
+    t1 = time.time()
+    print("Time for test: {}".format(t1-t0))
+    pruned_original = copy.deepcopy(net)
+
+    names,weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names,[cfg.sigma]*number_of_layers))
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_original,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+
+    remove_reparametrization(pruned_original,exclude_layer_list=cfg.exclude_layers)
+    print("pruned_performance of pruned original")
+    t0 = time.time()
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    t1 = time.time()
+    print("Time for test: {}".format(t1-t0))
+    del pruned_original
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+    labels = []
+    # stochastic_dense_performances.append(original_performance)
+    for n in range(N):
+        current_model = get_noisy_sample_sigma_per_layer(net,cfg,sigma_per_layer=sigma_per_layer)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        t0 = time.time()
+        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        t1 = time.time()
+        print("Time for test: {}".format(t1-t0))
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+
+        if cfg.pruner == "global":
+            prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model,cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
+        torch.cuda.empty_cache()
+        print("Stocastic pruning performance")
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        print("Time for test: {}".format(t1-t0))
+
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+        del current_model
+        torch.cuda.empty_cache()
+
+    quantil_50 = np.quantile(pruned_performance,50)
+
+
+    quantil_50_delta = (quantil_50 - pruned_original_performance)
+
+    return quantil_50_delta,pruned_original_performance,quantil_50
+
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test",name:str=""):
 
     use_cuda = torch.cuda.is_available()
@@ -6257,7 +6337,6 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
         print("Time for test: {}".format(t1-t0))
 
-        return
         pruned_performance.append(stochastic_pruned_performance)
         stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         del current_model
@@ -8036,19 +8115,44 @@ if __name__ == '__main__':
     #     "dataset": "imagenet",
     #     "set":"test"
     # })
-    sigmas_ = [ 0.001]
-    pruning_rates_ = [0.75]
-    # pruners_ =["global","lamp"]
-    # for s in  sigmas_:
-    #     for pr in pruning_rates_:
-    #         for p in pruners_:
-    #             cfg.sigma = s
-    #             cfg.amount = pr
-    #             cfg.pruner = p
-    #             t = {"sigma":s,"amount":pr,"pruner":p}
-    #             print(t)
+    sigmas_ = [ 0.0001,0.001,0.003]
+    pruning_rates_ = [0.55,0.65,0.7,0.75]
+    pruners_ =["global","lamp"]
 
-    stochastic_pruning_against_deterministic_pruning(cfg,name="")
+    best_delta = -float("Inf")
+    best_params = None
+    df = pd.DataFrame(log_dict)
+    # df.to_csv(filepath, mode="a", header=False, index=False)
+    df = None
+    for s in  sigmas_:
+        for pr in pruning_rates_:
+            for p in pruners_:
+                cfg.sigma = s
+                cfg.amount = pr
+                cfg.pruner = p
+                t = {"sigma":s,"amount":pr,"pruner":p}
+                print(t)
+                delta , deterministic_performance , quantil_50_performance = stochastic_pruning_against_deterministic_pruning_mean_diference(cfg,name="")
+                torch.cuda.empty_cache()
+
+                t.update({"delta":delta,"Determinstic performance":deterministic_performance,"quantil_50_performance":quantil_50_performance})
+
+                if df is None:
+                    df = pd.DataFrame(t)
+                else:
+                    temp_df = pd.DataFrame(t)
+                    df = pd.concat((df,temp_df),ignore_index=True)
+
+                if delta > best_delta:
+
+                    best_params = t
+                    best_delta = delta
+                    print("Best delta so far".format(best_delta))
+                    print("Parameters: {}".format(t))
+                    print("Delta {} , Deterministic Performance {} , Quantil 50 performance {}".format(delta,deterministic_performance,quantil_50_performance))
+    df.to_csv("imagenet_pr_sigma_combination.csv")
+
+
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
