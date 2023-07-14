@@ -6139,7 +6139,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "solution":"",
             "batch_size": 512,
             # "batch_size": 128,
-            "num_workers": 4,
+            "num_workers": 8,
         })
         create_ensemble_dataframe(cfg2,sigma_values, architecture_values, pruning_rate_values, dataset_values)
     if number_experiment==16:
@@ -6188,9 +6188,9 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "noise_after_pruning":0,
             # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
             "amount": 0.75 , # For resnet18
-            "batch_size": 16,
+            "batch_size": 128,
             # "batch_size": 128,
-            "num_workers": 18,
+            "num_workers": 4,
             "save_model_path": "stochastic_pruning_models/",
             "save_data_path": "stochastic_pruning_data/",
             "use_wandb": True
@@ -7193,6 +7193,7 @@ def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,tor
     batch_prediction = model(data)
     return batch_prediction
 
+# def save_ensemble_predictions():
 def ensemble_predictions(prefix:str,cfg):
 
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
@@ -7334,8 +7335,8 @@ def ensemble_predictions(prefix:str,cfg):
         t0 = time.time()
         for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
             #Load the individuals
-            print("Individual:{}".format(individual))
-            print("Contents of the weight folder")
+            # print("Individual:{}".format(individual))
+            # print("Contents of the weight folder")
             p = Path(individual).glob('**/*')
             files = [x for x in p if x.is_file()]
             print("{}".format(files))
@@ -7411,6 +7412,7 @@ def ensemble_predictions(prefix:str,cfg):
             full_voting_mean_accuracy = full_voting_mean_accuracy + (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
             counter_for_mean_voting += 1
 
+    assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
     lamp_results = {"voting": full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
     print(cfg)
     print(lamp_results)
