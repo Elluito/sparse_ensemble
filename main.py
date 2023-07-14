@@ -2929,7 +2929,12 @@ def get_model(cfg: omegaconf.DictConfig):
                 return net
             if "alternative" == cfg.model_type:
                 from alternate_models.vgg import VGG
-                net = VGG(cfg.architecture)
+                if cfg.dataset== "cifar100":
+                    net = VGG(cfg.architecture,num_classes=100)
+                if cfg.dataset== "cifar10":
+                    net = VGG(cfg.architecture)
+                if cfg.dataset =="imagenet":
+                    net = VGG(cfg.architecture,num_classes=1000)
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
