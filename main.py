@@ -6123,7 +6123,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 14:
         fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg)
     if number_experiment== 15:
-        print("Began experimetn 15")
+        print("Began experiment 15")
         sigma_values = [0.001,0.003,0.005]
         pruning_rate_values = [0.8,0.85,0.9,0.95]
         architecture_values = ["resnet18","resnet50","VGG19"]
@@ -6222,6 +6222,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         le_pruners = [None]*(len(sigmas_)*len(pruning_rates_)*len(pruners_))
 
         evaluation_set = select_eval_set(cfg2,"test")
+        print("Loaded the dataset {}! ".format(cfg2.dataset))
         i = 0
         for s in  sigmas_:
             for pr in pruning_rates_:
