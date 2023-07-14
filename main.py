@@ -6141,6 +6141,122 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "num_workers": 4,
         })
         create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+    if number_experiment==16:
+        solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
+        exclude_layers = ["conv1", "fc"]
+        cfg = omegaconf.DictConfig({
+            "population": 5,
+            "generations": 10,
+            "epochs": 100,
+            "short_epochs": 10,
+            # "dataset": "mnist",
+            # "dataset": "cifar10",
+            "dataset": "imagenet",
+            "length_test": "small",
+            "architecture": "resnet18",
+            # "architecture": "VGG19",
+            "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
+            # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+            # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
+            # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+            # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+            # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+            # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+            #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+            # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+            # "solution": "cifar10_resnet20",
+            "exclude_layers": ["conv1", "fc"],
+            # "exclude_layers": [],
+            # "exclude_layers": ["conv1", "linear"],
+            # "exclude_layers": ["features.0", "classifier"],
+            "noise": "gaussian",
+            "pruner": "global",
+            # "model_type": "alternative",
+            "model_type": "hub",
+            "fine_tune_exclude_layers": True,
+            "fine_tune_non_zero_weights": True,
+            "sampler": "tpe",
+            "flop_limit": 0,
+            "one_batch": True,
+            "measure_gradient_flow":True,
+            "full_fine_tune": False,
+            "use_stochastic": True,
+            # "sigma": 0.0021419609859022197,
+            "sigma": 0.001,
+            "noise_after_pruning":0,
+            # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
+            "amount": 0.75 , # For resnet18
+            "batch_size": 16,
+            # "batch_size": 128,
+            "num_workers": 18,
+            "save_model_path": "stochastic_pruning_models/",
+            "save_data_path": "stochastic_pruning_data/",
+            "use_wandb": True
+        })
+
+        ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
+        # cfg = omegaconf.DictConfig({
+        #     "sigma":0.001,
+        #     "amount":0.9,
+        #     "architecture":"resnet18",
+        #     "model_type": "hub",
+        #     "dataset": "imagenet",
+        #     "set":"test"
+        # })
+        sigmas_ = [0.001,0.003]
+        pruning_rates_ = [0.55,0.65,0.7,0.75]
+        pruners_ =["global","lamp"]
+
+        best_delta = -float("Inf")
+        best_params = None
+        # df.to_csv(filepath, mode="a", header=False, index=False)
+        df = None
+        le_deltas = np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+        le_deterministic_performances = np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+        le_quantil_50_performances =  np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+
+        le_sigmas = np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+        le_pruning_rates = np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+        le_pruners = [None]*(len(sigmas_)*len(pruning_rates_)*len(pruners_))
+
+        evaluation_set = select_eval_set(cfg,"test")
+        i = 0
+        for s in  sigmas_:
+            for pr in pruning_rates_:
+                for p in pruners_:
+                    cfg.sigma = s
+                    cfg.amount = pr
+                    cfg.pruner = p
+                    t = {"sigma":s,"amount":pr,"pruner":p}
+                    print(t)
+                    delta , deterministic_performance , quantil_50_performance = stochastic_pruning_against_deterministic_pruning_mean_diference(cfg,evaluation_set,name="")
+                    torch.cuda.empty_cache()
+                    le_deltas[i] = delta
+                    le_deterministic_performances[i] = deterministic_performance
+                    le_quantil_50_performances[i] = quantil_50_performance
+                    le_sigmas[i] = s
+                    le_pruners[i] = p
+                    le_pruning_rates[i] = pr
+                    i+=1
+
+                    t.update({"delta":[delta],"Determinstic performance":[deterministic_performance],"quantil_50_performance":[quantil_50_performance],"Population":[cfg.population]})
+
+
+                    if delta > best_delta:
+
+                        best_params = t
+                        best_delta = delta
+                        print("Best delta so far {}".format(best_delta))
+                        print("Parameters: {}".format(t))
+                        print("Delta {} , Deterministic Performance {} , Quantil 50 performance {}".format(delta,deterministic_performance,quantil_50_performance))
+
+        print("Best delta is {}".format(best_delta))
+        print("For params {}".format(best_params))
+        dict ={"sigma":le_sigmas,"pruning_rate":le_pruning_rates,"pruner":le_pruners,"delta":le_deltas,"Determinstic performance":le_deterministic_performances,"quantil_50_performance":le_quantil_50_performances,"Population":[cfg.population]*len(le_quantil_50_performances)}
+        df = pd.DataFrame(dict)
+
+        df.to_csv("{}_pr_sigma_combination_pop_{}.csv".format(cfg.dataset,cfg.population),index=False)
+
 
 
     # if number_experiment == 13:
@@ -6189,11 +6305,10 @@ def test_sigma_experiment_selector():
 
 ############################### Plot of stochastic pruning against deterministic pruning ###############################
 
-def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaconf.DictConfig, eval_set: str = "test",name:str=""):
+def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaconf.DictConfig, evaluation_set:torch.utils.data.DataLoader,name:str=""):
 
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
-    evaluation_set = select_eval_set(cfg, eval_set)
     N = cfg.population
     pop = []
     pruned_performance = []
@@ -6202,10 +6317,10 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
     accelerator = accelerate.Accelerator(mixed_precision="fp16")
     evaluation_set , net = accelerator.prepare(evaluation_set,net)
 
-    t0 = time.time()
-    original_performance = test_with_accelerator(net,evaluation_set, verbose=1,accelerator=accelerator)
-    t1 = time.time()
-    print("Time for test: {}".format(t1-t0))
+    # t0 = time.time()
+    original_performance = test_with_accelerator(net,evaluation_set, verbose=0,accelerator=accelerator)
+    # t1 = time.time()
+    # print("Time for test: {}".format(t1-t0))
     pruned_original = copy.deepcopy(net)
 
     names,weights = zip(*get_layer_dict(net))
@@ -6221,10 +6336,10 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
 
     remove_reparametrization(pruned_original,exclude_layer_list=cfg.exclude_layers)
     print("pruned_performance of pruned original")
-    t0 = time.time()
-    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    t1 = time.time()
-    print("Time for test: {}".format(t1-t0))
+    # t0 = time.time()
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=0)
+    # t1 = time.time()
+    # print("Time for test: {}".format(t1-t0))
     del pruned_original
     # pop.append(pruned_original)
     # pruned_performance.append(pruned_original_performance)
@@ -6253,16 +6368,16 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
         torch.cuda.empty_cache()
-        print("Stocastic pruning performance")
-        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        print("Time for test: {}".format(t1-t0))
+        # print("Stocastic pruning performance")
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=0)
+        # print("Time for test: {}".format(t1-t0))
 
         pruned_performance.append(stochastic_pruned_performance)
         # stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
         del current_model
         torch.cuda.empty_cache()
 
-    quantil_50 = np.quantile(pruned_performance,50)
+    quantil_50 = np.quantile(pruned_performance,0.5)
 
 
     quantil_50_delta = (quantil_50 - pruned_original_performance)
@@ -7213,6 +7328,7 @@ def ensemble_predictions(prefix:str,cfg):
         predictions_voting = None
         counter_for_mean_individuals = 2
         ind_number = 0
+        t0 = time.time()
         for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
             #Load the individuals
             print("Individual:{}".format(individual))
@@ -7265,7 +7381,8 @@ def ensemble_predictions(prefix:str,cfg):
                 print("I break the individuals for-loop")
                 break
             ind_number += 1
-
+        t1 = time.time()
+        print("Time to process one batch {}".format(t1-t0))
         # Now I'm going to actually make the predictions first by averaging and second by voting
         temp_variable = torch.mode(predictions_voting,dim=1)
         pred_voting = temp_variable.values
@@ -8054,104 +8171,6 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
-    solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
-    exclude_layers = ["conv1", "fc"]
-    cfg = omegaconf.DictConfig({
-        "population": 10,
-        "generations": 10,
-        "epochs": 100,
-        "short_epochs": 10,
-        # "dataset": "mnist",
-        "dataset": "cifar10",
-        # "dataset": "imagenet",
-        "length_test": "small",
-        "architecture": "resnet18",
-        # "architecture": "VGG19",
-        # "solution": "/nobackup/sclaam/trained_models/resnet18_imagenet.pth",
-        # "solution": "trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        # "solution" : "trained_models/cifar10/resnet50_cifar10.pth",
-        # "solution" : "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
-        # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-        "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        #  "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-        # "solution": "cifar10_resnet20",
-        # "exclude_layers": ["conv1", "fc"],
-        # "exclude_layers": [],
-        "exclude_layers": ["conv1", "linear"],
-        # "exclude_layers": ["features.0", "classifier"],
-       "noise": "gaussian",
-       "pruner": "global",
-        # "model_type": "alternative",
-        "model_type": "hub",
-        "fine_tune_exclude_layers": True,
-        "fine_tune_non_zero_weights": True,
-        "sampler": "tpe",
-        "flop_limit": 0,
-        "one_batch": True,
-        "measure_gradient_flow":True,
-        "full_fine_tune": False,
-        "use_stochastic": True,
-        # "sigma": 0.0021419609859022197,
-        "sigma": 0.001,
-        "noise_after_pruning":0,
-        # "amount": 0.944243158936, # for VGG19 to mach 0.9 pruning rate on Resnet 18
-        "amount": 0.75 , # For resnet18
-        "batch_size": 16,
-        # "batch_size": 128,
-        "num_workers": 18,
-        "save_model_path": "stochastic_pruning_models/",
-        "save_data_path": "stochastic_pruning_data/",
-        "use_wandb": True
-    })
-
-    ### Deterministic pruner vs stochastic pruner based on pruner, dataset, sigma, and pruning rate present on cfg #####
-       # cfg = omegaconf.DictConfig({
-    #     "sigma":0.001,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "model_type": "hub",
-    #     "dataset": "imagenet",
-    #     "set":"test"
-    # })
-    sigmas_ = [ 0.0001,0.001,0.003]
-    pruning_rates_ = [0.55,0.65,0.7,0.75]
-    pruners_ =["global","lamp"]
-
-    best_delta = -float("Inf")
-    best_params = None
-    df = pd.DataFrame(log_dict)
-    # df.to_csv(filepath, mode="a", header=False, index=False)
-    df = None
-    for s in  sigmas_:
-        for pr in pruning_rates_:
-            for p in pruners_:
-                cfg.sigma = s
-                cfg.amount = pr
-                cfg.pruner = p
-                t = {"sigma":s,"amount":pr,"pruner":p}
-                print(t)
-                delta , deterministic_performance , quantil_50_performance = stochastic_pruning_against_deterministic_pruning_mean_diference(cfg,name="")
-                torch.cuda.empty_cache()
-
-                t.update({"delta":delta,"Determinstic performance":deterministic_performance,"quantil_50_performance":quantil_50_performance})
-
-                if df is None:
-                    df = pd.DataFrame(t)
-                else:
-                    temp_df = pd.DataFrame(t)
-                    df = pd.concat((df,temp_df),ignore_index=True)
-
-                if delta > best_delta:
-
-                    best_params = t
-                    best_delta = delta
-                    print("Best delta so far".format(best_delta))
-                    print("Parameters: {}".format(t))
-                    print("Delta {} , Deterministic Performance {} , Quantil 50 performance {}".format(delta,deterministic_performance,quantil_50_performance))
-
-    df.to_csv("imagenet_pr_sigma_combination.csv")
 
 
 
@@ -8199,25 +8218,25 @@ if __name__ == '__main__':
     # ##############################################################################
 
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    # parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
-    #
-    #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
+
+
+    args = vars(parser.parse_args())
+    LeMain(args)
     #
 
 
