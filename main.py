@@ -6123,12 +6123,13 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 14:
         fine_tune_deterministic_pruning_ACCELERATOR_experiment(cfg)
     if number_experiment== 15:
+        print("Began experimetn 15")
         sigma_values = [0.001,0.003,0.005]
         pruning_rate_values = [0.8,0.85,0.9,0.95]
         architecture_values = ["resnet18","resnet50","VGG19"]
         dataset_values = ["cifar100" , "cifar10"]
 
-        cfg = omegaconf.DictConfig({
+        cfg2 = omegaconf.DictConfig({
             "sigma":0.001,
             "amount":0.9,
             "architecture":"resnet18",
@@ -6140,11 +6141,12 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             # "batch_size": 128,
             "num_workers": 4,
         })
-        create_ensemble_dataframe(cfg,sigma_values, architecture_values, pruning_rate_values, dataset_values)
+        create_ensemble_dataframe(cfg2,sigma_values, architecture_values, pruning_rate_values, dataset_values)
     if number_experiment==16:
+        print("Began experimetn 16")
         solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
         exclude_layers = ["conv1", "fc"]
-        cfg = omegaconf.DictConfig({
+        cfg2 = omegaconf.DictConfig({
             "population": 5,
             "generations": 10,
             "epochs": 100,
@@ -6219,17 +6221,17 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         le_pruning_rates = np.zeros(len(sigmas_)*len(pruning_rates_)*len(pruners_))
         le_pruners = [None]*(len(sigmas_)*len(pruning_rates_)*len(pruners_))
 
-        evaluation_set = select_eval_set(cfg,"test")
+        evaluation_set = select_eval_set(cfg2,"test")
         i = 0
         for s in  sigmas_:
             for pr in pruning_rates_:
                 for p in pruners_:
-                    cfg.sigma = s
-                    cfg.amount = pr
-                    cfg.pruner = p
+                    cfg2.sigma = s
+                    cfg2.amount = pr
+                    cfg2.pruner = p
                     t = {"sigma":s,"amount":pr,"pruner":p}
                     print(t)
-                    delta , deterministic_performance , quantil_50_performance = stochastic_pruning_against_deterministic_pruning_mean_diference(cfg,evaluation_set,name="")
+                    delta , deterministic_performance , quantil_50_performance = stochastic_pruning_against_deterministic_pruning_mean_diference(cfg2,evaluation_set,name="")
                     torch.cuda.empty_cache()
                     le_deltas[i] = delta
                     le_deterministic_performances[i] = deterministic_performance
@@ -6239,7 +6241,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
                     le_pruning_rates[i] = pr
                     i+=1
 
-                    t.update({"delta":[delta],"Determinstic performance":[deterministic_performance],"quantil_50_performance":[quantil_50_performance],"Population":[cfg.population]})
+                    t.update({"delta":[delta],"Determinstic performance":[deterministic_performance],"quantil_50_performance":[quantil_50_performance],"Population":[cfg2.population]})
 
 
                     if delta > best_delta:
@@ -6255,7 +6257,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         dict ={"sigma":le_sigmas,"pruning_rate":le_pruning_rates,"pruner":le_pruners,"delta":le_deltas,"Determinstic performance":le_deterministic_performances,"quantil_50_performance":le_quantil_50_performances,"Population":[cfg.population]*len(le_quantil_50_performances)}
         df = pd.DataFrame(dict)
 
-        df.to_csv("{}_pr_sigma_combination_pop_{}.csv".format(cfg.dataset,cfg.population),index=False)
+        df.to_csv("{}_pr_sigma_combination_pop_{}.csv".format(cfg2.dataset,cfg2.population),index=False)
 
 
 
