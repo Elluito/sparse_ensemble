@@ -27,7 +27,7 @@ conda activate work
 which python
 unset GOMP_CPU_AFFINITY
 #nvcc --version
-#~python $1 $2 $3 $4 $5 $6
+python main.py $1 $2 $3 $4 $5 $6
 #&& python main.py && python main.py
-CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py
+#CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py
 
