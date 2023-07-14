@@ -6317,11 +6317,12 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
-    accelerator = accelerate.Accelerator(mixed_precision="fp16")
-    evaluation_set , net = accelerator.prepare(evaluation_set,net)
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set , net = accelerator.prepare(evaluation_set,net)
 
     # t0 = time.time()
-    original_performance = test_with_accelerator(net,evaluation_set, verbose=0,accelerator=accelerator)
+    # original_performance = test_with_accelerator(net,evaluation_set, verbose=0,accelerator=accelerator)
+    pruned_original_performance = test(net, use_cuda, evaluation_set, verbose=0)
     # t1 = time.time()
     # print("Time for test: {}".format(t1-t0))
     pruned_original = copy.deepcopy(net)
