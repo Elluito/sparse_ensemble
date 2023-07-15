@@ -6144,7 +6144,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "solution":"",
             "batch_size": 512,
             # "batch_size": 128,
-            "num_workers": 8,
+            "num_workers": 4,
         })
         create_ensemble_dataframe(cfg2,sigma_values, architecture_values, pruning_rate_values, dataset_values)
     if number_experiment==16:
