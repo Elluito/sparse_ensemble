@@ -7439,6 +7439,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
     pruner_list = []
     arch_list = []
     dataset_list =[]
+    pr_list = []
 
     #Loop over all values of everything
     for dataset in dataset_values:
@@ -7492,7 +7493,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     accuracy.append(global_ensemble_results["mean"])
                     arch_list.append(arch)
                     dataset_list.append(dataset)
-                    pr_list.append(cfg.amount)
+                    pr_list.append(pruning_rate)
                     # For LAMP
                     accuracy.append(lamp_ensemble_results["voting"])
                     stage.append("Voting")
@@ -7501,7 +7502,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     accuracy.append(lamp_ensemble_results["mean"])
                     arch_list.append(arch)
                     dataset_list.append(dataset)
-                    pr_list.append(cfg.amount)
+                    pr_list.append(pruning_rate)
 
 
     ensemble_dataframe = pd.DataFrame(
