@@ -6144,11 +6144,11 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
             "solution":"",
             "batch_size": 512,
             # "batch_size": 128,
-            "num_workers": 4,
+            "num_workers": 10,
         })
         create_ensemble_dataframe(cfg2,sigma_values, architecture_values, pruning_rate_values, dataset_values)
     if number_experiment==16:
-        print("Began experimetn 16")
+        print("Began experiment 16")
         solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
         exclude_layers = ["conv1", "fc"]
         cfg2 = omegaconf.DictConfig({
@@ -7317,6 +7317,10 @@ def ensemble_predictions(prefix:str,cfg):
     print("Global results")
     print(global_results)
     # torch.cuda.empty_cache()
+
+
+
+
     ########################## LAMP stochatic #######################################
 
     print(cfg)
@@ -7343,9 +7347,9 @@ def ensemble_predictions(prefix:str,cfg):
             #Load the individuals
             # print("Individual:{}".format(individual))
             # print("Contents of the weight folder")
-            p = Path(individual).glob('**/*')
-            files = [x for x in p if x.is_file()]
-            print("{}".format(files))
+ #           p = Path(individual).glob('**/*')
+ #           files = [x for x in p if x.is_file()]
+ #           print("{}".format(files))
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
@@ -7434,6 +7438,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
     sigma_list = []
     pruner_list = []
     arch_list = []
+    dataset_list =[]
 
     #Loop over all values of everything
     for dataset in dataset_values:
@@ -7486,6 +7491,8 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     pruner_list.append("GMP")
                     accuracy.append(global_ensemble_results["mean"])
                     arch_list.append(arch)
+                    dataset_list.append(dataset)
+                    pr_list.append(cfg.amount)
                     # For LAMP
                     accuracy.append(lamp_ensemble_results["voting"])
                     stage.append("Voting")
@@ -7493,6 +7500,8 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     pruner_list.append("LAMP")
                     accuracy.append(lamp_ensemble_results["mean"])
                     arch_list.append(arch)
+                    dataset_list.append(dataset)
+                    pr_list.append(cfg.amount)
 
 
     ensemble_dataframe = pd.DataFrame(
