@@ -32,13 +32,13 @@ for dataset in ${datasets[@]};do
 #fi
 #echo
 echo "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
-ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/" | head -n -10
+ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/" | head -n -10 | xargs -d '\n' rm -rf --
 echo "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"
-ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"| head -n -10
+ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"| head -n -10 | xargs -d '\n' rm -rf --
 echo "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
-ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma${sigma}/pr${pr}/" | head -n -10
+ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma${sigma}/pr${pr}/" | head -n -10 | xargs -d '\n' rm -rf --
 echo "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma${sigma}/pr${pr}/"
-ls -1t  "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma${sigma}/pr${pr}/" | head -n -10
+ls -1t  "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma${sigma}/pr${pr}/" | head -n -10 | xargs -d '\n' rm -rf --
 
 #ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
 #| head -n -10 | xargs -d '\n' rm -rf --
