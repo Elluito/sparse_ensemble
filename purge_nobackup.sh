@@ -36,6 +36,42 @@ for dataset in ${datasets[@]};do
 #echo "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"
 #ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"| head -n -10 | xargs -d '\n' rm -rf --
 
+
+
+
+
+################### Stochastic  global ###################################
+
+sto_global_name="/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
+echo $sto_global_name
+number_directories=$(ls $sto_global_name | wc -l)
+number_directories=$(($number_directories + 0))
+echo "Number of individuals in folder ${number_directories}"
+if [ $number_directories -gt 10 ] && [ -d $sto_global_name ]; then
+cd $sto_global_name
+ls -1t $sto_global_name | head -n -10 | xargs -d '\n' rm -r --
+ls
+fi
+
+
+################### Stochastic LAMP ###################################
+sto_lamp_name="/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"
+echo $sto_lamp_name
+number_directories=$(ls $sto_lamp_name | wc -l)
+number_directories=$(($number_directories + 0))
+echo "Number of individuals in folder ${number_directories}"
+if [ $number_directories -gt 10 ] && [ -d $sto_lamp_name ]; then
+cd $sto_lamp_name
+ls -1t $sto_lamp_name | head -n -10 | xargs -d '\n' rm -r --
+ls
+fi
+
+
+
+
+
+###################           deterministic_GLOBAL
+
 deter_global_name="/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma0.0/pr${pr}/"
 echo $deter_global_name
 number_directories=$(ls $deter_global_name | wc -l)
@@ -46,6 +82,9 @@ cd $deter_global_name
 ls -1t $deter_global_name | head -n -10 | xargs -d '\n' rm -r --
 ls
 fi
+
+
+################################# deterministic lamp
 deter_lamp_name="/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
 echo $deter_lamp_name
 number_directories=$(ls $deter_lamp_name | wc -l)
