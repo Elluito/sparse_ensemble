@@ -35,23 +35,25 @@ for dataset in ${datasets[@]};do
 #ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/" | head -n -10 | xargs -d '\n' rm -rf --
 #echo "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"
 #ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_LAMP/${model}/sigma${sigma}/pr${pr}/"| head -n -10 | xargs -d '\n' rm -rf --
-echo "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
 
-number_directories=$(ls "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma0.0/pr${pr}/" | wc -l)
+deter_global_name="/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma0.0/pr${pr}/"
+echo $deter_global_name
+number_directories=$(ls $deter_global_name | wc -l)
 number_directories=$(($number_directories + 0))
 echo "Number of individuals in folder ${number_directories}"
-if [ $number_directories -gt 10 ]; then
-ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma0.0/pr${pr}/" | head -n -10 | xargs -d '\n' rm -r --
+if [ $number_directories -gt 10 ] && [ -d $deter_global_name ]; then
+ls -1t deter_global_name | head -n -10 | xargs -d '\n' rm -r --
 ls "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_GLOBAL/${model}/sigma0.0/pr${pr}/"
 fi
-
-echo "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
-number_directories=$(ls "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/" | wc -l)
+deter_lamp_name="/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
+echo $deter_lamp_name
+number_directories=$(ls $deter_lamp_name | wc -l)
 number_directories=$(($number_directories + 0))
 echo "Number of individuals in folder ${number_directories}"
-if [ $number_directories -gt 10 ]; then
-ls -1t  "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/" | head -n -10 | xargs -d '\n' rm -r --
-ls "/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
+if [ $number_directories -gt 10 ] && [ -d $deter_lamp_name ]; then
+cd $deter_lamp_name
+ls -1t | head -n -10 | xargs -d '\n' rm -r --
+ls #"/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
 fi
 
 #ls -1t "/nobackup/sclaam/gradient_flow_data/${dataset}/stochastic_GLOBAL/${model}/sigma${sigma}/pr${pr}/"
