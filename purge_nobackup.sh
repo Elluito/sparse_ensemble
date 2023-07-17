@@ -43,7 +43,7 @@ number_directories=$(($number_directories + 0))
 echo "Number of individuals in folder ${number_directories}"
 if [ $number_directories -gt 10 ] && [ -d $deter_global_name ]; then
 cd $deter_global_name
-ls -1t deter_global_name | head -n -10 | xargs -d '\n' rm -r --
+ls -1t $deter_global_name | head -n -10 | xargs -d '\n' rm -r --
 ls
 fi
 deter_lamp_name="/nobackup/sclaam/gradient_flow_data/${dataset}/deterministic_LAMP/${model}/sigma0.0/pr${pr}/"
