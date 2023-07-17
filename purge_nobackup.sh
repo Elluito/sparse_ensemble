@@ -49,6 +49,7 @@ number_directories=$(($number_directories + 0))
 echo "Number of individuals in folder ${number_directories}"
 if [ $number_directories -gt 10 ] && [ -d $sto_global_name ]; then
 cd $sto_global_name
+pwd
 ls -1t $sto_global_name | head -n -10 | xargs -d '\n' rm -r --
 ls
 fi
@@ -62,6 +63,7 @@ number_directories=$(($number_directories + 0))
 echo "Number of individuals in folder ${number_directories}"
 if [ $number_directories -gt 10 ] && [ -d $sto_lamp_name ]; then
 cd $sto_lamp_name
+pwd
 ls -1t $sto_lamp_name | head -n -10 | xargs -d '\n' rm -r --
 ls
 fi

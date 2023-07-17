@@ -7489,20 +7489,35 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                     accuracy.append(global_ensemble_results["voting"])
                     stage.append("Voting")
                     sigma_list.append(sig)
-                    pruner_list.append("GMP")
-                    accuracy.append(global_ensemble_results["mean"])
                     arch_list.append(arch)
                     dataset_list.append(dataset)
                     pr_list.append(pruning_rate)
-                    # For LAMP
-                    accuracy.append(lamp_ensemble_results["voting"])
-                    stage.append("Voting")
+                    pruner_list.append("GMP")
+                    ## Mean
+                    stage.append("Mean")
+                    accuracy.append(global_ensemble_results["mean"])
                     sigma_list.append(sig)
+                    arch_list.append(arch)
+                    dataset_list.append(dataset)
+                    pr_list.append(pruning_rate)
+                    pruner_list.append("GMP")
+
+                    # For LAMP
+                    stage.append("Voting")
+                    accuracy.append(lamp_ensemble_results["voting"])
+                    sigma_list.append(sig)
+                    arch_list.append(arch)
+                    dataset_list.append(dataset)
+                    pr_list.append(pruning_rate)
                     pruner_list.append("LAMP")
+                    ## Mean
+
+                    stage.append("Mean")
                     accuracy.append(lamp_ensemble_results["mean"])
                     arch_list.append(arch)
                     dataset_list.append(dataset)
                     pr_list.append(pruning_rate)
+                    pruner_list.append("LAMP")
 
 
     ensemble_dataframe = pd.DataFrame(
