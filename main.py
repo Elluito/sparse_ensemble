@@ -7250,13 +7250,13 @@ def ensemble_predictions(prefix:str,cfg):
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
                 if Path(individual +"weigths/epoch_100.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
                 if Path(individual +"weigths/epoch_101.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
             except Exception as err:
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
                 print(err)
@@ -7353,14 +7353,14 @@ def ensemble_predictions(prefix:str,cfg):
             try:
                 if Path(individual +"weigths/epoch_90.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
 
                 elif Path(individual +"weigths/epoch_100.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
                 elif Path(individual +"weigths/epoch_101.pth").is_file():
                     model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
-                    print("I loaded the weights!")
+                    # print("I loaded the weights!")
             except Exception as err:
                 print(individual)
                 print(err)
@@ -7424,12 +7424,15 @@ def ensemble_predictions(prefix:str,cfg):
 
     assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
     lamp_results = {"voting": full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
-    print(cfg)
+    print("LAMP")
     print(lamp_results)
 
 
     return global_results,lamp_results
-
+def mock_function():
+    dict_1 = {"voting": 94,"mean":94 }
+    dict_2 = {"voting":95 ,"mean":95 }
+    return dict_1 ,dict_2
 def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,architecture_values:list,pruning_rate_values:list,dataset_values:list):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
@@ -7450,44 +7453,14 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
                 cfg.architecture = arch
                 for sig in sigma_values:
                     cfg.sigma = sig
-                    # if cfg.dataset == "cifar10":
-                    #     if cfg.architecture == "resnet18":
-                    #         solution = "trained_modes/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-                    #         exclude_layers =["conv1", "linear"]
-                    #     if cfg.architecture == "VGG19":
-                    #         solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
-                    #         exclude_layers = ["features.0", "classifier"]
-                    #     if cfg.architecture == "resnet50":
-                    #         solution = "trained_models/cifar10/resnet50_cifar10.pth"
-                    #         exclude_layers = ["conv1", "linear"]
-                    # if cfg.dataset == "cifar100":
-                    #     if cfg.architecture == "resnet18":
-                    #         cfg.solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
-                    #         exclude_layers =["conv1", "linear"]
-                    #     if cfg.architecture == "VGG19":
-                    #         cfg.solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
-                    #         exclude_layers = ["features.0", "classifier"]
-                    #     if cfg.architecture  == "resnet50":
-                    #         cfg.solution = "trained_models/cifar100/resnet50_cifar100.pth"
-                    #         exclude_layers = ["conv1", "linear"]
-                    # if cfg.dataset== "imagenet":
-                    #     if cfg.architecture == "resnet18":
-                    #         cfg.solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
-                    #         exclude_layers = ["conv1", "fc"]
-                    #     if cfg.architecture == "VGG19":
-                    #         cfg.solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
-                    #         exclude_layers = ["features.0", "classifier"]
-                    #     if  args["architecture"] == "resnet50":
-                    #         cfg.solution = "/nobackup/sclaam/trained_models/resnet50_imagenet.pth"
-                    #         exclude_layers = ["conv1", "fc"]
-                    #     print(cfg)
 
                     print(cfg)
                     global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
-                    torch.cuda.empty_cache()
+                    # global_ensemble_results,lamp_ensemble_results = mock_function()
+                    # torch.cuda.empty_cache()
                     # For Global
-                    accuracy.append(global_ensemble_results["voting"])
                     stage.append("Voting")
+                    accuracy.append(global_ensemble_results["voting"])
                     sigma_list.append(sig)
                     arch_list.append(arch)
                     dataset_list.append(dataset)
@@ -7514,6 +7487,7 @@ def create_ensemble_dataframe(cfg:omegaconf.DictConfig,sigma_values:list,archite
 
                     stage.append("Mean")
                     accuracy.append(lamp_ensemble_results["mean"])
+                    sigma_list.append(sig)
                     arch_list.append(arch)
                     dataset_list.append(dataset)
                     pr_list.append(pruning_rate)
