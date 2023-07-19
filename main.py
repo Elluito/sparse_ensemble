@@ -7200,6 +7200,99 @@ def get_predictions_of_individual(folder:str,batch:typing.Tuple[torch.Tensor,tor
     return batch_prediction
 
 # def save_ensemble_predictions():
+def record_predictions_of_individual(prefix:str,cfg):
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+
+    max_individuals = 10
+
+    train,val,test = get_datasets(cfg)
+
+    labels = None
+    ########################## first Global stochatic #######################################
+
+    model_place_holder: nn.Module = get_model(cfg)
+
+    index_batch = 0
+    ind_number = 0
+
+    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
+        all_predictions = None
+        #Load the individuals
+        try:
+            if Path(individual +"weigths/epoch_90.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
+                # print("I loaded the weights!")
+            if Path(individual +"weigths/epoch_100.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
+                # print("I loaded the weights!")
+            if Path(individual +"weigths/epoch_101.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
+                # print("I loaded the weights!")
+        except Exception as err:
+            print("There was the follwing error but im going to continue because I only need 10 individuals")
+            print(err)
+            continue
+
+        model_place_holder.eval()
+        model_place_holder.cuda()
+        data, target = batch
+        # now we go through all the test set
+        for inputs,targets in test:
+            inputs,targets = inputs.cuda(),targets.cuda()
+            batch_prediction = model_place_holder(data)
+            if all_predictions is None:
+                all_predictions = batch_prediction.detach().cpu().numpy()
+            else:
+                all_predictions = np.concatenate((all_predictions,batch_prediction.detach().cpu().numpy()),axis=0)
+        with open(individual+"global_predictions","wb") as f :
+            pickle.dump(all_predictions,f)
+
+        if ind_number > max_individuals:
+            print("He completado 10 individuos para el batch {}".format(index_batch))
+            break
+        ind_number += 1
+    ############################ Lamp now############################
+
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/",recursive=True)):
+        all_predictions = None
+        #Load the individuals
+        try:
+            if Path(individual +"weigths/epoch_90.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_90.pth"))
+                # print("I loaded the weights!")
+            if Path(individual +"weigths/epoch_100.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_100.pth"))
+                # print("I loaded the weights!")
+            if Path(individual +"weigths/epoch_101.pth").is_file():
+                model_place_holder.load_state_dict(torch.load(individual +"weigths/epoch_101.pth"))
+                # print("I loaded the weights!")
+        except Exception as err:
+            print("There was the follwing error but im going to continue because I only need 10 individuals")
+            print(err)
+            continue
+
+        model_place_holder.eval()
+        model_place_holder.cuda()
+        data, target = batch
+        # now we go through all the test set
+        for inputs,targets in test:
+            inputs,targets = inputs.cuda(),targets.cuda()
+            batch_prediction = model_place_holder(data)
+            if all_predictions is None:
+                all_predictions = batch_prediction.detach().cpu().numpy()
+            else:
+                all_predictions = np.concatenate((all_predictions,batch_prediction.detach().cpu().numpy()),axis=0)
+        with open(individual+"lamp_predictions","wb") as f :
+            pickle.dump(all_predictions,f)
+
+        if ind_number > max_individuals:
+            print("He completado 10 individuos para el batch {}".format(index_batch))
+            break
+        ind_number += 1
+
 def ensemble_predictions(prefix:str,cfg):
 
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
