@@ -7261,12 +7261,11 @@ def ensemble_predictions(prefix:str,cfg):
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
                 print(err)
                 continue
-
                 # break
             # Aqui predigo solo un individuo, tengo que acumular estas predicciones para luego hace el recuento total
             # despues del for.
             try:
-                individual_predictions:torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
+                individual_predictions: torch.Tensor = get_predictions_of_individual(individual,(inputs,targets) , model_place_holder, cfg)
             except Exception as e:
                 print("There was the follwing error but im going to continue because I only need 10 individuals")
                 print(e)
@@ -7313,10 +7312,12 @@ def ensemble_predictions(prefix:str,cfg):
             full_voting_mean_accuracy = full_voting_mean_accuracy+ (voting_accuracy-full_voting_mean_accuracy)/counter_for_mean_voting
             counter_for_mean_voting+=1
 
-    global_results = {"voting": full_voting_mean_accuracy,"mean": full_mean_mean_accuracy}
+    global_results = {"voting": full_voting_mean_accuracy.detach().cpu().numpy(),"mean": full_mean_mean_accuracy.detach().cpu().numpy()}
     print("Global results")
     print(global_results)
     # torch.cuda.empty_cache()
+    with open(stochastic_global_root+"global_ensemble_results","wb") as f :
+        pickle.dump(global_results,f)
 
 
 
@@ -7413,7 +7414,7 @@ def ensemble_predictions(prefix:str,cfg):
         if full_mean_mean_accuracy is None:
             full_mean_mean_accuracy = mean_accuracy
         else:
-            full_mean_mean_accuracy = full_mean_mean_accuracy+ (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
+            full_mean_mean_accuracy = full_mean_mean_accuracy + (mean_accuracy-full_mean_mean_accuracy)/counter_for_mean_mean
             counter_for_mean_mean +=1
         # For voting method
         if full_voting_mean_accuracy is None:
@@ -7423,10 +7424,11 @@ def ensemble_predictions(prefix:str,cfg):
             counter_for_mean_voting += 1
 
     assert predictions_mean is not None," the predictions for batch {} for all individuals were skipped.".format(index)
-    lamp_results = {"voting": full_voting_mean_accuracy,"mean":full_mean_mean_accuracy}
+    lamp_results = {"voting": full_voting_mean_accuracy.detach().cpu().numpy(),"mean":full_mean_mean_accuracy.cpu().detach().numpy()}
     print("LAMP")
     print(lamp_results)
-
+    with open(stochastic_lamp_root+"lamp_ensemble_results","wb") as f :
+        pickle.dump(lamp_results,f)
 
     return global_results,lamp_results
 def mock_function():
