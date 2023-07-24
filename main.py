@@ -4906,6 +4906,170 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         wandb.join()
 
 
+def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
+    trainloader, valloader, testloader = get_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    ################################## WANDB configuration ############################################
+    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
+    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
+    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_dataset_per_generation"
+    if cfg.use_wandb:
+        os.environ["wandb_start_method"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="stochastic_pruning",
+            name=f"mask_transfer_stochastic_fine_tuning"
+                 f"{non_zero_string}{one_batch_string}",
+            notes="",
+            reinit=True,
+        )
+    ################################## Gradient flow measure###############test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)#############################
+    filepath_GF_measure =""
+    if cfg.measure_gradient_flow:
+
+        identifier = f"{time.time():14.5f}".replace(" ", "")
+        if cfg.pruner == "lamp":
+            filepath_GF_measure += "gradient_flow_data/mask_transfer_det_sto/{}/stochastic_LAMP/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+                # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+            # else:
+            # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        if cfg.pruner == "global":
+            filepath_GF_measure += "gradient_flow_data/mask_transfer_det_sto/{}/stochastic_GLOBAL/{}/{}/sigma{}/pr{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,cfg.sigma,cfg.amount,identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+    pruned_model = get_model(cfg)
+    best_model = None
+    best_accuracy = -1
+    initial_flops = 0
+    data_loader_iterator = cycle(iter(valloader))
+    data, y = next(data_loader_iterator)
+    first_iter = 1
+    unit_sparse_flops = 0
+    evaluation_set = valloader
+    if cfg.one_batch:
+        evaluation_set = [(data, y)]
+    names, weights = zip(*get_layer_dict(pruned_model))
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * len(names)))
+
+    deterministic_pruned_model = copy.deepcopy(pruned_model)
+    if cfg.pruner == "global":
+        prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    if cfg.pruner == "manual":
+        prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner="manual", pr_per_layer=pr_per_layer)
+        individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
+                                                   exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                                   pruner="lamp", return_pr_per_layer=True)
+        if cfg.use_wandb:
+            log_dict = {}
+            for name, elem in individual_prs_per_layer.items():
+                log_dict["individual_{}_pr".format(name)] = elem
+            wandb.log(log_dict)
+
+    if cfg.pruner == "lamp":
+        prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+                        type="layer-wise",
+                        pruner=cfg.pruner)
+
+
+    # Go over the population t
+    for n in range(cfg.population):
+        # current_model = get_noisy_sample(pruned_model, cfg)
+        current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+        copy_of_pruned_model = copy.deepcopy(current_model)
+        # det_mask_transfer_model = copy.deepcopy(current_model)
+        # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        # Dense stochastic performance
+        # if cfg.pruner == "global":
+        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        #
+        # if cfg.pruner == "manual":
+        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner="manual", pr_per_layer=pr_per_layer)
+        #     individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
+        #                                                exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                                                pruner="lamp", return_pr_per_layer=True)
+        #     if cfg.use_wandb:
+        #         log_dict = {}
+        #         for name, elem in individual_prs_per_layer.items():
+        #             log_dict["individual_{}_pr".format(name)] = elem
+        #         wandb.log(log_dict)
+        #
+        # if cfg.pruner == "lamp":
+        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+        #                     type="layer-wise",
+        #                     pruner=cfg.pruner)
+        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+
+        copy_buffers(from_net=deterministic_pruned_model, to_net=current_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        if first_iter:
+            _, unit_sparse_flops = flops(current_model, data)
+            first_iter = 0
+        noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
+                                                                 count_flops=True, batch_flops=unit_sparse_flops)
+        check_for_layers_collapse(current_model)
+        initial_flops += individual_sparse_flops
+        if noisy_sample_performance > best_accuracy:
+            best_accuracy = noisy_sample_performance
+            best_model = current_model
+
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+
+
+    initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
+
+    end = time.time()
+    initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    total = time.time()-end
+    print("Time for testing: {} s".format(total))
+
+
+    # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
+
+    # if cfg.pruner == "global":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    #
+    # if cfg.pruner == "lamp":
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+    #                     type="layer-wise",
+    #                     pruner=cfg.pruner)
+    #
+    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # perfor = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    # torch.save({"model_state":pruned_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_deterministic_{cfg.pruner}_pr{cfg.amount}.pth")
+
+    if cfg.use_wandb:
+        wandb.log({"val_set_accuracy": initial_performance, "sparse_flops": initial_flops, "initial_test_performance":
+            initial_test_performance})
+
+
+    restricted_fine_tune_measure_flops(best_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
+                                       use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
+                                       initial_flops=initial_flops,
+                                       fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
+                                       fine_tune_non_zero_weights=cfg.fine_tune_non_zero_weights,
+                                       gradient_flow_file_prefix=filepath_GF_measure,
+                                       cfg=cfg)
 def static_sigma_per_layer_manually_iterative_process_flops_counts(cfg: omegaconf.DictConfig, FLOP_limit: float = 1e15):
     FLOP_limit = cfg.flop_limit
     trainloader, valloader, testloader = get_datasets(cfg)
@@ -6264,6 +6428,8 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
         df = pd.DataFrame(dict)
 
         df.to_csv("{}_pr_sigma_combination_pop_{}.csv".format(cfg2.dataset,cfg2.population),index=False)
+    if number_experiment ==17:
+        run_fine_tune_mask_transfer_experiment(cfg)
 
 
 
@@ -8290,7 +8456,7 @@ if __name__ == '__main__':
     ############################## Epsilon experiments for the boxplots ################################################
 
     # identifier = f"{time.time():14.5f}".replace(" ", "")
-    # population_sweeps_transfer_mask_rank_experiments(cfg,identifier=identifier)
+    population_sweeps_transfer_mask_rank_experiments(cfg,identifier=identifier)
 
      ########### All epsilon stochastic pruning #######################
     # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
