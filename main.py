@@ -6969,7 +6969,94 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
     plt.savefig(file,bbox_inches="tight")
-def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_epochs=11):
+def gradient_flow_especific_combination_dataframe_generation_stochastic_only(prefix:str,cfg,min_epochs=11,is_mask_transfer=False):
+    '''
+    This function is for unifying the results of a particular exp
+    @rtype: object
+    @param prefix:This is the folder were deterministic LAMP/GLOBAL and stochastic LAMP/GLOBAL folders (with all the subfolder struceture) reside. Should contain the same dataset name as in cfg.
+    @param cfg: Configuration for a particular architceture X sigma X pruning rate combination to create a dataframe with all individuals results. The dataset is
+    present in the prefix string
+    '''
+    # prefix = Path(prefix)
+    middle_string = cfg.model_type
+    # if cfg.model_type == "hub" :
+    #     middle_string = "/hub"
+
+    assert cfg.dataset in prefix,"Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset,prefix)
+    # If I want to unify the mask transfer.
+    if is_mask_transfer:
+        stochastic_global_root = prefix+"mask_transfer_det_sto/" + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+        stochastic_lamp_root = prefix +"mask_transfer_det_sto/" +"stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    else:
+        stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+        stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+
+    combine_stochastic_GLOBAL_DF: pd.DataFrame = None
+    combine_stochastic_LAMP_DF: pd.DataFrame = None
+
+    ########################### Global Determinisitc ########################################
+    ########################### Lamp Deterministic  ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
+        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<min_epochs:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [0] * len_df
+        individual_df["Pruner"] = ["LAMP"] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_deterministic_LAMP_DF is None:
+            combine_deterministic_LAMP_DF = individual_df
+        else:
+            combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
+
+    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
+
+    ########################## first Global stochatic #######################################
+    for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
+        individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<min_epochs:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Pruner"] = ["GMP"] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_stochastic_GLOBAL_DF is None:
+            combine_stochastic_GLOBAL_DF = individual_df
+        else:
+            combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
+
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
+    ########################## Second LAMP stochatic #######################################
+
+
+
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root+"*/",recursive=True)):
+        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df<min_epochs:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        individual_df["Pruner"] = ["LAMP"] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_stochastic_LAMP_DF is None:
+            combine_stochastic_LAMP_DF = individual_df
+        else:
+            combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
+
+
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
+def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_epochs=11,is_mask_transfer=False):
     '''
     This function is for unifying the results of a particular exp
     @rtype: object
@@ -6986,10 +7073,13 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_
     deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
 
     deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
-
-    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-
-    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    # If I want to unify the mask transfer.
+    if is_mask_transfer:
+        stochastic_global_root = prefix+"mask_transfer_det_sto/" + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+        stochastic_lamp_root = prefix +"mask_transfer_det_sto/" +"stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    else:
+        stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+        stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
@@ -8497,6 +8587,7 @@ if __name__ == '__main__':
 #
 #     ################# Unify sigma experiments results for gradient flow measurement ####################################
 #
+
 #
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
     # sigma_values = [0.001,0.003,0.005]
@@ -8525,7 +8616,7 @@ if __name__ == '__main__':
     #         for arch in architecture_values:
     #             cfg.architecture = arch
     #             for sig in sigma_values:
-    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/ACCELERATOR/imagenet/",cfg,2)
+    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/mask_transfer_det_sto/",cfg,2)
     # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
