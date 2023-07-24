@@ -602,16 +602,21 @@ def heatmap1_exp(cfg):
 
 
 def copy_buffers(from_net: nn.Module, to_net: nn.Module):
-    iter_1 = to_net.named_modules()
+    """
 
-    for name, m in iter_1:
-        with torch.no_grad():
-            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
-                    isinstance(m, nn.BatchNorm3d):
-                temp_dict = dict(dict(from_net.named_modules())[name].named_buffers())
-                if len(list(temp_dict.items()))==1:
-                    weight_mask = dict(temp_dict)["weight_mask"]
-                    m.weight.data.mul_(weight_mask)
+    @param from_net: Network that contains the mask to be transfered to "to_net"
+    @param to_net: Network to wich weights are going to be pruned by the mask in "from_net"
+    @return: None
+    """
+    iter_1 = to_net.named_modules()
+    with torch.no_grad():
+        for name, m in iter_1:
+                if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                        isinstance(m, nn.BatchNorm3d):
+                    temp_dict = dict(dict(from_net.named_modules())[name].named_buffers())
+                    if len(list(temp_dict.items()))==1:
+                        weight_mask = dict(temp_dict)["weight_mask"]
+                        m.weight.data.mul_(weight_mask)
 
 
 def heatmap2_mean_decrease_maskTransfer_exp(cfg):
@@ -4911,9 +4916,6 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     ################################## WANDB configuration ############################################
-    exclude_layers_string = "_exclude_layers_fine_tuned" if cfg.fine_tune_exclude_layers else ""
-    non_zero_string = "_non_zero_weights_fine_tuned" if cfg.fine_tune_non_zero_weights else ""
-    one_batch_string = "_one_batch_per_generation" if cfg.one_batch else "_whole_dataset_per_generation"
     if cfg.use_wandb:
         os.environ["wandb_start_method"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -4921,12 +4923,12 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
             entity="luis_alfredo",
             config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
             project="stochastic_pruning",
-            name=f"mask_transfer_stochastic_fine_tuning"
-                 f"{non_zero_string}{one_batch_string}",
+            name=f"mask_transfer_stochastic_fine_tuning",
+
             notes="",
             reinit=True,
         )
-    ################################## Gradient flow measure###############test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)#############################
+    ################################## Gradient flow measure ############### test(pruned_model, use_cuda=use_cuda, testloader=valloader, verbose=1)#############################
     filepath_GF_measure =""
     if cfg.measure_gradient_flow:
 
@@ -4947,11 +4949,13 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
     pruned_model = get_model(cfg)
+    pruned_model.cuda()
     best_model = None
     best_accuracy = -1
     initial_flops = 0
     data_loader_iterator = cycle(iter(valloader))
     data, y = next(data_loader_iterator)
+    data,y = data.cuda(), y.cuda()
     first_iter = 1
     unit_sparse_flops = 0
     evaluation_set = valloader
@@ -4979,69 +4983,39 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
         prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
                         type="layer-wise",
                         pruner=cfg.pruner)
+    p = test(deterministic_pruned_model, use_cuda,testloader, verbose=0, count_flops=False, batch_flops=unit_sparse_flops)
+    print("Deterministic model performance: {}".format(p))
 
 
     # Go over the population t
     for n in range(cfg.population):
         # current_model = get_noisy_sample(pruned_model, cfg)
         current_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
-        copy_of_pruned_model = copy.deepcopy(current_model)
-        # det_mask_transfer_model = copy.deepcopy(current_model)
-        # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
-        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+        # copy_of_pruned_model = copy.deepcopy(current_model)
+        deterministic_pruned_model.cuda()
+        copy_buffers(from_net=deterministic_pruned_model,to_net=current_model)
+        # remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
-        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        # Dense stochastic performance
-        # if cfg.pruner == "global":
-        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
-        #
-        # if cfg.pruner == "manual":
-        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-        #                     pruner="manual", pr_per_layer=pr_per_layer)
-        #     individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
-        #                                                exclude_layers=cfg.exclude_layers, type="layer-wise",
-        #                                                pruner="lamp", return_pr_per_layer=True)
-        #     if cfg.use_wandb:
-        #         log_dict = {}
-        #         for name, elem in individual_prs_per_layer.items():
-        #             log_dict["individual_{}_pr".format(name)] = elem
-        #         wandb.log(log_dict)
-        #
-        # if cfg.pruner == "lamp":
-        #     prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
-        #                     type="layer-wise",
-        #                     pruner=cfg.pruner)
-        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-        #                 pruner=cfg.pruner)
-
-        # Here is where I transfer the mask from the pruned stochastic model to the
-        # original weights and put it in the ranking
-        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-
-        copy_buffers(from_net=deterministic_pruned_model, to_net=current_model)
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         if first_iter:
             _, unit_sparse_flops = flops(current_model, data)
             first_iter = 0
         noisy_sample_performance, individual_sparse_flops = test(current_model, use_cuda, evaluation_set, verbose=0,
                                                                  count_flops=True, batch_flops=unit_sparse_flops)
+
+        print("Deterministic mask on noísy weights model performance on test: {}".format(noisy_sample_performance))
         check_for_layers_collapse(current_model)
         initial_flops += individual_sparse_flops
         if noisy_sample_performance > best_accuracy:
             best_accuracy = noisy_sample_performance
             best_model = current_model
 
-    # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
-
-
-
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
 
     end = time.time()
     initial_test_performance = test(best_model, use_cuda=use_cuda, testloader=testloader, verbose=1)
+    print("Deterministic mask on noísy weights model performance on test: {}".format(initial_performance))
     total = time.time()-end
     print("Time for testing: {} s".format(total))
-
 
     # torch.save({"model_state":best_model.state_dict()},f"noisy_models/{cfg.dataset}/{cfg.architecture}/one_shot_{cfg.pruner}_s{cfg.sigma}_pr{cfg.amount}.pth")
 
@@ -6424,7 +6398,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
 
         print("Best delta is {}".format(best_delta))
         print("For params {}".format(best_params))
-        dict ={"sigma":le_sigmas,"pruning_rate":le_pruning_rates,"pruner":le_pruners,"delta":le_deltas,"Determinstic performance":le_deterministic_performances,"quantil_50_performance":le_quantil_50_performances,"Population":[cfg.population]*len(le_quantil_50_performances)}
+        dict ={"sigma":le_sigmas,"pruning_rate":le_pruning_rates,"pruner":le_pruners,"delta":le_deltas,"Determinstic performance":le_deterministic_performances,"quantil_50_performance":le_quantil_50_performances,"Population":[cfg2.population]*len(le_quantil_50_performances)}
         df = pd.DataFrame(dict)
 
         df.to_csv("{}_pr_sigma_combination_pop_{}.csv".format(cfg2.dataset,cfg2.population),index=False)
@@ -8293,7 +8267,7 @@ def LeMain(args):
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
         "gradient_cliping": True,
-        "use_wandb": True
+        "use_wandb":False
     })
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
@@ -8456,7 +8430,7 @@ if __name__ == '__main__':
     ############################## Epsilon experiments for the boxplots ################################################
 
     # identifier = f"{time.time():14.5f}".replace(" ", "")
-    population_sweeps_transfer_mask_rank_experiments(cfg,identifier=identifier)
+    # population_sweeps_transfer_mask_rank_experiments(cfg,identifier=identifier)
 
      ########### All epsilon stochastic pruning #######################
     # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
