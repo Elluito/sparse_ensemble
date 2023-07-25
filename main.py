@@ -1,7 +1,7 @@
 import os
 import accelerate
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
 import paretoset
@@ -1582,7 +1582,25 @@ def get_intelligent_pruned_network(cfg):
         print(f"{test_acc}")
         print(f"Model has compression ratio of {count_zero_parameters(full_model) / count_parameters(full_model)}")
 
-
+def prune_function(net,cfg,pr_per_layer=None):
+    target_sparsity = cfg.amount
+    if cfg.pruner == "global":
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+    if cfg.pruner == "manual":
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner="manual", pr_per_layer=pr_per_layer)
+        individual_prs_per_layer = prune_with_rate(net, target_sparsity,
+                                                   exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                                   pruner="lamp", return_pr_per_layer=True)
+        if cfg.use_wandb:
+            log_dict = {}
+            for name, elem in individual_prs_per_layer.items():
+                log_dict["individual_{}_pr".format(name)] = elem
+            wandb.log(log_dict)
+    if cfg.pruner == "lamp":
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers,
+                        type="layer-wise",
+                        pruner=cfg.pruner)
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
                     type: str = "global",
                     criterion:
@@ -1708,7 +1726,7 @@ def get_cifar_datasets(cfg:omegaconf.DictConfig):
         #
         #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
         current_directory = Path().cwd()
-        data_path = ""
+        data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path ="/nobackup/sclaam/data"
         elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
@@ -3170,6 +3188,273 @@ def two_step_iterative_pruning(cfg: omegaconf.DictConfig):
 def gradient_decent_on_sigma_pr():
     pass
 
+############################################### CDF and 0 counting functions ###########################################
+def count_zero_slices(conv_weight:torch.Tensor):
+
+    out_features, in_features, H, W = conv_weight.size()
+    in_features_list = torch.zeros(in_features)
+    out_features_list = torch.zeros(out_features)
+
+    for i in range(in_features):
+        in_features_slice = torch.index_select(conv_weight,1,torch.tensor(i) )
+        in_features_list[i] = in_features_slice.nelement()-torch.count_nonzero(in_features_slice)
+    for i in range(out_features):
+        out_features_slice = torch.index_select(conv_weight,0,torch.tensor(i) )
+        out_features_list[i] =  out_features_slice.nelement()-torch.count_nonzero(out_features_slice)
+
+    return in_features_list,out_features_list
+
+def number_of_0_analysis_stochastic_deterministic(cfg:omegaconf.DictConfig=None,cfg2:omegaconf.DictConfig=None,config_list = []):
+
+    net = get_model(cfg)
+
+    prune_function(net,cfg)
+    remove_reparametrization(net,exclude_layer_list=cfg.exclude_layers)
+    names_det, weights_det = zip(*get_layer_dict(net))
+    sigma_per_layer = dict(zip(names_det, [cfg.sigma] * len(names_det)))
+    # get noisy model
+    noisy_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
+    prune_function(noisy_model,cfg)
+    remove_reparametrization(noisy_model,exclude_layer_list=cfg.exclude_layers)
+    names_sto, weights_sto = zip(*get_layer_dict(noisy_model))
+
+    number_of_0s_in_features_layers_det =[]
+    number_of_0s_out_features_layers_det =[]
+
+    number_of_0s_in_features_layers_sto =[]
+    number_of_0s_out_features_layers_sto =[]
+
+    for j,det_weight in  enumerate(weights_det):
+        if len(det_weight.size())<4:
+            continue
+        # in_features,out_features,H,W =det_weight.size()
+        # in_features_aling_det = det_weight.view(-1,in_features).detach()
+        # out_features_aling_det = det_weight.view(-1,out_features).detach()
+        # in_features_aling_sto =  weights_sto[j].view(-1,in_features).detach()
+        # out_features_aling_sto =  weights_sto[j].view(-1,out_features).detach()
+
+        # zero_in_features_det = in_features_aling_det.nelement()-torch.count_nonzero(in_features_aling_det,dim=0)
+        #
+        # zero_out_features_det =out_features_aling_det.nelement()-torch.count_nonzero(out_features_aling_det,dim=0)
+
+        zero_in_features_det,zero_out_features_det  = count_zero_slices(det_weight)
+
+        # zero_in_features_sto = in_features_aling_sto.nelement()- torch.count_nonzero(in_features_aling_sto,dim=0)
+        # zero_out_features_sto = out_features_aling_sto.nelement()-torch.count_nonzero(out_features_aling_sto,dim=0)
+
+        zero_in_features_sto, zero_out_features_sto  = count_zero_slices(weights_sto[j])
+
+        number_of_0s_in_features_layers_det.append(zero_in_features_det.detach().cpu().numpy())
+        number_of_0s_out_features_layers_det.append(zero_out_features_det.detach().cpu().numpy())
+
+        number_of_0s_in_features_layers_sto.append(zero_in_features_sto.detach().cpu().numpy())
+        number_of_0s_out_features_layers_sto.append(zero_out_features_sto.detach().cpu().numpy())
+    out_det_dict={}
+    in_det_dict={}
+    out_sto_dict={}
+    in_sto_dict={}
+    for i,(name,weight) in enumerate(zip(names_det,weights_det)):
+
+
+        if len(weight.size())<4:
+            continue
+        out_features,in_features,H,W = weight.size()
+
+        # plt.figure()
+        f, (ax1, ax2) = plt.subplots(2, 1)
+        # Figure size
+        # Width of a bar
+        width = 0.2
+
+        plt.title("Layer {}, ".format(name))
+        ind1 = np.arange(in_features)
+        in_det_dict[name] = number_of_0s_in_features_layers_det[i]
+        out_det_dict[name] = number_of_0s_out_features_layers_det[i]
+        in_sto_dict[name] = number_of_0s_in_features_layers_sto[i]
+        out_sto_dict[name] = number_of_0s_out_features_layers_sto[i]
+        # Plotting
+        ax1.bar(ind1-width/2,number_of_0s_in_features_layers_det[i], width, label='Deterministic')
+        ax1.bar(ind1 + width/2,number_of_0s_in_features_layers_sto[i], width, label='Stochastic')
+        ax1.set_title('Input features')
+        ax1.set_ylabel("Number of 0s")
+
+        ind2 = np.arange(out_features)
+        # Plotting
+        ax2.bar(ind2-width/2,number_of_0s_out_features_layers_det[i], width, label='Deterministic')
+        ax2.bar(ind2 + width/2,number_of_0s_out_features_layers_sto[i], width, label='Stochastic')
+        ax2.set_title('Output features')
+        ax2.set_ylabel("Number of 0s")
+        ax2.set_xlabel("Feature index")
+        plt.legend()
+        plt.tight_layout()
+        save_string= 'data/zero_count/{}/{}/{}/sigma{}/'.format(cfg.architecture,cfg.dataset,cfg.amount,cfg.sigma)
+
+        path=Path(save_string)
+        path.mkdir(parents=True,exist_ok=True)
+        plt.savefig(save_string+"number_0s_{}_{}_pr_{}_pruner{}_layer{}.png".format(cfg.architecture,cfg.dataset,cfg.amount,cfg.pruner,name))
+        plt.close()
+
+    with open(save_string+"output_sto_features_count_dict.plk","wb")as f:
+        pickle.dump(out_sto_dict,f)
+    with open(save_string+"input_sto_features_count_dict.plk","wb")as f:
+        pickle.dump(in_sto_dict,f)
+    with open(save_string+"output_det_features_count_dict.plk","wb")as f:
+        pickle.dump(out_det_dict,f)
+    with open(save_string+"input_det_features_count_dict.plk","wb")as f:
+        pickle.dump(in_det_dict,f)
+
+
+    #   read helpers
+    # with open(save_string+"output_sto_features_count_dict.plk","rb")as f:
+    #     pickle.dump(out_sto_dict,f)
+    # with open(save_string+"input_sto_features_count_dict.plk","rb")as f:
+    #     pickle.dump(in_sto_dict,f)
+    # with open(save_string+"output_det_features_count_dict.plk","rb")as f:
+    #     pickle.dump(out_det_dict,f)
+    # with open(save_string+"input_det_features_count_dict.plk","rb")as f:
+    #     pickle.dump(in_det_dict,f)
+
+
+
+
+def CDF_weights_analysis_stochastic_deterministic(cfg:omegaconf.DictConfig=None,cfg2:omegaconf.DictConfig=None,config_list = [],range:tuple=None):
+    if cfg2 is None:
+        net = get_model(cfg)
+        param_vector = torch.abs(parameters_to_vector(net.parameters()))
+        names, weights = zip(*get_layer_dict(net))
+
+        # deterministic_pruned_model = copy.deepcopy(net)
+        # if cfg.pruner == "global":
+        #     prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        # if cfg.pruner == "manual":
+        #     prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner="manual", pr_per_layer=pr_per_layer)
+        #     individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
+        #                                                exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                                                pruner="lamp", return_pr_per_layer=True)
+        #     if cfg.use_wandb:
+        #         log_dict = {}
+        #         for name, elem in individual_prs_per_layer.items():
+        #             log_dict["individual_{}_pr".format(name)] = elem
+        #         wandb.log(log_dict)
+        # if cfg.pruner == "lamp":
+        #     prune_with_rate(deterministic_pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers,
+        #                     type="layer-wise",
+        #                     pruner=cfg.pruner)
+
+        sigma_per_layer = dict(zip(names, [cfg.sigma] * len(names)))
+        noisy_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
+        param_vector_noisy = torch.abs(parameters_to_vector(noisy_model.parameters()))
+
+        sigma_per_layer = dict(zip(names, [0.001] * len(names)))
+        noisy_model2 = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
+        param_vector_noisy2 = torch.abs(parameters_to_vector(noisy_model2.parameters()))
+        # param_vector= param_vector/max(param_vector)
+        # pruning_rates = [0.8,0.85,0.9,0.95]
+        pruning_rates = [0.9]
+        colors = ["m","g","r","c"]
+        dataset_string = cfg.dataset.upper()
+        architecture_string = ""
+        if cfg.architecture == "resnet18":
+            architecture_string= "ResNet18"
+        if cfg.architecture == "resnet50":
+            architecture_string= "ResNet50"
+        if cfg.architecture == "VGG19":
+            architecture_string= "VGG19"
+
+        # For net 1
+        if range is None:
+            count1, bin_counts1 = torch.histogram(param_vector,bins=len(param_vector))
+        else:
+            count1, bin_counts1 = torch.histogram(param_vector,bins=len(param_vector),range=range)
+        pdf1 = count1 / torch.sum(count1)
+        cdf1 = torch.cumsum(pdf1,dim=0)
+        plt.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string}-Det.")
+        names1, weights1 = zip(*get_layer_dict(net))
+
+        for i , pr in enumerate(pruning_rates):
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights1,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold @ pr {pr} for Det.")
+
+        # For net 2
+        if range is None:
+            count2, bin_counts2 = torch.histogram(param_vector_noisy,bins=len(param_vector_noisy))
+        else:
+            count2, bin_counts2 = torch.histogram(param_vector_noisy,bins=len(param_vector_noisy),range=range)
+        pdf2 = count2 / torch.sum(count2)
+        cdf2 = torch.cumsum(pdf2,dim=0)
+        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(), label=f"{architecture_string}-Sto.@{cfg.sigma}")
+
+        names2, weights2 = zip(*get_layer_dict(noisy_model))
+
+        for i , pr in enumerate(pruning_rates):
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights2,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="dotted",label=f"Threshold @ pr {pr} for Sto.")
+
+
+
+        plt.title(f"Deterministic and Stochastic {architecture_string} model on {dataset_string}")
+        plt.legend()
+        if range is not None:
+            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_{range[1]}_range.pdf")
+        else:
+            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_full_range.pdf")
+
+    if cfg2 is not None:
+
+        net1 = get_model(cfg)
+        net2 = get_model(cfg2)
+        param_vector1 = torch.abs(parameters_to_vector(net1.parameters()))
+        param_vector2 = torch.abs(parameters_to_vector(net2.parameters()))
+
+        # param_vector= param_vector/max(param_vector)
+        pruning_rates = [0.9,0.95]
+        dataset_string = cfg.dataset.upper()
+
+        assert dataset_string == cfg2.dataset.upper(),"The solutions are not trained on the same dataset. {} is trained on {} and {} is trained on  {}".format(cfg.architecture,cfg.dataset,cfg2.architecure,cfg2.dataset)
+
+        architecture_string1 = ""
+        architecture_string2 = ""
+        if cfg.architecture == "resnet18":
+            architecture_string1= "ResNet18"
+        if cfg.architecture == "resnet50":
+            architecture_string1= "ResNet50"
+        if cfg.architecture == "VGG19":
+            architecture_string1= "VGG19"
+
+        if cfg2.architecture == "resnet18":
+            architecture_string2= "ResNet18"
+        if cfg2.architecture == "resnet50":
+            architecture_string2= "ResNet50"
+        if cfg2.architecture == "VGG19":
+            architecture_string2= "VGG19"
+
+
+        colors = ["m","g","r","c"]
+        # For net 1
+        count1, bin_counts1 = torch.histogram(param_vector1,bins=len(param_vector1),range=(0,0.09))
+        pdf1 = count1 / torch.sum(count1)
+        cdf1 = torch.cumsum(pdf1,dim=0)
+        plt.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string1}")
+        # For net 2
+        count2, bin_counts2 = torch.histogram(param_vector2,bins=len(param_vector2),range=(0,0.09))
+        pdf2 = count2 / torch.sum(count2)
+        cdf2 = torch.cumsum(pdf2,dim=0)
+        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(), label=f"{architecture_string2}")
+
+        names1, weights1 = zip(*get_layer_dict(net1))
+        names2, weights2 = zip(*get_layer_dict(net2))
+
+        for i , pr in enumerate(pruning_rates):
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights1,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="--",label=f"Threshold @ pr {pr} for {architecture_string1}")
+
+            threshold,index_threshold,full_vector= get_threshold_and_pruned_vector_from_pruning_rate(list_of_layers=weights2,pruning_rate=pr)
+            plt.axvline(threshold,linewidth=1, color=colors[i],linestyle="dotted",label=f"Threshold @ pr {pr} for {architecture_string2}")
+
+        plt.title(f"{architecture_string1} and {architecture_string2} on {dataset_string}")
+        plt.legend()
+        plt.savefig(f"cdf_{cfg.architecture}_{cfg2.architecture}_{cfg.dataset}.pdf")
 
 def weights_analysis_per_weight(cfg:omegaconf.DictConfig=None,cfg2:omegaconf.DictConfig=None,config_list = []):
     if cfg2 is None:
@@ -6969,7 +7254,7 @@ def scatter_plot_sigmas(dataFrame1:pd.DataFrame,dataFrame2:pd.DataFrame,determin
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
     plt.savefig(file,bbox_inches="tight")
-def gradient_flow_especific_combination_dataframe_generation_stochastic_only(prefix:str,cfg,min_epochs=11,is_mask_transfer=False):
+def gradient_flow_especific_combination_dataframe_generation_stochastic_only(prefix:str,cfg,min_epochs=11,surname=""):
     '''
     This function is for unifying the results of a particular exp
     @rtype: object
@@ -6984,12 +7269,8 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
 
     assert cfg.dataset in prefix,"Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset,prefix)
     # If I want to unify the mask transfer.
-    if is_mask_transfer:
-        stochastic_global_root = prefix+"mask_transfer_det_sto/" + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-        stochastic_lamp_root = prefix +"mask_transfer_det_sto/" +"stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-    else:
-        stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-        stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
@@ -6997,26 +7278,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
 
     ########################### Global Determinisitc ########################################
     ########################### Lamp Deterministic  ########################################
-
-    for index, individual in enumerate(glob.glob(deterministic_lamp_root+"*/",recursive=True)):
-        individual_df = pd.read_csv(individual+"recordings.csv" ,sep=",",header=0,index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df<min_epochs:
-            continue
-        individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [0] * len_df
-        individual_df["Pruner"] = ["LAMP"] * len_df
-        individual_df["Architecture"] = [cfg.architecture] * len_df
-        individual_df["Dataset"] = [cfg.dataset] * len_df
-        individual_df["Pruning Rate"] = [cfg.amount] * len_df
-        if combine_deterministic_LAMP_DF is None:
-            combine_deterministic_LAMP_DF = individual_df
-        else:
-            combine_deterministic_LAMP_DF  = pd.concat((combine_deterministic_LAMP_DF,individual_df),ignore_index=True)
-
-    combine_deterministic_LAMP_DF.to_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",header=True,index=False)
-
-    ########################## first Global stochatic #######################################
+    ########################## First Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/",recursive=True)):
         individual_df = pd.read_csv(individual +"recordings.csv" ,sep=",",header=0,index_col=False)
         len_df = individual_df.shape[0]
@@ -7033,7 +7295,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,individual_df),ignore_index=True)
 
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True,index=False)
     ########################## Second LAMP stochatic #######################################
 
 
@@ -7055,7 +7317,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
             combine_stochastic_LAMP_DF  = pd.concat((combine_stochastic_LAMP_DF,individual_df),ignore_index=True)
 
 
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
 def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_epochs=11,is_mask_transfer=False):
     '''
     This function is for unifying the results of a particular exp
@@ -7073,13 +7335,9 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_
     deterministic_lamp_root = prefix + "deterministic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
 
     deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
-    # If I want to unify the mask transfer.
-    if is_mask_transfer:
-        stochastic_global_root = prefix+"mask_transfer_det_sto/" + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-        stochastic_lamp_root = prefix +"mask_transfer_det_sto/" +"stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-    else:
-        stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-        stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
@@ -7168,13 +7426,13 @@ def gradient_flow_especific_combination_dataframe_generation(prefix:str,cfg,min_
 
     combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",header=True ,index=False)
 
-def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
+def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig,surname=""):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     first_sigma = sigmas.pop()
 
-    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
-    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset }_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_LAMP_DF = pd.read_csv(f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
+    combine_stochastic_GLOBAL_DF = pd.read_csv(f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset }_sigma_{first_sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
     for sigma in sigmas:
         lamp_tem_df = pd.read_csv(f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv",sep= ",",header=0,index_col=False)
 
@@ -7183,8 +7441,8 @@ def unify_sigma_datasets(sigmas:list,cfg:omegaconf.DictConfig):
         combine_stochastic_LAMP_DF =pd.concat((combine_stochastic_LAMP_DF,lamp_tem_df),ignore_index=True)
         combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF,global_tem_df),ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
-    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_LAMP_DF.to_csv(f"gradientflow_stochastic_lamp_all_sigmas_{surname}{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
+    combine_stochastic_GLOBAL_DF.to_csv(f"gradientflow_stochastic_global_all_sigmas_{surname}{cfg.architecture}_{cfg.dataset }_pr{cfg.amount}.csv",header=True ,index=False)
 def unify_all_variables_datasets(sigmas:list,architectures:list,pruning_rates:list,datasets:list):
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
@@ -8307,7 +8565,7 @@ def LeMain(args):
                 solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
                 exclude_layers =["conv1", "linear"]
             if args["architecture"]== "VGG19":
-                solution = "trained_models/cifar100/VGG19_cifar10_traditional_train_valacc=93,57.pth"
+                solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
                 exclude_layers = ["features.0", "classifier"]
             if args["architecture"]== "resnet50":
                 solution = "trained_models/cifar10/resnet50_cifar10.pth"
@@ -8359,11 +8617,14 @@ def LeMain(args):
         "gradient_cliping": True,
         "use_wandb":False
     })
+
     cfg.exclude_layers = exclude_layers
     # for i,elem  in enumerate(exclude_layers):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     # weights_analysis_per_weight(cfg)
-    experiment_selector(cfg,args["experiment"])
+    # experiment_selector(cfg,args["experiment"])
+    # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
+    number_of_0_analysis_stochastic_deterministic(cfg)
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
@@ -8595,18 +8856,18 @@ if __name__ == '__main__':
     # architecture_values = ["VGG19","resnet50","resnet18"]
     # dataset_values = ["cifar10","cifar100"]
 #
-    # sigma_values = [0.001]
-    # dataset_values = ["imagenet"]
-    # pruning_rate_values = [0.9]
-    # architecture_values = ["resnet18"]
-    # cfg = omegaconf.DictConfig({
-    #     "sigma":0.001,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
-    #     "model_type": "hub",
-    #     "dataset": "imagenet",
-    #     "set":"test"
-    # })
+    sigma_values = [0.005]
+    dataset_values = ["cifar10"]
+    pruning_rate_values = [0.9]
+    architecture_values = ["resnet18"]
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "alternative",
+        "dataset": "imagenet",
+        "set":"test"
+    })
 
     #
     # for dataset in dataset_values:
@@ -8616,7 +8877,7 @@ if __name__ == '__main__':
     #         for arch in architecture_values:
     #             cfg.architecture = arch
     #             for sig in sigma_values:
-    #                 gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/mask_transfer_det_sto/",cfg,2)
+    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/mask_transfer_det_sto/",cfg,2,surname="mask_transfer")
     # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
