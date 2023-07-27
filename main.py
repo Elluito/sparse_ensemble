@@ -3396,9 +3396,9 @@ def CDF_weights_analysis_stochastic_deterministic(cfg:omegaconf.DictConfig=None,
         plt.title(f"Deterministic and Stochastic {architecture_string} model on {dataset_string}")
         plt.legend()
         if range is not None:
-            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_{range[1]}_range.pdf")
+            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_{range[1]}_range.pdf")
         else:
-            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_full_range.pdf")
+            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range.pdf")
 
     if cfg2 is not None:
 
@@ -8623,8 +8623,8 @@ def LeMain(args):
     #     omegaconf.OmegaConf.update(cfg,f"exclude_layers[{i}]",elem,merge=True)
     # weights_analysis_per_weight(cfg)
     # experiment_selector(cfg,args["experiment"])
-    # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
-    number_of_0_analysis_stochastic_deterministic(cfg)
+    CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
+    # number_of_0_analysis_stochastic_deterministic(cfg)
 
 def curve_plot(filepath,filename,title:str):
     curve = np.load(filepath)
@@ -8811,31 +8811,30 @@ if __name__ == '__main__':
     #                                           specific_pruning_rates=[0.88])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
     #                                           specific_pruning_rates=[0.94])
-
-    # ##############################################################################
-    #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
-    # ##############################################################################
-
-
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
-    parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
-    parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
-    parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
-
-
-    args = vars(parser.parse_args())
-    LeMain(args)
+    #
+    # # ##############################################################################
+    # #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
+    # # ##############################################################################
+    #
+    #
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment',type=int,default=11 ,help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int,default=1,help = 'Population', required=False)
+    # parser.add_argument('-gen', '--generation',type=int,default=10, help = 'Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs',type=int,default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma',type=float,default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size',type=int,default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner',type=str,default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset',type=str,default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture',type=str,default="resnet18", help='Type of architecture', required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype',type=str,default="alternative", help='The type of model (which model definition/declaration) to use in the architecture', required=True)
+    # parser.add_argument('-pru', '--pruning_rate',type=float,default=0.9, help='percentage of weights to prune', required=False)
+    # parser.add_argument('-nw', '--num_workers',type=int,default=4, help='Number of workers', required=False)
+    #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
     #
 
 
