@@ -8876,7 +8876,7 @@ if __name__ == '__main__':
     #         for arch in architecture_values:
     #             cfg.architecture = arch
     #             for sig in sigma_values:
-    gradient_flow_especific_combination_dataframe_generation("gradient_flow_data/mask_transfer_det_sto/",cfg,2,surname="mask_transfer")
+    gradient_flow_especific_combination_dataframe_generation_stochastic_only("gradient_flow_data/mask_transfer_det_sto/",cfg,2,surname="mask_transfer")
     # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
 
 
