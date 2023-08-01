@@ -12,6 +12,8 @@ import numpy as np
 import torch
 from torch import nn
 from shrinkbench.metrics.flops import flops
+import torch.nn.functional as F
+from sklearn.manifold import MDS
 from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
@@ -22,7 +24,22 @@ from accelerate import Accelerator
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 
+############ This function is for projecting a model given a list of models and project them into 2D plane with MDS ####
+def project_models(list_of_models:typing.List[torch.nn.Module]):
+    dataset = None
+    for m in list_of_models:
+        vector = parameters_to_vector(m.parameters()).detach().cpu().numpy()
+        if dataset is None:
+            dataset = np.reshape(vector,(1,-1))
+        else:
+            dataset = np.vstack((dataset,np.reshape(vector,(1,-1))))
+    embeding = MDS(n_components=2)
 
+    transformed_parameters = embeding.fit_transform(dataset)
+    return transformed_parameters
+    # markers =[".","o","v","^",]
+
+########################################################################################################################
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -146,7 +163,11 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             if count_flops:
                 sparse_flops += batch_flops
             test_loss += loss.data.item()
-            _, predicted = torch.max(outputs.data, 1)
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs,dim=0)
+                _, predicted = torch.max(soft_max_outputs, 1)
             total += targets.size(0)
             correct += predicted.eq(targets.data).cpu().sum()
 
