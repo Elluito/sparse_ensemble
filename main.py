@@ -1,6 +1,5 @@
 import os
 import accelerate
-
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
@@ -13,9 +12,7 @@ from typing import List, Union, Any
 import pandas as pd
 import datetime as date
 import umap
-
 from torch.backends.cudnn import deterministic
-
 import wandb
 import optuna
 # sys.path.append('csgmcmc')
@@ -41,6 +38,7 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 from functools import partial
+print("Unitl line 40")
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 import ignite.metrics as igm
@@ -8887,8 +8885,8 @@ def LeMain(args):
     cfg.exclude_layers = exclude_layers
     # weights_analysis_per_weight(cfg)
     experiment_selector(cfg,args["experiment"])
-    # MDS_projection_plot(cfg)
-    # bias_comparison_resnet18()
+    MDS_projection_plot(cfg)
+    bias_comparison_resnet18()
     # vj
     # plot_histograms_predictions()
     # stochastic_pruning_against_deterministic_pruning(cfg,name="official_seed")
@@ -9024,6 +9022,15 @@ def compare_architecture_distributions(arc1="", arc2=""):
 def continued_fined_tuning_imagenet(cfg):
     pass
 
+def record_model_dataset_predictions(cfg,record_dataset=False):
+    train,val,test = get_datasets(cfg)
+    model = get_model(cfg)
+    record_predictions(model, test, "dense_{}_{}_predictions_{}".format(cfg.architecture,cfg.model_type,cfg.dataset),record_dataset,file_path_x="{}_x".format(cfg.dataset),file_path_y="{}_y".format(cfg.dataset))
+
+    det_model = copy.deepcopy(model)
+
+
+
 
 def bias_comparison_resnet18():
     pred_list = []
@@ -9032,19 +9039,32 @@ def bias_comparison_resnet18():
         dense_predictions = pickle.load(f)
         pred_list.append(dense_predictions)
         pred_labels.append("Dense Model")
-    with open("fine_tuned_resnet18_sto_0.005_predictions_cifar10", "rb") as f:
+    with open("fine_tuned_resnet18_sto_lamp_0.005_predictions_cifar10", "rb") as f:
         fined_tuned_stochastic_predictions = pickle.load(f)
         pred_list.append(fined_tuned_stochastic_predictions)
-        pred_labels.append(r"Pruned Fine-tuned $\sigma$=0.005")
-    with open("fine_tuned_resnet18_sto_0.001_predictions_pr0.9_cifar10", "rb") as f:
+        pred_labels.append(r"$\sigma$=0.005")
+    with open("fine_tuned_resnet18_sto_lamp_0.001_predictions_cifar10", "rb") as f:
         fined_tuned_stochastic_predictions_01 = pickle.load(f)
         pred_list.append(fined_tuned_stochastic_predictions_01)
-        pred_labels.append(r"Pruned Fine-tuned $\sigma$=0.001")
-    with open("fine_tuned_resnet18_det_predictions_cifar10", "rb") as f:
+        pred_labels.append(r"$\sigma$=0.001")
+    with open("fine_tuned_resnet18_det_lamp_predictions_cifar10", "rb") as f:
         fined_tuned_determinsitic_predictions = pickle.load(f)
         pred_list.append(fined_tuned_determinsitic_predictions)
-        pred_labels.append(r"Pruned Fine-tuned Det")
-
+        pred_labels.append(r"$\sigma$=0")
+    data = np.concatenate((fined_tuned_determinsitic_predictions[:100, :].reshape(1, -1),
+                           fined_tuned_stochastic_predictions[:100, :].reshape(1, -1),
+                           fined_tuned_stochastic_predictions_01[:100, :].reshape(1, -1),
+                           dense_predictions[:100, :].reshape(1, -1)), axis=0)
+    from sklearn.manifold import TSNE
+    # emmbeding = umap.UMAP()
+    emmbeding = TSNE(n_components=2, n_jobs=2,perplexity=1)
+    new_data = emmbeding.fit_transform(data)
+    print(new_data)
+    plt.figure()
+    df = pd.DataFrame({"x": new_data[:, 0], "y": new_data[:, 1],
+                       "Labels": ["Fine-Tuned Det", "Fine-Tuned Sto. 0.005", "Fine-Tuned Sto. 0.001", "Dense"]})
+    g =sns.scatterplot(data=df, x="x", y="y", hue="Labels")
+    plt.savefig("prediction_projections_lamp_fine_tuned.png")
     #
     # with open("one_shot_resnet18_det_prediction", "rb") as f:
     #     one_shot_determinsitic_predictions = pickle.load(f)
@@ -9055,24 +9075,26 @@ def bias_comparison_resnet18():
     with open("cifar10_y", "rb") as f:
         test_labels = pickle.load(f)
     tensor_test_labels = torch.tensor(test_labels)
-    biases =[]
+    biases = []
+    accuracies_list = []
     for pred in pred_list:
 
         _,_,_,accuracies,confideces = check_correctness(torch.tensor(pred),tensor_test_labels)
         ece = calc_ece(torch.tensor(confideces),torch.tensor(accuracies))
         biases.append(ece)
-    df = pd.DataFrame({"ECE":biases,"Labels":pred_labels
+        accuracies_list.append(((accuracies.sum()/accuracies.size(0))*100).item())
+    df = pd.DataFrame({"ECE":biases,"Labels":pred_labels,"Accuracy": accuracies_list
     })
-    g = sns.barplot(data=df,x="Labels",y="ECE")
-    g.save("bias.png")
+    g = sns.catplot(kind="bar",data=df,x="Labels",y="ECE",hue="Accuracy")
+    plt.savefig("bias_lamp.png",bbox_inches="tight")
+
 
 def MDS_projection_plot(cfg):
     from alternate_models import ResNet18
     from sparse_ensemble_utils import project_models
     train, val, test = get_datasets(cfg)
-    # dense_model = get_model(cfg)
-    # record_predictions(dense_model, test, "dense_resnet18_predictions_cifar10")
-    # return
+    dense_model = get_model(cfg)
+    record_predictions(dense_model, test, "dense_resnet18_predictions_cifar10")
     model_det = ResNet18()
     model_sto = ResNet18()
     list_of_models = []
@@ -9086,7 +9108,8 @@ def MDS_projection_plot(cfg):
     # })
     # prune_function(model_det,cfg)
     # prune_function(model_sto,cfg)
-    lamp_det = torch.load("noisy_models/cifar10/resnet18/mask_transfer_fine_tuned_global_resnet18_cifar10.pth")
+    # lamp_det = torch.load("noisy_models/cifar10/resnet18/mask_transfer_fine_tuned_global_resnet18_cifar10.pth")
+    lamp_det = torch.load("noisy_models/cifar10/resnet18/fine_tuned_det_lamp_pr0.9.pth")
     model_det.load_state_dict(lamp_det)
     record_predictions(model_det, test, "fine_tuned_resnet18_det_lamp_predictions_cifar10", record_dataset=True,
                        file_path_x="cifar10_x", file_path_y="cifar10_y")
@@ -9094,12 +9117,12 @@ def MDS_projection_plot(cfg):
     list_of_models.append(copy.deepcopy(model_det))
     global_det = torch.load("noisy_models/cifar10/resnet18/fine_tuned_resnet18_deterministic_global.pth")
     model_det.load_state_dict(global_det)
-    record_predictions(model_det, test, "fine_tuned_resnet18_det_predictions_cifar10", record_dataset=True,
-                       file_path_x="cifar10_x", file_path_y="cifar10_y")
+    record_predictions(model_det, test, "fine_tuned_resnet18_det_predictions_cifar10")
 
     list_of_models.append(copy.deepcopy(model_det))
     lamp_s1 = torch.load("noisy_models/cifar10/resnet18/fine_tuned_S0.001_lamp_pr0.9.pth", map_location="cpu")
     model_det.load_state_dict(lamp_s1)
+    record_predictions(model_det, test, "fine_tuned_resnet18_sto_lamp_0.001_predictions_cifar10")
     list_of_models.append(copy.deepcopy(model_det))
 
     lamp_s5 = torch.load("noisy_models/cifar10/resnet18/fine_tuned_S0.005_lamp_pr0.9.pth", map_location="cpu")
@@ -9159,14 +9182,14 @@ def plot_histograms_predictions():
                            one_shot_stochastic_predictions[:100, :].reshape(1, -1)), axis=0)
     from sklearn.manifold import TSNE
     # emmbeding = umap.UMAP()
-    emmbeding = TSNE(n_components=2, n_jobs=2)
+    emmbeding = TSNE(n_components=2, n_jobs=2,perplexity=1)
     new_data = emmbeding.fit_transform(data)
     print(new_data)
     plt.figure()
     df = pd.DataFrame({"x": new_data[:, 0], "y": new_data[:, 1],
                        "Labels": ["Fine-Tuned Det", "Fine-Tuned Sto. 0.005", "One-Shot Det", "One-Shot Sto. 0.005"]})
-    g = not sns.scatter(data=df, x="x", y="y", hue="Labels")
-    g.save("prediction_projections.png")
+    g =sns.scatterplot(data=df, x="x", y="y", hue="Labels")
+    plt.savefig("prediction_projections.png")
 
 
     args_sort_FT_det = np.argsort(fined_tuned_determinsitic_predictions, axis=1)
@@ -9206,7 +9229,7 @@ if __name__ == '__main__':
     #     "batch_size": 512,
     #     "lr": 0.001,
     #     "momentum": 0.9,
-    #     "weight_decay": 1e-4,
+    #     "weight_decay": 1e-4,\
     #     "cyclic_lr": True,
     #     "lr_peak_epoch": 5,
     #     "optim": "adam",
