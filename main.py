@@ -8888,8 +8888,9 @@ def LeMain(args):
     # weights_analysis_per_weight(cfg)
     experiment_selector(cfg,args["experiment"])
     # MDS_projection_plot(cfg)
-    bias_comparison_resnet18()
-    plot_histograms_predictions()
+    # bias_comparison_resnet18()
+    # vj
+    # plot_histograms_predictions()
     # stochastic_pruning_against_deterministic_pruning(cfg,name="official_seed")
     # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
     # number_of_0_analysis_stochastic_deterministic(cfg)
