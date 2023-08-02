@@ -36,13 +36,13 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-import hydra
+# import hydra
 import torchvision
 import torchvision.transforms as transforms
 import scipy
 import argparse
 import scipy.optimize as optimize
-from torch.autograd import Variable
+# from torch.autograd import Variable
 import numpy as np
 import random
 import torch.nn.utils.prune as prune
@@ -53,7 +53,7 @@ import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 import ignite.metrics as igm
 from torchmetrics import Accuracy
-import array as pyarr
+# import array as pyarr
 import matplotlib
 
 matplotlib.use('Agg')
@@ -70,7 +70,7 @@ import logging
 import torchvision as tv
 from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
 from matplotlib.axes import SubplotBase
-from itertools import chain, combinations
+from itertools import combinations
 import seaborn as sns
 import seaborn.objects as so
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
@@ -205,8 +205,8 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
-def all_subsets(ss):
-    return chain(*map(lambda x: combinations(ss, x), range(0, len(ss) + 1)))
+# def all_subsets(ss):
+#     return chain(*map(lambda x: combinations(ss, x), range(0, len(ss) + 1)))
 
 
 def strip_prefix(net_state_dict: dict):

@@ -1,4 +1,7 @@
 print("First line")
+import time
+t0 =time.time()
+
 import os
 print("After os")
 # import accelerate
@@ -56,7 +59,6 @@ import ignite.metrics as igm
 from torchmetrics import Accuracy
 import array as pyarr
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -65,7 +67,6 @@ import sklearn as sk
 from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import time
 from torch.utils.data import DataLoader, random_split, Dataset
 import logging
 import torchvision as tv
@@ -91,3 +92,6 @@ from pathlib import Path
 import argparse
 from decimal import Decimal
 print("safe All imports")
+t1 = time.time()
+print("time for imports = {}".format(t1-t0))
+
