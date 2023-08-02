@@ -7,11 +7,14 @@ print("After accelerate")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
+print("After Pickle")
 import paretoset
+print("After pareto set")
 import glob
+print("After glob")
 # import pygmo
 import typing
-from typing import List, Union, Any
+print("After typing")
 import pandas as pd
 print("Until: 16")
 import datetime as date
@@ -7074,7 +7077,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
     stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
 
-    lamp_pruned_original: typing.Union[Union[ResNet, None, VGG, nn.Module], Any] = copy.deepcopy(net)
+    lamp_pruned_original: typing.Union[ResNet, None, VGG, nn.Module] = copy.deepcopy(net)
 
     prune_with_rate(lamp_pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                     pruner="lamp")
