@@ -21,7 +21,7 @@ import datetime as date
 print("after datetime")
 # import umap
 print("after umap")
-import wandb
+# import wandb
 print("wandb")
 #import optuna
 print("After optuna")
