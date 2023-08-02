@@ -5223,13 +5223,13 @@ def check_correctness(outputs, targets):
     soft_max_outputs = F.softmax(outputs, dim=1)
     print("soft_max:{}".format(soft_max_outputs))
     _, predicted = torch.max(outputs.data, 1)
-    _, predicted_soft_max = torch.max(soft_max_outputs.data, 1)
+    soft_max_pred, predicted_soft_max = torch.max(soft_max_outputs.data, 1)
     total += targets.size(0)
     correct += predicted.eq(targets.data).cpu().sum()
 
     correct_soft_max += predicted_soft_max.eq(targets.data).cpu().sum()
 
-    return total, correct, correct_soft_max
+    return total, correct, correct_soft_max,predicted.eq(targets.data).cpu(),soft_max_pred
 
 
 def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
@@ -6916,7 +6916,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
 
     remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
     record_predictions(pruned_original, evaluation_set,
-                       "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type,cfg.dataset))
+                       "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
     print("pruned_performance of pruned original")
     t0 = time.time()
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
@@ -6949,7 +6949,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         record_predictions(current_model, evaluation_set,
-                           "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type,cfg.dataset))
+                           "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
         return
         torch.cuda.empty_cache()
         print("Stocastic pruning performance")
@@ -7742,18 +7742,18 @@ def bar_plot_every_experiment(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame
 
         }
     )
-    columns = ["Stage",r"$\sigma$","Pruner","Architecture","Dataset","Pruning rate"]
-    test_labels = ["One-Shot",0,"GMP","RESNET18","CIFAR10",0.9]
-    sub_dataframe = d[d["Pruning rate"]==0.9]
-    sub_dataframe = sub_dataframe[sub_dataframe["Dataset"]=="CIFAR10"]
-    sub_dataframe = sub_dataframe[sub_dataframe["Architecture"]=="RESNET18"]
-    sub_dataframe = sub_dataframe[sub_dataframe["Pruner"]=="GMP"]
-    sub_dataframe = sub_dataframe[sub_dataframe["$\sigma$"]==0.001]
-    sub_dataframe = sub_dataframe[sub_dataframe["Stage"]=="One-Shot"]
+    columns = ["Stage", r"$\sigma$", "Pruner", "Architecture", "Dataset", "Pruning rate"]
+    test_labels = ["One-Shot", 0, "GMP", "RESNET18", "CIFAR10", 0.9]
+    sub_dataframe = d[d["Pruning rate"] == 0.9]
+    sub_dataframe = sub_dataframe[sub_dataframe["Dataset"] == "CIFAR10"]
+    sub_dataframe = sub_dataframe[sub_dataframe["Architecture"] == "RESNET18"]
+    sub_dataframe = sub_dataframe[sub_dataframe["Pruner"] == "GMP"]
+    sub_dataframe = sub_dataframe[sub_dataframe["$\sigma$"] == 0.001]
+    sub_dataframe = sub_dataframe[sub_dataframe["Stage"] == "One-Shot"]
 
-    new_d = d.groupby(columns).median().reset_index()#.rename(columns={0:'Median Performance'})
+    new_d = d.groupby(columns).median().reset_index()  # .rename(columns={0:'Median Performance'})
 
-    new_d.to_csv("organized_gradient_flow_dataset_sigmas{}.csv".format(sigmas_to_show),index=False)
+    new_d.to_csv("organized_gradient_flow_dataset_sigmas{}.csv".format(sigmas_to_show), index=False)
 
     if dataFrame2 is not None:
         d2 = dataFrame2[dataFrame2[r"$\sigma$"].isin(sigmas_to_show)]
@@ -7948,11 +7948,10 @@ def load_predictions(file):
 
 
 def record_predictions_of_individual(prefix: str, cfg):
-
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-    prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.modeltype}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.modelt_ype}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # Create the folder structure if is not there already
     path = Path(prediction_prefix)
     path.mkdir(parents=True, exist_ok=True)
@@ -8035,7 +8034,7 @@ def record_predictions_of_individual(prefix: str, cfg):
             else:
                 all_predictions = np.concatenate((all_predictions, batch_prediction.detach().cpu().numpy()), axis=0)
 
-        with open(prediction_prefix+ f"lamp_predictions_{index}", "wb") as f:
+        with open(prediction_prefix + f"lamp_predictions_{index}", "wb") as f:
             pickle.dump(all_predictions, f)
 
         if ind_number > max_individuals:
@@ -8115,7 +8114,7 @@ def ensemble_predictions(prefix: str, cfg):
                 predictions_mean = individual_predictions
             else:
                 predictions_mean = predictions_mean + (
-                            individual_predictions - predictions_mean) / counter_for_mean_individuals
+                        individual_predictions - predictions_mean) / counter_for_mean_individuals
                 counter_for_mean_individuals += 1
             if predictions_voting is None:
                 predictions_voting = torch.reshape(torch.argmax(individual_predictions, dim=1), (-1, 1))
@@ -8146,14 +8145,14 @@ def ensemble_predictions(prefix: str, cfg):
             full_mean_mean_accuracy = mean_accuracy
         else:
             full_mean_mean_accuracy = full_mean_mean_accuracy + (
-                        mean_accuracy - full_mean_mean_accuracy) / counter_for_mean_mean
+                    mean_accuracy - full_mean_mean_accuracy) / counter_for_mean_mean
             counter_for_mean_mean += 1
         # For voting method
         if full_voting_mean_accuracy is None:
             full_voting_mean_accuracy = voting_accuracy
         else:
             full_voting_mean_accuracy = full_voting_mean_accuracy + (
-                        voting_accuracy - full_voting_mean_accuracy) / counter_for_mean_voting
+                    voting_accuracy - full_voting_mean_accuracy) / counter_for_mean_voting
             counter_for_mean_voting += 1
 
     global_results = {"voting": full_voting_mean_accuracy.detach().cpu().numpy(),
@@ -8229,7 +8228,7 @@ def ensemble_predictions(prefix: str, cfg):
                 predictions_mean = individual_predictions
             else:
                 predictions_mean = predictions_mean + (
-                            individual_predictions - predictions_mean) / counter_for_mean_individuals
+                        individual_predictions - predictions_mean) / counter_for_mean_individuals
                 counter_for_mean_individuals += 1
             if predictions_voting is None:
                 predictions_voting = torch.reshape(torch.argmax(individual_predictions, dim=1), (-1, 1))
@@ -8260,14 +8259,14 @@ def ensemble_predictions(prefix: str, cfg):
             full_mean_mean_accuracy = mean_accuracy
         else:
             full_mean_mean_accuracy = full_mean_mean_accuracy + (
-                        mean_accuracy - full_mean_mean_accuracy) / counter_for_mean_mean
+                    mean_accuracy - full_mean_mean_accuracy) / counter_for_mean_mean
             counter_for_mean_mean += 1
         # For voting method
         if full_voting_mean_accuracy is None:
             full_voting_mean_accuracy = voting_accuracy
         else:
             full_voting_mean_accuracy = full_voting_mean_accuracy + (
-                        voting_accuracy - full_voting_mean_accuracy) / counter_for_mean_voting
+                    voting_accuracy - full_voting_mean_accuracy) / counter_for_mean_voting
             counter_for_mean_voting += 1
 
     assert predictions_mean is not None, " the predictions for batch {} for all individuals were skipped.".format(index)
@@ -8889,7 +8888,8 @@ def LeMain(args):
     # weights_analysis_per_weight(cfg)
     experiment_selector(cfg,args["experiment"])
     # MDS_projection_plot(cfg)
-    # plot_histograms_predictions()
+    bias_comparison_resnet18()
+    plot_histograms_predictions()
     # stochastic_pruning_against_deterministic_pruning(cfg,name="official_seed")
     # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
     # number_of_0_analysis_stochastic_deterministic(cfg)
@@ -9024,10 +9024,54 @@ def continued_fined_tuning_imagenet(cfg):
     pass
 
 
+def bias_comparison_resnet18():
+    pred_list = []
+    pred_labels = []
+    with open("dense_resnet18_predictions_cifar10", "rb") as f:
+        dense_predictions = pickle.load(f)
+        pred_list.append(dense_predictions)
+        pred_labels.append("Dense Model")
+    with open("fine_tuned_resnet18_sto_0.005_predictions_cifar10", "rb") as f:
+        fined_tuned_stochastic_predictions = pickle.load(f)
+        pred_list.append(fined_tuned_stochastic_predictions)
+        pred_labels.append(r"Pruned Fine-tuned $\sigma$=0.005")
+    with open("fine_tuned_resnet18_sto_0.001_predictions_pr0.9_cifar10", "rb") as f:
+        fined_tuned_stochastic_predictions_01 = pickle.load(f)
+        pred_list.append(fined_tuned_stochastic_predictions_01)
+        pred_labels.append(r"Pruned Fine-tuned $\sigma$=0.001")
+    with open("fine_tuned_resnet18_det_predictions_cifar10", "rb") as f:
+        fined_tuned_determinsitic_predictions = pickle.load(f)
+        pred_list.append(fined_tuned_determinsitic_predictions)
+        pred_labels.append(r"Pruned Fine-tuned Det")
+
+    #
+    # with open("one_shot_resnet18_det_prediction", "rb") as f:
+    #     one_shot_determinsitic_predictions = pickle.load(f)
+    #
+    # with open("one_shot_resnet18_sto_prediction", "rb") as f:
+    #     one_shot_stochastic_predictions = pickle.load(f)
+
+    with open("cifar10_y", "rb") as f:
+        test_labels = pickle.load(f)
+    tensor_test_labels = torch.tensor(test_labels)
+    biases =[]
+    for pred in pred_list:
+
+        _,_,_,accuracies,confideces = check_correctness(torch.tensor(pred),tensor_test_labels)
+        ece = calc_ece(torch.tensor(confideces),torch.tensor(accuracies))
+        biases.append(ece)
+    df = pd.DataFrame({"ECE":biases,"Labels":pred_labels
+    })
+    g = sns.barplot(data=df,x="Labels",y="ECE")
+    g.save("bias.png")
+
 def MDS_projection_plot(cfg):
     from alternate_models import ResNet18
     from sparse_ensemble_utils import project_models
     train, val, test = get_datasets(cfg)
+    # dense_model = get_model(cfg)
+    # record_predictions(dense_model, test, "dense_resnet18_predictions_cifar10")
+    # return
     model_det = ResNet18()
     model_sto = ResNet18()
     list_of_models = []
@@ -9064,6 +9108,7 @@ def MDS_projection_plot(cfg):
 
     global_s1 = torch.load("noisy_models/cifar10/resnet18/fine_tuned_S0.001_pr0.9.pth", map_location="cpu")
     model_det.load_state_dict(global_s1)
+    record_predictions(model_det, test, "fine_tuned_resnet18_sto_0.001_predictions_pr0.9_cifar10")
     list_of_models.append(copy.deepcopy(model_det))
 
     global_s5 = torch.load("noisy_models/cifar10/resnet18/fine_tuned_S0.005_pr_0.9.pth")
@@ -9088,8 +9133,11 @@ def MDS_projection_plot(cfg):
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
     plt.savefig("MDS_projections_resnet18_cifar10.pdf", bbox_inches="tight")
 
+
 def plot_projection_prediction():
     pass
+
+
 def plot_histograms_predictions():
     with open("fine_tuned_resnet18_sto_0.005_predictions_cifar10", "rb") as f:
         fined_tuned_stochastic_predictions = pickle.load(f)
@@ -9104,11 +9152,21 @@ def plot_histograms_predictions():
 
     with open("cifar10_y", "rb") as f:
         test_labels = pickle.load(f)
-    data = np.concatenate((fined_tuned_determinsitic_predictions[:100,:].reshape(1,-1),fined_tuned_stochastic_predictions[:100,:].reshape(1,-1),one_shot_determinsitic_predictions[:100,:].reshape(1,-1),one_shot_stochastic_predictions[:100,:].reshape(1,-1)),axis=0)
+    data = np.concatenate((fined_tuned_determinsitic_predictions[:100, :].reshape(1, -1),
+                           fined_tuned_stochastic_predictions[:100, :].reshape(1, -1),
+                           one_shot_determinsitic_predictions[:100, :].reshape(1, -1),
+                           one_shot_stochastic_predictions[:100, :].reshape(1, -1)), axis=0)
     from sklearn.manifold import TSNE
-    emmbeding = umap.UMAP()
+    # emmbeding = umap.UMAP()
+    emmbeding = TSNE(n_components=2, n_jobs=2)
     new_data = emmbeding.fit_transform(data)
     print(new_data)
+    plt.figure()
+    df = pd.DataFrame({"x": new_data[:, 0], "y": new_data[:, 1],
+                       "Labels": ["Fine-Tuned Det", "Fine-Tuned Sto. 0.005", "One-Shot Det", "One-Shot Sto. 0.005"]})
+    g = not sns.scatter(data=df, x="x", y="y", hue="Labels")
+    g.save("prediction_projections.png")
+
 
     args_sort_FT_det = np.argsort(fined_tuned_determinsitic_predictions, axis=1)
     args_sort_FT_sto = np.argsort(fined_tuned_stochastic_predictions, axis=1)
@@ -9136,6 +9194,7 @@ def plot_histograms_predictions():
     axes[1, 2].set_title("Labels", fontsize=6)
     axes[1, 2].tick_params(axis='both', which='both', labelsize=7, labelbottom=True)
     plt.savefig("predictions_histograms.png", bbox_inches="tight")
+    plt.close()
 
 
 if __name__ == '__main__':
@@ -9333,9 +9392,9 @@ if __name__ == '__main__':
 # # #
 # # ################################## Barplot with all results #######################################################################
 #
-    df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",sep = ",",header = 0, index_col = False)
-    df2 = pd.read_csv(f"gradientflow_stochastic_ensemble_for_all_datasets_architectures_pruning_rates.csv",sep = ",",header = 0, index_col = False)
-    bar_plot_every_experiment(df,df2,use_set="test",sigmas_to_show=[0,0.001,0.003,0.005])
+# df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv",sep = ",",header = 0, index_col = False)
+# df2 = pd.read_csv(f"gradientflow_stochastic_ensemble_for_all_datasets_architectures_pruning_rates.csv",sep = ",",header = 0, index_col = False)
+# bar_plot_every_experiment(df,df2,use_set="test",sigmas_to_show=[0,0.001,0.003,0.005])
 
 
 # ################################## CURVE PLOTS #######################################################################
