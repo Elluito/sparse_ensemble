@@ -13,6 +13,7 @@ import glob
 import typing
 from typing import List, Union, Any
 import pandas as pd
+print("Until: 16")
 import datetime as date
 import umap
 from torch.backends.cudnn import deterministic
@@ -5112,7 +5113,7 @@ def dynamic_sigma_iterative_process(cfg: omegaconf.DictConfig, print_exclude_lay
         wandb.join()
 
 
-def compare_weights(weight_list_1: List[torch.TensorType], weight_list_2: List[torch.TensorType]):
+def compare_weights(weight_list_1: typing.List[torch.TensorType], weight_list_2: typing.List[torch.TensorType]):
     list_equals = []
     list_of_elem = []
     for i, weight1 in enumerate(weight_list_1):
@@ -5770,7 +5771,7 @@ def generation_of_stochastic_prune_with_efficient_evaluation(solution, target_sp
         #     image, y = get_random_image_label(dataloader)
     if len(sorted_images) != 0:
         image, y = sorted_images.pop()
-    index_to_remove: List[int] = []
+    index_to_remove: typing.List[int] = []
     ######## While there
     total_for_image = len(surviving_models)
     while len(surviving_models) > 1:
@@ -5845,7 +5846,7 @@ def efficient_evaluation_random_images(solution, target_sparsity, sigmas_for_exp
     images_used += 1
     image, y = image.cuda(), y.cuda()
 
-    index_to_remove: List[int] = []
+    index_to_remove: typing.List[int] = []
     ######## While there
     total_for_image = len(surviving_models)
     while len(surviving_models) > 1:
@@ -7073,7 +7074,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
     stochastic_with_deterministic_mask_performance = []
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
 
-    lamp_pruned_original: Union[Union[ResNet, None, VGG, nn.Module], Any] = copy.deepcopy(net)
+    lamp_pruned_original: typing.Union[Union[ResNet, None, VGG, nn.Module], Any] = copy.deepcopy(net)
 
     prune_with_rate(lamp_pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                     pruner="lamp")
