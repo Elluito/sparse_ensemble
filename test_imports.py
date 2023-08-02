@@ -21,8 +21,8 @@ import datetime as date
 print("after datetime")
 # import umap
 print("after umap")
-from torch.backends.cudnn import deterministic
 import wandb
+print("wandb")
 import optuna
 print("After optuna")
 # sys.path.append('csgmcmc')
