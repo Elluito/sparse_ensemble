@@ -1,6 +1,8 @@
 print("First line")
 import os
+print("After os")
 import accelerate
+print("After accelerate")
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
