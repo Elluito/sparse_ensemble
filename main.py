@@ -8,7 +8,7 @@ print("After accelerate")
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
 print("After Pickle")
-import paretoset
+# import paretoset
 print("After pareto set")
 import glob
 print("After glob")
@@ -8404,245 +8404,245 @@ def plot_gradientFlow_data(filepath, title=""):
     plt.savefig("le_test.png")
 
 
-def same_image_pareto_analysis(dataFrame: pd.DataFrame, file: str):
-    temp_dataframe = dataFrame[["initial_GF_valset", "initial_val_accuracy"]]
-    pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe, sense=['max', 'max'])
-    temp_dataframe2 = dataFrame[["initial_GF_valset", "final_val_accuracy"]]
-    temp_dataframe3 = dataFrame[["initial_val_accuracy", "final_val_accuracy"]]
-    temp_dataframe4 = dataFrame[["final_GF_valset", "final_val_accuracy"]]
+# def same_image_pareto_analysis(dataFrame: pd.DataFrame, file: str):
+#     temp_dataframe = dataFrame[["initial_GF_valset", "initial_val_accuracy"]]
+#     pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe, sense=['max', 'max'])
+#     temp_dataframe2 = dataFrame[["initial_GF_valset", "final_val_accuracy"]]
+#     temp_dataframe3 = dataFrame[["initial_val_accuracy", "final_val_accuracy"]]
+#     temp_dataframe4 = dataFrame[["final_GF_valset", "final_val_accuracy"]]
+#
+#     pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2, sense=['max', 'max'])
+#
+#     best = temp_dataframe2['final_val_accuracy'].argmax()
+#
+#     plt.figure()
+#     g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
+#
+#     index_with_both = pareto_indexes_post * pareto_indexes_pre
+#     data_frame_both = temp_dataframe[index_with_both]
+#     print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+#     print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+#     print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#
+#     plt.scatter(x=temp_dataframe[pareto_indexes_post]['initial_GF_valset'],
+#                 y=temp_dataframe[pareto_indexes_post]['initial_val_accuracy'], color='blue', edgecolors='red',
+#                 # alpha=0.5,
+#                 label='Pareto front for final val accuracy')
+#     plt.scatter(x=data_frame_both['initial_GF_valset'],
+#                 y=data_frame_both['initial_val_accuracy'], color='cyan', edgecolors='red')
+#     if pareto_indexes_pre[best]:
+#
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#     else:
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#     # After fine-tuning results
+#     g = sns.scatterplot(data=temp_dataframe4, x="final_GF_valset", y="final_val_accuracy", color='blue', markers='+')
+#     plt.scatter(x=temp_dataframe4[pareto_indexes_pre]['final_GF_valset'],
+#                 y=temp_dataframe4[pareto_indexes_pre]['final_val_accuracy'], color='cyan',
+#                 label='Pareto front before training'
+#                 )
+#
+#     plt.scatter(x=temp_dataframe['final_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                 y=temp_dataframe['final_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                 color='red',
+#                 marker='x',
+#                 label='Single Best after fine-tuning'
+#                 )
+#     not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+#     new_data_after_finetuning = temp_dataframe4[not_first_pareto_set]
+#     new_data = temp_dataframe[not_first_pareto_set]
+#     second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
+#     second_pareto_front_finetuning = paretoset.paretoset(costs=new_data_after_finetuning, sense=['max', 'max'])
+#
+#     # Before Finetunig
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#     scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
+#                            y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
+#                            label='Second Pareto front for initial val accuracy')
+#     # After finetuning
+#     scattter = plt.scatter(x=temp_dataframe4[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe4[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#     scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
+#                            y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
+#                            label='Second Pareto front for initial val accuracy')
+#
+#     plt.xlabel("Magnitude gradient")
+#     plt.ylabel('Accuracy')
+#
+#     plt.legend()
+#     plt.savefig('{}_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
+#     plt.figure()
+#
+#     not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+#     new_data = temp_dataframe[not_first_pareto_set]
+#     second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
+#     g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
+#
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#     scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
+#                            y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
+#                            label='Second Pareto front for initial val accuracy')
+#     # best1 = temp_dataframe[best]["initial_GF_valset"]
+#     # best2 = temp_dataframe[best]["initial_val_accuracy"]
+#     best1 = temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#     best2 = temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
+#
+#     temp = new_data[new_data["initial_GF_valset"] == best1]
+#     temp = temp[temp["initial_val_accuracy"] == best2]
+#
+#     if not temp.empty:
+#
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#     else:
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#
+#     plt.legend()
+#     plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
+#
+#     index_with_both = pareto_indexes_post * pareto_indexes_pre
+#     data_frame_both = temp_dataframe[index_with_both]
+#     print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+#     print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+#     print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#
+#     plt.figure()
+#     g = sns.scatterplot(data=temp_dataframe3, x='initial_val_accuracy', y='final_val_accuracy', color='blue')
+#     plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file), bbox_inches='tight')
+#
 
-    pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2, sense=['max', 'max'])
-
-    best = temp_dataframe2['final_val_accuracy'].argmax()
-
-    plt.figure()
-    g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
-
-    index_with_both = pareto_indexes_post * pareto_indexes_pre
-    data_frame_both = temp_dataframe[index_with_both]
-    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
-    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
-    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-
-    plt.scatter(x=temp_dataframe[pareto_indexes_post]['initial_GF_valset'],
-                y=temp_dataframe[pareto_indexes_post]['initial_val_accuracy'], color='blue', edgecolors='red',
-                # alpha=0.5,
-                label='Pareto front for final val accuracy')
-    plt.scatter(x=data_frame_both['initial_GF_valset'],
-                y=data_frame_both['initial_val_accuracy'], color='cyan', edgecolors='red')
-    if pareto_indexes_pre[best]:
-
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-    else:
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-    # After fine-tuning results
-    g = sns.scatterplot(data=temp_dataframe4, x="final_GF_valset", y="final_val_accuracy", color='blue', markers='+')
-    plt.scatter(x=temp_dataframe4[pareto_indexes_pre]['final_GF_valset'],
-                y=temp_dataframe4[pareto_indexes_pre]['final_val_accuracy'], color='cyan',
-                label='Pareto front before training'
-                )
-
-    plt.scatter(x=temp_dataframe['final_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                y=temp_dataframe['final_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                color='red',
-                marker='x',
-                label='Single Best after fine-tuning'
-                )
-    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
-    new_data_after_finetuning = temp_dataframe4[not_first_pareto_set]
-    new_data = temp_dataframe[not_first_pareto_set]
-    second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
-    second_pareto_front_finetuning = paretoset.paretoset(costs=new_data_after_finetuning, sense=['max', 'max'])
-
-    # Before Finetunig
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-    scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
-                           y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
-                           label='Second Pareto front for initial val accuracy')
-    # After finetuning
-    scattter = plt.scatter(x=temp_dataframe4[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe4[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-    scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
-                           y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
-                           label='Second Pareto front for initial val accuracy')
-
-    plt.xlabel("Magnitude gradient")
-    plt.ylabel('Accuracy')
-
-    plt.legend()
-    plt.savefig('{}_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
-    plt.figure()
-
-    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
-    new_data = temp_dataframe[not_first_pareto_set]
-    second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
-    g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
-
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-    scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
-                           y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
-                           label='Second Pareto front for initial val accuracy')
-    # best1 = temp_dataframe[best]["initial_GF_valset"]
-    # best2 = temp_dataframe[best]["initial_val_accuracy"]
-    best1 = temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-    best2 = temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
-
-    temp = new_data[new_data["initial_GF_valset"] == best1]
-    temp = temp[temp["initial_val_accuracy"] == best2]
-
-    if not temp.empty:
-
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-    else:
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-
-    plt.legend()
-    plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
-
-    index_with_both = pareto_indexes_post * pareto_indexes_pre
-    data_frame_both = temp_dataframe[index_with_both]
-    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
-    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
-    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-
-    plt.figure()
-    g = sns.scatterplot(data=temp_dataframe3, x='initial_val_accuracy', y='final_val_accuracy', color='blue')
-    plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file), bbox_inches='tight')
-
-
-def pareto_analysis(dataFrame: pd.DataFrame, file: str):
-    # Before fine-tuning pareto set
-    temp_dataframe = dataFrame[["initial_GF_valset", "initial_val_accuracy"]]
-    pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe, sense=['max', 'max'])
-    temp_dataframe2 = dataFrame[["initial_GF_valset", "final_val_accuracy"]]
-    temp_dataframe3 = dataFrame[["initial_val_accuracy", "final_val_accuracy"]]
-    temp_dataframe4 = dataFrame[["final_GF_valset", "final_val_accuracy"]]
-
-    pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2, sense=['max', 'max'])
-
-    best = temp_dataframe2['final_val_accuracy'].argmax()
-
-    plt.figure()
-    g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
-
-    index_with_both = pareto_indexes_post * pareto_indexes_pre
-    data_frame_both = temp_dataframe[index_with_both]
-    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
-    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
-    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-
-    plt.scatter(x=temp_dataframe[pareto_indexes_post]['initial_GF_valset'],
-                y=temp_dataframe[pareto_indexes_post]['initial_val_accuracy'], color='blue', edgecolors='red',
-                # alpha=0.5,
-                label='Pareto front for final val accuracy')
-    plt.scatter(x=data_frame_both['initial_GF_valset'],
-                y=data_frame_both['initial_val_accuracy'], color='cyan', edgecolors='red')
-    if pareto_indexes_pre[best]:
-
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-    else:
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-
-    plt.legend()
-    plt.savefig('{}_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
-    plt.figure()
-
-    not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
-    new_data = temp_dataframe[not_first_pareto_set]
-    second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
-    g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
-
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-    scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
-                           y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
-                           label='Second Pareto front for initial val accuracy')
-    # best1 = temp_dataframe[best]["initial_GF_valset"]
-    # best2 = temp_dataframe[best]["initial_val_accuracy"]
-    best1 = temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-    best2 = temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
-
-    temp = new_data[new_data["initial_GF_valset"] == best1]
-    temp = temp[temp["initial_val_accuracy"] == best2]
-
-    if not temp.empty:
-
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-    else:
-        plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
-                    color='red',
-                    marker='x',
-                    label='Single Best after fine-tuning'
-                    )
-
-    plt.legend()
-    plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
-
-    index_with_both = pareto_indexes_post * pareto_indexes_pre
-    data_frame_both = temp_dataframe[index_with_both]
-    print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
-    print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
-    print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
-    scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
-                           y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
-                           label='Pareto front for initial val accuracy')
-
-    plt.figure()
-    g = sns.scatterplot(data=temp_dataframe3, x='initial_val_accuracy', y='final_val_accuracy', color='blue')
-    plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file), bbox_inches='tight')
-
-
+# def pareto_analysis(dataFrame: pd.DataFrame, file: str):
+#     # Before fine-tuning pareto set
+#     temp_dataframe = dataFrame[["initial_GF_valset", "initial_val_accuracy"]]
+#     pareto_indexes_pre = paretoset.paretoset(costs=temp_dataframe, sense=['max', 'max'])
+#     temp_dataframe2 = dataFrame[["initial_GF_valset", "final_val_accuracy"]]
+#     temp_dataframe3 = dataFrame[["initial_val_accuracy", "final_val_accuracy"]]
+#     temp_dataframe4 = dataFrame[["final_GF_valset", "final_val_accuracy"]]
+#
+#     pareto_indexes_post = paretoset.paretoset(costs=temp_dataframe2, sense=['max', 'max'])
+#
+#     best = temp_dataframe2['final_val_accuracy'].argmax()
+#
+#     plt.figure()
+#     g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
+#
+#     index_with_both = pareto_indexes_post * pareto_indexes_pre
+#     data_frame_both = temp_dataframe[index_with_both]
+#     print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+#     print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+#     print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#
+#     plt.scatter(x=temp_dataframe[pareto_indexes_post]['initial_GF_valset'],
+#                 y=temp_dataframe[pareto_indexes_post]['initial_val_accuracy'], color='blue', edgecolors='red',
+#                 # alpha=0.5,
+#                 label='Pareto front for final val accuracy')
+#     plt.scatter(x=data_frame_both['initial_GF_valset'],
+#                 y=data_frame_both['initial_val_accuracy'], color='cyan', edgecolors='red')
+#     if pareto_indexes_pre[best]:
+#
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#     else:
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#
+#     plt.legend()
+#     plt.savefig('{}_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
+#     plt.figure()
+#
+#     not_first_pareto_set = np.bitwise_not(pareto_indexes_pre)
+#     new_data = temp_dataframe[not_first_pareto_set]
+#     second_pareto_front = paretoset.paretoset(costs=new_data, sense=['max', 'max'])
+#     g = sns.scatterplot(data=temp_dataframe, x='initial_GF_valset', y='initial_val_accuracy', color='blue')
+#
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#     scattter = plt.scatter(x=new_data[second_pareto_front]['initial_GF_valset'],
+#                            y=new_data[second_pareto_front]['initial_val_accuracy'], color='green',
+#                            label='Second Pareto front for initial val accuracy')
+#     # best1 = temp_dataframe[best]["initial_GF_valset"]
+#     # best2 = temp_dataframe[best]["initial_val_accuracy"]
+#     best1 = temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#     best2 = temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()]
+#
+#     temp = new_data[new_data["initial_GF_valset"] == best1]
+#     temp = temp[temp["initial_val_accuracy"] == best2]
+#
+#     if not temp.empty:
+#
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#     else:
+#         plt.scatter(x=temp_dataframe['initial_GF_valset'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     y=temp_dataframe['initial_val_accuracy'].iloc[temp_dataframe2['final_val_accuracy'].argmax()],
+#                     color='red',
+#                     marker='x',
+#                     label='Single Best after fine-tuning'
+#                     )
+#
+#     plt.legend()
+#     plt.savefig('{}_2nd_pareto_anayisis_GF.png'.format(file), bbox_inches='tight')
+#
+#     index_with_both = pareto_indexes_post * pareto_indexes_pre
+#     data_frame_both = temp_dataframe[index_with_both]
+#     print('Elements on initial accuracy pareto set: {}'.format(sum(pareto_indexes_pre)))
+#     print('Elements on final accuracy pareto set: {}'.format(sum(pareto_indexes_post)))
+#     print('Elements on both accuracies pareto set: {}'.format(sum(pareto_indexes_post * pareto_indexes_pre)))
+#     scattter = plt.scatter(x=temp_dataframe[pareto_indexes_pre]['initial_GF_valset'],
+#                            y=temp_dataframe[pareto_indexes_pre]['initial_val_accuracy'], color='cyan',
+#                            label='Pareto front for initial val accuracy')
+#
+#     plt.figure()
+#     g = sns.scatterplot(data=temp_dataframe3, x='initial_val_accuracy', y='final_val_accuracy', color='blue')
+#     plt.savefig('{}_initial_acc_vs_final_acc.png'.format(file), bbox_inches='tight')
+#
+#
 def get_first_epoch_GF_last_epoch_accuracy(dataFrame, title, file):
     initial_val_set_GF = []
     initial_test_set_GF = []
