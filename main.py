@@ -19,9 +19,11 @@ import pandas as pd
 print("Until: 16")
 import datetime as date
 import umap
+print("after umap")
 from torch.backends.cudnn import deterministic
 import wandb
 import optuna
+print("After optuna")
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
 from csgmcmc.models import *
