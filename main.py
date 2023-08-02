@@ -7953,6 +7953,9 @@ def record_predictions_of_individual(prefix: str, cfg):
 
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
     prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.modeltype}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    # Create the folder structure if is not there already
+    path = Path(prediction_prefix)
+    path.mkdir(parents=True, exist_ok=True)
 
     max_individuals = 10
 
