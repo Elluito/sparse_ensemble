@@ -1,24 +1,34 @@
+print("First line")
 import os
-import accelerate
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
+print("After os")
+# import accelerate
+print("After accelerate")
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
-import paretoset
+print("After Pickle")
+# import paretoset
+print("After pareto set")
 import glob
+print("After glob")
 # import pygmo
 import typing
-from typing import List, Union, Any
+print("After typing")
 import pandas as pd
+print("Until: 16")
 import datetime as date
-
+print("after datetime")
+# import umap
+print("after umap")
 from torch.backends.cudnn import deterministic
-
 import wandb
 import optuna
+print("After optuna")
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
 from csgmcmc.models import *
+print("Until 20")
 import omegaconf
 import copy
 import pprint
@@ -39,12 +49,14 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 from functools import partial
+print("Unitl line 40")
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 import ignite.metrics as igm
 from torchmetrics import Accuracy
 import array as pyarr
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -68,7 +80,8 @@ from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
-    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse,get_mask,apply_mask,restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops,test_with_accelerator
+    get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse, get_mask, \
+    apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator
 from itertools import cycle
 from matplotlib.patches import PathPatch
 import matplotlib.transforms as mtransforms
@@ -77,3 +90,4 @@ from shrinkbench.metrics.flops import flops
 from pathlib import Path
 import argparse
 from decimal import Decimal
+print("safe All imports")

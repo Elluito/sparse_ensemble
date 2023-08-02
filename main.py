@@ -19,7 +19,7 @@ import pandas as pd
 print("Until: 16")
 import datetime as date
 print("after datetime")
-import umap
+# import umap
 print("after umap")
 from torch.backends.cudnn import deterministic
 import wandb
@@ -90,7 +90,7 @@ from shrinkbench.metrics.flops import flops
 from pathlib import Path
 import argparse
 from decimal import Decimal
-
+print("safe All imports")
 # For different epsilon
 plt.rcParams["mathtext.fontset"] = "cm"
 
