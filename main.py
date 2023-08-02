@@ -1,7 +1,7 @@
 print("First line")
 import os
 print("After os")
-import accelerate
+# import accelerate
 print("After accelerate")
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -6897,11 +6897,11 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_performance = []
     stochastic_dense_performances = []
     stochastic_deltas = []
-    accelerator = accelerate.Accelerator(mixed_precision="fp16")
-    evaluation_set, net = accelerator.prepare(evaluation_set, net)
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
 
     t0 = time.time()
-    original_performance = test_with_accelerator(net, evaluation_set, verbose=1, accelerator=accelerator)
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     t1 = time.time()
     print("Time for test: {}".format(t1 - t0))
     pruned_original = copy.deepcopy(net)

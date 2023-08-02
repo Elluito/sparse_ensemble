@@ -2,7 +2,6 @@ import copy
 import logging
 import time
 import typing
-import accelerate
 import omegaconf
 # from main import get_layer_dict
 import optuna.samplers
@@ -19,7 +18,7 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
-from accelerate import Accelerator
+# from accelerate import Accelerator
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
@@ -968,7 +967,7 @@ def get_gradient_norm(model: nn.Module, masked=False):
     return np.sqrt(sum_of_gradients)
 
 
-def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator: accelerate.Accelerator,
+def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, accelerator,
                                                       dataLoader, testLoader, filepath, total_flops, epoch,
                                                       use_wandb=False, criterion=None):
     # model = accelerator.unwrap_model(wrapped_model)
