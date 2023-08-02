@@ -23,11 +23,11 @@ print("after datetime")
 print("after umap")
 import wandb
 print("wandb")
-import optuna
+#import optuna
 print("After optuna")
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
-from csgmcmc.models import *
+# from csgmcmc.models import *
 print("Until 20")
 import omegaconf
 import copy
