@@ -1,8 +1,9 @@
+print("First line")
 import os
 import accelerate
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
+# os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
 import paretoset
 import glob
@@ -18,6 +19,7 @@ import optuna
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
 from csgmcmc.models import *
+print("Until 20")
 import omegaconf
 import copy
 import pprint
