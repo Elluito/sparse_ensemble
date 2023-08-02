@@ -18,6 +18,7 @@ print("After typing")
 import pandas as pd
 print("Until: 16")
 import datetime as date
+print("after datetime")
 import umap
 print("after umap")
 from torch.backends.cudnn import deterministic
