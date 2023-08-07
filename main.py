@@ -1198,19 +1198,16 @@ def objective_function(sto_performance,deter_performance, pruning_rate):
         return ((sto_performance - deter_performance))
 
 def run_pr_sigma_search_for_cfg(cfg):
-    pruner: optuna.pruners.BasePruner = (
-        optuna.pruners.MedianPruner()
-    )
-    sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10)
-    # sampler = optuna.samplers.TPESampler()
-    study = optuna.create_study(direction="maximize", pruner=pruner, sampler=sampler,
+    # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
+    sampler = optuna.samplers.TPESampler()
+    study = optuna.create_study(direction="maximize", sampler=sampler,
                                 study_name="stochastic-global-pr-and-sigma-optimisation-{}-{}".format(cfg.architecture,
                                                                                                       cfg.dataset),
                                 storage="sqlite:///find_pr_sigma_database_{}_{}.dep".format(cfg.architecture,
                                                                                             cfg.dataset),
                                 load_if_exists=True)
 
-    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=1000)
+    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=300)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
