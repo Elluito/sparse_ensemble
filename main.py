@@ -69,7 +69,6 @@ matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
-import sklearn as sk
 from sklearn.manifold import MDS, TSNE
 from collections import defaultdict
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -1193,13 +1192,17 @@ def plot_heatmaps(cfg, plot_index=1):
 
 ################################# Noise calibration with optuna ##################################
 def objective_function(sto_performance,deter_performance, pruning_rate):
+    if sto_performance>deter_performance:
         return ((sto_performance - deter_performance)) * pruning_rate
+    if sto_performance<=deter_performance:
+        return ((sto_performance - deter_performance))
+
 def run_pr_sigma_search_for_cfg(cfg):
     pruner: optuna.pruners.BasePruner = (
         optuna.pruners.MedianPruner()
     )
-    # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10)
-    sampler = optuna.samplers.TPESampler()
+    sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10)
+    # sampler = optuna.samplers.TPESampler()
     study = optuna.create_study(direction="maximize", pruner=pruner, sampler=sampler,
                                 study_name="stochastic-global-pr-and-sigma-optimisation-{}-{}".format(cfg.architecture,
                                                                                                       cfg.dataset),
@@ -1207,7 +1210,7 @@ def run_pr_sigma_search_for_cfg(cfg):
                                                                                             cfg.dataset),
                                 load_if_exists=True)
 
-    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=50)
+    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=1000)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -1274,43 +1277,43 @@ def run_pr_sigma_search_for_cfg(cfg):
 
 
 
-    print("Manual best  pr = 0.9 sigma = 0.005 #################################")
-    net = get_model(cfg)
-    print("Dense performance on test set = {}".format(dense_performance))
-    train, val, testloader = get_datasets(cfg)
-
-    dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    pruned_model = copy.deepcopy(net)
-    cfg.amount = 0.9
-    prune_function(pruned_model, cfg)
-    remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-
-    # Add small noise just to get tiny variations of the deterministic case
-    det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
-
-    names, weights = zip(*get_layer_dict(net))
-    number_of_layers = len(names)
-    sigma_per_layer = dict(zip(names, [0.005] * number_of_layers))
-    print("Deterministic performance on test set = {}".format(det_performance))
-    performance_of_models = []
-
-    for individual_index in range(5):
-        ############### Here I ask for pr and for sigma ###################################
-
-        current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
-        # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
-        prune_function(current_model, cfg)
-
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-        stochastic_performance = test(current_model, use_cuda=True, testloader=testloader , verbose=0)
-        # Dense stochastic performance
-        performance_of_models.append(stochastic_performance)
-
-    performance_of_models = np.array(performance_of_models)
-    median = np.median(performance_of_models)
-    print("Median accuracy of population: {}".format(median))
-    fitness_function_median = objective_function(median,det_performance, best_pruning_rate)
-    print("Fintness function of the median on test set: {}".format(fitness_function_median))
+    # print("Manual pr = 0.9 sigma = 0.005 #################################")
+    # net = get_model(cfg)
+    # print("Dense performance on test set = {}".format(dense_performance))
+    # train, val, testloader = get_datasets(cfg)
+    #
+    # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    # pruned_model = copy.deepcopy(net)
+    # cfg.amount = 0.9
+    # prune_function(pruned_model, cfg)
+    # remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    #
+    # # Add small noise just to get tiny variations of the deterministic case
+    # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
+    #
+    # names, weights = zip(*get_layer_dict(net))
+    # number_of_layers = len(names)
+    # sigma_per_layer = dict(zip(names, [0.005] * number_of_layers))
+    # print("Deterministic performance on test set = {}".format(det_performance))
+    # performance_of_models = []
+    #
+    # for individual_index in range(5):
+    #     ############### Here I ask for pr and for sigma ###################################
+    #
+    #     current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+    #     # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+    #     prune_function(current_model, cfg)
+    #
+    #     remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+    #     stochastic_performance = test(current_model, use_cuda=True, testloader=testloader , verbose=0)
+    #     # Dense stochastic performance
+    #     performance_of_models.append(stochastic_performance)
+    #
+    # performance_of_models = np.array(performance_of_models)
+    # median = np.median(performance_of_models)
+    # print("Median accuracy of population: {}".format(median))
+    # fitness_function_median = objective_function(median,det_performance, best_pruning_rate)
+    # print("Fintness function of the median on test set: {}".format(fitness_function_median))
 
 
 def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg) -> np.ndarray:
@@ -1347,7 +1350,7 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
     best_accuracy_found = 0
     performance_of_models = []
 
-    for individual_index in range(5):
+    for individual_index in range(10):
         ############### Here I ask for pr and for sigma ###################################
 
         current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
