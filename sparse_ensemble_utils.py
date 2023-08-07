@@ -165,7 +165,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             if torch.all(outputs > 0):
                 _, predicted = torch.max(outputs.data, 1)
             else:
-                soft_max_outputs = F.softmax(outputs,dim=0)
+                soft_max_outputs = F.softmax(outputs,dim=1)
                 _, predicted = torch.max(soft_max_outputs, 1)
             total += targets.size(0)
             correct += predicted.eq(targets.data).cpu().sum()

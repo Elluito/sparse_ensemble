@@ -40,14 +40,16 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-import hydra
 import torchvision
+print("After torchvision")
 import torchvision.transforms as transforms
 import scipy
 import argparse
 import scipy.optimize as optimize
 from torch.autograd import Variable
+print("After  autograd")
 import numpy as np
+print("After numpy")
 import random
 import torch.nn.utils.prune as prune
 import platform
