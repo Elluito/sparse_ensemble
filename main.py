@@ -1365,8 +1365,8 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
     print("Median of population performance: {}".format(median))
     average_difference_performance = det_performance - performance_of_models
     fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
-    fitness_function_vector = objective_function(performance_of_models, det_performance,sample_pruning_rate)
-    average_fitness_function = fitness_function_vector.mean()
+    # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
+    # average_fitness_function = fitness_function_vector.mean()
 
     return fitness_function_median
 
