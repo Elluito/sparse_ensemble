@@ -9019,7 +9019,7 @@ def LeMain(args):
     if args["dataset"] == "cifar100":
         if args["modeltype"] == "alternative":
             if args["architecture"] == "resnet18":
-                solution = "trained_modes/cifar100/resnet18_cifar100_traditional_train.pth"
+                solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
