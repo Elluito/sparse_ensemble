@@ -1202,7 +1202,7 @@ def run_pr_sigma_search_for_cfg(cfg,arg):
 
     one_batch =
     sampler =
-    use_population
+    use_population =
 
     if sampler== "cmaes":
         sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=2)
@@ -6808,7 +6808,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
         pickle.dump(best_model_found, f)
 
 
-def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
+def experiment_selector(cfg: omegaconf.DictConfig,args, number_experiment: int = 1):
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
     if number_experiment == 2:
@@ -6983,7 +6983,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
     if number_experiment == 17:
         run_fine_tune_mask_transfer_experiment(cfg)
     if number_experiment == 18:
-        run_pr_sigma_search_for_cfg(cfg)
+        run_pr_sigma_search_for_cfg(cfg,args)
 
     # if number_experiment == 13:
 
@@ -8176,6 +8176,7 @@ def record_predictions_of_individual(prefix: str, cfg):
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
     prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # Create the folder structure if is not there already
     path = Path(prediction_prefix)
