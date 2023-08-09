@@ -6855,8 +6855,8 @@ def experiment_selector(cfg: omegaconf.DictConfig,args, number_experiment: int =
             "dataset": "imagenet",
             "set": "test",
             "solution": "",
-            "batch_size": 512,
-            # "batch_size": 128,
+            # "batch_size": 512,
+            "batch_size": 128,
             "num_workers": 10,
         })
         create_ensemble_dataframe(cfg2, sigma_values, architecture_values, pruning_rate_values, dataset_values)
@@ -8229,11 +8229,15 @@ def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
             print("He completado 10 individuos para el batch {}".format(index_batch))
             break
         ind_number += 1
-    ############################ Lamp now############################
+    ############################ Lamp now ############################
     del inputs
     del targets
     torch.cuda.empty_cache()
+    gc.collect()
     print("Now LAMP")
+    print(glob.glob(stochastic_lamp_root + "*/", recursive=True))
+    index_batch = 0
+    ind_number = 0
     for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
         all_predictions = None
         # Load the individuals
@@ -8517,6 +8521,7 @@ def mock_function():
 
 def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, architecture_values: list,
                               pruning_rate_values: list, dataset_values: list):
+    import gc
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     accuracy = []
@@ -8543,6 +8548,7 @@ def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, arc
                     # global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
                     record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",datasets_tuple,cfg)
                     torch.cuda.empty_cache()
+                    gc.collect()
                     print(torch.cuda.memory_summary(device=None, abbreviated=False))
                     # global_ensemble_results,lamp_ensemble_results = mock_function()
                     # torch.cuda.empty_cache()
