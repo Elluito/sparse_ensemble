@@ -8539,7 +8539,7 @@ def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, arc
 
                     print(cfg)
                     # global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
-                    record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",datasets,cfg)
+                    record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",datasets_tuple,cfg)
                     torch.cuda.empty_cache()
                     torch.cuda.memory_summary(device=None, abbreviated=False)
                     # global_ensemble_results,lamp_ensemble_results = mock_function()
