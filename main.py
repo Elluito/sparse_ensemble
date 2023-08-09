@@ -1197,9 +1197,21 @@ def objective_function(sto_performance,deter_performance, pruning_rate):
     if sto_performance<=deter_performance:
         return ((sto_performance - deter_performance))
 
-def run_pr_sigma_search_for_cfg(cfg):
-    # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
-    sampler = optuna.samplers.TPESampler()
+
+def run_pr_sigma_search_for_cfg(cfg,arg):
+
+    one_batch =
+    sampler =
+    use_population
+
+    if sampler== "cmaes":
+        sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=2)
+    else:
+        sampler = optuna.samplers.TPESampler()
+
+    # # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
+    # vj
+    # sampler = optuna.samplers.TPESampler()
     study = optuna.create_study(direction="maximize", sampler=sampler,
                                 study_name="stochastic-global-pr-and-sigma-optimisation-{}-{}".format(cfg.architecture,
                                                                                                       cfg.dataset),
@@ -1207,7 +1219,7 @@ def run_pr_sigma_search_for_cfg(cfg):
                                                                                             cfg.dataset),
                                 load_if_exists=True)
 
-    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=300)
+    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=200)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -1242,7 +1254,7 @@ def run_pr_sigma_search_for_cfg(cfg):
 
     performance_of_models = []
     performance_of_models_val = []
-    for individual_index in range(5):
+    for individual_index in range(10):
         ############### Here I ask for pr and for sigma ###################################
 
         current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -1274,53 +1286,55 @@ def run_pr_sigma_search_for_cfg(cfg):
 
 
 
-    # print("Manual pr = 0.9 sigma = 0.005 #################################")
-    # net = get_model(cfg)
-    # print("Dense performance on test set = {}".format(dense_performance))
-    # train, val, testloader = get_datasets(cfg)
-    #
-    # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    # pruned_model = copy.deepcopy(net)
-    # cfg.amount = 0.9
-    # prune_function(pruned_model, cfg)
-    # remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-    #
-    # # Add small noise just to get tiny variations of the deterministic case
-    # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
-    #
-    # names, weights = zip(*get_layer_dict(net))
-    # number_of_layers = len(names)
-    # sigma_per_layer = dict(zip(names, [0.005] * number_of_layers))
-    # print("Deterministic performance on test set = {}".format(det_performance))
-    # performance_of_models = []
-    #
-    # for individual_index in range(5):
-    #     ############### Here I ask for pr and for sigma ###################################
-    #
-    #     current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
-    #     # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
-    #     prune_function(current_model, cfg)
-    #
-    #     remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-    #     stochastic_performance = test(current_model, use_cuda=True, testloader=testloader , verbose=0)
-    #     # Dense stochastic performance
-    #     performance_of_models.append(stochastic_performance)
-    #
-    # performance_of_models = np.array(performance_of_models)
-    # median = np.median(performance_of_models)
-    # print("Median accuracy of population: {}".format(median))
-    # fitness_function_median = objective_function(median,det_performance, best_pruning_rate)
-    # print("Fintness function of the median on test set: {}".format(fitness_function_median))
+    print("Manual pr = 0.9 sigma = 0.005 #################################")
+    net = get_model(cfg)
+    print("Dense performance on test set = {}".format(dense_performance))
+    train, val, testloader = get_datasets(cfg)
+
+    dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    pruned_model = copy.deepcopy(net)
+    cfg.amount = 0.9
+    prune_function(pruned_model, cfg)
+    remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # Add small noise just to get tiny variations of the deterministic case
+    det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [0.005] * number_of_layers))
+    print("Deterministic performance on test set = {}".format(det_performance))
+    performance_of_models = []
+
+    for individual_index in range(5):
+        ############### Here I ask for pr and for sigma ###################################
+
+        current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+        prune_function(current_model, cfg)
+
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        stochastic_performance = test(current_model, use_cuda=True, testloader=testloader , verbose=0)
+        # Dense stochastic performance
+        performance_of_models.append(stochastic_performance)
+
+    performance_of_models = np.array(performance_of_models)
+    median = np.median(performance_of_models)
+    print("Median accuracy of population: {}".format(median))
+    fitness_function_median = objective_function(median,det_performance, best_pruning_rate)
+    print("Fintness function of the median on test set: {}".format(fitness_function_median))
 
 
-def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg) -> np.ndarray:
+def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg,one_batch=True,use_population=True,use_log_sigma=False) -> np.ndarray:
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = get_model(cfg)
     train, val_loader, test_loader = get_datasets(cfg)
 
-    dense_performance = test(net, use_cuda=True, testloader=val_loader, verbose=0, one_batch=True)
-
-    sample_sigma = trial.suggest_float("sigma", 0.001, 0.01)
+    # dense_performance = test(net, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+    if use_log_sigma:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01,log=True)
+    else:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01)
     sample_pruning_rate = trial.suggest_float("pruning_rate", 0.3, 0.99)
 
     # def objective_function(stochastic_performance,deter_performance, pruning_rate):
@@ -1343,32 +1357,38 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
     # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
     #                                  names=["layer", "q25", "q50", "q75"])
     # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
-    best_model_found = None
-    best_accuracy_found = 0
-    performance_of_models = []
+    if  use_population:
+        performance_of_models = []
+        for individual_index in range(10):
+              ############### Here I ask for pr and for sigma ###################################
 
-    for individual_index in range(10):
-        ############### Here I ask for pr and for sigma ###################################
+              current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+              # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+              prune_function(current_model, cfg_copy)
 
-        current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+              remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+              # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+              stochastic_performance = test(current_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+              # Dense stochastic performance
+              performance_of_models.append(stochastic_performance)
+        performance_of_models = np.array(performance_of_models)
+        median = np.median(performance_of_models)
+        print("Median of population performance: {}".format(median))
+        average_difference_performance = det_performance - performance_of_models
+        fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
+        # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
+            # average_fitness_function = fitness_function_vector.mean()
+        return fitness_function_median
+    else:
+        stochastic_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
         # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
-        prune_function(current_model, cfg_copy)
+        prune_function(stochastic_model, cfg_copy)
 
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        remove_reparametrization(stochastic_model, exclude_layer_list=cfg.exclude_layers)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        stochastic_performance = test(current_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=True)
-        # Dense stochastic performance
-        performance_of_models.append(stochastic_performance)
+        stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+        fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
 
-    performance_of_models = np.array(performance_of_models)
-    median = np.median(performance_of_models)
-    print("Median of population performance: {}".format(median))
-    average_difference_performance = det_performance - performance_of_models
-    fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
-    # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
-    # average_fitness_function = fitness_function_vector.mean()
-
-    return fitness_function_median
 
     # Here is where I transfer the mask from the pruned stochastic model to the
     # original weights and put it in the ranking
@@ -8156,7 +8176,7 @@ def record_predictions_of_individual(prefix: str, cfg):
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-    prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.modelt_ype}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # Create the folder structure if is not there already
     path = Path(prediction_prefix)
     path.mkdir(parents=True, exist_ok=True)
