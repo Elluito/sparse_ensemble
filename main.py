@@ -8174,11 +8174,9 @@ def load_predictions(file):
     return t
 
 
-def record_predictions_of_individual(prefix: str, cfg):
+def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-
     stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
-
     prediction_prefix = f"/nobackup/sclaam/prediction_storage/{cfg.dataset}/{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # Create the folder structure if is not there already
     path = Path(prediction_prefix)
@@ -8186,7 +8184,7 @@ def record_predictions_of_individual(prefix: str, cfg):
 
     max_individuals = 10
 
-    train, val, test = get_datasets(cfg)
+    train, val, test = datasets_tuple
 
     labels = None
     ########################## first Global stochatic #######################################
@@ -8196,7 +8194,7 @@ def record_predictions_of_individual(prefix: str, cfg):
     index_batch = 0
     ind_number = 0
     model_place_holder.cuda()
-
+    model_place_holder.eval()
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/", recursive=True)):
         all_predictions = None
         # Load the individuals
@@ -8214,8 +8212,6 @@ def record_predictions_of_individual(prefix: str, cfg):
             print("There was the follwing error but im going to continue because I only need 10 individuals")
             print(err)
             continue
-
-        model_place_holder.eval()
         # now we go through all the test set
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -8225,6 +8221,7 @@ def record_predictions_of_individual(prefix: str, cfg):
                 all_predictions = batch_prediction.detach().cpu().numpy()
             else:
                 all_predictions = np.concatenate((all_predictions, batch_prediction.detach().cpu().numpy()), axis=0)
+
         with open(prediction_prefix + f"global_predictions_{index}.npy", "wb") as f:
             pickle.dump(all_predictions, f)
 
@@ -8236,7 +8233,7 @@ def record_predictions_of_individual(prefix: str, cfg):
     del inputs
     del targets
     torch.cuda.empty_cache()
-
+    print("Now LAMP")
     for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
         all_predictions = None
         # Load the individuals
@@ -8255,7 +8252,6 @@ def record_predictions_of_individual(prefix: str, cfg):
             print(err)
             continue
 
-        model_place_holder.eval()
         # now we go through all the test set
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -8272,7 +8268,7 @@ def record_predictions_of_individual(prefix: str, cfg):
             print("He completado 10 individuos para el batch {}".format(index_batch))
             break
         ind_number += 1
-
+    del model_place_holder
 
 def ensemble_predictions(prefix: str, cfg):
     stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/sigma{cfg.sigma}/pr{cfg.amount}/"
@@ -8532,6 +8528,8 @@ def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, arc
     # Loop over all values of everything
     for dataset in dataset_values:
         cfg.dataset = dataset
+        datasets_tuple = get_datasets(cfg)
+
         for pruning_rate in pruning_rate_values:
             cfg.amount = pruning_rate
             for arch in architecture_values:
@@ -8541,7 +8539,9 @@ def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, arc
 
                     print(cfg)
                     # global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
-                    record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/", cfg)
+                    record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",datasets,cfg)
+                    torch.cuda.empty_cache()
+                    torch.cuda.memory_summary(device=None, abbreviated=False)
                     # global_ensemble_results,lamp_ensemble_results = mock_function()
                     # torch.cuda.empty_cache()
                     # For Global
