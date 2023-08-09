@@ -8195,6 +8195,7 @@ def record_predictions_of_individual(prefix: str, cfg):
 
     index_batch = 0
     ind_number = 0
+    model_place_holder.cuda()
 
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/", recursive=True)):
         all_predictions = None
@@ -8215,10 +8216,10 @@ def record_predictions_of_individual(prefix: str, cfg):
             continue
 
         model_place_holder.eval()
-        model_place_holder.cuda()
         # now we go through all the test set
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
+            print(index)
             batch_prediction = model_place_holder(inputs)
             if all_predictions is None:
                 all_predictions = batch_prediction.detach().cpu().numpy()
@@ -8232,6 +8233,9 @@ def record_predictions_of_individual(prefix: str, cfg):
             break
         ind_number += 1
     ############################ Lamp now############################
+    del inputs
+    del targets
+    torch.cuda.empty_cache()
 
     for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
         all_predictions = None
@@ -8252,7 +8256,6 @@ def record_predictions_of_individual(prefix: str, cfg):
             continue
 
         model_place_holder.eval()
-        model_place_holder.cuda()
         # now we go through all the test set
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -9550,7 +9553,7 @@ if __name__ == '__main__':
                         required=False)
     ############# this is for pr and sigma optim ###############################
     parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=True, help='One batch in sigma pr optim', required=False)
+    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim', required=False)
     parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     parser.add_argument('-ls', '--log_sigma', type=bool, default=False, help='Use log scale for sigma in pr,sigma optim', required=False)
     parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim', required=False)
