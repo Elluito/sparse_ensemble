@@ -9132,7 +9132,7 @@ def LeMain(args):
     # print("Deterministic pruning outside function: {}".format(det_performance))
     # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
     print(args)
-    experiment_selector(cfg, args["experiment"])
+    experiment_selector(cfg, args,args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # vj
