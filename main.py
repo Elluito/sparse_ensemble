@@ -1200,9 +1200,9 @@ def objective_function(sto_performance,deter_performance, pruning_rate):
 
 def run_pr_sigma_search_for_cfg(cfg,arg):
 
-    one_batch =
-    sampler =
-    use_population =
+    one_batch = arg["one_batch"]
+    sampler = arg["sampler"]
+    use_population = cfg["population"]
 
     if sampler== "cmaes":
         sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=2)
@@ -1213,10 +1213,10 @@ def run_pr_sigma_search_for_cfg(cfg,arg):
     # vj
     # sampler = optuna.samplers.TPESampler()
     study = optuna.create_study(direction="maximize", sampler=sampler,
-                                study_name="stochastic-global-pr-and-sigma-optimisation-{}-{}".format(cfg.architecture,
-                                                                                                      cfg.dataset),
-                                storage="sqlite:///find_pr_sigma_database_{}_{}.dep".format(cfg.architecture,
-                                                                                            cfg.dataset),
+                                study_name="stochastic-global-pr-and-sigma-optimisation-{}-{}-{}".format(cfg.architecture,
+                                                                                                      cfg.dataset,sampler),
+                                storage="sqlite:///find_pr_sigma_database_{}_{}_{}_{}.dep".format(cfg.architecture,
+                                                                                            cfg.dataset,sampler,one_batch),
                                 load_if_exists=True)
 
     study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=200)
