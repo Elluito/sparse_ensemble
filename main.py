@@ -1389,7 +1389,7 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
         remove_reparametrization(stochastic_model, exclude_layer_list=cfg.exclude_layers)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
-        fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
+        fitness_function_median = objective_function(stochastic_performance,det_performance, sample_pruning_rate)
 
 
     # Here is where I transfer the mask from the pruned stochastic model to the
@@ -8215,13 +8215,13 @@ def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
         # now we go through all the test set
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
-            print(index)
             batch_prediction = model_place_holder(inputs)
             if all_predictions is None:
                 all_predictions = batch_prediction.detach().cpu().numpy()
             else:
                 all_predictions = np.concatenate((all_predictions, batch_prediction.detach().cpu().numpy()), axis=0)
 
+        print(index)
         with open(prediction_prefix + f"global_predictions_{index}.npy", "wb") as f:
             pickle.dump(all_predictions, f)
 
@@ -8253,6 +8253,7 @@ def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
             continue
 
         # now we go through all the test set
+        print(index)
         for inputs, targets in test:
             inputs, targets = inputs.cuda(), targets.cuda()
             batch_prediction = model_place_holder(inputs)
@@ -8268,6 +8269,7 @@ def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
             print("He completado 10 individuos para el batch {}".format(index_batch))
             break
         ind_number += 1
+    print("FINISH")
     del model_place_holder
 
 def ensemble_predictions(prefix: str, cfg):
@@ -8541,7 +8543,7 @@ def create_ensemble_dataframe(cfg: omegaconf.DictConfig, sigma_values: list, arc
                     # global_ensemble_results,lamp_ensemble_results = ensemble_predictions(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",cfg)
                     record_predictions_of_individual(f"/nobackup/sclaam/gradient_flow_data/{cfg.dataset}/",datasets_tuple,cfg)
                     torch.cuda.empty_cache()
-                    torch.cuda.memory_summary(device=None, abbreviated=False)
+                    print(torch.cuda.memory_summary(device=None, abbreviated=False))
                     # global_ensemble_results,lamp_ensemble_results = mock_function()
                     # torch.cuda.empty_cache()
                     # For Global
