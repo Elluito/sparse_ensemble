@@ -1390,6 +1390,7 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
         fitness_function_median = objective_function(stochastic_performance,det_performance, sample_pruning_rate)
+        return fitness_function_median
 
 
     # Here is where I transfer the mask from the pruned stochastic model to the
@@ -8233,7 +8234,7 @@ def record_predictions_of_individual(prefix: str,datasets_tuple,cfg):
     del inputs
     del targets
     torch.cuda.empty_cache()
-    gc.collect()
+    # gc.collect()
     print("Now LAMP")
     print(glob.glob(stochastic_lamp_root + "*/", recursive=True))
     index_batch = 0
