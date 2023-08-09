@@ -1202,7 +1202,9 @@ def run_pr_sigma_search_for_cfg(cfg,arg):
 
     one_batch = arg["one_batch"]
     sampler = arg["sampler"]
-    use_population = cfg["population"]
+    log_sigma = arg["log_sigma"]
+    number_of_trials = arg["trials"]
+    use_population = True if cfg["population"] > 1 else False
 
     if sampler== "cmaes":
         sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=2)
@@ -1219,7 +1221,7 @@ def run_pr_sigma_search_for_cfg(cfg,arg):
                                                                                             cfg.dataset,sampler,one_batch),
                                 load_if_exists=True)
 
-    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg), n_trials=200)
+    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg,one_batch,use_population,use_log_sigma=log_sigma), n_trials=200)
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -9528,7 +9530,7 @@ if __name__ == '__main__':
     #
     #
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=11, help='Experiment number', required=True)
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
     # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
@@ -9545,8 +9547,12 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
                         required=False)
+    ############# this is for pr and sigma optim ###############################
     parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
-
+    parser.add_argument('-ob', '--one_batch', type=bool, default=True, help='One batch in sigma pr optim', required=False)
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    parser.add_argument('-ls', '--log_sigma', type=bool, default=False, help='Use log scale for sigma in pr,sigma optim', required=False)
+    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim', required=False)
     args = vars(parser.parse_args())
     LeMain(args)
     #
@@ -9703,5 +9709,4 @@ if __name__ == '__main__':
     #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
     #
     #
-    #
-    #
+
