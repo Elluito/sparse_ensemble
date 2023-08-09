@@ -9131,6 +9131,7 @@ def LeMain(args):
     # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
     # print("Deterministic pruning outside function: {}".format(det_performance))
     # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
+    print(args)
     experiment_selector(cfg, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
