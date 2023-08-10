@@ -2444,6 +2444,7 @@ Median accuracy of population: 70.03999999999999
 Fintness function of the median on test set: 35.486872653650096
 Median accuracy of population valset: 68.18
 Fintness function of the median on val set: 34.10682760600815
+
 Manual pr = 0.9 sigma = 0.005 #################################
 Dense performance on test set = 95.4
 Files already downloaded and verified

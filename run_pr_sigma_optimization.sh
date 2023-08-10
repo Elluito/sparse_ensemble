@@ -36,16 +36,22 @@ models=("resnet18" "resnet50" "VGG19")
 
 #Datasets
 datasets=("cifar10" "cifar100")
+samplers =("nsga" "tpe")
+functions=("1" "2")
 
 
 for model in ${models[@]}; do
 # For over the models
 for dataset in ${datasets[@]};do
+for sampler in ${samplers[@]};do
+for f in ${functions[@]};do
 # For over  datasets
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
-qsub -N "search_sigma_pr_${model}_${dataset}" run.sh  18 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1"
+qsub -N "search_sigma_pr_${model}_${dataset}" run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "${f}"
 
+done
+done
 done
 
 done

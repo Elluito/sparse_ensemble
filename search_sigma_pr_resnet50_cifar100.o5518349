@@ -2441,9 +2441,14 @@ Files already downloaded and verified
 Deterministic performance on test set = 7.62
 Deterministic performance on val set = 7.8
 Median accuracy of population: 8.49
-Fintness function of the median on test set: 0.7666985563251129
+Fintness function of the median on test set: 0.766698556325112 8.499
 Median accuracy of population valset: 8.34
 Fintness function of the median on val set: 0.47588186254662174
+
+
+
+
+
 Manual pr = 0.9 sigma = 0.005 #################################
 Dense performance on test set = 76.93
 Files already downloaded and verified
