@@ -45,6 +45,7 @@ for dataset in ${datasets[@]};do
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 qsub -N "search_sigma_pr_${model}_${dataset}" run.sh  18 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1"
+
 done
 
 done

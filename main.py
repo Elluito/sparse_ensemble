@@ -1197,17 +1197,198 @@ def objective_function(sto_performance,deter_performance, pruning_rate):
     if sto_performance<=deter_performance:
         return ((sto_performance - deter_performance))
 
+def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg,one_batch=True,use_population=True,use_log_sigma=False,Fx=1):
 
+    # in theory cfg is available everywhere because it is define on the if name ==__main__ section
+    net = get_model(cfg)
+    train, val_loader, test_loader = get_datasets(cfg)
+
+    # dense_performance = test(net, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+    if use_log_sigma:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01,log=True)
+    else:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01)
+    sample_pruning_rate = trial.suggest_float("pruning_rate", 0.3, 0.99)
+
+    # def objective_function(stochastic_performance,deter_performance, pruning_rate):
+    #     return ((stochastic_performance - deter_performance)) * pruning_rate
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [sample_sigma] * number_of_layers))
+    cfg_copy = copy.deepcopy(cfg)
+    cfg_copy.amount = sample_pruning_rate
+
+    pruned_model = copy.deepcopy(net)
+    prune_function(pruned_model, cfg_copy)
+    remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # Add small noise just to get tiny variations of the deterministic case
+    det_performance = test(pruned_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+    print("Det performance: {}".format(det_performance))
+
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+    # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    if  use_population:
+        performance_of_models = []
+        for individual_index in range(10):
+            ############### Here I ask for pr and for sigma ###################################
+
+            current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+            # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+            prune_function(current_model, cfg_copy)
+
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+            # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+            stochastic_performance = test(current_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+            # Dense stochastic performance
+            performance_of_models.append(stochastic_performance)
+        performance_of_models = np.array(performance_of_models)
+        median = np.median(performance_of_models)
+        print("Median of population performance: {}".format(median))
+        average_difference_performance = det_performance - performance_of_models
+        fitness_function_median = objective_function(median,det_performance, sample_pruning_rate)
+        # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
+        # average_fitness_function = fitness_function_vector.mean()
+        if Fx==1:
+            return median,fitness_function_median
+        else:
+            return median,sample_pruning_rate
+    else:
+        stochastic_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+        prune_function(stochastic_model, cfg_copy)
+
+        remove_reparametrization(stochastic_model, exclude_layer_list=cfg.exclude_layers)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+        fitness_function_median = objective_function(stochastic_performance,det_performance, sample_pruning_rate)
+        print("Stochastic performance: {}".format(stochastic_performance))
+        if Fx==1:
+            return stochastic_performance,fitness_function_median
+        else:
+            return stochastic_performance,sample_pruning_rate
+
+
+
+def run_pr_sigma_search_MOO_for_cfg(cfg,arg):
+    one_batch = True #arg["one_batch"]
+    sampler = arg["sampler"]
+    log_sigma = arg["log_sigma"]
+    number_of_trials = arg["trials"]
+    functions = arg["functions"]
+    use_population = True if cfg["population"] > 1 else False
+
+    if sampler== "nsga":
+        # sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,popsize=10,inc_popsize=2)
+        sampler = optuna.samplers.NSGAIISampler()
+    if sampler == "tpe":
+        sampler = optuna.samplers.TPESampler()
+    else:
+        raise Exception("Sampler {} is not suported for this experiment".format(sampler))
+    # # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
+    # vj
+    # sampler = optuna.samplers.TPESampler()
+    study = optuna.create_study(direction=["maximize","maximize"], sampler=sampler,
+                                study_name="stochastic-global-pr-and-sigma-optimisation-MOO-{}-{}-{}".format(cfg.architecture,
+                                                                                                         cfg.dataset,sampler),
+                                storage="sqlite:///find_pr_sigma_database_MOO_{}_{}_{}_{}.dep".format(cfg.architecture,
+                                                                                                  cfg.dataset,sampler,one_batch),
+                                load_if_exists=True)
+
+    study.optimize(lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg,one_batch,use_population,use_log_sigma=log_sigma), n_trials=args["trials"])
+
+    print("Number of finished trials: {}".format(len(study.trials)))
+
+    print("\n Best trial:")
+    trials = study.best_trials
+
+    sigmas_list = []
+    pruning_rate_list = []
+    f1_list = []
+    f2_list= []
+
+    for trial in trials:
+        f1 , f2 = trial.values
+        f1_list.append(f1)
+        f2_list.append(f2)
+        print("  Values: {},{}".format(f1,f2))
+
+        print("  Params: ")
+
+        for key, value in trial.params.items():
+
+            print("    {}: {}".format(key, value))
+
+        sigma_list.append(trial.params["sigma"])
+        pruning_rate_list.append(trial.params["pruning_rate"])
+    if functions == 1:
+        optuna.visualization.plot_pareto_front(study, target_names=["Stochastic Performance" ,"Differce with Det."])
+    if functions == 2:
+        optuna.visualization.plot_pareto_front(study, target_names=["Stochastic Performance" ,"Pruning rate"])
+
+    # net = get_model(cfg)
+    # train, val, testloader = get_datasets(cfg)
+    #
+    # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    #
+    #
+    #
+    # pruned_model = copy.deepcopy(net)
+    # cfg.amount = best_pruning_rate
+    # prune_function(pruned_model, cfg)
+    # remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    # # Add small noise just to get tiny variations of the deterministic ase
+    # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
+    # det_performance_val = test(pruned_model, use_cuda=True, testloader=val, verbose=0)
+    #
+    # names, weights = zip(*get_layer_dict(net))
+    # number_of_layers = len(names)
+    # sigma_per_layer = dict(zip(names, [best_sigma] * number_of_layers))
+    # print("Deterministic performance on test set = {}".format(det_performance))
+    # print("Deterministic performance on val set = {}".format(det_performance_val))
+    # stochastic_performance = []
+    #
+    # performance_of_models = []
+    # performance_of_models_val = []
+    #
+    # for individual_index in range(10):
+    #     ############### Here I ask for pr and for sigma ###################################
+    #
+    #     current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+    #     # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+    #     prune_function(current_model, cfg)
+    #
+    #     remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+    #     stochastic_performance = test(current_model, use_cuda=True, testloader=testloader, verbose=0)
+    #     stochastic_performance_val = test(current_model, use_cuda=True, testloader=val, verbose=0)
+    #
+    #     performance_of_models_val.append(stochastic_performance_val)
+    #     # Dense stochastic performance
+    #     performance_of_models.append(stochastic_performance)
+    #
+    # performance_of_models = np.array(performance_of_models)
+    # median = np.median(performance_of_models)
+    # print("Median accuracy of population: {}".format(median))
+    # fitness_function_median = objective_function(median,det_performance, best_pruning_rate)
+    # print("Fintness function of the median on test set: {}".format(fitness_function_median))
+    # ##########  val functions###########################
+    # performance_of_models_val= np.array(performance_of_models_val)
+    # median = np.median(performance_of_models_val)
+    # print("Median accuracy of population valset: {}".format(median))
+    # fitness_function_median = objective_function(median,det_performance_val, best_pruning_rate)
+    # print("Fintness function of the median on val set: {}".format(fitness_function_median))
 def run_pr_sigma_search_for_cfg(cfg,arg):
 
-    one_batch = arg["one_batch"]
+    one_batch = False #arg["one_batch"]
     sampler = arg["sampler"]
     log_sigma = arg["log_sigma"]
     number_of_trials = arg["trials"]
     use_population = True if cfg["population"] > 1 else False
 
     if sampler== "cmaes":
-        sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=2)
+        sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,popsize=10,inc_popsize=2)
     else:
         sampler = optuna.samplers.TPESampler()
 
@@ -1221,7 +1402,7 @@ def run_pr_sigma_search_for_cfg(cfg,arg):
                                                                                             cfg.dataset,sampler,one_batch),
                                 load_if_exists=True)
 
-    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg,one_batch,use_population,use_log_sigma=log_sigma), n_trials=200)
+    study.optimize(lambda trial: find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial, cfg,one_batch,use_population,use_log_sigma=log_sigma), n_trials=args["trials"])
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -1353,7 +1534,7 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
     remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
 
     # Add small noise just to get tiny variations of the deterministic case
-    det_performance = test(pruned_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=True)
+    det_performance = test(pruned_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
     print("Det performance: {}".format(det_performance))
 
     # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
@@ -1390,6 +1571,7 @@ def find_pr_sigma_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Tria
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
         stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
         fitness_function_median = objective_function(stochastic_performance,det_performance, sample_pruning_rate)
+        print("Stochastic performance: {}".format(stochastic_performance))
         return fitness_function_median
 
 
@@ -6987,7 +7169,8 @@ def experiment_selector(cfg: omegaconf.DictConfig,args, number_experiment: int =
         run_fine_tune_mask_transfer_experiment(cfg)
     if number_experiment == 18:
         run_pr_sigma_search_for_cfg(cfg,args)
-
+    if number_experiment == 19:
+        run_pr_sigma_search_MOO_for_cfg(cfg,args)
     # if number_experiment == 13:
 
 
@@ -9566,6 +9749,7 @@ if __name__ == '__main__':
     parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     parser.add_argument('-ls', '--log_sigma', type=bool, default=False, help='Use log scale for sigma in pr,sigma optim', required=False)
     parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim', required=False)
+    parser.add_argument('-fnc', '--functions', type=int, default=1, help='Type of functions for MOO optim of sigma and pr', required=False)
     args = vars(parser.parse_args())
     LeMain(args)
     #

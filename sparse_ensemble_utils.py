@@ -18,25 +18,28 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
+
 # from accelerate import Accelerator
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 
+
 ############ This function is for projecting a model given a list of models and project them into 2D plane with MDS ####
-def project_models(list_of_models:typing.List[torch.nn.Module]):
+def project_models(list_of_models: typing.List[torch.nn.Module]):
     dataset = None
     for m in list_of_models:
         vector = parameters_to_vector(m.parameters()).detach().cpu().numpy()
         if dataset is None:
-            dataset = np.reshape(vector,(1,-1))
+            dataset = np.reshape(vector, (1, -1))
         else:
-            dataset = np.vstack((dataset,np.reshape(vector,(1,-1))))
+            dataset = np.vstack((dataset, np.reshape(vector, (1, -1))))
     embeding = MDS(n_components=2)
 
     transformed_parameters = embeding.fit_transform(dataset)
     return transformed_parameters
     # markers =[".","o","v","^",]
+
 
 ########################################################################################################################
 class AverageMeter(object):
@@ -139,7 +142,7 @@ def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flo
         return 100. * correct.item() / total
 
 
-def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0):
+def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -165,7 +168,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             if torch.all(outputs > 0):
                 _, predicted = torch.max(outputs.data, 1)
             else:
-                soft_max_outputs = F.softmax(outputs,dim=1)
+                soft_max_outputs = F.softmax(outputs, dim=1)
                 _, predicted = torch.max(soft_max_outputs, 1)
             total += targets.size(0)
             correct += predicted.eq(targets.data).cpu().sum()
@@ -179,6 +182,11 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
                     return 100. * correct.item() / total, sparse_flops
                 else:
                     return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
     if verbose == 1 or verbose == 2:
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
             test_loss / len(testloader), correct, total,
