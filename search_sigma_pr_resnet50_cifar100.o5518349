@@ -1,0 +1,2453 @@
+## WARNING!
+## The current directory is in your home directory. Please use the high-performance
+## cluster filesystem /nobackup. See documentation for information.
+## WARNING!
+
+## Hosts assigned to job 5518349.1:
+##
+## db12gpu6.arc3.leeds.ac.uk 6 slots
+##
+## Resources granted:
+##
+## h_vmem = 11453246122 (per slot)
+## h_rt   = 08:00:00
+## disk   = 1G (per slot)
+
+First line
+After os
+After accelerate
+After Pickle
+After pareto set
+After glob
+After typing
+Until: 16
+after datetime
+after umap
+After optuna
+Until 20
+Unitl line 40
+Device: cuda
+safe All imports
+{'experiment': 18, 'population': 1, 'generation': 10, 'epochs': 1, 'sigma': 0.0, 'batch_size': 128, 'pruner': 'global', 'dataset': 'cifar100', 'architecture': 'resnet50', 'modeltype': 'alternative', 'pruning_rate': 0.9, 'num_workers': 10, 'one_batch': True, 'sampler': 'tpe', 'log_sigma': True, 'trials': 600, 'functions': 1}
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.96
+Stochastic performance: 98.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.06
+Stochastic performance: 97.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.12
+Stochastic performance: 97.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.98
+Stochastic performance: 3.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 43.82
+Stochastic performance: 42.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.18
+Stochastic performance: 66.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.9
+Stochastic performance: 1.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 99.08
+Stochastic performance: 99.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.6
+Stochastic performance: 97.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 26.82
+Stochastic performance: 3.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.42
+Stochastic performance: 1.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.48
+Stochastic performance: 71.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.52
+Stochastic performance: 1.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.52
+Stochastic performance: 84.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 21.5
+Stochastic performance: 22.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.26
+Stochastic performance: 9.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 34.06
+Stochastic performance: 30.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 91.72
+Stochastic performance: 88.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.62
+Stochastic performance: 9.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.34
+Stochastic performance: 30.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.1
+Stochastic performance: 1.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.22
+Stochastic performance: 3.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.14
+Stochastic performance: 2.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 23.64
+Stochastic performance: 16.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.36
+Stochastic performance: 2.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.26
+Stochastic performance: 4.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.8
+Stochastic performance: 60.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.54
+Stochastic performance: 3.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 27.16
+Stochastic performance: 25.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 89.82
+Stochastic performance: 60.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.04
+Stochastic performance: 59.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.24
+Stochastic performance: 5.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.88
+Stochastic performance: 2.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.28
+Stochastic performance: 2.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 0.82
+Stochastic performance: 0.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.48
+Stochastic performance: 17.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.84
+Stochastic performance: 1.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.84
+Stochastic performance: 48.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.1
+Stochastic performance: 2.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.42
+Stochastic performance: 6.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.04
+Stochastic performance: 38.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.12
+Stochastic performance: 3.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.24
+Stochastic performance: 1.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 16.02
+Stochastic performance: 9.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.22
+Stochastic performance: 1.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.48
+Stochastic performance: 2.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.32
+Stochastic performance: 40.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 29.4
+Stochastic performance: 26.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.28
+Stochastic performance: 66.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 74.68
+Stochastic performance: 74.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.94
+Stochastic performance: 66.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 41.5
+Stochastic performance: 38.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.26
+Stochastic performance: 44.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 14.6
+Stochastic performance: 14.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 15.14
+Stochastic performance: 12.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 33.86
+Stochastic performance: 29.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.16
+Stochastic performance: 2.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.7
+Stochastic performance: 61.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.54
+Stochastic performance: 2.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.78
+Stochastic performance: 4.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.64
+Stochastic performance: 8.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.7
+Stochastic performance: 2.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.8
+Stochastic performance: 2.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 24.74
+Stochastic performance: 7.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.48
+Stochastic performance: 6.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.52
+Stochastic performance: 2.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.4
+Stochastic performance: 1.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 36.78
+Stochastic performance: 32.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.44
+Stochastic performance: 1.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.62
+Stochastic performance: 1.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 23.2
+Stochastic performance: 13.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.74
+Stochastic performance: 71.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.36
+Stochastic performance: 54.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.58
+Stochastic performance: 54.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.2
+Stochastic performance: 72.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.8
+Stochastic performance: 57.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 83.58
+Stochastic performance: 82.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.64
+Stochastic performance: 57.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.64
+Stochastic performance: 60.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.1
+Stochastic performance: 80.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.18
+Stochastic performance: 71.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.48
+Stochastic performance: 49.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.18
+Stochastic performance: 58.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.82
+Stochastic performance: 78.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 38.92
+Stochastic performance: 40.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.92
+Stochastic performance: 41.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.74
+Stochastic performance: 34.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 29.8
+Stochastic performance: 29.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 40.66
+Stochastic performance: 40.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.48
+Stochastic performance: 66.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.08
+Stochastic performance: 66.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.64
+Stochastic performance: 37.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 87.98
+Stochastic performance: 87.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.84
+Stochastic performance: 76.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 18.54
+Stochastic performance: 17.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.38
+Stochastic performance: 65.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 48.38
+Stochastic performance: 50.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.8
+Stochastic performance: 49.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 26.22
+Stochastic performance: 24.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 31.4
+Stochastic performance: 30.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.24
+Stochastic performance: 3.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 47.32
+Stochastic performance: 43.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.24
+Stochastic performance: 64.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.78
+Stochastic performance: 68.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.18
+Stochastic performance: 61.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.06
+Stochastic performance: 69.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 79.36
+Stochastic performance: 79.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.58
+Stochastic performance: 77.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 52.48
+Stochastic performance: 51.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.16
+Stochastic performance: 64.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.1
+Stochastic performance: 63.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.14
+Stochastic performance: 71.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 59.36
+Stochastic performance: 59.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 87.34
+Stochastic performance: 86.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.76
+Stochastic performance: 51.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 10.68
+Stochastic performance: 10.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 21.7
+Stochastic performance: 20.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.24
+Stochastic performance: 81.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.92
+Stochastic performance: 61.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.06
+Stochastic performance: 75.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.62
+Stochastic performance: 7.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.24
+Stochastic performance: 44.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 34.84
+Stochastic performance: 33.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 35.78
+Stochastic performance: 37.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 16.56
+Stochastic performance: 15.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 52.32
+Stochastic performance: 53.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.52
+Stochastic performance: 57.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.96
+Stochastic performance: 68.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 29.28
+Stochastic performance: 27.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.26
+Stochastic performance: 40.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 48.26
+Stochastic performance: 48.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 38.52
+Stochastic performance: 36.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.44
+Stochastic performance: 65.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.2
+Stochastic performance: 71.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 45.82
+Stochastic performance: 42.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.64
+Stochastic performance: 52.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 21.48
+Stochastic performance: 20.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.56
+Stochastic performance: 5.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.9
+Stochastic performance: 30.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.36
+Stochastic performance: 78.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 12.1
+Stochastic performance: 10.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.38
+Stochastic performance: 32.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.32
+Stochastic performance: 47.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.24
+Stochastic performance: 3.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 25.92
+Stochastic performance: 25.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.66
+Stochastic performance: 39.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.62
+Stochastic performance: 63.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 16.74
+Stochastic performance: 16.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.22
+Stochastic performance: 54.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.9
+Stochastic performance: 69.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.0
+Stochastic performance: 72.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.02
+Stochastic performance: 65.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.02
+Stochastic performance: 80.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.98
+Stochastic performance: 74.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.34
+Stochastic performance: 68.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.78
+Stochastic performance: 67.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.46
+Stochastic performance: 70.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.96
+Stochastic performance: 77.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.08
+Stochastic performance: 71.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.78
+Stochastic performance: 83.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.22
+Stochastic performance: 69.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.04
+Stochastic performance: 68.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.94
+Stochastic performance: 65.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.32
+Stochastic performance: 75.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.96
+Stochastic performance: 57.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.92
+Stochastic performance: 70.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.22
+Stochastic performance: 79.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 86.36
+Stochastic performance: 84.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.94
+Stochastic performance: 67.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 87.68
+Stochastic performance: 86.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.32
+Stochastic performance: 51.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 52.66
+Stochastic performance: 51.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 59.74
+Stochastic performance: 60.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.3
+Stochastic performance: 74.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.5
+Stochastic performance: 67.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.34
+Stochastic performance: 56.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.58
+Stochastic performance: 76.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 48.74
+Stochastic performance: 44.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.7
+Stochastic performance: 69.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.92
+Stochastic performance: 61.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.28
+Stochastic performance: 74.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.88
+Stochastic performance: 63.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.2
+Stochastic performance: 64.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.06
+Stochastic performance: 55.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.84
+Stochastic performance: 45.92
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.78
+Stochastic performance: 73.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 43.56
+Stochastic performance: 43.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.46
+Stochastic performance: 62.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 93.3
+Stochastic performance: 92.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 57.66
+Stochastic performance: 58.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.4
+Stochastic performance: 76.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.92
+Stochastic performance: 69.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.78
+Stochastic performance: 70.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.06
+Stochastic performance: 71.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.4
+Stochastic performance: 81.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.72
+Stochastic performance: 62.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.0
+Stochastic performance: 66.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.2
+Stochastic performance: 49.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.84
+Stochastic performance: 76.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.62
+Stochastic performance: 68.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.74
+Stochastic performance: 60.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 56.22
+Stochastic performance: 57.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 43.24
+Stochastic performance: 44.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.52
+Stochastic performance: 96.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.5
+Stochastic performance: 63.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 57.02
+Stochastic performance: 56.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.72
+Stochastic performance: 71.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.08
+Stochastic performance: 63.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.16
+Stochastic performance: 53.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 30.86
+Stochastic performance: 32.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 29.6
+Stochastic performance: 29.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 45.94
+Stochastic performance: 43.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 41.76
+Stochastic performance: 40.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.36
+Stochastic performance: 62.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.34
+Stochastic performance: 65.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.2
+Stochastic performance: 51.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.88
+Stochastic performance: 34.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.74
+Stochastic performance: 71.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 22.18
+Stochastic performance: 22.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.92
+Stochastic performance: 53.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.82
+Stochastic performance: 82.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.96
+Stochastic performance: 66.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.16
+Stochastic performance: 63.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 50.4
+Stochastic performance: 47.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.26
+Stochastic performance: 73.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.5
+Stochastic performance: 57.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.34
+Stochastic performance: 67.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.92
+Stochastic performance: 77.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.68
+Stochastic performance: 6.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 43.38
+Stochastic performance: 40.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.76
+Stochastic performance: 2.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.46
+Stochastic performance: 70.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.22
+Stochastic performance: 70.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.18
+Stochastic performance: 63.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 57.82
+Stochastic performance: 56.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.34
+Stochastic performance: 68.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.8
+Stochastic performance: 98.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.74
+Stochastic performance: 2.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.68
+Stochastic performance: 97.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.12
+Stochastic performance: 62.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 49.22
+Stochastic performance: 50.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.14
+Stochastic performance: 70.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.46
+Stochastic performance: 75.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.58
+Stochastic performance: 69.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.26
+Stochastic performance: 60.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 90.3
+Stochastic performance: 89.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.76
+Stochastic performance: 14.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 30.58
+Stochastic performance: 29.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.62
+Stochastic performance: 79.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.44
+Stochastic performance: 56.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.42
+Stochastic performance: 54.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.36
+Stochastic performance: 38.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.32
+Stochastic performance: 54.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.7
+Stochastic performance: 49.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.42
+Stochastic performance: 84.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.06
+Stochastic performance: 35.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 47.76
+Stochastic performance: 46.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.22
+Stochastic performance: 67.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.22
+Stochastic performance: 72.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 26.52
+Stochastic performance: 26.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 11.44
+Stochastic performance: 10.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.94
+Stochastic performance: 68.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.24
+Stochastic performance: 59.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.64
+Stochastic performance: 4.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.2
+Stochastic performance: 68.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.76
+Stochastic performance: 48.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.12
+Stochastic performance: 78.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.32
+Stochastic performance: 60.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.02
+Stochastic performance: 40.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.1
+Stochastic performance: 57.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 83.42
+Stochastic performance: 82.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.86
+Stochastic performance: 73.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 31.7
+Stochastic performance: 31.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.04
+Stochastic performance: 18.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.52
+Stochastic performance: 51.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 81.24
+Stochastic performance: 81.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.46
+Stochastic performance: 5.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 94.28
+Stochastic performance: 94.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 57.24
+Stochastic performance: 58.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.08
+Stochastic performance: 3.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.4
+Stochastic performance: 6.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 22.04
+Stochastic performance: 23.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 18.24
+Stochastic performance: 16.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 24.44
+Stochastic performance: 22.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 95.8
+Stochastic performance: 95.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.96
+Stochastic performance: 77.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.94
+Stochastic performance: 68.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 13.98
+Stochastic performance: 5.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 88.52
+Stochastic performance: 87.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 23.14
+Stochastic performance: 17.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.64
+Stochastic performance: 69.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.9
+Stochastic performance: 34.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.34
+Stochastic performance: 96.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.94
+Stochastic performance: 75.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 87.12
+Stochastic performance: 86.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 47.38
+Stochastic performance: 44.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.66
+Stochastic performance: 63.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 0.86
+Stochastic performance: 1.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.38
+Stochastic performance: 72.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.44
+Stochastic performance: 79.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 90.4
+Stochastic performance: 88.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 55.4
+Stochastic performance: 53.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.62
+Stochastic performance: 49.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.36
+Stochastic performance: 98.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.52
+Stochastic performance: 71.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 44.72
+Stochastic performance: 43.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 56.76
+Stochastic performance: 57.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 29.9
+Stochastic performance: 29.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.08
+Stochastic performance: 98.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 0.9
+Stochastic performance: 0.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.56
+Stochastic performance: 65.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 50.46
+Stochastic performance: 49.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 13.2
+Stochastic performance: 10.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 74.6
+Stochastic performance: 73.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 92.46
+Stochastic performance: 91.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.04
+Stochastic performance: 38.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.76
+Stochastic performance: 5.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.0
+Stochastic performance: 61.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.62
+Stochastic performance: 78.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 83.58
+Stochastic performance: 82.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 24.2
+Stochastic performance: 24.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.48
+Stochastic performance: 67.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.76
+Stochastic performance: 51.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 59.9
+Stochastic performance: 60.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.18
+Stochastic performance: 75.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.34
+Stochastic performance: 2.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.8
+Stochastic performance: 60.74
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 41.0
+Stochastic performance: 35.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.88
+Stochastic performance: 55.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 18.12
+Stochastic performance: 15.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 30.24
+Stochastic performance: 29.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.7
+Stochastic performance: 62.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.76
+Stochastic performance: 63.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.2
+Stochastic performance: 8.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 45.66
+Stochastic performance: 43.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.6
+Stochastic performance: 69.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.92
+Stochastic performance: 1.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.34
+Stochastic performance: 77.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.4
+Stochastic performance: 68.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.6
+Stochastic performance: 65.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 79.56
+Stochastic performance: 79.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 82.0
+Stochastic performance: 81.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.02
+Stochastic performance: 72.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 85.38
+Stochastic performance: 75.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.7
+Stochastic performance: 56.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.32
+Stochastic performance: 65.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.24
+Stochastic performance: 4.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.84
+Stochastic performance: 77.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.9
+Stochastic performance: 54.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.5
+Stochastic performance: 2.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.54
+Stochastic performance: 71.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.72
+Stochastic performance: 1.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.56
+Stochastic performance: 59.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.2
+Stochastic performance: 65.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 92.72
+Stochastic performance: 92.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 90.84
+Stochastic performance: 90.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 35.98
+Stochastic performance: 35.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 48.58
+Stochastic performance: 47.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.08
+Stochastic performance: 17.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.76
+Stochastic performance: 98.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 74.44
+Stochastic performance: 30.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.86
+Stochastic performance: 80.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 25.86
+Stochastic performance: 24.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 86.7
+Stochastic performance: 86.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.78
+Stochastic performance: 62.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.34
+Stochastic performance: 83.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.2
+Stochastic performance: 10.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.56
+Stochastic performance: 5.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 11.04
+Stochastic performance: 10.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.32
+Stochastic performance: 7.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 16.58
+Stochastic performance: 5.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.74
+Stochastic performance: 4.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.7
+Stochastic performance: 3.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 27.38
+Stochastic performance: 25.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.78
+Stochastic performance: 97.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.4
+Stochastic performance: 70.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.0
+Stochastic performance: 37.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.86
+Stochastic performance: 84.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 93.68
+Stochastic performance: 93.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.58
+Stochastic performance: 56.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 95.5
+Stochastic performance: 95.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.02
+Stochastic performance: 76.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.04
+Stochastic performance: 68.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 45.74
+Stochastic performance: 45.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 18.4
+Stochastic performance: 16.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.42
+Stochastic performance: 3.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.72
+Stochastic performance: 45.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.74
+Stochastic performance: 33.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 9.02
+Stochastic performance: 8.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.86
+Stochastic performance: 73.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.62
+Stochastic performance: 50.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.56
+Stochastic performance: 77.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 90.64
+Stochastic performance: 87.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.34
+Stochastic performance: 66.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.22
+Stochastic performance: 98.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 88.9
+Stochastic performance: 86.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.38
+Stochastic performance: 57.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 41.42
+Stochastic performance: 42.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 70.34
+Stochastic performance: 72.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.64
+Stochastic performance: 73.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.44
+Stochastic performance: 76.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.74
+Stochastic performance: 69.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.8
+Stochastic performance: 79.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 83.46
+Stochastic performance: 70.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.0
+Stochastic performance: 62.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.82
+Stochastic performance: 70.32
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.52
+Stochastic performance: 67.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.74
+Stochastic performance: 72.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.64
+Stochastic performance: 77.48
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 57.24
+Stochastic performance: 13.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.22
+Stochastic performance: 96.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.96
+Stochastic performance: 85.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 64.58
+Stochastic performance: 63.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 75.48
+Stochastic performance: 75.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 52.1
+Stochastic performance: 49.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.54
+Stochastic performance: 70.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.18
+Stochastic performance: 5.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 14.52
+Stochastic performance: 11.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 95.06
+Stochastic performance: 95.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 60.36
+Stochastic performance: 60.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.98
+Stochastic performance: 81.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 23.88
+Stochastic performance: 22.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 69.92
+Stochastic performance: 34.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.42
+Stochastic performance: 45.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 94.2
+Stochastic performance: 94.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.44
+Stochastic performance: 2.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.04
+Stochastic performance: 77.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.94
+Stochastic performance: 43.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.52
+Stochastic performance: 3.92
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.22
+Stochastic performance: 52.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.7
+Stochastic performance: 67.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.08
+Stochastic performance: 73.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 91.8
+Stochastic performance: 91.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 88.44
+Stochastic performance: 86.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 84.24
+Stochastic performance: 83.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 32.56
+Stochastic performance: 33.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 59.8
+Stochastic performance: 59.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.5
+Stochastic performance: 96.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.58
+Stochastic performance: 98.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.22
+Stochastic performance: 7.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 11.76
+Stochastic performance: 10.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.8
+Stochastic performance: 5.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.52
+Stochastic performance: 1.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.12
+Stochastic performance: 9.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.74
+Stochastic performance: 8.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 21.08
+Stochastic performance: 20.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.26
+Stochastic performance: 9.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.78
+Stochastic performance: 8.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.28
+Stochastic performance: 5.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.84
+Stochastic performance: 5.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.76
+Stochastic performance: 2.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.62
+Stochastic performance: 10.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.76
+Stochastic performance: 10.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.86
+Stochastic performance: 4.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.96
+Stochastic performance: 7.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.6
+Stochastic performance: 15.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.88
+Stochastic performance: 4.92
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.68
+Stochastic performance: 9.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.84
+Stochastic performance: 5.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 16.0
+Stochastic performance: 12.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.48
+Stochastic performance: 9.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.28
+Stochastic performance: 3.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.7
+Stochastic performance: 3.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 12.84
+Stochastic performance: 10.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.0
+Stochastic performance: 6.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.0
+Stochastic performance: 6.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 15.36
+Stochastic performance: 12.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.26
+Stochastic performance: 3.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.86
+Stochastic performance: 16.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 9.38
+Stochastic performance: 8.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.4
+Stochastic performance: 7.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.34
+Stochastic performance: 3.3
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.38
+Stochastic performance: 3.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 22.54
+Stochastic performance: 22.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 10.08
+Stochastic performance: 10.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 23.28
+Stochastic performance: 23.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.84
+Stochastic performance: 97.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.8
+Stochastic performance: 2.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 13.7
+Stochastic performance: 14.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.34
+Stochastic performance: 97.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.16
+Stochastic performance: 5.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 87.6
+Stochastic performance: 86.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 79.7
+Stochastic performance: 80.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 94.06
+Stochastic performance: 93.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.82
+Stochastic performance: 75.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.0
+Stochastic performance: 65.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.78
+Stochastic performance: 3.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.48
+Stochastic performance: 1.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 51.4
+Stochastic performance: 52.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.78
+Stochastic performance: 7.0
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 94.04
+Stochastic performance: 93.92
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.76
+Stochastic performance: 5.86
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 93.14
+Stochastic performance: 92.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 17.5
+Stochastic performance: 17.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.08
+Stochastic performance: 95.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.8
+Stochastic performance: 98.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.96
+Stochastic performance: 3.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.84
+Stochastic performance: 1.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 93.86
+Stochastic performance: 94.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 91.72
+Stochastic performance: 90.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 72.0
+Stochastic performance: 62.38
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.56
+Stochastic performance: 97.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.08
+Stochastic performance: 1.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 63.92
+Stochastic performance: 59.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 26.98
+Stochastic performance: 27.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 77.6
+Stochastic performance: 76.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 12.36
+Stochastic performance: 11.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 67.88
+Stochastic performance: 67.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.4
+Stochastic performance: 1.68
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.42
+Stochastic performance: 55.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.2
+Stochastic performance: 44.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 89.74
+Stochastic performance: 90.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 83.5
+Stochastic performance: 83.18
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 0.92
+Stochastic performance: 0.82
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.26
+Stochastic performance: 63.84
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.02
+Stochastic performance: 76.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 95.76
+Stochastic performance: 95.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.36
+Stochastic performance: 63.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 81.02
+Stochastic performance: 78.46
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.14
+Stochastic performance: 5.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 68.98
+Stochastic performance: 68.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 61.64
+Stochastic performance: 63.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.28
+Stochastic performance: 64.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 86.86
+Stochastic performance: 85.78
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.84
+Stochastic performance: 3.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.86
+Stochastic performance: 2.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 78.44
+Stochastic performance: 77.34
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 12.1
+Stochastic performance: 11.16
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 54.82
+Stochastic performance: 53.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 71.38
+Stochastic performance: 72.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.52
+Stochastic performance: 2.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.88
+Stochastic performance: 66.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 58.36
+Stochastic performance: 58.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 81.96
+Stochastic performance: 80.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.06
+Stochastic performance: 6.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.62
+Stochastic performance: 7.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.28
+Stochastic performance: 5.26
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.94
+Stochastic performance: 2.58
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.7
+Stochastic performance: 7.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 7.26
+Stochastic performance: 7.64
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.06
+Stochastic performance: 5.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.42
+Stochastic performance: 2.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 15.8
+Stochastic performance: 14.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.36
+Stochastic performance: 3.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 8.2
+Stochastic performance: 8.96
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.94
+Stochastic performance: 4.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 19.42
+Stochastic performance: 19.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.96
+Stochastic performance: 98.06
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.96
+Stochastic performance: 7.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.06
+Stochastic performance: 3.4
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 15.28
+Stochastic performance: 15.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.6
+Stochastic performance: 6.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.34
+Stochastic performance: 2.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 22.4
+Stochastic performance: 21.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.38
+Stochastic performance: 98.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.98
+Stochastic performance: 97.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.84
+Stochastic performance: 98.7
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 27.34
+Stochastic performance: 27.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.4
+Stochastic performance: 2.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 86.2
+Stochastic performance: 85.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.12
+Stochastic performance: 96.72
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 12.54
+Stochastic performance: 10.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 3.0
+Stochastic performance: 3.1
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.5
+Stochastic performance: 96.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 46.46
+Stochastic performance: 44.04
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.68
+Stochastic performance: 2.42
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 11.48
+Stochastic performance: 11.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.96
+Stochastic performance: 1.76
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 97.14
+Stochastic performance: 96.52
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 31.96
+Stochastic performance: 28.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 5.36
+Stochastic performance: 5.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 76.8
+Stochastic performance: 76.22
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 18.56
+Stochastic performance: 19.54
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.26
+Stochastic performance: 96.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.64
+Stochastic performance: 2.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 53.36
+Stochastic performance: 52.98
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 92.66
+Stochastic performance: 92.36
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 62.48
+Stochastic performance: 63.12
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.7
+Stochastic performance: 3.9
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 93.96
+Stochastic performance: 94.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.76
+Stochastic performance: 74.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 96.8
+Stochastic performance: 97.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 11.44
+Stochastic performance: 2.8
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 80.76
+Stochastic performance: 81.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 66.98
+Stochastic performance: 67.6
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 39.58
+Stochastic performance: 40.08
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 4.68
+Stochastic performance: 4.94
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 27.26
+Stochastic performance: 27.66
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 89.96
+Stochastic performance: 90.02
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 0.9
+Stochastic performance: 1.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 59.16
+Stochastic performance: 58.88
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 73.3
+Stochastic performance: 74.24
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 50.96
+Stochastic performance: 49.2
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 1.42
+Stochastic performance: 1.44
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 95.76
+Stochastic performance: 95.56
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 15.74
+Stochastic performance: 16.28
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 2.38
+Stochastic performance: 2.62
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 65.02
+Stochastic performance: 65.14
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 98.62
+Stochastic performance: 98.5
+Files already downloaded and verified
+Files already downloaded and verified
+Det performance: 6.78
+Stochastic performance: 6.98
+Number of finished trials: 600
+
+ Best trial:
+  Value: 3.225421512815991
+  Params: 
+    sigma: 0.0010359108573095674
+    pruning_rate: 0.8812627084196698
+Files already downloaded and verified
+Files already downloaded and verified
+Deterministic performance on test set = 7.62
+Deterministic performance on val set = 7.8
+Median accuracy of population: 8.49
+Fintness function of the median on test set: 0.7666985563251129
+Median accuracy of population valset: 8.34
+Fintness function of the median on val set: 0.47588186254662174
+Manual pr = 0.9 sigma = 0.005 #################################
+Dense performance on test set = 76.93
+Files already downloaded and verified
+Files already downloaded and verified
+Deterministic performance on test set = 4.44
+Median accuracy of population: 3.8
+Fintness function of the median on test set: -0.6400000000000006
