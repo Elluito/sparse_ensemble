@@ -1209,7 +1209,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.
         sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01, log=True)
     else:
         sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01)
-    sample_pruning_rate = trial.suggest_float("pruning_rate", 0.3, 0.99)
+    sample_pruning_rate = trial.suggest_float("pruning_rate", 0.01, 0.99)
 
     # def objective_function(stochastic_performance,deter_performance, pruning_rate):
     #     return ((stochastic_performance - deter_performance)) * pruning_rate
@@ -1342,7 +1342,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     use_population = True if cfg["population"] > 1 else False
     function_string = "F1" if functions == 1 else "F2"
     if sampler == "nsga":
-        # sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,popsize=10,inc_popsize=2)
+        # sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,inc_popsize=2)
         sampler = optuna.samplers.NSGAIISampler()
     elif sampler == "tpe":
         sampler = optuna.samplers.TPESampler()
@@ -1426,9 +1426,17 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #     pruning_rate_list.append(trial.params["pruning_rate"])
     # if functions == 1:
     #     g = optuna.visualization.plot_pareto_front(study, target_names=["Stochastic Performance", "Differce with Det."])
+    #     g.update_layout(
+    #         title=dict(text="{} {} {}".format(cfg.architecture, cfg.dataset,sampler), font=dict(size=20), automargin=True, yref='paper')
+    #
+    #     )
     #     g.show()
     # if functions == 2:
     #     g = optuna.visualization.plot_pareto_front(study, target_names=["Stochastic Performance", "Pruning rate"])
+    #     g.update_layout(
+    #         title=dict(text="{} {} {}".format(cfg.architecture, cfg.dataset,sampler), font=dict(size=20), automargin=True, yref='paper')
+    #
+    #     )
     #     g.show()
 
     # net = get_model(cfg)
