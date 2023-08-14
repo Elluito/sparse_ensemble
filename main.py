@@ -68,7 +68,7 @@ import matplotlib
 #           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
 #           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
 #           TkAgg, TkCairo, WebAgg, WX, WXAgg, WXCairo
-matplotlib.use("TkAgg")
+# matplotlib.use("TkAgg")
 print("matplotlib backend {}".format(matplotlib.get_backend()))
 # matplotlib.use('Agg')
 from matplotlib.patches import PathPatch
@@ -1453,8 +1453,8 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #
     # p["Sigma"] = sigmas_list
     #
-    p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic performance": f1_list,
-                      "Fitness":fitness_list,"Sigma":sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2":f2_list})
+    p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
+                      "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
 
     p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
                                                              one_batch_string),index=False)
