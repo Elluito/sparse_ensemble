@@ -64,8 +64,17 @@ import ignite.metrics as igm
 from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
-
-matplotlib.use('Agg')
+# - interactive backends:
+#           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
+#           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
+#           TkAgg, TkCairo, WebAgg, WX, WXAgg, WXCairo
+matplotlib.use("TkAgg")
+print("matplotlib backend {}".format(matplotlib.get_backend()))
+# matplotlib.use('Agg')
+from matplotlib.patches import PathPatch
+import matplotlib.transforms as mtransforms
+from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
+from matplotlib.axes import SubplotBase
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.ticker import PercentFormatter, FormatStrFormatter
@@ -76,8 +85,6 @@ import time
 from torch.utils.data import DataLoader, random_split, Dataset
 import logging
 import torchvision as tv
-from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
-from matplotlib.axes import SubplotBase
 from itertools import combinations
 import seaborn as sns
 import seaborn.objects as so
@@ -90,8 +97,6 @@ from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse, get_mask, \
     apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator
 from itertools import cycle
-from matplotlib.patches import PathPatch
-import matplotlib.transforms as mtransforms
 # import pylustrator
 from shrinkbench.metrics.flops import flops
 from pathlib import Path
@@ -1196,6 +1201,11 @@ def objective_function(sto_performance, deter_performance, pruning_rate):
         return ((sto_performance - deter_performance)) * pruning_rate
     if sto_performance <= deter_performance:
         return ((sto_performance - deter_performance))
+def conver_fitness_to_difference(fitness,pruning_rate):
+    if fitness<0:
+        return fitness
+    else:
+        fitnes/pruning_rate
 
 
 def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
@@ -1275,6 +1285,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.
 
 
 def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
+
     net = get_model(cfg)
     train, val, testloader = get_datasets(cfg)
 
@@ -1299,7 +1310,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
     if cal_val:
         performance_of_models_val = []
 
-    for individual_index in range(3):
+    for individual_index in range(1):
         ############### Here I ask for pr and for sigma ###################################
 
         current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -1330,15 +1341,17 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         print("Fintness function of the median on val set: {}".format(fitness_function_median))
         return fitness_function_median_test, fitness_function_median_val, median
 
-    return fitness_function_median_test, median
+    return fitness_function_median_test, median,median-det_performance
 
 
 def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
-    one_batch = False# arg["one_batch"]
+    one_batch = False  # arg["one_batch"]
+    one_batch_string = "whole_batch" if not one_batch else "one_batch"
     sampler = arg["sampler"]
     log_sigma = arg["log_sigma"]
     number_of_trials = arg["trials"]
     functions = arg["functions"]
+
     use_population = True if cfg["population"] > 1 else False
     function_string = "F1" if functions == 1 else "F2"
     if sampler == "nsga":
@@ -1362,68 +1375,129 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
                                     one_batch, function_string),
                                 load_if_exists=True)
 
-    study.optimize(
-        lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
-                                                                              use_log_sigma=log_sigma,Fx=functions),
-        n_trials=args["trials"])
+    # study.optimize(
+    #     lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
+    #                                                                           use_log_sigma=log_sigma,Fx=functions),
+    #     n_trials=args["trials"])
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
     print("\n Best trial:")
     trials = study.best_trials
+    print("Size of the pareto front: {}".format(len(trials)))
 
     sigmas_list = []
     pruning_rate_list = []
     f1_list = []
     f2_list = []
-    if functions==1:
-        trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[1])
-        f1,f2 = trial_with_highest_difference.values
-        print("  Values: {},{}".format(f1, f2))
-        print("  Params: ")
-        for key, value in trial_with_highest_difference.params.items():
-            print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-            "pruning_rate"],trial_with_highest_difference.params["sigma"])
-        print(
-            "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-                fitness_function_on_test_set, test_median_stochastic_performance,
-                fitness_function_on_test_set /trial_with_highest_difference.params[
-                    "pruning_rate"]))
-    else:
-        trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[1])
+    difference_with_deterministic_list = []
+    fitness_list = []
 
-        f1 , f2 = trial_with_highest_difference.values
-        print("  Values: {},{}".format(f1, f2))
-        print("  Params: ")
-        for key, value in trial_with_highest_difference.params.items():
-            print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-            "pruning_rate"],trial_with_highest_difference.params["sigma"])
-        print(
-            "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-                fitness_function_on_test_set, test_median_stochastic_performance,
-                fitness_function_on_test_set /trial_with_highest_difference.params[
-                    "pruning_rate"]))
-    # for trial in trials:
-    #     f1, f2 = trial.values
-    #     f1_list.append(f1)
-    #     f2_list.append(f2)
-    #     # print("  Values: {},{}".format(f1, f2))
-    #
+    # if functions==1:
+    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    #     f1,f2 = trial_with_highest_difference.values
+    #     print("  Values: {},{}".format(f1, f2))
     #     print("  Params: ")
-    #     for key, value in trial.params.items():
+    #     for key, value in trial_with_highest_difference.params.items():
     #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial.params[
-    #         "pruning_rate"], trial.params["sigma"])
+    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
+    #         "pruning_rate"],trial_with_highest_difference.params["sigma"])
     #     print(
     #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
     #             fitness_function_on_test_set, test_median_stochastic_performance,
-    #             fitness_function_on_test_set / trial.params[
+    #             fitness_function_on_test_set /trial_with_highest_difference.params[
     #                 "pruning_rate"]))
+    # else:
+    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
     #
-    #     sigmas_list.append(trial.params["sigma"])
-    #     pruning_rate_list.append(trial.params["pruning_rate"])
+    #     f1 , f2 = trial_with_highest_difference.values
+    #     print("  Values: {},{}".format(f1, f2))
+    #     print("  Params: ")
+    #     for key, value in trial_with_highest_difference.params.items():
+    #         print("    {}: {}".format(key, value))
+    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
+    #         "pruning_rate"],trial_with_highest_difference.params["sigma"])
+    #     print(
+    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    #             fitness_function_on_test_set, test_median_stochastic_performance,
+    #             fitness_function_on_test_set /trial_with_highest_difference.params[
+    #                 "pruning_rate"]))
+
+    for trial in trials:
+        f1, f2 = trial.values
+        pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
+        f1_list.append(f1)
+        f2_list.append(f2)
+        print("  Values: {},{}".format(f1, f2))
+
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+        fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
+            "pruning_rate"], trial.params["sigma"])
+
+        difference_with_deterministic_list.append(difference)
+        fitness_list.append(fitness_function_on_test_set)
+
+        # print(
+        #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+        #         fitness_function_on_test_set, test_median_stochastic_performance,
+        #         fitness_function_on_test_set / trial.params[
+        #             "pruning_rate"]))
+
+        sigmas_list.append(sigma)
+        pruning_rate_list.append(pr)
+
+    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                          one_batch_string))
+    #
+    # p["Sigma"] = sigmas_list
+    #
+    p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic performance": f1_list,
+                      "Fitness":fitness_list,"Sigma":sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2":f2_list})
+
+    p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+                                                             one_batch_string),index=False)
+
+    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                          one_batch_string))
+    # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
+    # # plt.figure()
+    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
+    # # cm = plt.cm.get_cmap('RdYlBu')
+    # # cmap = mpl.cm.viridis
+    # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
+    # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
+    #
+    #
+    # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    # # fig.colorbar(
+    # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+    # #     cax=ax,
+    # #     extend='both',
+    # #     ticks=bounds,
+    # #     spacing='proportional',
+    # #     orientation='horizontal',
+    # #     label='Discrete intervals, some other units',
+    # # )
+    #
+    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"],zs=p["Sigma"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    #
+    # plt.xlabel("Stochastic performance on Val set")
+    # plt.ylabel("Pruning rate")
+    # plt.colorbar(sc, label="Difference with deterministic on test set")
+    # # plt.legend()
+    # # plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".foramt(cfg.architecture, cfg.dataset, sampler, function_string,
+    # #                                                      one_batch_string), bbox_inches="tight")
+    # ax.zaxis.set_rotate_label(False)
+    # ax.set_zlabel('$\sigma$', fontsize=35, rotation=0)
+    # plt.show()
+    # plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                      one_batch_string), bbox_inches="tight")
+    ##################### NOw we compare wit the deteminstic for the test set ##############################################
+
     # if functions == 1:
     #     g = optuna.visualization.plot_pareto_front(study, target_names=["Stochastic Performance", "Differce with Det."])
     #     g.update_layout(
@@ -1443,9 +1517,12 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # train, val, testloader = get_datasets(cfg)
     #
     # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    #
-    #
-    #
+
+
+
+
+    ######################### testing one net on thes test set #########################################################
+
     # pruned_model = copy.deepcopy(net)
     # cfg.amount = best_pruning_rate
     # prune_function(pruned_model, cfg)
@@ -1478,6 +1555,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #     performance_of_models_val.append(stochastic_performance_val)
     #     # Dense stochastic performance
     #     performance_of_models.append(stochastic_performance)
+
     #
     # performance_of_models = np.array(performance_of_models)
     # median = np.median(performance_of_models)
