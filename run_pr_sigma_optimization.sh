@@ -51,8 +51,9 @@ for sampler in ${samplers[@]};do
 #fi
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
-qsub -N "search_sigma_pr_MOO_${model}_${dataset}_${sampler}" run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
-#./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
+#qsub -N "search_sigma_pr_MOO_${model}_${dataset}_${sampler}" run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
+./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
+./run.sh  19 "0.0" "global" "resnet18" "cifar10" "0.9" "alternative" "1" "nsga" "2"
 #done
 done
 done

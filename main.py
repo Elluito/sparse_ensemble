@@ -64,6 +64,7 @@ import ignite.metrics as igm
 from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
+
 # - interactive backends:
 #           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
 #           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
@@ -1201,11 +1202,13 @@ def objective_function(sto_performance, deter_performance, pruning_rate):
         return ((sto_performance - deter_performance)) * pruning_rate
     if sto_performance <= deter_performance:
         return ((sto_performance - deter_performance))
-def conver_fitness_to_difference(fitness,pruning_rate):
-    if fitness<0:
+
+
+def conver_fitness_to_difference(fitness, pruning_rate):
+    if fitness < 0:
         return fitness
     else:
-        fitnes/pruning_rate
+        fitnes / pruning_rate
 
 
 def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
@@ -1285,7 +1288,6 @@ def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.
 
 
 def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
-
     net = get_model(cfg)
     train, val, testloader = get_datasets(cfg)
 
@@ -1341,7 +1343,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         print("Fintness function of the median on val set: {}".format(fitness_function_median))
         return fitness_function_median_test, fitness_function_median_val, median
 
-    return fitness_function_median_test, median,median-det_performance
+    return fitness_function_median_test, median, median - det_performance
 
 
 def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
@@ -1423,55 +1425,63 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #             fitness_function_on_test_set /trial_with_highest_difference.params[
     #                 "pruning_rate"]))
 
-    for trial in trials:
-        f1, f2 = trial.values
-        pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
-        f1_list.append(f1)
-        f2_list.append(f2)
-        print("  Values: {},{}".format(f1, f2))
+    # for trial in trials:
+    #     f1, f2 = trial.values
+    #     pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
+    #     f1_list.append(f1)
+    #     f2_list.append(f2)
+    #     print("  Values: {},{}".format(f1, f2))
+    #
+    #     print("  Params: ")
+    #     for key, value in trial.params.items():
+    #         print("    {}: {}".format(key, value))
+    #     fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
+    #         "pruning_rate"], trial.params["sigma"])
+    #
+    #     difference_with_deterministic_list.append(difference)
+    #     fitness_list.append(fitness_function_on_test_set)
 
-        print("  Params: ")
-        for key, value in trial.params.items():
-            print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
-            "pruning_rate"], trial.params["sigma"])
-
-        difference_with_deterministic_list.append(difference)
-        fitness_list.append(fitness_function_on_test_set)
-
-        # print(
-        #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-        #         fitness_function_on_test_set, test_median_stochastic_performance,
-        #         fitness_function_on_test_set / trial.params[
-        #             "pruning_rate"]))
-
-        sigmas_list.append(sigma)
-        pruning_rate_list.append(pr)
+    # print(
+    #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    #         fitness_function_on_test_set, test_median_stochastic_performance,
+    #         fitness_function_on_test_set / trial.params[
+    #             "pruning_rate"]))
+    #
+    # sigmas_list.append(sigma)
+    # pruning_rate_list.append(pr)
 
     # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
     #                                                          one_batch_string))
     #
     # p["Sigma"] = sigmas_list
     #
-    p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
-                      "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
-
-    p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-                                                             one_batch_string),index=False)
-
-    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-    #                                                          one_batch_string))
+    # p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
+    #                   "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
+    #
+    # p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                          one_batch_string),index=False)
+    #
+    p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+                                                             one_batch_string))
     # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
-    # # plt.figure()
+    # plt.figure()
     # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
-    # # cm = plt.cm.get_cmap('RdYlBu')
-    # # cmap = mpl.cm.viridis
+    cmap = plt.cm.get_cmap('RdYlBu')
+    # cmap = mpl.cm.viridis
     # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
     # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
-    #
-    #
+    # diff = p["Difference with deterministic"]
+    # min_val = diff.min()
+    # q25 = diff.quantile(q=0.25)
+    # q50 = diff.quantile(q=0.50)
+    # q75 = diff.quantile(q=0.75)
+    # max_val = diff.max()
+    # bounds =[min_val,q25,0,q50,q75]
+    # bounds.sort()
+
     # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
     # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
     # # fig.colorbar(
     # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
@@ -1483,14 +1493,22 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # #     label='Discrete intervals, some other units',
     # # )
     #
-    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"],zs=p["Sigma"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
-    #
-    # plt.xlabel("Stochastic performance on Val set")
-    # plt.ylabel("Pruning rate")
-    # plt.colorbar(sc, label="Difference with deterministic on test set")
-    # # plt.legend()
-    # # plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".foramt(cfg.architecture, cfg.dataset, sampler, function_string,
-    # #                                                      one_batch_string), bbox_inches="tight")
+
+    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    p_more_than_0 = p[p["Difference with deterministic"] > 0]
+    sc_less_than_0 = plt.scatter(y=p_lees_than_0["Stochastic performance"], x=p_lees_than_0["Pruning rate"],
+                                 facecolors='none', edgecolors='k', s=15)
+    sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
+                     c=p_more_than_0["Difference with deterministic"], cmap=cmap,
+                     norm=matplotlib.colors.PowerNorm(gamma=2), s=15)
+
+    plt.ylabel("Stochastic performance on Val set")
+    plt.xlabel("Pruning rate")
+    plt.colorbar(sc, label="Difference with deterministic on test set")
+    # plt.legend()
+    plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".format(cfg.architecture, cfg.dataset, sampler, function_string,
+                                                         one_batch_string), bbox_inches="tight")
     # ax.zaxis.set_rotate_label(False)
     # ax.set_zlabel('$\sigma$', fontsize=35, rotation=0)
     # plt.show()
@@ -1517,9 +1535,6 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # train, val, testloader = get_datasets(cfg)
     #
     # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
-
-
-
 
     ######################### testing one net on thes test set #########################################################
 
@@ -3470,13 +3485,13 @@ def get_model(cfg: omegaconf.DictConfig):
                     in_features = net.fc.in_features
                     net.fc = nn.Linear(in_features, 10)
 
-                    temp_dict = torch.load(cfg.solution)["net"]
-                    real_dict = {}
-                    for k, item in temp_dict.items():
-                        if k.startswith('module'):
-                            new_key = k.replace("module.", "")
-                            real_dict[new_key] = item
-                    net.load_state_dict(real_dict)
+                    # temp_dict = torch.load(cfg.solution)["net"]
+                    # real_dict = {}
+                    # for k, item in temp_dict.items():
+                    #     if k.startswith('module'):
+                    #         new_key = k.replace("module.", "")
+                    #         real_dict[new_key] = item
+                    # net.load_state_dict(real_dict)
 
                 if cfg.dataset == "imagenet":
                     from torchvision.models import resnet18, ResNet18_Weights
@@ -3488,6 +3503,7 @@ def get_model(cfg: omegaconf.DictConfig):
                     # Using pretrained weights:
                     # net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
                     # net = resnet18(weights="IMAGENET1K_V1")
+                return net
         else:
             if "csgmcmc" == cfg.model_type:
                 net = ResNet18()
@@ -3586,6 +3602,38 @@ def get_model(cfg: omegaconf.DictConfig):
                     net = ResNet50()
                 if cfg.dataset == "imagenet":
                     net = ResNet50(num_classes=1000)
+                return net
+            if "hub" == cfg.model_type:
+                if cfg.dataset == "cifar100":
+                    from torchvision import resnet50
+                    net = resnet50()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features, 100)
+                    net.load_state_dict(cfg, solution)
+                if cfg.dataset == "cifar10":
+                    from torchvision.models import resnet50
+                    net = resnet50()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features, 10)
+                    #
+                    # temp_dict = torch.load(cfg.solution)["net"]
+                    # real_dict = {}
+                    # for k, item in temp_dict.items():
+                    #     if k.startswith('module'):
+                    #         new_key = k.replace("module.", "")
+                    #         real_dict[new_key] = item
+                    # net.load_state_dict(real_dict)
+
+                if cfg.dataset == "imagenet":
+                    from torchvision.models import resnet50, ResNet18_Weights
+
+                    net = resnet50()
+                    # temp_dict = torch.load(cfg.solution)
+                    # net.load_state_dict(temp_dict)
+
+                    # Using pretrained weights:
+                    # net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+                    # net = resnet18(weights="IMAGENET1K_V1")
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
@@ -5921,6 +5969,7 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
         det_pred, sto_pred = preditions_on_batch(deterministic_pruned_model, copy_of_pruned_model, data)
         record_predictions(deterministic_pruned_model, testloader, "one_shot_resnet18_det_prediction")
         record_predictions(copy_of_pruned_model, testloader, "one_shot_resnet18_sto_prediction")
+
         torch.save(det_pred, "deterministic_outputs")
         torch.save(sto_pred, "stochastic_outputs")
         torch.save(y, "labels_of_batch")
@@ -7523,7 +7572,6 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
     print("Det_performance in function: {}".format(pruned_original_performance))
     t1 = time.time()
-    return
     print("Time for test: {}".format(t1 - t0))
     del pruned_original
     # pop.append(pruned_original)
@@ -7551,9 +7599,8 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
         # original weights and put it in the ranking
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-        record_predictions(current_model, evaluation_set,
-                           "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
-        return
+        # record_predictions(current_model, evaluation_set,
+        #                    "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
         torch.cuda.empty_cache()
         print("Stocastic pruning performance")
         stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
@@ -9442,8 +9489,8 @@ def LeMain(args):
     if args["dataset"] == "cifar10":
         if args["modeltype"] == "alternative":
             if args["architecture"] == "resnet18":
-                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-                # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+                # solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
@@ -9521,12 +9568,12 @@ def LeMain(args):
     # print("Deterministic pruning outside function: {}".format(det_performance))
     # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
     print(args)
-    experiment_selector(cfg, args, args["experiment"])
+    explore_models_shapes()
+    # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
-    # vj
-    # plot_histograms_predictions()
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
+    # plot_histograms_predictions("normal_seed2")
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
     # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
@@ -9798,16 +9845,35 @@ def plot_projection_prediction():
     pass
 
 
-def plot_histograms_predictions():
+def test_predictions_for_cfg(cfg, stochastic=False, name=""):
+    train, val, testloader = get_datasets(cfg)
+    model = get_model(cfg)
+    pruned_model = copy.deepcopy(model)
+    names, weights = zip(*get_layer_dict(pruned_model))
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * len(names)))
+    if stochastic:
+        noisy_model = get_noisy_sample_sigma_per_layer(pruned_model, cfg, sigma_per_layer)
+        prune_function(noisy_model, cfg)
+        remove_reparametrization(noisy_model, exclude_layer_list=cfg.exclude_layers)
+        record_predictions(noisy_model, testloader,
+                           "one_shot_{}_{}_sto_{}_predictions".format(cfg.architecture, cfg.dataset, name))
+    else:
+        prune_function(pruned_model, cfg)
+        remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+        record_predictions(pruned_model, testloader,
+                           "one_shot_{}_{}_det_{}_predictions".format(cfg.architecture, cfg.dataset, name))
+
+
+def plot_histograms_predictions(name=""):
     with open("fine_tuned_resnet18_sto_0.005_predictions_cifar10", "rb") as f:
         fined_tuned_stochastic_predictions = pickle.load(f)
     with open("fine_tuned_resnet18_det_predictions_cifar10", "rb") as f:
         fined_tuned_determinsitic_predictions = pickle.load(f)
 
-    with open("one_shot_resnet18_det_prediction", "rb") as f:
+    with open("one_shot_resnet18_cifar10_det_seed2_predictions", "rb") as f:
         one_shot_determinsitic_predictions = pickle.load(f)
 
-    with open("one_shot_resnet18_sto_prediction", "rb") as f:
+    with open("one_shot_resnet18_cifar10_sto_seed2_predictions", "rb") as f:
         one_shot_stochastic_predictions = pickle.load(f)
 
     with open("cifar10_y", "rb") as f:
@@ -9844,16 +9910,438 @@ def plot_histograms_predictions():
     axes[0, 2].set_title("Labels")
     axes[0, 2].tick_params(axis='both', which='both', labelsize=7, labelbottom=True)
     axes[1, 0].hist(args_sort_OS_det[:, -1], bins=10)
-    axes[1, 0].set_title("One-Shot Det. hub", fontsize=6)
+    axes[1, 0].set_title("One-Shot Det.", fontsize=6)
     axes[1, 0].tick_params(axis='both', which='both', labelsize=7, labelbottom=True)
     axes[1, 1].hist(args_sort_OS_sto[:, -1], bins=10)
-    axes[1, 1].set_title("One-Shot Sto. hub", fontsize=6)
+    axes[1, 1].set_title("One-Shot Sto. ", fontsize=6)
     axes[1, 1].tick_params(axis='both', which='both', labelsize=7, labelbottom=True)
     axes[1, 2].hist(test_labels, bins=10)
     axes[1, 2].set_title("Labels", fontsize=6)
     axes[1, 2].tick_params(axis='both', which='both', labelsize=7, labelbottom=True)
-    plt.savefig("predictions_histograms.png", bbox_inches="tight")
+    plt.savefig("predictions_histograms_{}.png".format(name), bbox_inches="tight")
     plt.close()
+    plt.figure()
+    plt.hist(args_sort_OS_det[:, -1], bins=10)
+    plt.title("One-Shot Det.", fontsize=10)
+    plt.savefig("predictions_histogram_one_shot_det_{}.png".format(name), bbox_inches="tight")
+
+
+def shorcut_function(x, module):
+    if module.downsample:
+        return module.downsample(x)
+    else:
+        return x
+
+def create_truncated_resnet18(net):
+    def features_only(self, x):
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
+            x = self.layer1(x)
+            x = self.layer2(x)
+            out = F.relu(self.layer3[0].bn1(self.layer3[0].conv1(x)))
+            out = self.layer3[0].bn2(self.layer3[0].conv2(out))
+            out += shorcut_function(x, self.layer3[0])
+            out = F.relu(out)
+            out = F.avg_pool2d(out, 2)
+            out = out.view(out.size(0), -1)
+            out = self.fc2(out)
+            return out
+    net.__setattr__("fc2",nn.Linear(128,10))
+    net.forward = features_only.__get__(net)  # bind method
+
+def get_features_only_until_layer(net, block=2, net_type=0):
+    # ResNet block to compute receptive field for
+    if net_type == 0:
+        def features_only(self, x):
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
+            if block == 0: return x
+            # x = self.layer1(x)
+            out = F.relu(self.layer1[0].bn1(self.layer1[0].conv1(x)))
+            if block == 0.25: return out
+            out = self.layer1[0].bn2(self.layer1[0].conv2(out))
+            out += shorcut_function(x, self.layer1[0])
+            out = F.relu(out)
+            x2 = out
+            if block == 0.5: return out
+
+            out = F.relu(self.layer1[1].bn1(self.layer1[1].conv1(out)))
+            if block == 0.75: return out
+
+            out = self.layer1[1].bn2(self.layer1[1].conv2(out))
+            out += shorcut_function(x2, self.layer1[1])
+            out = F.relu(out)
+            x = out
+            if block == 1: return out
+            out = F.relu(self.layer2[0].bn1(self.layer2[0].conv1(x)))
+            if block == 1.25: return out
+            out = self.layer2[0].bn2(self.layer2[0].conv2(out))
+            out += shorcut_function(x, self.layer2[0])
+            out = F.relu(out)
+            x2 = out
+            if block == 1.5: return out
+
+            out = F.relu(self.layer2[1].bn1(self.layer2[1].conv1(out)))
+            if block == 1.75: return out
+
+            out = self.layer2[1].bn2(self.layer2[1].conv2(out))
+            out += shorcut_function(x2, self.layer2[1])
+            out = F.relu(out)
+            x = out
+            if block == 2: return out
+
+            out = F.relu(self.layer3[0].bn1(self.layer3[0].conv1(x)))
+            if block == 2.25: return out
+            out = self.layer3[0].bn2(self.layer3[0].conv2(out))
+            out += shorcut_function(x, self.layer3[0])
+            if block == 2.5: return out
+            out = F.relu(out)
+
+            x2 = out
+            out = F.relu(self.layer3[1].bn1(self.layer3[1].conv1(out)))
+            if block == 2.75: return out
+
+            out = self.layer3[1].bn2(self.layer3[1].conv2(out))
+            out += shorcut_function(x2, self.layer3[1])
+            out = F.relu(out)
+            x = out
+
+            if block == 3: return out
+
+            out = F.relu(self.layer4[0].bn1(self.layer4[0].conv1(x)))
+            if block == 3.25: return out
+            out = self.layer4[0].bn2(self.layer4[0].conv2(out))
+            out += shorcut_function(x, self.layer4[0])
+            out = F.relu(out)
+            x2 = out
+            if block == 3.5: return out
+
+            out = F.relu(self.layer4[1].bn1(self.layer4[1].conv1(out)))
+            if block == 3.75: return out
+
+            out = self.layer4[1].bn2(self.layer4[1].conv2(out))
+            out += shorcut_function(x2, self.layer4[1])
+            out = F.relu(out)
+            x = out
+            # x =  nn.AdaptiveAvgPool2d((1, 1))(x)
+            # x = F.avg_pool2d(x, 1)
+            return x
+    else:
+        def features_only(self, x):
+            x = self.bn1(self.conv1(x))
+            if block == 0: return x
+
+            # x = self.layer1(x)
+            out = F.relu(self.layer1[0].bn1(self.layer1[0].conv1(x)))
+            if block == 0.25: return out
+            out = self.layer1[0].bn2(self.layer1[0].conv2(out))
+            out += self.layer1[0].shortcut(x)
+            out = F.relu(out)
+            x2 = out
+            if block == 0.5: return out
+
+            out = F.relu(self.layer1[1].bn1(self.layer1[1].conv1(out)))
+            if block == 0.75: return out
+
+            out = self.layer1[1].bn2(self.layer1[1].conv2(out))
+            out += self.layer1[1].shortcut(x2)
+            out = F.relu(out)
+            x = out
+            if block == 1: return out
+            out = F.relu(self.layer2[0].bn1(self.layer2[0].conv1(x)))
+            if block == 1.25: return out
+            out = self.layer2[0].bn2(self.layer2[0].conv2(out))
+            out += self.layer2[0].shortcut(x)
+            out = F.relu(out)
+            x2 = out
+            if block == 1.5: return out
+
+            out = F.relu(self.layer2[1].bn1(self.layer2[1].conv1(out)))
+            if block == 1.75: return out
+
+            out = self.layer2[1].bn2(self.layer2[1].conv2(out))
+            out += self.layer2[1].shortcut(x2)
+            out = F.relu(out)
+            x = out
+            if block == 2: return out
+
+            out = F.relu(self.layer3[0].bn1(self.layer3[0].conv1(x)))
+            if block == 2.25: return out
+            out = self.layer3[0].bn2(self.layer3[0].conv2(out))
+            out += self.layer3[0].shortcut(x)
+            out = F.relu(out)
+            if block == 2.5: return out
+
+            x2 = out
+            out = F.relu(self.layer3[1].bn1(self.layer3[1].conv1(out)))
+            if block == 2.75: return out
+
+            out = self.layer3[1].bn2(self.layer3[1].conv2(out))
+            out += self.layer3[1].shortcut(x2)
+            out = F.relu(out)
+            x = out
+
+            if block == 3: return out
+
+            out = F.relu(self.layer4[0].bn1(self.layer4[0].conv1(x)))
+            if block == 3.25: return out
+            out = self.layer4[0].bn2(self.layer4[0].conv2(out))
+            out += self.layer4[0].shortcut(x)
+            out = F.relu(out)
+            x2 = out
+            if block == 3.5: return out
+
+            out = F.relu(self.layer4[1].bn1(self.layer4[1].conv1(out)))
+            if block == 3.75: return out
+
+            out = self.layer4[1].bn2(self.layer4[1].conv2(out))
+            out += self.layer4[1].shortcut(x2)
+            out = F.relu(out)
+            x = out
+            # x = F.avg_pool2d(x, 4)
+            return x
+
+    net.forward = features_only.__get__(net)  # bind method
+
+
+def get_features_only_until_block_layer(net, block=2, net_type=0):
+    # ResNet block to compute receptive field for
+    if net_type == 0:
+        def features_only(self, x):
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
+            if block == 0: return x
+
+            x = self.layer1(x)
+            if block == 1: return x
+
+            x = self.layer2(x)
+            if block == 2: return x
+
+            x = self.layer3(x)
+            if block == 3: return x
+
+            x = self.layer4(x)
+
+            return x
+    else:
+        def features_only(self, x):
+            x = F.relu(self.bn1(self.conv1(x)))
+            if block == 0: return x
+            x = self.layer1(x)
+            if block == 1: return x
+            x = self.layer2(x)
+            if block == 2: return x
+
+            x = self.layer3(x)
+            if block == 3: return x
+
+            x = self.layer4(x)
+            return x
+
+    net.forward = features_only.__get__(net)  # bind method
+
+
+def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
+                                          config_list=[], title=""):
+    names_m1, weights_m1 = zip(*get_layer_dict(pruned_model1))
+    # get noisy model
+    names_m2, weights_m2 = zip(*get_layer_dict(pruned_model_2))
+
+    pruning_rate_layer = lambda w: float(torch.count_nonzero(w == 0) / w.nelement())
+    # check_for_layers_collapse(pruned_model_2)
+    sparsities_m1 = list(map(pruning_rate_layer, weights_m1))
+    sparsities_m2 = list(map(pruning_rate_layer, weights_m2))
+
+    name_list = []
+    name_list.extend(names_m1)
+    name_list.extend(names_m1)
+
+    model_name_list = ["Pytorch Impl 1.With"] * len(sparsities_m1)
+    temp_list = ["Pytorch Impl 2. GMP"] * len(sparsities_m2)
+    model_name_list.extend(temp_list)
+
+    sparsities_list = []
+    sparsities_list.extend(sparsities_m1)
+    sparsities_list.extend(sparsities_m2)
+
+    df = pd.DataFrame({'Pruning Rate': sparsities_list, "Implementation": model_name_list, "Layer Name": name_list})
+    df.to_csv("pruning_rate_per_layer_comparison_{}_{}.csv".format(cfg.architecture, cfg.dataset), index=False, sep=";")
+    # df = df.sort_values(by='count', ascending=False)
+    g = sns.barplot(data=df, x="Layer Name", y="Pruning Rate", hue="Implementation")
+    plt.xticks(rotation=90)
+    plt.savefig('pytorch_seeds_comparisons_pruning_rate_per_layers_pr{}_{}_{}.png'.format(cfg.amount, cfg.architecture,
+                                                                                          cfg.dataset),
+                bbox_inches="tight")
+
+
+def explore_models_shapes():
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet18",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "",
+         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+         # explore_models_shapes()
+         "dataset": "cifar10",
+         "batch_size": 128,
+         "num_workers": 2,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "fc"]
+
+         })
+    # test_predictions_for_cfg(cfg,False,"seed3")
+    # test_predictions_for_cfg(cfg,True,"seed3")
+    # return
+    train, val, testloader = get_datasets(cfg)
+    resnet18_normal = get_model(cfg)
+    my_impl_pruned = copy.deepcopy(resnet18_normal)
+    prune_function(my_impl_pruned, cfg)
+    remove_reparametrization(my_impl_pruned, exclude_layer_list=cfg.exclude_layers)
+    cfg.model_type = "hub"
+    cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    cfg.exclude_layers = ["conv1", "fc"]
+    cfg.pruner = "global"
+    save_onnx(cfg)
+    resnet18_pytorch = get_model(cfg)
+    pytorch_impl_pruned = copy.deepcopy(resnet18_pytorch)
+    prune_function(pytorch_impl_pruned, cfg)
+    remove_reparametrization(pytorch_impl_pruned, exclude_layer_list=cfg.exclude_layers)
+    create_truncated_resnet18(pytorch_impl_pruned)
+    det_accuracy = test(pytorch_impl_pruned, True, testloader, verbose=1)
+    number_of_0_analysis_layer_two_models(my_impl_pruned, pytorch_impl_pruned, cfg,
+                                          title="Comparing implementations init")
+    return
+    resnet18_pytorch.eval()
+    resnet18_normal.eval()
+
+    data, y = next(iter(testloader))
+    images = data[:1, :, :, :]
+    #######################################3
+
+    from feature_maps_utils import get_activations_shape
+
+    # receptive_field_dict = receptive_field(resnet18_pytorch, (3, 32, 32),device="cpu")
+    # receptive_field_for_unit(receptive_field_dict, "2", (1, 1))
+    input_shapes_normal, resnet18_normal_activations_shapes, module_names_normal = get_activations_shape(
+        resnet18_normal, images)
+    input_shapes_pytorch, resnet18_pytorch_activations_shapes, module_names_pytorch = get_activations_shape(
+        resnet18_pytorch, images)
+
+    print("{} normal".format(cfg.architecture))
+    print(module_names_normal)
+    print(resnet18_normal_activations_shapes)
+
+    p1 = pd.DataFrame({
+        "Module Name": module_names_normal,
+        "Input Shape": input_shapes_normal,
+        "Output Shape": resnet18_normal_activations_shapes
+    })
+
+    p1.to_csv("output_shapes_{}_{}_normal.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
+
+    shapes_fn = lambda w: w.size()
+
+    names, weights = zip(*get_layer_dict(resnet18_normal))
+
+    w_shapes_list = list(map(shapes_fn, weights))
+
+    wp1 = pd.DataFrame({
+        "Module Name": names,
+        "Weight Shape": w_shapes_list
+    })
+    wp1.to_csv("weight_shapes_{}_{}_normal.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
+
+    print("{} pytorch".format(cfg.architecture))
+    print(module_names_pytorch)
+    print(resnet18_pytorch_activations_shapes)
+
+    w_shapes_list = list(map(shapes_fn, weights))
+
+    p2 = pd.DataFrame({
+        "Module Name": module_names_pytorch,
+        "Input Shape": input_shapes_pytorch,
+        "Output Shape": resnet18_pytorch_activations_shapes
+    })
+
+    p2.to_csv("output_shapes_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
+
+    shapes_fn = lambda w: w.size()
+
+    names, weights = zip(*get_layer_dict(resnet18_pytorch))
+    w_shapes_list = list(map(shapes_fn, weights))
+    wp2 = pd.DataFrame({
+        "Module Name": names,
+        "Weight Shape": w_shapes_list
+    })
+    wp2.to_csv("weight_shapes_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
+
+    #########################################
+    from torch_receptive_field import receptive_field, receptive_field_for_unit
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    import pdb
+
+    # resnet18_normal.cpu()
+    # resnet18_normal.train()
+    # receptive_field_dict = receptivefield(resnet18_normal, (3, 32, 32),device="cpu")
+    # get_features_only_until_layer(resnet18_pytorch,block=1,net_type=0)
+    # rf = receptivefield(resnet18_pytorch, (1, 3, 224, 224))
+    # print(rf)
+    print("Receptive field normal resnet18")
+
+    # resnet18_normal.train()
+    # get_features_only_until_layer(resnet18_normal, block=0.75, net_type=1)
+    # rf = receptivefield(resnet18_normal, (1, 3, 224, 224))
+    # print(rf)
+    # blocks = [0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4]
+    # blocks = np.linspace(0,4,17)
+    blocks = [0, 1, 2, 3, 4]
+    receptive_fields = []
+
+    for i in blocks:
+        get_features_only_until_block_layer(resnet18_normal, block=i, net_type=1)
+        rf = receptivefield(resnet18_normal, (1, 3, 500, 500))
+        # pdb.set_trace()
+        print("Receptive field for block {}".format(i))
+        print(rf)
+        receptive_fields.append(tuple(rf.rfsize))
+        # rf.show()
+    rf1 = pd.DataFrame({
+        "Block index": blocks,
+        "Receptive field": receptive_fields
+    })
+    rf1.to_csv("receptive_fields_{}_{}_normal.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
+    #
+    # # receptive_field_for_unit(receptive_field_dict, "2", (1, 1))
+    print()
+    print("Receptive field {} pytorch ".format(cfg.architecture))
+    # # resnet18_pytorch.cpu()
+    # # resnet18_pytorch.train()
+    receptive_fields = []
+    for i in blocks:
+        get_features_only_until_block_layer(resnet18_pytorch, block=i, net_type=0)
+        rf = receptivefield(resnet18_pytorch, (1, 3, 500, 500))
+        print("Receptive field for block {}".format(i))
+        print(rf)
+        receptive_fields.append(tuple(rf.rfsize))
+    #     # rf.show()
+    rf1 = pd.DataFrame({
+        "Block index": blocks,
+        "Receptive field": receptive_fields
+    })
+    rf1.to_csv("receptive_fields_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
 
 
 if __name__ == '__main__':
@@ -10102,5 +10590,4 @@ if __name__ == '__main__':
     #
     #     print("Now global deterministic")
     #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-    #
     #
