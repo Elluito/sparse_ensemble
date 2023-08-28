@@ -226,6 +226,7 @@ def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flo
 
 def train(epoch,net,trainloader,optimizer,criterion):
     print('\nEpoch: %d' % epoch)
+    net.to(device)
     net.train()
     train_loss = 0
     correct = 0
