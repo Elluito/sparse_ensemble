@@ -10190,6 +10190,7 @@ def truncated_network_unrestricted_training(cfg):
     trainloader, valloader, testloader = get_datasets(cfg)
 
     resnet18_truncated = get_model(cfg)
+    name ="resnet18_pytorch"
     create_truncated_resnet18(resnet18_truncated)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(resnet18_truncated.parameters(), lr=0.1,
@@ -10204,7 +10205,7 @@ def truncated_network_unrestricted_training(cfg):
         if acc > best_acc:
              print('Saving..')
              state = {
-                 'net': net.state_dict(),
+                 'net':resnet18_truncated.state_dict(),
                  'acc': acc,
                  'epoch': epoch,
              }
