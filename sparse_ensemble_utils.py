@@ -26,11 +26,11 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 ########################################################################################################################
 ######################### PROGRESS BAR FUNCTION ########################################################################
-_, term_width = os.popen('stty size', 'r').read().split()
-term_width = int(term_width)
-TOTAL_BAR_LENGTH = 65.
-last_time = time.time()
-begin_time = last_time
+# _, term_width = os.popen('stty size', 'r').read().split()
+# term_width = int(term_width)
+# TOTAL_BAR_LENGTH = 65.
+# last_time = time.time()
+# begin_time = last_time
 def progress_bar(current, total, msg=None):
     global last_time, begin_time
     if current == 0:
@@ -243,8 +243,10 @@ def train(epoch,net,trainloader,optimizer,criterion):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
-        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+        #              % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        print("Batch accuracy: {}".format(100.*correct/total, correct, total))
+
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
     if use_cuda:
         net.cuda()
