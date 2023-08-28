@@ -10186,7 +10186,9 @@ def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
 def truncated_network_unrestricted_training(cfg):
 
     from sparse_ensemble_utils import train
+    cfg.num_workers = 10
     trainloader, valloader, testloader = get_datasets(cfg)
+
     resnet18_truncated = get_model(cfg)
     create_truncated_resnet18(resnet18_truncated)
     criterion = nn.CrossEntropyLoss()
