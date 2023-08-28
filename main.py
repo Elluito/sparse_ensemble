@@ -5767,6 +5767,7 @@ def compare_weights(weight_list_1: typing.List[torch.TensorType], weight_list_2:
 
 
 def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
+
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -9568,7 +9569,9 @@ def LeMain(args):
     # print("Deterministic pruning outside function: {}".format(det_performance))
     # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
     print(args)
-    explore_models_shapes()
+    cfg.solution = ""
+    truncated_network_unrestricted_training(cfg)
+    # explore_models_shapes()
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
@@ -9933,7 +9936,7 @@ def shorcut_function(x, module):
         return x
 
 def create_truncated_resnet18(net):
-    def features_only(self, x):
+    def new_fowrard(self, x):
             x = self.conv1(x)
             x = self.bn1(x)
             x = self.relu(x)
@@ -9948,8 +9951,8 @@ def create_truncated_resnet18(net):
             out = out.view(out.size(0), -1)
             out = self.fc2(out)
             return out
-    net.__setattr__("fc2",nn.Linear(128,10))
-    net.forward = features_only.__get__(net)  # bind method
+    net.__setattr__("fc2",nn.Linear(256,10))
+    net.forward = new_fowrard.__get__(net)  # bind method
 
 def get_features_only_until_layer(net, block=2, net_type=0):
     # ResNet block to compute receptive field for
@@ -10180,6 +10183,35 @@ def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
                                                                                           cfg.dataset),
                 bbox_inches="tight")
 
+def truncated_network_unrestricted_training(cfg):
+
+    from sparse_ensemble_utils import train
+    trainloader, valloader, testloader = get_datasets(cfg)
+    resnet18_truncated = get_model(cfg)
+    create_truncated_resnet18(resnet18_truncated)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(resnet18_truncated.parameters(), lr=0.1,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    best_acc = 0
+    for epoch in range(cfg.epochs):
+        train(epoch,resnet18_truncated,trainloader,optimizer,criterion)
+        acc = test(resnet18_truncated, True, testloader, verbose=1)
+        scheduler.step()
+        print("Test set accuracy: {}".format(acc))
+        if acc > best_acc:
+             print('Saving..')
+             state = {
+                 'net': net.state_dict(),
+                 'acc': acc,
+                 'epoch': epoch,
+             }
+        if not os.path.isdir('checkpoint'):
+            os.mkdir('checkpoint')
+        if os.path.isfile('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name,best_acc)):
+            os.remove('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name,best_acc))
+        torch.save(state, './checkpoint/truncated_{}_test_acc_{}.pth'.format(name,acc))
+        best_acc = acc
 
 def explore_models_shapes():
     cfg = omegaconf.DictConfig(
@@ -10219,7 +10251,7 @@ def explore_models_shapes():
     pytorch_impl_pruned = copy.deepcopy(resnet18_pytorch)
     prune_function(pytorch_impl_pruned, cfg)
     remove_reparametrization(pytorch_impl_pruned, exclude_layer_list=cfg.exclude_layers)
-    create_truncated_resnet18(pytorch_impl_pruned)
+    # create_truncated_resnet18(pytorch_impl_pruned)
     det_accuracy = test(pytorch_impl_pruned, True, testloader, verbose=1)
     number_of_0_analysis_layer_two_models(my_impl_pruned, pytorch_impl_pruned, cfg,
                                           title="Comparing implementations init")

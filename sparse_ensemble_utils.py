@@ -18,11 +18,93 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
-
+import os
+import sys
 # from accelerate import Accelerator
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
+########################################################################################################################
+######################### PROGRESS BAR FUNCTION ########################################################################
+_, term_width = os.popen('stty size', 'r').read().split()
+term_width = int(term_width)
+TOTAL_BAR_LENGTH = 65.
+last_time = time.time()
+begin_time = last_time
+def progress_bar(current, total, msg=None):
+    global last_time, begin_time
+    if current == 0:
+        begin_time = time.time()  # Reset for new bar.
+
+    cur_len = int(TOTAL_BAR_LENGTH*current/total)
+    rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
+
+    sys.stdout.write(' [')
+    for i in range(cur_len):
+        sys.stdout.write('=')
+    sys.stdout.write('>')
+    for i in range(rest_len):
+        sys.stdout.write('.')
+    sys.stdout.write(']')
+
+    cur_time = time.time()
+    step_time = cur_time - last_time
+    last_time = cur_time
+    tot_time = cur_time - begin_time
+
+    L = []
+    L.append('  Step: %s' % format_time(step_time))
+    L.append(' | Tot: %s' % format_time(tot_time))
+    if msg:
+        L.append(' | ' + msg)
+
+    msg = ''.join(L)
+    sys.stdout.write(msg)
+    for i in range(term_width-int(TOTAL_BAR_LENGTH)-len(msg)-3):
+        sys.stdout.write(' ')
+
+    # Go back to the center of the bar.
+    for i in range(term_width-int(TOTAL_BAR_LENGTH/2)+2):
+        sys.stdout.write('\b')
+    sys.stdout.write(' %d/%d ' % (current+1, total))
+
+    if current < total-1:
+        sys.stdout.write('\r')
+    else:
+        sys.stdout.write('\n')
+    sys.stdout.flush()
+
+def format_time(seconds):
+    days = int(seconds / 3600/24)
+    seconds = seconds - days*3600*24
+    hours = int(seconds / 3600)
+    seconds = seconds - hours*3600
+    minutes = int(seconds / 60)
+    seconds = seconds - minutes*60
+    secondsf = int(seconds)
+    seconds = seconds - secondsf
+    millis = int(seconds*1000)
+
+    f = ''
+    i = 1
+    if days > 0:
+        f += str(days) + 'D'
+        i += 1
+    if hours > 0 and i <= 2:
+        f += str(hours) + 'h'
+        i += 1
+    if minutes > 0 and i <= 2:
+        f += str(minutes) + 'm'
+        i += 1
+    if secondsf > 0 and i <= 2:
+        f += str(secondsf) + 's'
+        i += 1
+    if millis > 0 and i <= 2:
+        f += str(millis) + 'ms'
+        i += 1
+    if f == '':
+        f = '0ms'
+    return f
 
 
 ############ This function is for projecting a model given a list of models and project them into 2D plane with MDS ####
@@ -142,6 +224,27 @@ def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flo
         return 100. * correct.item() / total
 
 
+def train(epoch,net,trainloader,optimizer,criterion):
+    print('\nEpoch: %d' % epoch)
+    net.train()
+    train_loss = 0
+    correct = 0
+    total = 0
+    for batch_idx, (inputs, targets) in enumerate(trainloader):
+        inputs, targets = inputs.to(device), targets.to(device)
+        optimizer.zero_grad()
+        outputs = net(inputs)
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
+
+        train_loss += loss.item()
+        _, predicted = outputs.max(1)
+        total += targets.size(0)
+        correct += predicted.eq(targets).sum().item()
+
+        progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                     % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
     if use_cuda:
         net.cuda()
