@@ -9513,7 +9513,7 @@ def LeMain(args):
                 exclude_layers = ["conv1", "linear"]
         if args["modeltype"] == "hub":
             if args["architecture"] == "resnet18":
-                solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+                solution = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
                 exclude_layers = ["conv1", "fc"]
 
     if args["dataset"] == "imagenet":
