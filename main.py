@@ -3652,7 +3652,20 @@ def get_model(cfg: omegaconf.DictConfig):
                 if cfg.dataset == "cifar100":
                     net = torch.hub.load("chenyaofo/pytorch-cifar-models", cfg.solution, pretrained=True)
                 if cfg.dataset == "cifar10":
-                    net = torch.hub.load("chenyaofo/pytorch-cifar-models", cfg.solution, pretrained=True)
+                    # net = torch.hub.load("chenyaofo/pytorch-cifar-models", cfg.solution, pretrained=True)
+                    from torchvision.models import resnet50
+                    net = resnet50()
+                    in_features = net.fc.in_features
+                    net.fc = nn.Linear(in_features, 10)
+
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k, item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.", "")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
                 if cfg.dataset == "imagenet":
                     from torchvision.models import resnet50, ResNet50_Weights
                     # Using pretrained weights:
@@ -5767,7 +5780,6 @@ def compare_weights(weight_list_1: typing.List[torch.TensorType], weight_list_2:
 
 
 def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
-
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -9569,8 +9581,9 @@ def LeMain(args):
     # print("Deterministic pruning outside function: {}".format(det_performance))
     # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
     print(args)
-    cfg.solution = ""
-    truncated_network_unrestricted_training(cfg)
+    # cfg.solution = ""
+    # truncated_network_unrestricted_training(cfg)
+    truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
@@ -9935,24 +9948,27 @@ def shorcut_function(x, module):
     else:
         return x
 
+
 def create_truncated_resnet18(net):
     def new_fowrard(self, x):
-            x = self.conv1(x)
-            x = self.bn1(x)
-            x = self.relu(x)
-            x = self.maxpool(x)
-            x = self.layer1(x)
-            x = self.layer2(x)
-            out = F.relu(self.layer3[0].bn1(self.layer3[0].conv1(x)))
-            out = self.layer3[0].bn2(self.layer3[0].conv2(out))
-            out += shorcut_function(x, self.layer3[0])
-            out = F.relu(out)
-            out = F.avg_pool2d(out, 2)
-            out = out.view(out.size(0), -1)
-            out = self.fc2(out)
-            return out
-    net.__setattr__("fc2",nn.Linear(256,10))
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        out = F.relu(self.layer3[0].bn1(self.layer3[0].conv1(x)))
+        out = self.layer3[0].bn2(self.layer3[0].conv2(out))
+        out += shorcut_function(x, self.layer3[0])
+        out = F.relu(out)
+        out = F.avg_pool2d(out, 2)
+        out = out.view(out.size(0), -1)
+        out = self.fc2(out)
+        return out
+
+    net.__setattr__("fc2", nn.Linear(256, 10))
     net.forward = new_fowrard.__get__(net)  # bind method
+
 
 def get_features_only_until_layer(net, block=2, net_type=0):
     # ResNet block to compute receptive field for
@@ -10166,8 +10182,8 @@ def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
     name_list.extend(names_m1)
     name_list.extend(names_m1)
 
-    model_name_list = ["Pytorch Impl 1.With"] * len(sparsities_m1)
-    temp_list = ["Pytorch Impl 2. GMP"] * len(sparsities_m2)
+    model_name_list = ["Custom Impl."] * len(sparsities_m1)
+    temp_list = ["Pytorch Impl."] * len(sparsities_m2)
     model_name_list.extend(temp_list)
 
     sparsities_list = []
@@ -10183,14 +10199,101 @@ def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
                                                                                           cfg.dataset),
                 bbox_inches="tight")
 
-def truncated_network_unrestricted_training(cfg):
 
+def truncated_network_load_state_dict(cfg, filename):
+    resnet18_truncated = get_model(cfg)
+    create_truncated_resnet18(resnet18_truncated)
+    state_dict = torch.load(filename)
+    resnet18_truncated.load_state_dict(state_dict["net"])
+    return resnet18_truncated
+
+
+def truncated_network_fine_tune_linear_layer_only(cfg):
     from sparse_ensemble_utils import train
     cfg.num_workers = 10
     trainloader, valloader, testloader = get_datasets(cfg)
-
+    # loaded_resnet = truncated_network_load_state_dict(cfg,
+    #                                                   "trained_models/cifar10/truncated_resnet18_pytorch_test_acc_88.91.pth")
+    # acc_dense = test(loaded_resnet, True, testloader, verbose=1)
+    # pruning_rates = [0.5, 0.6, 0.7, 0.8,0.9]
+    # for pr in pruning_rates:
+    #     cfg.amount = pr
+    #     pruned_model = copy.deepcopy(loaded_resnet)
+    #     prune_function(pruned_model, cfg)
+    #     remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    #     acc_pruned = test(pruned_model, True, testloader, verbose=0)
+    #     print("Pruning rate: {} Test set accuracy: {}".format(pr, acc_pruned))
+    #
+    #
+    # names,weights = zip(*get_layer_dict(loaded_resnet))
+    # count_params = lambda x: x.numel()
+    # numel = list(map(count_params,weights))
+    # df = pd.DataFrame({"names":names,"number of params":numel})
+    # df.to_csv("test.csv",sep=";",index= False)
+    # return
     resnet18_truncated = get_model(cfg)
-    name ="resnet18_pytorch"
+    name = "resnet18_pytorch"
+    create_truncated_resnet18(resnet18_truncated)
+    # cfg.exclude_layers = ["conv1", "fc2", "fc", "layer3.1.conv1", "layer3.1.conv2", "layer4.0.conv1", "layer4.0.conv2",
+    #                       "layer4.0.downsample.0", "layer4.1.conv1", "layer4.1.conv2"]
+    train_layers =["fc2"]
+    for name, param in resnet18_truncated.named_parameters():
+        for layer_name in train_layers:
+            if layer_name in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(resnet18_truncated.parameters(), lr=0.1,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    best_acc = 0
+    for epoch in range(cfg.epochs):
+        train(epoch, resnet18_truncated, trainloader, optimizer, criterion)
+        acc = test(resnet18_truncated, True, testloader, verbose=1)
+        scheduler.step()
+        print("Test set accuracy: {}".format(acc))
+        if acc > best_acc:
+            print('Saving..')
+            state = {
+                'net': resnet18_truncated.state_dict(),
+                'acc': acc,
+                'epoch': epoch,
+            }
+            if not os.path.isdir('checkpoint'):
+                os.mkdir('checkpoint')
+            if os.path.isfile('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name, best_acc)):
+                os.remove('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name, best_acc))
+            torch.save(state, './checkpoint/truncated_{}_test_acc_{}.pth'.format(name, acc))
+            best_acc = acc
+def truncated_network_unrestricted_training(cfg):
+    from sparse_ensemble_utils import train
+    cfg.num_workers = 10
+    trainloader, valloader, testloader = get_datasets(cfg)
+    # loaded_resnet = truncated_network_load_state_dict(cfg,
+    #                                                   "trained_models/cifar10/truncated_resnet18_pytorch_test_acc_88.91.pth")
+    # cfg.exclude_layers = ["conv1", "fc2", "fc", "layer3.1.conv1", "layer3.1.conv2", "layer4.0.conv1", "layer4.0.conv2",
+    #                       "layer4.0.downsample.0", "layer4.1.conv1", "layer4.1.conv2"]
+    # acc_dense = test(loaded_resnet, True, testloader, verbose=1)
+    # pruning_rates = [0.5, 0.6, 0.7, 0.8,0.9]
+    # for pr in pruning_rates:
+    #     cfg.amount = pr
+    #     pruned_model = copy.deepcopy(loaded_resnet)
+    #     prune_function(pruned_model, cfg)
+    #     remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    #     acc_pruned = test(pruned_model, True, testloader, verbose=0)
+    #     print("Pruning rate: {} Test set accuracy: {}".format(pr, acc_pruned))
+    #
+    #
+    # names,weights = zip(*get_layer_dict(loaded_resnet))
+    # count_params = lambda x: x.numel()
+    # numel = list(map(count_params,weights))
+    # df = pd.DataFrame({"names":names,"number of params":numel})
+    # df.to_csv("test.csv",sep=";",index= False)
+    # return
+    resnet18_truncated = get_model(cfg)
+    name = "resnet18_pytorch"
     create_truncated_resnet18(resnet18_truncated)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(resnet18_truncated.parameters(), lr=0.1,
@@ -10198,30 +10301,31 @@ def truncated_network_unrestricted_training(cfg):
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     best_acc = 0
     for epoch in range(cfg.epochs):
-        train(epoch,resnet18_truncated,trainloader,optimizer,criterion)
+        train(epoch, resnet18_truncated, trainloader, optimizer, criterion)
         acc = test(resnet18_truncated, True, testloader, verbose=1)
         scheduler.step()
         print("Test set accuracy: {}".format(acc))
         if acc > best_acc:
-             print('Saving..')
-             state = {
-                 'net':resnet18_truncated.state_dict(),
-                 'acc': acc,
-                 'epoch': epoch,
-             }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        if os.path.isfile('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name,best_acc)):
-            os.remove('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name,best_acc))
-        torch.save(state, './checkpoint/truncated_{}_test_acc_{}.pth'.format(name,acc))
-        best_acc = acc
+            print('Saving..')
+            state = {
+                'net': resnet18_truncated.state_dict(),
+                'acc': acc,
+                'epoch': epoch,
+            }
+            if not os.path.isdir('checkpoint'):
+                os.mkdir('checkpoint')
+            if os.path.isfile('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name, best_acc)):
+                os.remove('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name, best_acc))
+            torch.save(state, './checkpoint/truncated_{}_test_acc_{}.pth'.format(name, acc))
+            best_acc = acc
+
 
 def explore_models_shapes():
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet18",
          "model_type": "alternative",
          # "model_type": "hub",
-         "solution": "",
+         # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
@@ -10234,7 +10338,7 @@ def explore_models_shapes():
          "noise": "gaussian",
          "sigma": 0.005,
          "pruner": "global",
-         "exclude_layers": ["conv1", "fc"]
+         "exclude_layers": ["conv1", "linear"]
 
          })
     # test_predictions_for_cfg(cfg,False,"seed3")
@@ -10247,17 +10351,19 @@ def explore_models_shapes():
     remove_reparametrization(my_impl_pruned, exclude_layer_list=cfg.exclude_layers)
     cfg.model_type = "hub"
     cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
     cfg.exclude_layers = ["conv1", "fc"]
     cfg.pruner = "global"
-    save_onnx(cfg)
+    # save_onnx(cfg)
     resnet18_pytorch = get_model(cfg)
     pytorch_impl_pruned = copy.deepcopy(resnet18_pytorch)
+    cfg.amount=0.99
     prune_function(pytorch_impl_pruned, cfg)
     remove_reparametrization(pytorch_impl_pruned, exclude_layer_list=cfg.exclude_layers)
     # create_truncated_resnet18(pytorch_impl_pruned)
     det_accuracy = test(pytorch_impl_pruned, True, testloader, verbose=1)
     number_of_0_analysis_layer_two_models(my_impl_pruned, pytorch_impl_pruned, cfg,
-                                          title="Comparing implementations init")
+                                          title="Comparing implementations ResNet50")
     return
     resnet18_pytorch.eval()
     resnet18_normal.eval()
