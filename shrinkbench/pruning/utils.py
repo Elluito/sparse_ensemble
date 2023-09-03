@@ -71,6 +71,7 @@ def get_activations(model, input):
         if isinstance(module, nn.ReLU):
             # TODO ResNet18 implementation reuses a
             # single ReLU layer?
+            activations[module] = output.detach().cpu().numpy().copy()
             return
         assert module not in activations, \
             f"{module} already in activations"

@@ -97,6 +97,8 @@ from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse, get_mask, \
     apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator
+from feature_maps_utils import load_layer_features
+import re
 from itertools import cycle
 # import pylustrator
 from shrinkbench.metrics.flops import flops
@@ -2363,7 +2365,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
 
         transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
+            transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -2375,6 +2377,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         ])
 
         trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
         trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
@@ -2386,35 +2389,35 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
     if cfg.dataset == "cifar100":
-        current_directory = Path().cwd()
+        current_directory = path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data"
-        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR100"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
 
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4, padding_mode='reflect'),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
 
-        trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-        trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+        trainloader = torch.utils.data.dataloader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
                                                   num_workers=cfg.num_workers)
-        val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        val_loader = torch.utils.data.dataloader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
                                                  num_workers=cfg.num_workers)
-        testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
-        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
 
@@ -9563,6 +9566,7 @@ def LeMain(args):
     })
 
     cfg.exclude_layers = exclude_layers
+
     # weights_analysis_per_weight(cfg)
     # print(omegaconf.OmegaConf.to_yaml(cfg))
     # net = get_model(cfg)
@@ -9583,8 +9587,9 @@ def LeMain(args):
     print(args)
     # cfg.solution = ""
     # truncated_network_unrestricted_training(cfg)
-    truncated_network_fine_tune_linear_layer_only(cfg)
+    # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
+    record_features_cifar10_model()
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
@@ -10143,8 +10148,47 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
             x = self.layer2(x)
             if block == 2: return x
 
-            x = self.layer3(x)
-            if block == 3: return x
+            # x = self.layer3(x)
+            out = self.layer3[0].conv1(x)
+            out = self.layer3[0].bn1(out)
+            out = self.layer3[0].relu(out)
+
+            out = self.layer3[0].conv2(out)
+            out = self.layer3[0].bn2(out)
+            out = self.layer3[0].relu(out)
+
+            out = self.layer3[0].conv3(out)
+            out = self.layer3[0].bn3(out)
+
+            identity = self.layer3[0].downsample(x)
+
+            out += identity
+            out = self.layer3[0].relu(out)
+            x = out
+            out = self.layer3[1].conv1(x)
+            # out = self.layer3[1].conv2(out)
+            # def forward(self, x: Tensor) -> Tensor:
+            #     identity = x
+            #
+            #     out = self.conv1(x)
+            #     out = self.bn1(out)
+            #     out = self.relu(out)
+            #
+            #     out = self.conv2(out)
+            #     out = self.bn2(out)
+            #     out = self.relu(out)
+            #
+            #     out = self.conv3(out)
+            #     out = self.bn3(out)
+            #
+            #     if self.downsample is not None:
+            #         identity = self.downsample(x)
+            #
+            #     out += identity
+            #     out = self.relu(out)
+            #
+            #     return out
+            if block == 3: return out
 
             x = self.layer4(x)
 
@@ -10158,8 +10202,26 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
             x = self.layer2(x)
             if block == 2: return x
 
-            x = self.layer3(x)
-            if block == 3: return x
+            # x = self.layer3(x)
+            out = self.layer3[0].conv1(x)
+            out = self.layer3[0].bn1(out)
+            out = F.relu(out)
+
+            out = self.layer3[0].conv2(out)
+            out = self.layer3[0].bn2(out)
+            out = F.relu(out)
+
+            out = self.layer3[0].conv3(out)
+            out = self.layer3[0].bn3(out)
+
+            identity = self.layer3[0].shortcut(x)
+
+            out += identity
+            out = F.relu(out)
+            x = out
+            out = self.layer3[1].conv1(x)
+            # out = self.layer3[1].conv2(out)
+            if block == 3: return out
 
             x = self.layer4(x)
             return x
@@ -10236,7 +10298,7 @@ def truncated_network_fine_tune_linear_layer_only(cfg):
     create_truncated_resnet18(resnet18_truncated)
     # cfg.exclude_layers = ["conv1", "fc2", "fc", "layer3.1.conv1", "layer3.1.conv2", "layer4.0.conv1", "layer4.0.conv2",
     #                       "layer4.0.downsample.0", "layer4.1.conv1", "layer4.1.conv2"]
-    train_layers =["fc2"]
+    train_layers = ["fc2"]
     for name, param in resnet18_truncated.named_parameters():
         for layer_name in train_layers:
             if layer_name in name:
@@ -10267,6 +10329,8 @@ def truncated_network_fine_tune_linear_layer_only(cfg):
                 os.remove('./checkpoint/truncated_{}_test_acc_{}.pth'.format(name, best_acc))
             torch.save(state, './checkpoint/truncated_{}_test_acc_{}.pth'.format(name, acc))
             best_acc = acc
+
+
 def truncated_network_unrestricted_training(cfg):
     from sparse_ensemble_utils import train
     cfg.num_workers = 10
@@ -10320,13 +10384,223 @@ def truncated_network_unrestricted_training(cfg):
             best_acc = acc
 
 
-def explore_models_shapes():
+def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",name2=""):
+    from CKA_similarity.CKA import CudaCKA
+
+    similarity_matrix = torch.zeros((number_layers,number_layers),device="cuda")
+    kernel = CudaCKA("cuda")
+    #### because the similiarity is a simetrical
+    for i in range(number_layers):
+        for j in range(i,number_layers):
+
+            layer_i = torch.tensor(load_layer_features(prefix1,name=name1))
+            layer_j = torch.tensor(load_layer_features(prefix2,name=name2))
+            layeri_cuda = layer_i.cuda()
+            layerj_cuda = layer_j.cuda()
+            layeri_cuda = layeri_cuda - torch.mean(layeri_cuda,dim=1)
+            layerj_cuda = layerj_cuda - torch.mean(layerj_cuda,dim=1)
+
+            similarity_matrix[i,j]=kernel.linear_CKA(layeri_cuda,layerj_cuda)
+            del layeri_cuda
+            del layerj_cuda
+            torch.cuda.empty_cache()
+    simetric_similarity = similarity_matrix.add(similarity_matrix.T)
+    simetric_similarity[range(number_layers),range(number_layers)]*=1/2
+
+
+    # network1 =
+    return simetric_similarity.detach().cpu().numpy()
+##### 1 of septemeber 2023 #####################################
+
+def features_similarity_comparison_experiments():
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+         # explore_models_shapes()
+         "dataset": "cifar10",
+         "batch_size": 128,
+         "num_workers": 2,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+
+    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_custom_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    cfg.model_type = "hub"
+    prefix_pytorch_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+
+    ##### -1 beacuse I dont have the linear layer here
+    number_of_layers = int(re.findall(r"\d+",cfg.architecture)[0])-1
+
+
+
+    #########   Pytorch vs Pytorch architectures ##################################
+
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    filename = "similarity_experiments/{}_pytroch_V_pytorch_similarity.npy".format(cfg.architecture)
+    with open(filename,"wb") as f :
+        np.save(f,similarity_for_networks)
+
+
+    ######### Custom vs Custom architectures ##################################
+
+    similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    filename = "similarity_experiments/{}_custom_V_custom_similarity.npy".format(cfg.architecture)
+    with open(filename,"wb") as f :
+        np.save(f,similarity_for_networks)
+
+    #########   Pytorch vs Custom architectures ##################################
+
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    filename = "similarity_experiments/{}_custom_V_custom_similarity.npy".format(cfg.architecture)
+    with open(filename,"wb") as f :
+        np.save(f,similarity_for_networks)
+
+def record_features_cifar10_model():
+    from feature_maps_utils import save_layer_feature_maps_for_batch
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet18",
          "model_type": "alternative",
          # "model_type": "hub",
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
+         # explore_models_shapes()
+         "dataset": "cifar10",
+         "batch_size": 128,
+         "num_workers": 2,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+    train, val, testloader = get_datasets(cfg)
+    ################################# dataset cifar10 ###########################################################################
+    if cfg.dataset=="cifar10":
+        current_directory = Path().cwd()
+        data_path = "/datasets"
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
+        # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        # val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        #                                          num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+    if cfg.dataset == "cifar100":
+        current_directory = path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+
+
+    resnet18_normal = get_model(cfg)
+
+    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+
+    cfg.model_type = "hub"
+
+    cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+    cfg.exclude_layers = ["conv1", "fc"]
+    cfg.pruner = "global"
+    # save_onnx(cfg)
+    resnet18_pytorch = get_model(cfg)
+
+    prefix_pytorch_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_pytorch_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+
+    ###################### Get the features for the training set for both models#####################################
+    # for x,y in trainloader:
+    #     # First the custom implementation
+    #     save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_train,name="_seed_1")
+    #
+    #     # second the custom implementation
+    #     save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
+    for x,y in testloader:
+        # First the custom implementation
+        save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_train,name="_seed_1")
+
+        # second the custom implementation
+        save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
+
+
+
+
+
+
+
+#####################################
+def explore_models_shapes():
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
@@ -10350,21 +10624,21 @@ def explore_models_shapes():
     prune_function(my_impl_pruned, cfg)
     remove_reparametrization(my_impl_pruned, exclude_layer_list=cfg.exclude_layers)
     cfg.model_type = "hub"
-    cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
-    # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+
+    # cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
     cfg.exclude_layers = ["conv1", "fc"]
     cfg.pruner = "global"
     # save_onnx(cfg)
     resnet18_pytorch = get_model(cfg)
     pytorch_impl_pruned = copy.deepcopy(resnet18_pytorch)
-    cfg.amount=0.99
+    cfg.amount = 0.99
     prune_function(pytorch_impl_pruned, cfg)
     remove_reparametrization(pytorch_impl_pruned, exclude_layer_list=cfg.exclude_layers)
     # create_truncated_resnet18(pytorch_impl_pruned)
-    det_accuracy = test(pytorch_impl_pruned, True, testloader, verbose=1)
-    number_of_0_analysis_layer_two_models(my_impl_pruned, pytorch_impl_pruned, cfg,
-                                          title="Comparing implementations ResNet50")
-    return
+    # det_accuracy = test(pytorch_impl_pruned, True, testloader, verbose=1)
+    # number_of_0_analysis_layer_two_models(my_impl_pruned, pytorch_impl_pruned, cfg,
+    #                                       title="Comparing implementations ResNet50")
     resnet18_pytorch.eval()
     resnet18_normal.eval()
 
@@ -10376,6 +10650,15 @@ def explore_models_shapes():
 
     # receptive_field_dict = receptive_field(resnet18_pytorch, (3, 32, 32),device="cpu")
     # receptive_field_for_unit(receptive_field_dict, "2", (1, 1))
+    from shrinkbench.metrics.flops import get_activations
+    t0 = time.time()
+    activations_normal = get_activations(resnet18_normal,images)
+    t1 = time.time()
+    activations_pytorch = get_activations(resnet18_pytorch,images)
+    t2 = time.time()
+    print("Time for resnet18 normal = {}".format(t1-t0))
+    print("Time for resnet18 pytorch = {}".format(t2-t1))
+    return
     input_shapes_normal, resnet18_normal_activations_shapes, module_names_normal = get_activations_shape(
         resnet18_normal, images)
     input_shapes_pytorch, resnet18_pytorch_activations_shapes, module_names_pytorch = get_activations_shape(
@@ -10579,12 +10862,13 @@ if __name__ == '__main__':
                         help='Type of functions for MOO optim of sigma and pr', required=False)
     args = vars(parser.parse_args())
     LeMain(args)
+
     #
     # MDS_projection_plot()
 
     #
     #     ###  Stochastic pruning with pruner, dataset, sigma, and pruning rate present on cfg
-    #     #  Also if measure GF is true in cfg then it measures the gradientflow, flops and other measurements  for the particlar
+    #     #  Also if measure GF is True in cfg then it measures the gradientflow, flops and other measurements  for the particlar
     #
     # experiment_selector(cfg,number_experiment=6)
     #
