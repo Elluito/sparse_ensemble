@@ -1,6 +1,6 @@
 import numpy as np
 import time as time
-from CKA_similarity import CKA
+from CKA_similarity.CKA import CKA
 
 if __name__ == '__main__':
     name1 = "/nobackup/sclaam/features/layer0_features_seed_1.txt"
