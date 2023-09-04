@@ -20,7 +20,7 @@ class BasicBlock(nn.Module):
     def __init__(self, in_planes, planes, stride=1, fixed_points=None):
         super(BasicBlock, self).__init__()
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         if fixed_points is None:
             self.conv1 = nn.Conv2d(
                 in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
@@ -67,7 +67,7 @@ class Bottleneck(nn.Module):
     def __init__(self, in_planes, planes, stride=1, fixed_points=None):
         super(Bottleneck, self).__init__()
 
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         if fixed_points is None:
             self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
             self.bn1 = nn.BatchNorm2d(planes)
@@ -118,7 +118,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.in_planes = 64
         self.fix_points = fixed_points
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU()
         if self.fix_points is None:
             self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
                                    stride=1, padding=1, bias=False)

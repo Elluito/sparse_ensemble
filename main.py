@@ -9589,7 +9589,9 @@ def LeMain(args):
     # truncated_network_unrestricted_training(cfg)
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
-    record_features_cifar10_model()
+    record_features_cifar10_model(cfg.architecture,args["experiment"])
+    features_similarity_comparison_experiments()
+
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
@@ -10385,7 +10387,7 @@ def truncated_network_unrestricted_training(cfg):
 
 
 def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",name2=""):
-    from CKA_similarity.CKA import CudaCKA
+    from CKA_similarity.CKA import CudaCKA,CKA
 
     similarity_matrix = torch.zeros((number_layers,number_layers),device="cuda")
     kernel = CudaCKA("cuda")
@@ -10393,14 +10395,14 @@ def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",na
     for i in range(number_layers):
         for j in range(i,number_layers):
 
-            layer_i = torch.tensor(load_layer_features(prefix1,name=name1))
-            layer_j = torch.tensor(load_layer_features(prefix2,name=name2))
+            layer_i = torch.tensor(load_layer_features(prefix1,i,name=name1))
+            layer_j = torch.tensor(load_layer_features(prefix2,j,name=name2))
             layeri_cuda = layer_i.cuda()
             layerj_cuda = layer_j.cuda()
-            layeri_cuda = layeri_cuda - torch.mean(layeri_cuda,dim=1)
-            layerj_cuda = layerj_cuda - torch.mean(layerj_cuda,dim=1)
+            layeri_cuda = layeri_cuda - torch.mean(layeri_cuda,dtype=torch.float,dim=0)
+            layerj_cuda = layerj_cuda - torch.mean(layerj_cuda,dtype=torch.float,dim=0)
 
-            similarity_matrix[i,j]=kernel.linear_CKA(layeri_cuda,layerj_cuda)
+            similarity_matrix[i,j]=kernel.linear_CKA(layeri_cuda.float(),layerj_cuda.float())
             del layeri_cuda
             del layerj_cuda
             torch.cuda.empty_cache()
@@ -10414,7 +10416,7 @@ def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",na
 
 def features_similarity_comparison_experiments():
     cfg = omegaconf.DictConfig(
-        {"architecture": "resnet50",
+        {"architecture": "resnet18",
          "model_type": "alternative",
          # "model_type": "hub",
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -10443,44 +10445,60 @@ def features_similarity_comparison_experiments():
     number_of_layers = int(re.findall(r"\d+",cfg.architecture)[0])-1
 
 
-
     #########   Pytorch vs Pytorch architectures ##################################
-
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
-    filename = "similarity_experiments/{}_pytroch_V_pytorch_similarity.npy".format(cfg.architecture)
-    with open(filename,"wb") as f :
-        np.save(f,similarity_for_networks)
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    filename = "similarity_experiments/{}_pytorch_V_pytorch_similarity.txt".format(cfg.architecture)
+    # with open(filename,"wb") as f :
+    np.savetxt(filename,similarity_for_networks,delimiter=",")
 
 
     ######### Custom vs Custom architectures ##################################
+    #
+    # similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    # filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
+    # # with open(filename,"wb") as f :
+    # np.savetxt(filename,similarity_for_networks,delimiter=",")
+    #
+    # #########   Pytorch vs Custom architectures ##################################
+    #
+    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    # filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
+    # # with open(filename,"wb") as f :
+    # np.savetxt(filename,similarity_for_networks,delimiter=",")
 
-    similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
-    filename = "similarity_experiments/{}_custom_V_custom_similarity.npy".format(cfg.architecture)
-    with open(filename,"wb") as f :
-        np.save(f,similarity_for_networks)
-
-    #########   Pytorch vs Custom architectures ##################################
-
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
-    filename = "similarity_experiments/{}_custom_V_custom_similarity.npy".format(cfg.architecture)
-    with open(filename,"wb") as f :
-        np.save(f,similarity_for_networks)
-
-def record_features_cifar10_model():
+def record_features_cifar10_model(architecture="resnet18",seed=1):
     from feature_maps_utils import save_layer_feature_maps_for_batch
+    if seed == 1:
+        seed_name = "_seed_1"
+        if architecture == "resnet18":
+            solution_normal = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+            solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+        if architecture == "resnet50":
+            solution_normal = "trained_models/cifar10/resnet50_cifar10.pth"
+            solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+    if seed == 2:
+        seed_name = "_seed_2"
+        if architecture == "resnet18":
+            solution_normal = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
+            solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
+        if architecture == "resnet50":
+            solution_normal = ""
+            solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_2_test_acc_89.93.pth"
+
     cfg = omegaconf.DictConfig(
-        {"architecture": "resnet18",
+        {"architecture": architecture,
          "model_type": "alternative",
          # "model_type": "hub",
+         "solution": solution_normal,
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-         "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
          # explore_models_shapes()
          "dataset": "cifar10",
-         "batch_size": 128,
-         "num_workers": 2,
+         "batch_size": 1,
+         "num_workers": 4,
          "amount": 0.9,
          "noise": "gaussian",
          "sigma": 0.005,
@@ -10556,21 +10574,29 @@ def record_features_cifar10_model():
 
 
     resnet18_normal = get_model(cfg)
+    current_directory = Path().cwd()
+    add_nobackup = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        add_nobackup ="/nobackub/sclaam/"
 
-    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_custom_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_custom_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    ######################## now the pytorch implementation ############################################################
 
     cfg.model_type = "hub"
 
-    cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    cfg.solution = solution_pytorch
+    # cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
     # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
     cfg.exclude_layers = ["conv1", "fc"]
     cfg.pruner = "global"
     # save_onnx(cfg)
     resnet18_pytorch = get_model(cfg)
 
-    prefix_pytorch_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_pytorch_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_pytorch_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_pytorch_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_pytorch_test.mkdir(parents=True,exist_ok=True)
+    # prefix_pytorch_train.mkdir(parents=True,exist_ok=True)
 
     ###################### Get the features for the training set for both models#####################################
     # for x,y in trainloader:
@@ -10579,13 +10605,30 @@ def record_features_cifar10_model():
     #
     #     # second the custom implementation
     #     save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
+    # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
+    # return
+    o=0
     for x,y in testloader:
         # First the custom implementation
-        save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_train,name="_seed_1")
-
+        # y_hat = resnet18_normal(x)
+        # print(y_hat)
+        # return
+        save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_test,seed_name=seed_name)
+        return
         # second the custom implementation
-        save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
+        save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
 
+        print("{} batch out of {}".format(o,len(testloader)))
+        o+=1
+        # if o ==2:
+        #     break
+        # o+=1
+    # print("before reading the layer")
+    # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
+    # print("Lenght of layer 0 features {}".format(len(layer_features)))
+    # layer_features = load_layer_features(prefix_pytorch_test,index=0,name="_seed_1")
+    # print("Lenght of layer 0 features {}".format(len(layer_features)))
+    # return
 
 
 

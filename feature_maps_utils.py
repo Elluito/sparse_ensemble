@@ -97,7 +97,8 @@ def get_activations_shape(model, input):
     return inputs, activations, module_names
 
 
-def save_layer_feature_maps_for_batch(model, input, file_prefix="",name=""):
+def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""):
+    model.eval()
     # activations = OrderedDict()
     feature_maps = []
     hooks = []
@@ -111,13 +112,19 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="",name=""):
         # #     f"{module} already in activations"
         # TODO [0] means first input, not all models have a single input
         # inputs.append(input[0].size())
+        # print("input")
+        # print(input)
+        # print("OUTPUT")
+        # print(output)
+        # return
         feature_maps.append(torch.flatten(output).detach().cpu().numpy())
         # module_names.append(str(module))
 
     for name, module in model.named_modules():
         if isinstance(module, nn.ReLU):
             hooks.append(module.register_forward_hook(store_activations))
-
+            # break
+    #
     # fn, hooks = hook_apply_partial_fn(store_activations, model, forward=True)
     # model.apply(fn)
     with torch.no_grad():
@@ -125,27 +132,39 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="",name=""):
     for h in hooks:
         h.remove()
 
+    Path(file_prefix).mkdir(parents=True, exist_ok=True)
+
     for i, elem in enumerate(feature_maps):
+        file_name = Path(file_prefix / "layer{}_features{}.txt".format(i, seed_name))
+        # if not file_name.is_file():
+        #     file_name.mkdir(parents=True)
+        # suma = np.sum(elem == 0)
+        n = len(elem)
+        print(n)
+        # print("Current layer: {}".format(i))
+        # print("{} out of {} elements are 0".format(suma, n))
+        # with open(file_name, "a+") as f:
+        #     np.savetxt(f, elem.reshape(1, -1), delimiter=",")
+    return feature_maps
 
-        file_name = Path(file_prefix + "layer{}_features{}.npy".format(i,name))
-        if not file_name.is_file():
-            file_name.mkdir(parents=True)
-        with open(file_name, "wb") as f:
-            np.save(f, elem)
 
-
-def load_layer_features(prefix, index,name=""):
+def load_layer_features(prefix, index, name=""):
     finished = False
-    full_features = []
-    while not finished:
-        try:
-            with open(prefix + "layer{}_features{}.npy".format(index,name), "rb") as f:
-                full_features.append(np.load(f))
-        except EOFError:
-            finished = True
-
-    return np.array(full_features)
-#def load_model_features(prefix,number_of_layers):
-
-
-
+    features = None
+    counter = 0
+    with open(prefix / "layer{}_features{}.txt".format(index, name), "r") as f:
+        # full_features.append(np.load(f))
+        features = np.loadtxt(f, delimiter=",")
+    # while not finished:
+    #     try:
+    #             suma = np.sum(feature == 0)
+    #             n = len(feature)
+    #             print("Current sample: {}".format(counter))
+    #             print("{} out of {} elements are 0".format(suma, n))
+    #             counter += 1
+    #             # if counter == 9:
+    #             # return full_features
+    #     except EOFError:
+    #         finished = True
+    return features
+# def load_model_features(prefix,number_of_layers):
