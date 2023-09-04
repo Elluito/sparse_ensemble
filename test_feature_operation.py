@@ -7,8 +7,8 @@ if __name__ == '__main__':
     name2 = "/nobackup/sclaam/features/layer1_features_seed_1.txt"
     kernel = CKA()
     t0 = time.time()
-    X = np.loadtxt(name1)
-    Y = np.loadtxt(name2)
+    X = np.loadtxt(name1,delimiter=",")
+    Y = np.loadtxt(name2,delimiter=",")
     t1 = time.time()
     print("Loading time 2 14GB files:{}".format(t1 - t0))
     print("Now the kernel operation")
