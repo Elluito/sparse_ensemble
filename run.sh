@@ -6,7 +6,8 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 48:00:00)
-#$ -l h_rt=010:00:00
+#$ -l h_rt=10:00:00
+
 
 # ASk for some GPU
 # -l coproc_p100=1
