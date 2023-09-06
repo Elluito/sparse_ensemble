@@ -10624,7 +10624,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
         # save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
 
         print("{} batch out of {}".format(o,len(testloader)))
-        if o ==2:
+        if o == maximun_samples:
             break
         o+=1
     # print("before reading the layer")
