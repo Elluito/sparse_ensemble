@@ -9589,8 +9589,8 @@ def LeMain(args):
     # truncated_network_unrestricted_training(cfg)
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
-    record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
-    # features_similarity_comparison_experiments()
+    # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
+    features_similarity_comparison_experiments()
 
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
@@ -10436,17 +10436,17 @@ def features_similarity_comparison_experiments():
 
          })
 
-    prefix_custom_train = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_custom_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_custom_train = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    prefix_custom_test = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
     cfg.model_type = "hub"
-    prefix_pytorch_test = Path("features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_pytorch_test = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
 
     ##### -1 beacuse I dont have the linear layer here
     number_of_layers = int(re.findall(r"\d+",cfg.architecture)[0])-1
 
 
     #########   Pytorch vs Pytorch architectures ##################################
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
     filename = "similarity_experiments/{}_pytorch_V_pytorch_similarity.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename,similarity_for_networks,delimiter=",")
@@ -10454,17 +10454,17 @@ def features_similarity_comparison_experiments():
 
     ######### Custom vs Custom architectures ##################################
     #
-    # similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
-    # filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename,similarity_for_networks,delimiter=",")
+    similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
+    # with open(filename,"wb") as f :
+    np.savetxt(filename,similarity_for_networks,delimiter=",")
     #
     # #########   Pytorch vs Custom architectures ##################################
     #
-    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
-    # filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename,similarity_for_networks,delimiter=",")
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
+    # with open(filename,"wb") as f :
+    np.savetxt(filename,similarity_for_networks,delimiter=",")
 
 def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alternative"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
