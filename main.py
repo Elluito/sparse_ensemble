@@ -9590,7 +9590,7 @@ def LeMain(args):
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
-    features_similarity_comparison_experiments()
+    features_similarity_comparison_experiments(cfg.architecture)
 
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
@@ -10414,9 +10414,9 @@ def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",na
     return simetric_similarity.detach().cpu().numpy()
 ##### 1 of septemeber 2023 #####################################
 
-def features_similarity_comparison_experiments():
+def features_similarity_comparison_experiments(architecture="resnet18"):
     cfg = omegaconf.DictConfig(
-        {"architecture": "resnet18",
+        {"architecture": architecture,
          "model_type": "alternative",
          # "model_type": "hub",
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
