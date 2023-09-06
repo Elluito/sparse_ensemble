@@ -10466,7 +10466,7 @@ def features_similarity_comparison_experiments():
     # # with open(filename,"wb") as f :
     # np.savetxt(filename,similarity_for_networks,delimiter=",")
 
-def record_features_cifar10_model(architecture="resnet18",seed=1):
+def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alternative"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     if seed == 1:
         seed_name = "_seed_1"
@@ -10482,12 +10482,16 @@ def record_features_cifar10_model(architecture="resnet18",seed=1):
             solution_normal = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
             solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
         if architecture == "resnet50":
-            solution_normal = ""
+            solution_normal = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_tst_acc_95.65.pth"
             solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_2_test_acc_89.93.pth"
+    if modeltype=="alternative":
+        solution = solution_normal
+    if modeltype== "hub":
+        solution = solution_pytorch
 
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
-         "model_type": "alternative",
+         "model_type":modeltype,
          # "model_type": "hub",
          "solution": solution_normal,
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -10581,21 +10585,22 @@ def record_features_cifar10_model(architecture="resnet18",seed=1):
 
     prefix_custom_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
     prefix_custom_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_cutom_test.mkdir(parents=True,exist_ok=True)
     ######################## now the pytorch implementation ############################################################
-
-    cfg.model_type = "hub"
-
-    cfg.solution = solution_pytorch
-    # cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
-    # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
-    cfg.exclude_layers = ["conv1", "fc"]
-    cfg.pruner = "global"
-    # save_onnx(cfg)
-    resnet18_pytorch = get_model(cfg)
-
-    prefix_pytorch_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_pytorch_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
-    prefix_pytorch_test.mkdir(parents=True,exist_ok=True)
+    #
+    # cfg.model_type = "hub"
+    #
+    # cfg.solution = solution_pytorch
+    # # cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    # # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+    # cfg.exclude_layers = ["conv1", "fc"]
+    # cfg.pruner = "global"
+    # # save_onnx(cfg)
+    # resnet18_pytorch = get_model(cfg)
+    #
+    # prefix_pytorch_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    # prefix_pytorch_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    # prefix_pytorch_test.mkdir(parents=True,exist_ok=True)
     # prefix_pytorch_train.mkdir(parents=True,exist_ok=True)
 
     ###################### Get the features for the training set for both models#####################################
@@ -10607,6 +10612,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1):
     #     save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
     # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
     # return
+    maximun_samples = 2000
     o=0
     for x,y in testloader:
         # First the custom implementation
@@ -10614,15 +10620,13 @@ def record_features_cifar10_model(architecture="resnet18",seed=1):
         # print(y_hat)
         # return
         save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_test,seed_name=seed_name)
-        return
         # second the custom implementation
-        save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
+        # save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
 
         print("{} batch out of {}".format(o,len(testloader)))
+        if o ==2:
+            break
         o+=1
-        # if o ==2:
-        #     break
-        # o+=1
     # print("before reading the layer")
     # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
     # print("Lenght of layer 0 features {}".format(len(layer_features)))

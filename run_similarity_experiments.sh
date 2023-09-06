@@ -36,7 +36,7 @@ models=("resnet18" "resnet50")
 #Datasets
 #datasets=("cifar10" "cifar100")
 types=("alternative" "hub")
-seeds =("1" "2")
+seeds=("1" "2")
 
 
 for model in ${models[@]}; do
