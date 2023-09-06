@@ -10581,7 +10581,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
     current_directory = Path().cwd()
     add_nobackup = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-        add_nobackup ="/nobackub/sclaam/"
+        add_nobackup ="/nobackup/sclaam/"
 
     prefix_custom_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
     prefix_custom_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
