@@ -10493,7 +10493,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
         {"architecture": architecture,
          "model_type":modeltype,
          # "model_type": "hub",
-         "solution": solution_normal,
+         "solution": solution,
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
          # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
@@ -10585,7 +10585,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
 
     prefix_custom_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
     prefix_custom_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
-    prefix_cutom_test.mkdir(parents=True,exist_ok=True)
+    prefix_custom_test.mkdir(parents=True,exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     #
     # cfg.model_type = "hub"
@@ -10613,11 +10613,13 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
     # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
     # return
     maximun_samples = 2000
+    resnet18_normal.cuda()
     o=0
     for x,y in testloader:
         # First the custom implementation
         # y_hat = resnet18_normal(x)
         # print(y_hat)
+        x = x.cuda()
         # return
         save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_test,seed_name=seed_name)
         # second the custom implementation
