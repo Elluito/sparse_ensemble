@@ -9589,8 +9589,8 @@ def LeMain(args):
     # truncated_network_unrestricted_training(cfg)
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
-    record_features_cifar10_model(cfg.architecture,args["experiment"])
-    features_similarity_comparison_experiments()
+    record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
+    # features_similarity_comparison_experiments()
 
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
