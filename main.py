@@ -10428,7 +10428,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
         return simetric_similarity.detach().cpu().numpy()
     if use_device == "cpu":
-        simetric_similarity = similarity_matrix + similarity_matrix.T
+        simetric_similarity = similarity_matrix + np.transpose(similarity_matrix)
         simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
         return simetric_similarity
 
@@ -10476,6 +10476,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
     ######### Custom vs Custom architectures ##################################
     #
+
     similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
                                                                  name2="_seed_2", use_device="cpu")

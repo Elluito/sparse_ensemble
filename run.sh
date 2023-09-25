@@ -6,11 +6,11 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 48:00:00)
-#$ -l h_rt=10:00:00
+#$ -l h_rt=20:00:00
 
 
 # ASk for some GPU
-#$ -l coproc_p100=1
+# -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=50G
