@@ -9590,7 +9590,7 @@ def LeMain(args):
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
     record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
-    #features_similarity_comparison_experiments(cfg.architecture)
+    # features_similarity_comparison_experiments(cfg.architecture)
 
     # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
@@ -10466,7 +10466,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
     # with open(filename,"wb") as f :
     np.savetxt(filename,similarity_for_networks,delimiter=",")
 
-def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alternative"):
+def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     if seed == 1:
         seed_name = "_seed_1"
@@ -10482,7 +10482,8 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="alte
             solution_normal = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
             solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
         if architecture == "resnet50":
-            solution_normal = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_tst_acc_95.65.pth"
+            solution_normal = "trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
+            # "/home/home01/sclaam/sparse_ensemble/trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
             solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_2_test_acc_89.93.pth"
     if modeltype=="alternative":
         solution = solution_normal
