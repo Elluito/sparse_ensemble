@@ -32,11 +32,11 @@
 #
 #CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 
-models=("resnet18" "resnet50")
+models=("resnet50")
 #Datasets
 #datasets=("cifar10" "cifar100")
-types=("alternative" "hub")
-seeds=("1" "2")
+types=("alternative")
+seeds=("2")
 
 
 for model in ${models[@]}; do
@@ -45,9 +45,9 @@ for type in ${types[@]};do
 for seed in ${seeds[@]};do
 #for f in ${functions[@]};do
 # For over  datasets
-if [ "${model}" = "resnet50" ] && [  "${seed}" = "2" ] & [  "${type}" = "normal" ] ; then
- continue
-fi
+#if [ "${model}" = "resnet50" ] && [  "${seed}" = "2" ] & [  "${type}" = "normal" ] ; then
+# continue
+#fi
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 qsub -N "saving_features_${model}_${type}_${seed}" run.sh  "${seed}" "0.0" "global" "${model}" "cifar10" "0.9" "${type}" "1" "nsga" "2"
