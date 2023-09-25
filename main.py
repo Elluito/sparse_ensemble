@@ -10415,8 +10415,8 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
             if use_device == "cpu":
                 layer_i = load_layer_features(prefix1, i, name=name1)
                 layer_j = load_layer_features(prefix2, j, name=name2)
-                layeri_cuda = layeri_cuda - np.mean(layeri, dtype=torch.float, axis=0)
-                layerj_cuda = layerj_cuda - np.mean(layerj, dtype=torch.float, axis=0)
+                layeri_cuda = layeri - np.mean(layeri, dtype=torch.float, axis=0)
+                layerj_cuda = layerj- np.mean(layerj, dtype=torch.float, axis=0)
 
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda, layerj_cuda)
                 del layeri_cuda
