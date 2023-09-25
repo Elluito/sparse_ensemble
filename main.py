@@ -10386,32 +10386,53 @@ def truncated_network_unrestricted_training(cfg):
             best_acc = acc
 
 
-def representation_similarity_analysis(prefix1,prefix2,number_layers,name1="",name2=""):
-    from CKA_similarity.CKA import CudaCKA,CKA
+def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", use_device="cuda"):
+    from CKA_similarity.CKA import CudaCKA, CKA
 
-    similarity_matrix = torch.zeros((number_layers,number_layers),device="cuda")
-    kernel = CudaCKA("cuda")
+    if use_device == "cuda":
+        kernel = CudaCKA("cuda")
+        similarity_matrix = torch.zeros((number_layers, number_layers), device=use_device)
+
+    else:
+
+        similarity_matrix = np.zeros((number_layers, number_layers))
+        kernel = CKA()
     #### because the similiarity is a simetrical
     for i in range(number_layers):
-        for j in range(i,number_layers):
+        for j in range(i, number_layers):
+            if use_device == "cuda":
+                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1))
+                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2))
+                layeri_cuda = layer_i.cuda()
+                layerj_cuda = layer_j.cuda()
+                layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
+                layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
 
-            layer_i = torch.tensor(load_layer_features(prefix1,i,name=name1))
-            layer_j = torch.tensor(load_layer_features(prefix2,j,name=name2))
-            layeri_cuda = layer_i.cuda()
-            layerj_cuda = layer_j.cuda()
-            layeri_cuda = layeri_cuda - torch.mean(layeri_cuda,dtype=torch.float,dim=0)
-            layerj_cuda = layerj_cuda - torch.mean(layerj_cuda,dtype=torch.float,dim=0)
+                similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
+                del layeri_cuda
+                del layerj_cuda
+                torch.cuda.empty_cache()
+            if use_device == "cpu":
+                layer_i = load_layer_features(prefix1, i, name=name1)
+                layer_j = load_layer_features(prefix2, j, name=name2)
+                layeri_cuda = layeri_cuda - np.mean(layeri, dtype=torch.float, axis=0)
+                layerj_cuda = layerj_cuda - np.mean(layerj, dtype=torch.float, axis=0)
 
-            similarity_matrix[i,j]=kernel.linear_CKA(layeri_cuda.float(),layerj_cuda.float())
-            del layeri_cuda
-            del layerj_cuda
-            torch.cuda.empty_cache()
-    simetric_similarity = similarity_matrix.add(similarity_matrix.T)
-    simetric_similarity[range(number_layers),range(number_layers)]*=1/2
-
+                similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda, layerj_cuda)
+                del layeri_cuda
+                del layerj_cuda
 
     # network1 =
-    return simetric_similarity.detach().cpu().numpy()
+    if use_device == "cuda":
+        simetric_similarity = similarity_matrix.add(similarity_matrix.T)
+        simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
+        return simetric_similarity.detach().cpu().numpy()
+    if use_device == "cpu":
+        simetric_similarity = similarity_matrix + similarity_matrix.T
+        simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
+        return simetric_similarity
+
+
 ##### 1 of septemeber 2023 #####################################
 
 def features_similarity_comparison_experiments(architecture="resnet18"):
@@ -10436,37 +10457,44 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
          })
 
-    prefix_custom_train = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_custom_test = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_custom_train = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
     cfg.model_type = "hub"
-    prefix_pytorch_test = Path("/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    prefix_pytorch_test = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
 
     ##### -1 beacuse I dont have the linear layer here
-    number_of_layers = int(re.findall(r"\d+",cfg.architecture)[0])-1
-
+    number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
 
     #########   Pytorch vs Pytorch architectures ##################################
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
-    filename = "similarity_experiments/{}_pytorch_V_pytorch_similarity.txt".format(cfg.architecture)
-    # with open(filename,"wb") as f :
-    np.savetxt(filename,similarity_for_networks,delimiter=",")
-
+    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    # filename = "similarity_experiments/{}_pytorch_V_pytorch_similarity.txt".format(cfg.architecture)
+    # # with open(filename,"wb") as f :
+    # np.savetxt(filename,similarity_for_networks,delimiter=",")
 
     ######### Custom vs Custom architectures ##################################
     #
-    similarity_for_networks = representation_similarity_analysis(prefix_custom_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
+    similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
+                                                                 number_layers=number_of_layers, name1="_seed_1",
+                                                                 name2="_seed_2", use_device="cpu")
     filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
-    np.savetxt(filename,similarity_for_networks,delimiter=",")
+    np.savetxt(filename, similarity_for_networks, delimiter=",")
     #
     # #########   Pytorch vs Custom architectures ##################################
     #
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_custom_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_1")
+    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
+                                                                 number_layers=number_of_layers, name1="_seed_1",
+                                                                 name2="_seed_1", use_device="cpu")
     filename = "similarity_experiments/{}_pytorch_V_custom_similarity.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
-    np.savetxt(filename,similarity_for_networks,delimiter=",")
+    np.savetxt(filename, similarity_for_networks, delimiter=",")
 
-def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative"):
+
+def record_features_cifar10_model(architecture="resnet18", seed=1,
+                                  modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     if seed == 1:
         seed_name = "_seed_1"
@@ -10485,14 +10513,14 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resn
             solution_normal = "trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
             # "/home/home01/sclaam/sparse_ensemble/trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
             solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_2_test_acc_89.93.pth"
-    if modeltype=="alternative":
+    if modeltype == "alternative":
         solution = solution_normal
-    if modeltype== "hub":
+    if modeltype == "hub":
         solution = solution_pytorch
 
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
-         "model_type":modeltype,
+         "model_type": modeltype,
          # "model_type": "hub",
          "solution": solution,
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -10513,7 +10541,7 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resn
          })
     train, val, testloader = get_datasets(cfg)
     ################################# dataset cifar10 ###########################################################################
-    if cfg.dataset=="cifar10":
+    if cfg.dataset == "cifar10":
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -10577,16 +10605,17 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resn
         testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
 
-
     resnet18_normal = get_model(cfg)
     current_directory = Path().cwd()
     add_nobackup = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-        add_nobackup ="/nobackup/sclaam/"
+        add_nobackup = "/nobackup/sclaam/"
 
-    prefix_custom_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
-    prefix_custom_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
-    prefix_custom_test.mkdir(parents=True,exist_ok=True)
+    prefix_custom_train = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     #
     # cfg.model_type = "hub"
@@ -10615,21 +10644,21 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resn
     # return
     maximun_samples = 2000
     resnet18_normal.cuda()
-    o=0
-    for x,y in testloader:
+    o = 0
+    for x, y in testloader:
         # First the custom implementation
         # y_hat = resnet18_normal(x)
         # print(y_hat)
         x = x.cuda()
         # return
-        save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_test,seed_name=seed_name)
+        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
         # second the custom implementation
         # save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
 
-        print("{} batch out of {}".format(o,len(testloader)))
+        print("{} batch out of {}".format(o, len(testloader)))
         if o == maximun_samples:
             break
-        o+=1
+        o += 1
     # print("before reading the layer")
     # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
     # print("Lenght of layer 0 features {}".format(len(layer_features)))
@@ -10638,13 +10667,8 @@ def record_features_cifar10_model(architecture="resnet18",seed=1,modeltype="resn
     # return
 
 
-
-
-
-
 #####################################
 def explore_models_shapes():
-
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
          "model_type": "alternative",
@@ -10702,12 +10726,12 @@ def explore_models_shapes():
     # receptive_field_for_unit(receptive_field_dict, "2", (1, 1))
     from shrinkbench.metrics.flops import get_activations
     t0 = time.time()
-    activations_normal = get_activations(resnet18_normal,images)
+    activations_normal = get_activations(resnet18_normal, images)
     t1 = time.time()
-    activations_pytorch = get_activations(resnet18_pytorch,images)
+    activations_pytorch = get_activations(resnet18_pytorch, images)
     t2 = time.time()
-    print("Time for resnet18 normal = {}".format(t1-t0))
-    print("Time for resnet18 pytorch = {}".format(t2-t1))
+    print("Time for resnet18 normal = {}".format(t1 - t0))
+    print("Time for resnet18 pytorch = {}".format(t2 - t1))
     return
     input_shapes_normal, resnet18_normal_activations_shapes, module_names_normal = get_activations_shape(
         resnet18_normal, images)
