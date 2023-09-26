@@ -10412,9 +10412,12 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 del layeri_cuda
                 del layerj_cuda
                 torch.cuda.empty_cache()
+
             if use_device == "cpu":
-                layer_i = load_layer_features(prefix1, i, name=name1)
-                layer_j = load_layer_features(prefix2, j, name=name2)
+
+                layer_i = load_layer_features(prefix1, i, name=name1)[:500,:]
+                layer_j = load_layer_features(prefix2, j, name=name2)[:500,:]
+
                 layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
                 layerj_cuda = layer_j- np.mean(layer_j, dtype=np.float, axis=0)
 
