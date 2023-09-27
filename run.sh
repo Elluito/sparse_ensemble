@@ -10,7 +10,7 @@
 
 
 # ASk for some GPU
-#$ -l coproc_V100=1
+#$ -l coproc_v100=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=50G
