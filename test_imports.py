@@ -1,6 +1,6 @@
 print("First line")
 import time
-t0 =time.time()
+t0 = time.time()
 
 import os
 print("After os")
