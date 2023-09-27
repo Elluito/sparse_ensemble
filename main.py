@@ -10484,7 +10484,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
     similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
-                                                                 name2="_seed_2", use_device="gpu")
+                                                                 name2="_seed_2", use_device="cuda")
     filename = "similarity_experiments/{}_custom_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
@@ -10493,7 +10493,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
     #
     similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
-                                                                 name2="_seed_1", use_device="gpu")
+                                                                 name2="_seed_1", use_device="cuda")
     filename = "similarity_experiments/{}_pytorch_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
