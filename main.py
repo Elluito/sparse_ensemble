@@ -10387,22 +10387,23 @@ def truncated_network_unrestricted_training(cfg):
 
 
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", use_device="cuda"):
+
     from CKA_similarity.CKA import CudaCKA, CKA
 
     if use_device == "cuda":
         kernel = CudaCKA("cuda")
         similarity_matrix = torch.zeros((number_layers, number_layers), device=use_device)
 
-    else:
-
+    if use_device == "cpu":
         similarity_matrix = np.zeros((number_layers, number_layers))
         kernel = CKA()
     #### because the similiarity is a simetrical
     for i in range(number_layers):
         for j in range(i, number_layers):
             if use_device == "cuda":
-                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1))
-                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2))
+                print("We are in row {} and colum {}".format(i,j))
+                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:100,:])
+                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:100,:])
                 layeri_cuda = layer_i.cuda()
                 layerj_cuda = layer_j.cuda()
                 layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
@@ -10414,9 +10415,9 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 torch.cuda.empty_cache()
 
             if use_device == "cpu":
-
-                layer_i = load_layer_features(prefix1, i, name=name1)[:500,:]
-                layer_j = load_layer_features(prefix2, j, name=name2)[:500,:]
+                print("We are in row {} and colum {}".format(i,j))
+                layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
+                layer_j = load_layer_features(prefix2, j, name=name2)[:100,:]
 
                 layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
                 layerj_cuda = layer_j- np.mean(layer_j, dtype=np.float, axis=0)
@@ -10439,6 +10440,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
 ##### 1 of septemeber 2023 #####################################
 
 def features_similarity_comparison_experiments(architecture="resnet18"):
+
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": "alternative",
@@ -10482,8 +10484,8 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
     similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
-                                                                 name2="_seed_2", use_device="cpu")
-    filename = "similarity_experiments/{}_custom_V_custom_similarity.txt".format(cfg.architecture)
+                                                                 name2="_seed_2", use_device="gpu")
+    filename = "similarity_experiments/{}_custom_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
     #
@@ -10491,8 +10493,8 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
     #
     similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
-                                                                 name2="_seed_1", use_device="cpu")
-    filename = "similarity_experiments/{}_pytorch_V_custom_similarity.txt".format(cfg.architecture)
+                                                                 name2="_seed_1", use_device="gpu")
+    filename = "similarity_experiments/{}_pytorch_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
 
