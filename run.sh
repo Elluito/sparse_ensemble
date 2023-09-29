@@ -10,7 +10,7 @@
 
 
 # ASk for some GPU
-#$ -l coproc_v100=1
+#$ -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=50G
@@ -24,7 +24,7 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-conda activate work
+conda activate work2
 #which python
 unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY

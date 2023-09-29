@@ -10401,6 +10401,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
     for i in range(number_layers):
         for j in range(i, number_layers):
             if use_device == "cuda":
+                t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
                 layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:100,:])
                 layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:100,:])
@@ -10410,11 +10411,14 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
 
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
+                t1= time.time()
+                print("Time of loading + linear kernel: {}".format(t1-t0))
                 del layeri_cuda
                 del layerj_cuda
                 torch.cuda.empty_cache()
 
             if use_device == "cpu":
+                t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
                 layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
                 layer_j = load_layer_features(prefix2, j, name=name2)[:100,:]
@@ -10423,6 +10427,9 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 layerj_cuda = layer_j- np.mean(layer_j, dtype=np.float, axis=0)
 
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda, layerj_cuda)
+                t1= time.time()
+                print("Time of loading + linear kernel: {}".format(t1-t0))
+                del layeri_cuda
                 del layeri_cuda
                 del layerj_cuda
 
