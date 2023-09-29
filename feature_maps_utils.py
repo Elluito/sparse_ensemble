@@ -149,11 +149,11 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
     return feature_maps
 
 
-def load_layer_features(prefix, index, name=""):
+def load_layer_features(prefix, index, name="",type="txt"):
     finished = False
     features = None
     counter = 0
-    with open(prefix / "layer{}_features{}.txt".format(index, name), "r") as f:
+    with open(prefix / "layer{}_features{}.{}".format(index, name,type), "r") as f:
         # full_features.append(np.load(f))
         features = np.loadtxt(f, delimiter=",")
     # while not finished:

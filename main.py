@@ -9589,7 +9589,7 @@ def LeMain(args):
     # truncated_network_unrestricted_training(cfg)
     # truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
-    # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
+    record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     features_similarity_comparison_experiments(cfg.architecture)
 
     # experiment_selector(cfg, args, args["experiment"])
@@ -10399,11 +10399,14 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         kernel = CKA()
     #### because the similiarity is a simetrical
     for i in range(number_layers):
+        if use_device == "cuda":
+            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:50,:])
+        if use_device == "cpu":
+            layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
         for j in range(i, number_layers):
             if use_device == "cuda":
                 t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
-                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:50,:])
                 layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:50,:])
                 t1= time.time()
                 print("Time of loading both layers: {}".format(t1-t0))
@@ -10425,7 +10428,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
             if use_device == "cpu":
                 t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
-                layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
+                # layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
                 layer_j = load_layer_features(prefix2, j, name=name2)[:100,:]
 
                 layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
