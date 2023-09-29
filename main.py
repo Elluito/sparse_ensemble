@@ -10405,14 +10405,19 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 print("We are in row {} and colum {}".format(i,j))
                 layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:100,:])
                 layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:100,:])
+                t1= time.time()
+                print("Time of loading both layers: {}".format(t1-t0))
                 layeri_cuda = layer_i.cuda()
                 layerj_cuda = layer_j.cuda()
                 layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
                 layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
 
+                t0= time.time()
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
                 t1= time.time()
-                print("Time of loading + linear kernel: {}".format(t1-t0))
+                t0= time.time()
+                t0= time.time()
+                print("Time for linear kernel: {}".format(t1-t0))
                 del layeri_cuda
                 del layerj_cuda
                 torch.cuda.empty_cache()
