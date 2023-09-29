@@ -10403,8 +10403,8 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
             if use_device == "cuda":
                 t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
-                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:100,:])
-                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:100,:])
+                layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:50,:])
+                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:50,:])
                 t1= time.time()
                 print("Time of loading both layers: {}".format(t1-t0))
                 layeri_cuda = layer_i.cuda()
