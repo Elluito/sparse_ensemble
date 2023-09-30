@@ -53,7 +53,7 @@ def convert_to_npy(prefix1, name1):
         t1 = time.time()
         print("Time loading layer {} npy: {}".format(i, t1 - t0))
         t0 = time.time()
-        self_similarity = kernel.linear_CKA(thing, thing)
+        self_similarity = kernel.linear_CKA(thing.float(), thing.float())
         t1 = time.time()
         print("Self similarity {} calculated in {}".format(self_similarity, t1 - t0))
 
