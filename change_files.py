@@ -3,6 +3,7 @@ import omegaconf
 from pathlib import Path
 import re
 from feature_maps_utils import load_layer_features
+import time
 
 architecture = "resnet50"
 
@@ -45,10 +46,13 @@ name2 = "_seed_2",
 def convert_to_npy(prefix1, name1):
     indexes = range(49)
     for i in indexes:
-        thing = load_layer_features(prefix1, i, name=name1)
-        file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
-        np.save(file_name, thing)
+        t0 = time.time()
+        thing = load_layer_features(prefix1, i, name=name1, type="npy")
+        t1 = time.time()
+        print("Time loading layer {} npy: {}".format(i, t1 - t0))
 
+        # file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
+        # np.save(file_name, thing)
 
 convert_to_npy(prefix_custom_test, name1)
-convert_to_npy(prefix_custom_test, name2)
+# convert_to_npy(prefix_custom_test, name2)
