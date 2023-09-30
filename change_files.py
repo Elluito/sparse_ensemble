@@ -40,7 +40,7 @@ prefix_pytorch_test = Path(
 number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
 
 name1 = "_seed_1"
-name2 = "_seed_2",
+name2 = "_seed_2"
 
 
 def convert_to_npy(prefix1, name1):
@@ -54,5 +54,5 @@ def convert_to_npy(prefix1, name1):
         # file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
         # np.save(file_name, thing)
 
-convert_to_npy(prefix_custom_test, name1)
+convert_to_npy(prefix_custom_test, name2)
 # convert_to_npy(prefix_custom_test, name2)
