@@ -50,6 +50,7 @@ def convert_to_npy(prefix1, name1):
     for i in indexes:
         t0 = time.time()
         thing = torch.tensor(load_layer_features(prefix1, i, name=name1, type="npy"), device="cuda")
+        print("sizr of thing {}".format(thing.size()))
         t1 = time.time()
         print("Time loading layer {} npy: {}".format(i, t1 - t0))
         t0 = time.time()
