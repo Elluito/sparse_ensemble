@@ -4,9 +4,10 @@ from pathlib import Path
 import re
 from feature_maps_utils import load_layer_features
 import time
+from CKA_similarity.CKA import CKA, CudaCKA
 
 architecture = "resnet50"
-
+kernel = CKA()
 cfg = omegaconf.DictConfig(
     {"architecture": architecture,
      "model_type": "alternative",
@@ -50,9 +51,14 @@ def convert_to_npy(prefix1, name1):
         thing = load_layer_features(prefix1, i, name=name1, type="npy")
         t1 = time.time()
         print("Time loading layer {} npy: {}".format(i, t1 - t0))
+        t0 = time.time()
+        self_similarity = kernel.linear_CKA(thing, thing)
+        t1 = time.time()
+        print("Self similarity {} calculated in {}".format(self_similarity, t1 - t0))
 
         # file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
         # np.save(file_name, thing)
+
 
 convert_to_npy(prefix_custom_test, name1)
 # convert_to_npy(prefix_custom_test, name2)

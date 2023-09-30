@@ -6,7 +6,6 @@ from pathlib import Path
 import torch
 from torch import nn
 
-
 def hook_applyfn(hook, model, forward=False, backward=False):
     """
 
