@@ -10400,14 +10400,14 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
     #### because the similiarity is a simetrical
     for i in range(number_layers):
         if use_device == "cuda":
-            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1))
+            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:1000,:])
         if use_device == "cpu":
             layer_i = load_layer_features(prefix1, i, name=name1)
         for j in range(i, number_layers):
             if use_device == "cuda":
                 t0= time.time()
                 print("We are in row {} and colum {}".format(i,j))
-                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2))
+                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:1000,:])
                 t1= time.time()
                 print("Time of loading both layers: {}".format(t1-t0))
                 layeri_cuda = layer_i.cuda()
@@ -10500,7 +10500,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
     similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
                                                                  name2="_seed_2", use_device="cuda")
-    filename = "similarity_experiments/{}_custom_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
+    filename = "similarity_experiments/{}_custom_V_custom_similarity_cuda_1000.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
     #
@@ -10509,7 +10509,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
     similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
                                                                  number_layers=number_of_layers, name1="_seed_1",
                                                                  name2="_seed_1", use_device="cuda")
-    filename = "similarity_experiments/{}_pytorch_V_custom_similarity_cuda_100.txt".format(cfg.architecture)
+    filename = "similarity_experiments/{}_pytorch_V_custom_similarity_cuda_1000.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
 

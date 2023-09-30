@@ -48,21 +48,20 @@ name2 = "_seed_2"
 def convert_to_npy(prefix1, name1):
     indexes = range(49)
     for i in indexes:
-        # t0 = time.time()
-        thing = torch.tensor(load_layer_features(prefix1, i, name=name1, type="npy")[:1000,:], device="cuda")
-        thing2 = thing.clone()
+        t0 = time.time()
+        thing = torch.tensor(load_layer_features(prefix1, i, name=name1, type="npy"), device="cuda")
         # thing = load_layer_features(prefix1, i, name=name1, type="npy")
         # print("sizr of thing {}".format(thing.size()))
-        # t1 = time.time()
-        # print("Time loading layer {} npy: {}".format(i, t1 - t0))
-        t0 = time.time()
-        self_similarity = kernel.linear_CKA(thing.float(), thing2.float())
         t1 = time.time()
-        print("Self similarity {} calculated in {}".format(self_similarity, t1 - t0))
+        print("Time loading layer {} npy: {}".format(i, t1 - t0))
+        # t0 = time.time()
+        # self_similarity = kernel.linear_CKA(thing.float(), thing2.float())
+        # t1 = time.time()
+        # print("Self similarity {} calculated in {}".format(self_similarity, t1 - t0))
 
-        # file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
-        # np.save(file_name, thing)
+        file_name = Path(prefix1 / "layer{}_features{}.npy".format(i, name1))
+        np.save(file_name, thing)
 
 
-convert_to_npy(prefix_custom_test, name1)
+convert_to_npy(prefix_custom_test, name2)
 # convert_to_npy(prefix_custom_test, name2)
