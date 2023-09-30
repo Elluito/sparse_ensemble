@@ -155,7 +155,10 @@ def load_layer_features(prefix, index, name="",type="txt"):
     counter = 0
     with open(prefix / "layer{}_features{}.{}".format(index, name,type), "r") as f:
         # full_features.append(np.load(f))
-        features = np.loadtxt(f, delimiter=",")
+        if type == "txt":
+            features = np.loadtxt(f, delimiter=",")
+        if type == "npy":
+            features = np.load(f)
     # while not finished:
     #     try:
     #             suma = np.sum(feature == 0)
