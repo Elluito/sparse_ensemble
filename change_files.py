@@ -64,5 +64,5 @@ def convert_to_npy(prefix1, name1):
         # np.save(file_name, thing)
 
 
-convert_to_npy(prefix_custom_test, name2)
+convert_to_npy(prefix_custom_test, name1)
 # convert_to_npy(prefix_custom_test, name2)
