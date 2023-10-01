@@ -286,7 +286,7 @@ def test():
 
 
 # test()
-if __name__ == '__main__':
+# if __name__ == '__main__':
     #
     # from easy_receptive_fields_pytorch.receptivefield import receptivefield
     # from main import get_features_only_until_block_layer
