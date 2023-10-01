@@ -10198,32 +10198,33 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
     else:
         def features_only(self, x):
             x = F.relu(self.bn1(self.conv1(x)))
+            if self.rf_level!=1:
+                x=self.maxpool(x)
             if block == 0: return x
             x = self.layer1(x)
             if block == 1: return x
             x = self.layer2(x)
             if block == 2: return x
 
-            # x = self.layer3(x)
-            out = self.layer3[0].conv1(x)
-            out = self.layer3[0].bn1(out)
-            out = F.relu(out)
-
-            out = self.layer3[0].conv2(out)
-            out = self.layer3[0].bn2(out)
-            out = F.relu(out)
-
-            out = self.layer3[0].conv3(out)
-            out = self.layer3[0].bn3(out)
-
-            identity = self.layer3[0].shortcut(x)
-
-            out += identity
-            out = F.relu(out)
-            x = out
-            out = self.layer3[1].conv1(x)
+            x = self.layer3(x)
+            # out = self.layer3[0].conv1(x)
+            # out = self.layer3[0].bn1(out)
+            # out = F.relu(out)
+            #
+            # out = self.layer3[0].conv2(out)
+            # out = self.layer3[0].bn2(out)
+            # out = F.relu(out)
+            #
+            # out = self.layer3[0].conv3(out)
+            # out = self.layer3[0].bn3(out)
+            #
+            # identity = self.layer3[0].shortcut(x)
+            #
+            # out += identity
+            # out = F.relu(out)
+            # out = self.layer3[1].conv1(x)
             # out = self.layer3[1].conv2(out)
-            if block == 3: return out
+            if block == 3: return x
 
             x = self.layer4(x)
             return x
