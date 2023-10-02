@@ -286,39 +286,39 @@ def test():
 
 
 # test()
-# if __name__ == '__main__':
-    #
-    # from easy_receptive_fields_pytorch.receptivefield import receptivefield
-    # from main import get_features_only_until_block_layer
-    # import pdb
-    #
-    # # resnet18_normal.cpu()
-    # # resnet18_normal.train()
-    # # receptive_field_dict = receptivefield(resnet18_normal, (3, 32, 32),device="cpu")
-    # # get_features_only_until_layer(resnet18_pytorch,block=1,net_type=0)
-    # # rf = receptivefield(resnet18_pytorch, (1, 3, 224, 224))
-    # # print(rf)
-    # print("Receptive field normal resnet18")
-    # net = ResNet50_rf(num_classes=10, rf_level=2)
-    #
-    # # resnet18_normal.train()
-    # # get_features_only_until_layer(resnet18_normal, block=0.75, net_type=1)
-    # # rf = receptivefield(resnet18_normal, (1, 3, 224, 224))
-    # # print(rf)
-    # # blocks = [0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4]
-    # # blocks = np.linspace(0,4,17)
-    # blocks = [0, 1, 2, 3, 4]
-    # receptive_fields = []
-    #
-    # for i in blocks:
-    #     get_features_only_until_block_layer(net, block=i, net_type=1)
-    #     rf = receptivefield(net, (1, 3, 500, 500))
-    #     # pdb.set_trace()
-    #     print("Receptive field for block {}".format(i))
-    #     print(rf)
-    #     receptive_fields.append(tuple(rf.rfsize))
-    #     # rf.show()
-    #
+if __name__ == '__main__':
+
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from main import get_features_only_until_block_layer
+    import pdb
+
+    # resnet18_normal.cpu()
+    # resnet18_normal.train()
+    # receptive_field_dict = receptivefield(resnet18_normal, (3, 32, 32),device="cpu")
+    # get_features_only_until_layer(resnet18_pytorch,block=1,net_type=0)
+    # rf = receptivefield(resnet18_pytorch, (1, 3, 224, 224))
+    # print(rf)
+    print("Receptive field normal resnet18")
+    net = ResNet18_rf(num_classes=10, rf_level=2)
+
+    # resnet18_normal.train()
+    # get_features_only_until_layer(resnet18_normal, block=0.75, net_type=1)
+    # rf = receptivefield(resnet18_normal, (1, 3, 224, 224))
+    # print(rf)
+    # blocks = [0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4]
+    # blocks = np.linspace(0,4,17)
+    blocks = [0, 1, 2, 3, 4]
+    receptive_fields = []
+
+    for i in blocks:
+        get_features_only_until_block_layer(net, block=i, net_type=1)
+        rf = receptivefield(net, (1, 3, 500, 500))
+        # pdb.set_trace()
+        print("Receptive field for block {}".format(i))
+        print(rf)
+        receptive_fields.append(tuple(rf.rfsize))
+        # rf.show()
+
     #
     #
     # y = net(torch.randn(3, 3, 32, 32))
