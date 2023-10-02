@@ -10,7 +10,7 @@
 
 
 # ASk for some GPU
-#$ -l coproc_k80=1
+#$ -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=50G
@@ -34,7 +34,8 @@ unset KMP_AFFINITY
 #
 #CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 #python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --num_workers 10 --epochs $8 -pop 1 --one_batch False -sa $9 -ls True -tr 600 --functions "${10}"
-python change_files.py
-python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --num_workers 10 --epochs $8 -pop 1 --one_batch False -sa nsg -ls True -tr 300 --functions 2
+#python change_files.py
+#python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --num_workers 10 --epochs $8 -pop 1 --one_batch False -sa nsg -ls True -tr 300 --functions 2
+python similarity_comparison_architecture.py --architecture $1
 #python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --num_workers 10 --epochs $8 -pop 1 --one_batch False -sa tpe -ls True -tr 300 --functions 1
 #python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --num_workers 10 --epochs $8 -pop 1 --one_batch False -sa tpe -ls True -tr 300 --functions 2

@@ -1,3 +1,4 @@
+print("I'm about to begin the similarity comparison")
 import omegaconf
 from pathlib import Path
 import re
