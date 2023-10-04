@@ -57,7 +57,6 @@ from functools import partial
 print("Unitl line 40")
 import glob
 from torchmetrics import Accuracy
-import array as pyarr
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.patches as mpatches
