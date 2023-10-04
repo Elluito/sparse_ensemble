@@ -3,10 +3,10 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=10:00:00
+#SBATCH --time=5:00:00
 
 # set name of job
-#SBATCH --job-name=job123
+#SBATCH --job-name=train_cifar
 
 # set number of GPUs
 #SBATCH --gres=gpu:1
@@ -16,3 +16,8 @@
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
+
+conda active work2
+
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
+
