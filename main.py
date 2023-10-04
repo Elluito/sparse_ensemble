@@ -10198,8 +10198,7 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
     else:
         def features_only(self, x):
             x = F.relu(self.bn1(self.conv1(x)))
-            if self.rf_level!=1:
-                x=self.maxpool(x)
+            x=self.maxpool(x)
             if block == 0: return x
             x = self.layer1(x)
             if block == 1: return x
@@ -10227,6 +10226,7 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
             if block == 3: return x
 
             x = self.layer4(x)
+            # x = self.avgpool(x)
             return x
 
     net.forward = features_only.__get__(net)  # bind method

@@ -11,8 +11,8 @@ architecture = "resnet50"
 kernel = CudaCKA("cuda")
 cfg = omegaconf.DictConfig(
     {"architecture": architecture,
-     "model_type": "alternative",
-     # "model_type": "hub",
+     # "model_type": "alternative",
+     "model_type": "hub",
      "solution": "trained_models/cifar10/resnet50_cifar10.pth",
      # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
      # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
@@ -63,5 +63,5 @@ def convert_to_npy(prefix1, name1):
         np.save(file_name, thing)
 
 
+convert_to_npy(prefix_custom_test, name1)
 convert_to_npy(prefix_custom_test, name2)
-# convert_to_npy(prefix_custom_test, name2)
