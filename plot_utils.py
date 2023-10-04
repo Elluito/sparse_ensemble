@@ -1,46 +1,10 @@
-import sys
-import math
-import pickle
-import typing
 from typing import List
 import pandas as pd
-import datetime as date
-import optuna
-# sys.path.append('csgmcmc')
-from csgmcmc.models import *
-import omegaconf
-import copy
-import torchvision
-import torchvision.transforms as transforms
-import scipy
-import os
-import argparse
-import scipy.optimize as optimize
-from torch.autograd import Variable
 import numpy as np
-import random
-import platform
-from functools import partial
-import glob
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import Accuracy, Loss
-import array as pyarr
-import matplotlib
 # matplotlib.use('Agg')
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-from matplotlib.ticker import PercentFormatter, FormatStrFormatter
-from sklearn.manifold import MDS, TSNE
-from collections import defaultdict
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import time
-from torch.utils.data import DataLoader, random_split, Dataset
-import logging
-import torchvision as tv
-from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
-from itertools import chain, combinations
 import seaborn as sns
-from torch.nn.utils import parameters_to_vector, vector_to_parameters
 
 
 ############################### Plotting functions #####################################################################
