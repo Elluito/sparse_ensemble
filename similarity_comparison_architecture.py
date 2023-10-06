@@ -73,6 +73,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
                                                                  name2="_seed_2", type1="txt", type2="npy",
                                                                  use_device="cuda")
     filename = "similarity_experiments/{}_pytorch_s2_V_custom_s2_similarity_cuda_1000.txt".format(cfg.architecture)
+
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
 
