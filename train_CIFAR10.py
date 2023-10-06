@@ -325,7 +325,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
-
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     args = parser.parse_args()

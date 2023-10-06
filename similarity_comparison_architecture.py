@@ -135,7 +135,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
-    parser.add_argument('-arch', '--architecture', type=int, default=15, help='Architecture for analysis',
+    parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
                         required=True)
     args = vars(parser.parse_args())
     features_similarity_comparison_experiments(args["architecture"])
