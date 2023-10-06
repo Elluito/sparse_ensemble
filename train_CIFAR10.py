@@ -13,6 +13,7 @@ import os
 import argparse
 import wandb
 from alternate_models import *
+from pathlib import Path
 
 # =======================================UTILS===========================================================================
 ''' Some helper functions for PyTorch, including:
@@ -216,6 +217,17 @@ def main(args):
     stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
     # Data
     print('==> Preparing data..')
+    current_directory = Path().cwd()
+    data_path = "/datasets"
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "./datasets"
+    elif 'lla98-mtc03' == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "./datasets"
+
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -229,12 +241,12 @@ def main(args):
     ])
 
     trainset = torchvision.datasets.CIFAR10(
-        root='./datasets', train=True, download=True, transform=transform_train)
+        root=data_path, train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
 
     testset = torchvision.datasets.CIFAR10(
-        root='./datasets', train=False, download=True, transform=transform_test)
+        root=data_path , train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
