@@ -45,7 +45,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
          # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          "dataset": "cifar10",
          "batch_size": 1,
-         "num_workers": 4,
+         "num_workers": 0,
          "amount": 0.9,
          "noise": "gaussian",
          "sigma": 0.005,
