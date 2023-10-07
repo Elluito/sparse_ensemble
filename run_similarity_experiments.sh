@@ -32,29 +32,43 @@
 #
 #CUDA_VISIBLE_DEVICES="0" accelerate launch --num_processes=1 --mixed_precision=fp16 main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 
-models=("resnet50")
-#Datasets
-#datasets=("cifar10" "cifar100")
-types=("alternative")
-seeds=("2")
-
-
-for model in ${models[@]}; do
-# For over the models
-for type in ${types[@]};do
-for seed in ${seeds[@]};do
+#models=("resnet50")
+##Datasets
+##datasets=("cifar10" "cifar100")
+#types=("alternative")
+#seeds=("2")
+#
+#
+#for model in ${models[@]}; do
+## For over the models
+#for type in ${types[@]};do
+#for seed in ${seeds[@]};do
 #for f in ${functions[@]};do
 # For over  datasets
 #if [ "${model}" = "resnet50" ] && [  "${seed}" = "2" ] & [  "${type}" = "normal" ] ; then
 # continue
 #fi
 
+rf_level2_s1="trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_2_94.07.pth"
+name_rf_level2_s1="_seed_1_rf_level_2"
+rf_level2_s2="trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_2_94.03.pth"
+name_rf_level2_s2="_seed_2_rf_level_2"
+rf_level4_s1="trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_4_90.66.pth"
+name_rf_level4_s1="_seed_1_rf_level_4"
+rf_level4_s2="trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
+name_rf_level4_s2="_seed_2_rf_level_4"
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
-qsub -N "saving_features_${model}_${type}_${seed}" run.sh  "${seed}" "0.0" "global" "${model}" "cifar10" "0.9" "${type}" "1" "nsga" "2"
+
+qsub -N "saving_features_resnet50_rf_level2_s1" run.sh  "resnet50" "${rf_level2_s1}" "${name_rf_level2_s1}" 2
+qsub -N "saving_features_resnet50_rf_level2_s2" run.sh  "resnet50" "${rf_level2_s2}" "${name_rf_level2_s2}" 2
+qsub -N "saving_features_resnet50_rf_level4_s1" run.sh  "resnet50" "${rf_level4_s1}" "${name_rf_level4_s1}" 4
+qsub -N "saving_features_resnet50_rf_level4_s2" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
+
+
 #./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
 #./run.sh  1 "0.0" "global" "resnet18" "cifar10" "0.9" "alternative" "1" "nsga" "2"
+##done
 #done
-done
-done
-
-done
+#done
+#
+#done

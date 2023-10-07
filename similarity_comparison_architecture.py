@@ -7,12 +7,12 @@ import torchvision.transforms as transforms
 import torchvision
 import numpy as np
 import time
-from main import load_layer_features,get_model
+from main import load_layer_features, get_model
 import argparse
 
 
-def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alternative",solution="",seed_name="_seed_1"):
-
+def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
+                                  seed_name="_seed_1", rf_level=1):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     #
     # if seed == 1:
@@ -54,7 +54,9 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alt
 
          })
     ################################# dataset cifar10 ###########################################################################
+    from alternate_models.resnet import ResNet50_rf
     if cfg.dataset == "cifar10":
+        resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -90,6 +92,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alt
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
+        resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -119,7 +122,6 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alt
         testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
 
-    resnet18_normal = get_model(cfg)
     current_directory = Path().cwd()
     add_nobackup = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -179,7 +181,9 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alt
     # layer_features = load_layer_features(prefix_pytorch_test,index=0,name="_seed_1")
     # print("Lenght of layer 0 features {}".format(len(layer_features)))
     # return
-def features_similarity_comparison_experiments(architecture="resnet18",name=""):
+
+
+def features_similarity_comparison_experiments(architecture="resnet18", name=""):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": "alternative",
@@ -256,6 +260,7 @@ def features_similarity_comparison_experiments(architecture="resnet18",name=""):
     # # with open(filename,"wb") as f :
     # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
+
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
                                        use_device="cuda"):
     from CKA_similarity.CKA import CudaCKA, CKA
@@ -326,5 +331,25 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
     parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
                         required=True)
+
+    parser.add_argument('-s', '--solution', type=str, default="", help='',
+                        required=True)
+
+    parser.add_argument('-sn', '--seedname', type=str, default="", help='',
+                        required=True)
+    parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
+                        required=True)
+
     args = vars(parser.parse_args())
-    features_similarity_comparison_experiments(args["architecture"])
+    # features_similarity_comparison_experiments(args["architecture"])
+
+    # rf_level2_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_2_94.07.pth"
+    # name_rf_level2_s1 = "_seed_1_rf_level_2"
+    # rf_level2_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_2_94.03.pth"
+    # name_rf_level2_s2 = "_seed_2_rf_level_2"
+    # rf_level4_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_4_90.66.pth"
+    # name_rf_level4_s1 = "_seed_1_rf_level_4"
+    # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
+    # name_rf_level4_s2 = "_seed_2_rf_level_4"
+    record_features_cifar10_model(args["architecture"], modeltype="alternative", solution=args["solution"],
+                                  seed_name=args["seedname"])
