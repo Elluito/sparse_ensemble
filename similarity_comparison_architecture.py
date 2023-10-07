@@ -3,13 +3,183 @@ import omegaconf
 from pathlib import Path
 import re
 import torch
+import torchvision.transforms as transforms
+import torchvision
 import numpy as np
 import time
-from main import load_layer_features
+from main import load_layer_features,get_model
 import argparse
 
 
-def features_similarity_comparison_experiments(architecture="resnet18"):
+def record_features_cifar10_model(architecture="resnet18", seed=1,modeltype="alternative",solution="",seed_name="_seed_1"):
+
+    from feature_maps_utils import save_layer_feature_maps_for_batch
+    #
+    # if seed == 1:
+    #     seed_name = "_seed_1"
+    #     if architecture == "resnet18":
+    #         solution_normal = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+    #         solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    #     if architecture == "resnet50":
+    #         solution_normal = "trained_models/cifar10/resnet50_cifar10.pth"
+    #         solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+    # if seed == 2:
+    #     seed_name = "_seed_2"
+    #     if architecture == "resnet18":
+    #         solution_normal = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
+    #         solution_pytorch = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
+    #     if architecture == "resnet50":
+    #         solution_normal = "trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
+    #         # "/home/home01/sclaam/sparse_ensemble/trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
+    #         solution_pytorch = "trained_models/cifar10/resnet50_official_cifar10_seed_2_test_acc_89.93.pth"
+    #
+    # if modeltype == "alternative":
+    #     solution = solution_normal
+    # if modeltype == "hub":
+    #     solution = solution_pytorch
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype,
+         "solution": solution,
+         # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 1,
+         "num_workers": 4,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+    ################################# dataset cifar10 ###########################################################################
+    if cfg.dataset == "cifar10":
+        current_directory = Path().cwd()
+        data_path = "/datasets"
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
+        # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        # val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        #                                          num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+    if cfg.dataset == "cifar100":
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+
+    resnet18_normal = get_model(cfg)
+    current_directory = Path().cwd()
+    add_nobackup = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        add_nobackup = "/nobackup/sclaam/"
+
+    # prefix_custom_train = Path(
+    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    ######################## now the pytorch implementation ############################################################
+    #
+    # cfg.model_type = "hub"
+    #
+    # cfg.solution = solution_pytorch
+    # cfg.solution = "trained_models/cifar10/resnet18_official_cifar10_seed_1_test_acc_88.5.pth"
+    # cfg.solution = "trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth"
+    # cfg.exclude_layers = ["conv1", "fc"]
+    # cfg.pruner = "global"
+    # # save_onnx(cfg)
+    # resnet18_pytorch = get_model(cfg)
+    #
+    # prefix_pytorch_train = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"train"))
+    # prefix_pytorch_test = Path("{}features/{}/{}/{}/{}/".format(add_nobackup,cfg.dataset,cfg.architecture,cfg.model_type,"test"))
+    # prefix_pytorch_test.mkdir(parents=True,exist_ok=True)
+    # prefix_pytorch_train.mkdir(parents=True,exist_ok=True)
+
+    ###################### Get the features for the training set for both models#####################################
+    # for x,y in trainloader:
+    #     # First the custom implementation
+    #     save_layer_feature_maps_for_batch(resnet18_normal,x,prefix_custom_train,name="_seed_1")
+    #
+    #     # second the custom implementation
+    #     save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_custom_train,name="_seed_1")
+    # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
+    # return
+    maximun_samples = 2000
+    resnet18_normal.cuda()
+    o = 0
+    for x, y in testloader:
+        # First the custom implementation
+        # y_hat = resnet18_normal(x)
+        # print(y_hat)
+        x = x.cuda()
+        # return
+        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
+        # second the custom implementation
+        # save_layer_feature_maps_for_batch(resnet18_pytorch,x,prefix_pytorch_test,seed_name=seed_name)
+
+        print("{} batch out of {}".format(o, len(testloader)))
+        if o == maximun_samples:
+            break
+        o += 1
+    # print("before reading the layer")
+    # layer_features = load_layer_features(prefix_custom_test,index=0,name="_seed_1")
+    # print("Lenght of layer 0 features {}".format(len(layer_features)))
+    # layer_features = load_layer_features(prefix_pytorch_test,index=0,name="_seed_1")
+    # print("Lenght of layer 0 features {}".format(len(layer_features)))
+    # return
+def features_similarity_comparison_experiments(architecture="resnet18",name=""):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": "alternative",
@@ -64,27 +234,27 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
                                                                  number_layers=number_of_layers, name1="_seed_1",
                                                                  name2="_seed_2", type1="txt", type2="npy",
                                                                  use_device="cuda")
-    filename = "similarity_experiments/{}_pytorch_s1_V_custom_s2_similarity_cuda_1000.txt".format(cfg.architecture)
+    filename = "similarity_experiments/{}_pytorch_V_custom.txt".format(cfg.architecture)
     # with open(filename,"wb") as f :
     np.savetxt(filename, similarity_for_networks, delimiter=",")
 
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
-                                                                 number_layers=number_of_layers, name1="_seed_2",
-                                                                 name2="_seed_2", type1="txt", type2="npy",
-                                                                 use_device="cuda")
-    filename = "similarity_experiments/{}_pytorch_s2_V_custom_s2_similarity_cuda_1000.txt".format(cfg.architecture)
-
-    # with open(filename,"wb") as f :
-    np.savetxt(filename, similarity_for_networks, delimiter=",")
-
-
-    similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
-                                                                 number_layers=number_of_layers, name1="_seed_2",
-                                                                 name2="_seed_1", type1="txt", type2="npy",
-                                                                 use_device="cuda")
-    filename = "similarity_experiments/{}_pytorch_s2_V_custom_s1_similarity_cuda_1000.txt".format(cfg.architecture)
-    # with open(filename,"wb") as f :
-    np.savetxt(filename, similarity_for_networks, delimiter=",")
+    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
+    #                                                              number_layers=number_of_layers, name1="_seed_2",
+    #                                                              name2="_seed_2", type1="txt", type2="npy",
+    #                                                              use_device="cuda")
+    # filename = "similarity_experiments/{}_pytorch_s2_V_custom_s2_similarity_cuda_1000.txt".format(cfg.architecture)
+    #
+    # # with open(filename,"wb") as f :
+    # np.savetxt(filename, similarity_for_networks, delimiter=",")
+    #
+    #
+    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
+    #                                                              number_layers=number_of_layers, name1="_seed_2",
+    #                                                              name2="_seed_1", type1="txt", type2="npy",
+    #                                                              use_device="cuda")
+    # filename = "similarity_experiments/{}_pytorch_s2_V_custom_s1_similarity_cuda_1000.txt".format(cfg.architecture)
+    # # with open(filename,"wb") as f :
+    # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
                                        use_device="cuda"):

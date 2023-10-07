@@ -5,6 +5,7 @@ import numpy as np
 from pathlib import Path
 import torch
 from torch import nn
+from npy_append_array import NpyAppendArray
 
 def hook_applyfn(hook, model, forward=False, backward=False):
     """
@@ -134,7 +135,7 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
     # Path(file_prefix).mkdir(parents=True, exist_ok=True)
 
     for i, elem in enumerate(feature_maps):
-        file_name = Path(file_prefix / "layer{}_features{}.txt".format(i, seed_name))
+        file_name = Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
         # if not file_name.is_file():
         #     file_name.mkdir(parents=True)
         # suma = np.sum(elem == 0)
@@ -143,9 +144,12 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
         # print("Current layer: {}".format(i))
         # print("{} out of {} elements are 0".format(suma, n))
 
-        with open(file_name, "a+") as f:
-            np.savetxt(f, elem.reshape(1, -1), delimiter=",")
+        with NpyAppendArray(file_name, delete_if_exists=True) as npaa:
+            npaa.append(elem.reshape(1, -1))
+        # with open(file_name, "a+") as f:
+        #     np.savetxt(f, elem.reshape(1, -1), delimiter=",")
     return feature_maps
+
 
 
 def load_layer_features(prefix, index, name="", type="txt"):

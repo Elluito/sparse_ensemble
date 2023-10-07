@@ -10516,7 +10516,7 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
 
 def record_features_cifar10_model(architecture="resnet18", seed=1,
-                                  modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative"):
+                                  modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative",solution="",seed_name="_seed_1"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     if seed == 1:
         seed_name = "_seed_1"
@@ -10624,6 +10624,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,
         trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
                                                   num_workers=cfg.num_workers)
         testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+
         testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
 

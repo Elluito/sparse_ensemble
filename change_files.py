@@ -45,8 +45,7 @@ name1 = "_seed_1"
 name2 = "_seed_2"
 
 
-def convert_to_npy(prefix1, name1):
-    indexes = range(49)
+def convert_to_npy(prefix1, name1,indexes=range(49)):
     for i in indexes:
         t0 = time.time()
         thing = load_layer_features(prefix1, i, name=name1)
