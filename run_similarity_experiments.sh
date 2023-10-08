@@ -85,12 +85,12 @@ name_rf_level4_s2="_seed_2_rf_level_4"
 #qsub -N "saving_features_resnet50_rf_level2_s2" run.sh  "resnet50" "${rf_level2_s2}" "${name_rf_level2_s2}" 2
 #qsub -N "saving_features_resnet50_rf_level4_s1" run.sh  "resnet50" "${rf_level4_s1}" "${name_rf_level4_s1}" 4
 #qsub -N "saving_features_resnet50_rf_level4_s2" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
-files=($name_rf_level1_s1 $name_rf_level1_s1 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
+files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
 max=${#files[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
   for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
     echo "A: ${files[$idxA]}; B: ${files[$idxB]}" # Do whatever you're here for.
-    qsub -N "similarity_${files[$idxA]}_${files[$idxA]}" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}"
+#    qsub -N "similarity_${files[$idxA]}_${files[$idxA]}" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}"
   done
 done
 #./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
