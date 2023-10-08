@@ -305,8 +305,8 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
                         required=True)
-    parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
-                        required=True)
+    # parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
+    #                     required=True)
     #
     args = vars(parser.parse_args())
     # features_similarity_comparison_experiments(args["architecture"])
