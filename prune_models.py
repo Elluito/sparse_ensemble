@@ -68,7 +68,7 @@ def main():
         pruned_accuracy_list.append(pruned_accuracy)
         weight_names, weights = zip(*get_layer_dict(net))
         total_params = count_parameters(net)
-        zero_number = lambda w: torch.count_nonzero(w == 0) / total_params
+        zero_number = lambda w: (torch.count_nonzero(w == 0) / total_params).cpu().numpy()
         pruning_rates_per_layer = list(map(zero_number, weights))
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
         df2.to_csv("{}_pruning_rates.csv".format(files_names[i]), index=False)
