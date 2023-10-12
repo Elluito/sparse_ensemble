@@ -259,7 +259,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 t0 = time.time()
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
                 t1 = time.time()
-                t0 = time.time()
+                
                 t0 = time.time()
                 print("Time for linear kernel: {}".format(t1 - t0))
                 del layeri_cuda
@@ -270,7 +270,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 t0 = time.time()
                 print("We are in row {} and colum {}".format(i, j))
                 # layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
-                layer_j = load_layer_features(prefix2, j, name=name2)[:100, :]
+                layer_j = load_layer_features(prefix2, j, name=name2)[:1000, :]
 
                 layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
                 layerj_cuda = layer_j - np.mean(layer_j, dtype=np.float, axis=0)

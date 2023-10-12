@@ -926,10 +926,6 @@ def get_layer_dict(model: torch.nn.Module):
             if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
                     isinstance(m, nn.BatchNorm3d):
                 layer_dict.append((name, m.weight.data.cpu().detach()))
-                # if "shortcut" in name:
-                #     print(f"{name}:{m.weight.data}")
-                # if not isinstance(m, nn.Conv2d):
-                #     print(f"{name}:{m.weight.data}")
 
     return layer_dict
 

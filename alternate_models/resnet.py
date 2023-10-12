@@ -256,7 +256,10 @@ def ResNet18(num_classes=10, fix_points=None):
 
 
 def ResNet18_rf(num_classes=10, fix_points=None, rf_level=1):
-    return ResNetRF(BasicBlock, [2, 2, 2, 2], num_classes, fix_points, RF_level=rf_level)
+    if rf_level == 0:
+        return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
+    else:
+        return ResNetRF(BasicBlock, [2, 2, 2, 2], num_classes, fix_points, RF_level=rf_level)
 
 
 def ResNet34():
@@ -268,7 +271,10 @@ def ResNet50(num_classes=10, fix_points=None):
 
 
 def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1):
-    return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes, fix_points, RF_level=rf_level)
+    if rf_level == 0:
+        return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
+    else:
+        return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes, fix_points, RF_level=rf_level)
 
 
 def ResNet101():
@@ -290,6 +296,7 @@ if __name__ == '__main__':
 
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from main import get_features_only_until_block_layer
+
     print("Receptive field normal resnet18")
     net = ResNet18_rf(num_classes=10, rf_level=1)
     y = net(torch.randn(3, 3, 32, 32))
@@ -304,7 +311,6 @@ if __name__ == '__main__':
         print("Receptive field for block {}".format(i))
         print(rf)
         receptive_fields.append(tuple(rf.rfsize))
-
 
     y = net(torch.randn(3, 3, 32, 32))
     # print(y.size())
