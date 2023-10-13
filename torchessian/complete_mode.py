@@ -36,11 +36,15 @@ def lanczos(model, loss_function, dataloader, m, max_samples=0, buffer=2):
     k = len(dataloader)
     device = next(model.parameters()).data.device
 
+    counter_of_samples = 0
     for i, batch in enumerate(dataloader):
         v_ = v.to(device)
         w = w.to(device)
         batch = map(lambda x: x.to(device), batch)
         w += hessian_matmul(model, loss_function, v_, batch) / k
+        counter_of_samples += len(batch)
+        if max_samples != 0 and counter_of_samples > max_samples:
+            break
 
     v = v.to(w.device)
     alpha = []
@@ -83,7 +87,7 @@ def lanczos(model, loss_function, dataloader, m, max_samples=0, buffer=2):
             V[-buffer - 1] = V[-buffer - 1].cpu()
 
         w = torch.zeros_like(v)
-        counter_of_samples= 0
+        counter_of_samples = 0
         for j, batch in enumerate(dataloader):
             v_ = v.to(device)
             w = w.to(device)
@@ -91,7 +95,7 @@ def lanczos(model, loss_function, dataloader, m, max_samples=0, buffer=2):
             w += hessian_matmul(model, loss_function, v_, batch) / k
 
             counter_of_samples += len(batch)
-            if max_samples != 0 and counter_of_samples>max_samples:
+            if max_samples != 0 and counter_of_samples > max_samples:
                 break
 
         alpha.append(w.dot(v))
