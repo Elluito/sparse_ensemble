@@ -92,10 +92,9 @@ def lanczos(model, loss_function, dataloader, m, max_samples=0, buffer=2):
         for j, batch in enumerate(dataloader):
             v_ = v.to(device)
             w = w.to(device)
+            counter_of_samples += len(batch)
             batch = map(lambda x: x.to(device), batch)
             w += hessian_matmul(model, loss_function, v_, batch) / k
-
-            counter_of_samples += len(batch)
             if max_samples != 0 and counter_of_samples > max_samples:
                 break
 
