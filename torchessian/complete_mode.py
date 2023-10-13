@@ -2,7 +2,8 @@ import torch
 import tqdm
 from . import hessian_matmul
 
-def lanczos(model, loss_function, dataloader, m, buffer=2):
+
+def lanczos(model, loss_function, dataloader, m, max_samples=0, buffer=2):
     """
         This in an implementation of the Lanczos Algorithm as stated in
         https://en.wikipedia.org/wiki/Lanczos_algorithm.
@@ -28,19 +29,19 @@ def lanczos(model, loss_function, dataloader, m, buffer=2):
 
     v = torch.ones(n)
     v /= torch.norm(v)
-    
+
     w = torch.zeros_like(v)
-    
+
     print("[Complete LANCZOS Algorithm running]")
     k = len(dataloader)
-    device = next(net.parameters()).data.device
-    
+    device = next(model.parameters()).data.device
+
     for i, batch in enumerate(dataloader):
         v_ = v.to(device)
         w = w.to(device)
-        batch = map(lambda x:x.to(device), batch)
+        batch = map(lambda x: x.to(device), batch)
         w += hessian_matmul(model, loss_function, v_, batch) / k
-    
+
     v = v.to(w.device)
     alpha = []
     alpha.append(w.dot(v))
@@ -66,7 +67,7 @@ def lanczos(model, loss_function, dataloader, m, buffer=2):
                     v -= v.dot(v_) * v_
 
                 done = torch.norm(v) > 0
-                if k > 2 and not done: # This shouldn't happen even twice
+                if k > 2 and not done:  # This shouldn't happen even twice
                     raise Exception("Can't find orthogonal vector")
 
         # Full re-orthogonalization
@@ -82,12 +83,17 @@ def lanczos(model, loss_function, dataloader, m, buffer=2):
             V[-buffer - 1] = V[-buffer - 1].cpu()
 
         w = torch.zeros_like(v)
+        counter_of_samples= 0
         for j, batch in enumerate(dataloader):
             v_ = v.to(device)
             w = w.to(device)
-            batch = map(lambda x:x.to(device), batch)
+            batch = map(lambda x: x.to(device), batch)
             w += hessian_matmul(model, loss_function, v_, batch) / k
-            
+
+            counter_of_samples += len(batch)
+            if max_samples != 0 and counter_of_samples>max_samples:
+                break
+
         alpha.append(w.dot(v))
         w = w - alpha[-1] * V[-1] - beta[-1] * V[-2]
 
@@ -103,6 +109,6 @@ def lanczos(model, loss_function, dataloader, m, buffer=2):
 def gauss_quadrature(model, loss_function, dataloader, m, buffer=2):
     T, _ = lanczos(model, loss_function, dataloader, m, buffer)
     D, U = torch.eig(T, eigenvectors=True)
-    L = D[:, 0] # All eingenvalues are real
+    L = D[:, 0]  # All eingenvalues are real
     W = torch.Tensor(list(U[0, i] ** 2 for i in range(m)))
     return L, W
