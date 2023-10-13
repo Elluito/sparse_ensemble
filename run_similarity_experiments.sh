@@ -123,8 +123,8 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #    qsub -N "similarity_${files[$idxA]}_${files[$idxB]}" run.sh  "resnet50" "${files[$idxA]}" "${files[$idxB]}"
 #  done
 #done
-qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "${name_rf_level_p_s1}" "${name_rf_level_p_s3}"
-qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "${name_rf_level_p_s2}" "${name_rf_level_p_s3}"
+qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "" "${name_rf_level_p_s3}"
+qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "" "${name_rf_level_p_s3}"
 #qsub -N "smoothness_landscape${files[$idxA]}" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
 #
 
