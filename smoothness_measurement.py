@@ -5,7 +5,7 @@ import argparse
 import torchvision.transforms as transforms
 from pathlib import Path
 import torchvision
-from pyhessian import hessian
+import torchessian
 import loss_landscapes
 import loss_landscapes.metrics as metrics
 # libraries
@@ -68,7 +68,7 @@ def main(args):
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=1, shuffle=False, num_workers=0)
+        testset, batch_size=10, shuffle=False, num_workers=0)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     # ################################### model #############################
@@ -102,7 +102,7 @@ def main(args):
         net.load_state_dict(torch.load(args.solution)["net"])
 
     ###########################################################################
-    f1 = open("loss_data_fin_{}.pkl".format(args.name), "wb")
+    # f1 = open("loss_data_fin_{}.pkl".format(args.name), "wb")
     x, y = next(iter(testloader))
     x, y = x.cuda(), y.cuda()
     net.cuda()
@@ -122,16 +122,53 @@ def main(args):
     print("Is going to begin the hessian spectrum calculation data calculation")
     t0 = time.time()
     torch.cuda.empty_cache()
-    hessian_comp = hessian(net, criterion, data=(x, y), cuda=True)
-    density_eigen, density_weight = hessian_comp.density()
-    t1 = time.time()
-    print("The calculation lasted {}s".format(t1 - t0))
-    f2 = open("density_eigen_{}.pkl".format(args.name), "wb")
-    f3 = open("density_weight_{}.pkl".format(args.name), "wb")
-    pickle.dump(density_eigen, f2)
-    pickle.dump(density_weight, f3)
+    ################# With PyHessian     ###############################################
+    # hessian_comp = hessian(net, criterion, data=(x, y), cuda=True)
+    # density_eigen, density_weight = hessian_comp.density()
+    # f2 = open("density_eigen_{}.pkl".format(args.name), "wb")
+    # f3 = open("density_weight_{}.pkl".format(args.name), "wb")
+    # pickle.dump(density_eigen, f2)
+    # pickle.dump(density_weight, f3)
+    # f2.close()
+    # f3.close()
+    m = 90
+    l, w = torchessian.batch_mode.gauss_quadrature(
+        net,
+        criterion,
+        (x, y),
+        m,
+        buffer=m
+    )
+    f2 = open("l{}.pkl".format(args.name), "wb")
+    f3 = open("w{}.pkl".format(args.name), "wb")
+    pickle.dump(l, f2)
+    pickle.dump(l, f3)
     f2.close()
     f3.close()
+    # ################  With torchessian
+    t1 = time.time()
+    print("The calculation lasted {}s".format(t1 - t0))
+
+    support = torch.linspace(-5, 20, 10000)
+    fig, ax = plt.subplots(figsize=(15, 7))
+    density = torchessian.F(support, l, w, m)
+    ax.plot(support.numpy(), density.numpy(), color='b')
+    ax.set_yscale('log')
+    ax.set_yticks([10 ** (i - 7) for i in range(10)])
+    ax.set_ylim(10 ** -6, 10 ** 3)
+    # red_patch = mpatches.Patch(color='red', label='Without BatchNorm')
+    # blue_patch = mpatches.Patch(color='blue', label='With BatchNorm')
+    # plt.legend(handles=[red_patch, blue_patch])
+    plt.title("Beginning of training ResNet50")
+    plt.savefig("spectral_density{}.pdf".format(args.name))
+
+    # l, w = torchessian.complete_mode.gauss_quadrature(
+    #     net,
+    #     criterion,
+    #     testloader,
+    #     m,
+    #     buffer=m
+    # )
 
 
 if __name__ == '__main__':
