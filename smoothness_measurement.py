@@ -68,7 +68,7 @@ def main(args):
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=100, shuffle=False, num_workers=0)
+        testset, batch_size=10, shuffle=False, num_workers=0)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     # ################################### model #############################
@@ -132,10 +132,10 @@ def main(args):
     # f2.close()
     # f3.close()
     m = 90
-    l, w = torchessian.batch_mode.gauss_quadrature(
+    l, w = torchessian.complete_mode.gauss_quadrature(
         net,
         criterion,
-        (x, y),
+        testloader,
         m,
         buffer=m
     )
