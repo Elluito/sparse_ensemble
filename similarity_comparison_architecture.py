@@ -318,5 +318,5 @@ if __name__ == '__main__':
     # record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
     #                               seed_name=args["seedname1"])
 
-    features_similarity_comparison_experiments(architecture=args["architecture"],modeltype1="hub",modeltype2="hub", name1=args["seedname1"],
+    features_similarity_comparison_experiments(architecture=args["architecture"],modeltype1="hub",modeltype2="hub", name1="",
                                                name2=args["seedname2"])
