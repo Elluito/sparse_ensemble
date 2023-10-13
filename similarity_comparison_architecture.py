@@ -197,7 +197,7 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
     #
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
-                                                                 name2=name2, type1="npy", type2="npy",
+                                                                 name2=name2, type1="npy", type2="txt",
                                                                  use_device="cuda")
     filename = "similarity_experiments/{}_{}_V_{}_.txt".format(cfg.architecture, name1, name2)
     # with open(filename,"wb") as f :
