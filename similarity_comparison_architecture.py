@@ -315,8 +315,8 @@ if __name__ == '__main__':
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
 
-    record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
-                                  seed_name=args["seedname1"])
+    # record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
+    #                               seed_name=args["seedname1"])
 
-    # features_similarity_comparison_experiments(architecture=args["architecture"], name1=args["seedname1"],
-    #                                            name2=args["seedname2"])
+    features_similarity_comparison_experiments(architecture=args["architecture"],modeltype1="hub",modeltype2="hub", name1=args["seedname1"],
+                                               name2=args["seedname2"])
