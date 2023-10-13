@@ -45,4 +45,4 @@ unset KMP_AFFINITY
 
 
 # To save the representations
-python similarity_comparison_architecture.py --architecture $1 --seedname1 $2 --solution $3
+python similarity_comparison_architecture.py --architecture $1 --solution $2 --seedname1 $3
