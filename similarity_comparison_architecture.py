@@ -149,17 +149,12 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         o += 1
 
 
-def features_similarity_comparison_experiments(architecture="resnet18", name1="_seed_1", name2="_seed_2"):
+def features_similarity_comparison_experiments(architecture="resnet18", modeltype1="alternative",
+                                               modeltype2="alternative", name1="_seed_1", name2="_seed_2"):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
-         "model_type": "alternative",
-         # "model_type": "hub",
+         "model_type": modeltype1,
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-         # "solution": "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth",
-         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth",
-         # "solution": "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth",
-         # explore_models_shapes()
          "dataset": "cifar10",
          "batch_size": 128,
          "num_workers": 2,
@@ -173,10 +168,10 @@ def features_similarity_comparison_experiments(architecture="resnet18", name1="_
 
     prefix_custom_train = Path(
         "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "train"))
-    prefix_custom_test = Path(
+    prefix_modeltype1_test = Path(
         "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
-    cfg.model_type = "hub"
-    prefix_pytorch_test = Path(
+    cfg.model_type = modeltype2
+    prefix_modeltype2_test = Path(
         "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
 
     ##### -1 beacuse I dont have the linear layer here
@@ -200,7 +195,7 @@ def features_similarity_comparison_experiments(architecture="resnet18", name1="_
     #
     # #########   Pytorch vs Custom architectures ##################################
     #
-    similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
+    similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
                                                                  name2=name2, type1="npy", type2="npy",
                                                                  use_device="cuda")
@@ -259,7 +254,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 t0 = time.time()
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
                 t1 = time.time()
-                
+
                 t0 = time.time()
                 print("Time for linear kernel: {}".format(t1 - t0))
                 del layeri_cuda
@@ -297,14 +292,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
     parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
                         required=True)
-    #
-    # parser.add_argument('-s', '--solution', type=str, default="", help='',
-    #                     required=True)
+
+    parser.add_argument('-s', '--solution', type=str, default="", help='',
+                        required=False)
 
     parser.add_argument('-sn1', '--seedname1', type=str, default="", help='',
                         required=True)
     parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
-                        required=True)
+                        required=False)
     # parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
     #                     required=True)
     #
@@ -319,7 +314,9 @@ if __name__ == '__main__':
     # name_rf_level4_s1 = "_seed_1_rf_level_4"
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
-    # record_features_cifar10_model(args["architecture"], modeltype="alternative", solution=args["solution"],
-    #                               seed_name=args["seedname"])
-    features_similarity_comparison_experiments(architecture=args["architecture"], name1=args["seedname1"],
-                                               name2=args["seedname2"])
+
+    record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
+                                  seed_name=args["seedname1"])
+
+    # features_similarity_comparison_experiments(architecture=args["architecture"], name1=args["seedname1"],
+    #                                            name2=args["seedname2"])
