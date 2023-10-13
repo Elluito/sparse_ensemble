@@ -62,5 +62,5 @@ def convert_to_npy(prefix1, name1,indexes=range(49)):
         np.save(file_name, thing)
 
 
-convert_to_npy(prefix_custom_test, name1)
-convert_to_npy(prefix_custom_test, name2)
+convert_to_npy(prefix_pytorch_test, name1)
+convert_to_npy(prefix_pytorch_test, name2)

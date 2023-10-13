@@ -102,7 +102,9 @@ def main(args):
         net.load_state_dict(torch.load(args.solution)["net"])
 
     ###########################################################################
-    # f1 = open("loss_data_fin_{}.pkl".format(args.name), "wb")
+    prefix=Path("/nobackup/sclaam/smoothness/{}/".format(args.model))
+    prefix.mkdir(parents=True,exist_ok=True)
+    f1 = open("loss_data_fin_{}.pkl".format(args.name), "wb")
     x, y = next(iter(testloader))
     x, y = x.cuda(), y.cuda()
     net.cuda()
@@ -111,13 +113,13 @@ def main(args):
     metric = metrics.Loss(criterion, x, y)
     #
     # print("Is going to begin the random plane data calculationn")
-    # t0 = time.time()
-    # loss_data_fin = loss_landscapes.random_plane(net, metric, 10, STEPS, normalization='filter',
-    #                                              deepcopy_model=True)
+    t0 = time.time()
+    loss_data_fin = loss_landscapes.random_plane(net, metric, 10, STEPS, normalization='filter',
+                                                 deepcopy_model=True)
     # t1 = time.time()
     # print("The calculation lasted {}s".format(t1 - t0))
-    # pickle.dump(loss_data_fin, f1)
-    # f1.close()
+    pickle.dump(loss_data_fin, f1)
+    f1.close()
 
     print("Is going to begin the hessian spectrum calculation data calculation")
     t0 = time.time()
