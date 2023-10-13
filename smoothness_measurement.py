@@ -67,8 +67,10 @@ def main(args):
 
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(
+    testloader1 = torch.utils.data.DataLoader(
         testset, batch_size=10, shuffle=False, num_workers=0)
+    testloader2 = torch.utils.data.DataLoader(
+        testset, batch_size=1000, shuffle=False, num_workers=0)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
     # ################################### model #############################
@@ -102,10 +104,10 @@ def main(args):
         net.load_state_dict(torch.load(args.solution)["net"])
 
     ###########################################################################
-    prefix=Path("/nobackup/sclaam/smoothness/{}/".format(args.model))
-    prefix.mkdir(parents=True,exist_ok=True)
-    f1 = open("loss_data_fin_{}.pkl".format(args.name), "wb")
-    x, y = next(iter(testloader))
+    prefix = Path("/nobackup/sclaam/smoothness/{}/".format(args.model))
+    prefix.mkdir(parents=True, exist_ok=True)
+    f1 = open("{}loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
+    x, y = next(iter(testloader2))
     x, y = x.cuda(), y.cuda()
     net.cuda()
     net.eval()
@@ -116,8 +118,8 @@ def main(args):
     t0 = time.time()
     loss_data_fin = loss_landscapes.random_plane(net, metric, 10, STEPS, normalization='filter',
                                                  deepcopy_model=True)
-    # t1 = time.time()
-    # print("The calculation lasted {}s".format(t1 - t0))
+    t1 = time.time()
+    print("The calculation lasted {}s".format(t1 - t0))
     pickle.dump(loss_data_fin, f1)
     f1.close()
 
@@ -137,14 +139,14 @@ def main(args):
     l, w = torchessian.complete_mode.gauss_quadrature(
         net,
         criterion,
-        testloader,
+        testloader1,
         m,
         buffer=m
     )
     f2 = open("l{}.pkl".format(args.name), "wb")
     f3 = open("w{}.pkl".format(args.name), "wb")
     pickle.dump(l, f2)
-    pickle.dump(l, f3)
+    pickle.dump(w, f3)
     f2.close()
     f3.close()
     # ################  With torchessian
@@ -162,7 +164,7 @@ def main(args):
     # blue_patch = mpatches.Patch(color='blue', label='With BatchNorm')
     # plt.legend(handles=[red_patch, blue_patch])
     plt.title("Beginning of training ResNet50")
-    plt.savefig("spectral_density{}.pdf".format(args.name))
+    plt.savefig("{}spectral_density{}.pdf".format(prefix, args.name))
 
     # l, w = torchessian.complete_mode.gauss_quadrature(
     #     net,
@@ -176,15 +178,13 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
+    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,pytorch]')
     parser.add_argument('--RF_level', default=0, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--solution', '-s', default="",
-                        help='solution to use')
-    parser.add_argument('--name', '-n', default="no_name",
-                        help='name of the loss files')
+    parser.add_argument('--solution', '-s', default="", help='solution to use')
+    parser.add_argument('--name', '-n', default="no_name", help='name of the loss files')
 
     args = parser.parse_args()
     main(args)

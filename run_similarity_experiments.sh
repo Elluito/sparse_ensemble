@@ -115,7 +115,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "saving_features_resnet50_rf_level4_s2" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
 
 
-#files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
+files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
 #max=${#files[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
@@ -123,10 +123,17 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #    qsub -N "similarity_${files[$idxA]}_${files[$idxB]}" run.sh  "resnet50" "${files[$idxA]}" "${files[$idxB]}"
 #  done
 #done
-qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}"
-qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "_seed_2" "${name_rf_level_p_s3}"
-#qsub -N "smoothness_landscape${files[$idxA]}" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
-#
+#qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}"
+#qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "_seed_2" "${name_rf_level_p_s3}"
+
+files_names=($name_rf_level0_s1 $name_rf_level1_s1  $name_rf_level2_s1 $name_rf_level3_s1 $name_rf_level4_s1 $name_rf_level_p_s1)
+files=($rf_level0_s1 $rf_level1_s1  $rf_level2_s1 $rf_level3_s1 $rf_level4_s1 $rf_level_p_s1)
+files_level=(0 1 2 3 4 0)
+files_type=("normal" "normal" "normal" "normal" "pytorch")
+max=${#files[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+qsub -N "smoothness_landscape${files_names[$idxA]}" run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
+done
 
 #./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
 #./run.sh  1 "0.0" "global" "resnet18" "cifar10" "0.9" "alternative" "1" "nsga" "2"
