@@ -24,8 +24,8 @@ def convert_to_npy(prefix1, name1,indexes=range(49)):
         np.save(file_name, thing)
 
 def main(args):
-    architecture = args.architecture
-    modeltype=args.modeltype
+    architecture = args["architecture"]
+    modeltype=args["modeltype"]
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          # "model_type": "alternative",
@@ -58,7 +58,7 @@ def main(args):
     ##### -1 beacuse I dont have the linear layer here
     number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
 
-    name1 = args.seedname1
+    name1 = args["seedname1"]
 
 
 
