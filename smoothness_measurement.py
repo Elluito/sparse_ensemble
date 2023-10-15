@@ -114,7 +114,7 @@ def main(args):
     criterion = torch.nn.CrossEntropyLoss()
     metric = metrics.Loss(criterion, x, y)
     #
-    # print("Is going to begin the random plane data calculationn")
+    print("Is going to begin the random plane data calculation")
     t0 = time.time()
     loss_data_fin = loss_landscapes.random_plane(net, metric, 10, STEPS, normalization='filter',
                                                  deepcopy_model=True)
@@ -123,48 +123,48 @@ def main(args):
     pickle.dump(loss_data_fin, f1)
     f1.close()
 
-    print("Is going to begin the hessian spectrum calculation data calculation")
-    t0 = time.time()
-    torch.cuda.empty_cache()
-    ################# With PyHessian     ###############################################
-    # hessian_comp = hessian(net, criterion, data=(x, y), cuda=True)
-    # density_eigen, density_weight = hessian_comp.density()
-    # f2 = open("density_eigen_{}.pkl".format(args.name), "wb")
-    # f3 = open("density_weight_{}.pkl".format(args.name), "wb")
-    # pickle.dump(density_eigen, f2)
-    # pickle.dump(density_weight, f3)
+    # print("Is going to begin the hessian spectrum calculation data calculation")
+    # t0 = time.time()
+    # torch.cuda.empty_cache()
+    # ################# With PyHessian     ###############################################
+    # # hessian_comp = hessian(net, criterion, data=(x, y), cuda=True)
+    # # density_eigen, density_weight = hessian_comp.density()
+    # # f2 = open("density_eigen_{}.pkl".format(args.name), "wb")
+    # # f3 = open("density_weight_{}.pkl".format(args.name), "wb")
+    # # pickle.dump(density_eigen, f2)
+    # # pickle.dump(density_weight, f3)
+    # # f2.close()
+    # # f3.close()
+    # m = 90
+    # l, w = torchessian.complete_mode.gauss_quadrature(
+    #     net,
+    #     criterion,
+    #     testloader1,
+    #     m,
+    #     buffer=m
+    # )
+    # f2 = open("l{}.pkl".format(args.name), "wb")
+    # f3 = open("w{}.pkl".format(args.name), "wb")
+    # pickle.dump(l, f2)
+    # pickle.dump(w, f3)
     # f2.close()
     # f3.close()
-    m = 90
-    l, w = torchessian.complete_mode.gauss_quadrature(
-        net,
-        criterion,
-        testloader1,
-        m,
-        buffer=m
-    )
-    f2 = open("l{}.pkl".format(args.name), "wb")
-    f3 = open("w{}.pkl".format(args.name), "wb")
-    pickle.dump(l, f2)
-    pickle.dump(w, f3)
-    f2.close()
-    f3.close()
-    # ################  With torchessian
-    t1 = time.time()
-    print("The calculation lasted {}s".format(t1 - t0))
-
-    support = torch.linspace(-5, 20, 10000)
-    fig, ax = plt.subplots(figsize=(15, 7))
-    density = torchessian.F(support, l, w, m)
-    ax.plot(support.numpy(), density.numpy(), color='b')
-    ax.set_yscale('log')
-    ax.set_yticks([10 ** (i - 7) for i in range(10)])
-    ax.set_ylim(10 ** -6, 10 ** 3)
-    # red_patch = mpatches.Patch(color='red', label='Without BatchNorm')
-    # blue_patch = mpatches.Patch(color='blue', label='With BatchNorm')
-    # plt.legend(handles=[red_patch, blue_patch])
-    plt.title("Beginning of training ResNet50")
-    plt.savefig("{}spectral_density{}.pdf".format(prefix, args.name))
+    # # ################  With torchessian
+    # t1 = time.time()
+    # print("The calculation lasted {}s".format(t1 - t0))
+    #
+    # support = torch.linspace(-5, 20, 10000)
+    # fig, ax = plt.subplots(figsize=(15, 7))
+    # density = torchessian.F(support, l, w, m)
+    # ax.plot(support.numpy(), density.numpy(), color='b')
+    # ax.set_yscale('log')
+    # ax.set_yticks([10 ** (i - 7) for i in range(10)])
+    # ax.set_ylim(10 ** -6, 10 ** 3)
+    # # red_patch = mpatches.Patch(color='red', label='Without BatchNorm')
+    # # blue_patch = mpatches.Patch(color='blue', label='With BatchNorm')
+    # # plt.legend(handles=[red_patch, blue_patch])
+    # plt.title("Beginning of training ResNet50")
+    # plt.savefig("{}spectral_density{}.pdf".format(prefix, args.name))
 
     # l, w = torchessian.complete_mode.gauss_quadrature(
     #     net,
