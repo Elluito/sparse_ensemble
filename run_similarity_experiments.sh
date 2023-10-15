@@ -105,7 +105,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 
-qsub -N "saving_features_resnet50_rf_levelp_s3" run.sh  "resnet50" "${rf_level_p_s3}" "${name_rf_level_p_s3}"
+#qsub -N "saving_features_resnet50_rf_levelp_s3" run.sh  "resnet50" "${rf_level_p_s3}" "${name_rf_level_p_s3}"
 #qsub -N "saving_features_resnet50_rf_level1_s1" run.sh  "resnet50" "${rf_level1_s1}" "${name_rf_level1_s1}" 1
 #qsub -N "saving_features_resnet50_rf_level1_s2" run.sh  "resnet50" "${rf_level1_s2}" "${name_rf_level1_s2}" 1
 #qsub -N "saving_features_resnet50_rf_level3_s1" run.sh  "resnet50" "${rf_level3_s1}" "${name_rf_level3_s1}" 3
@@ -115,7 +115,7 @@ qsub -N "saving_features_resnet50_rf_levelp_s3" run.sh  "resnet50" "${rf_level_p
 #qsub -N "saving_features_resnet50_rf_level4_s2" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4
 
 
-files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
+#files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
 #max=${#files[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
