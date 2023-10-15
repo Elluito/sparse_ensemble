@@ -125,7 +125,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}"
 
-qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50"  "${name_rf_level_p_s3}" "_seed_2" "${rf_level_p_s3}"
+qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50"  "${name_rf_level_p_s3}" "_seed_2" "${rf_level_p_s3}"
 
 #files_names=($name_rf_level0_s1 $name_rf_level1_s1  $name_rf_level2_s1 $name_rf_level3_s1 $name_rf_level4_s1 $name_rf_level_p_s1)
 #files=($rf_level0_s1 $rf_level1_s1  $rf_level2_s1 $rf_level3_s1 $rf_level4_s1 $rf_level_p_s1)

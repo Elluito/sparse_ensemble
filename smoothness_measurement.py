@@ -104,9 +104,9 @@ def main(args):
         net.load_state_dict(torch.load(args.solution)["net"])
 
     ###########################################################################
-    # prefix = Path("/nobackup/sclaam/smoothness/{}/".format(args.model))
-    # prefix.mkdir(parents=True, exist_ok=True)
-    # f1 = open("{}loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
+    prefix = Path("/nobackup/sclaam/smoothness/{}/".format(args.model))
+    prefix.mkdir(parents=True, exist_ok=True)
+    f1 = open("{}loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
     x, y = next(iter(testloader2))
     x, y = x.cuda(), y.cuda()
     net.cuda()
