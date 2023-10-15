@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 import torchvision
 import numpy as np
 import time
-from main import load_layer_features, get_model
+from feature_maps_utils import load_layer_features
 import argparse
 
 # level 1
