@@ -13,7 +13,8 @@
 #$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=50G
+#$ -l h_vmem=16G
+
 # -t 1-2
 # -pe smp 3
 # Send emails when job starts and ends
