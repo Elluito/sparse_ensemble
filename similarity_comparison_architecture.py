@@ -142,8 +142,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     for x, y in testloader:
         x = x.cuda()
         save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
-        architecture
-        Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
+        # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(testloader)))
         if o == maximun_samples:
@@ -302,8 +301,11 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
                         required=False)
-    # parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
-    #                     required=True)
+    parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
+                        required=False)
+    parser.add_argument('-e', '--experiment', type=int, default=1, help='',
+                        required=False)
+
     #
     args = vars(parser.parse_args())
     # features_similarity_comparison_experiments(args["architecture"])
@@ -316,9 +318,11 @@ if __name__ == '__main__':
     # name_rf_level4_s1 = "_seed_1_rf_level_4"
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
-
-    # record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
-    #                               seed_name=args["seedname1"])
-
-    features_similarity_comparison_experiments(architecture=args["architecture"],modeltype1="hub",modeltype2="hub", name1=args["seedname1"],
-                                               name2=args["seedname2"])
+    if args.experiment == 1:
+        record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
+                                      seed_name=args["seedname1"])
+    #
+    if args.experiment == 2:
+        features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1="hub",
+                                                   modeltype2="hub", name1=args["seedname1"],
+                                                   name2=args["seedname2"])

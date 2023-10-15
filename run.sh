@@ -44,6 +44,9 @@ unset KMP_AFFINITY
 
 
 # To save the representations
-#python similarity_comparison_architecture.py --architecture $1 --seedname2 $2 --seedname1 $3
+python similarity_comparison_architecture.py --experiment 1 --architecture $1 --seedname1 $2 --solution $4
+python change_files --architecture $1 --modeltype hub --seedname1 $2
+python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 "_seed_2"
+python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 "_seed_1"
 
-python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
+#python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6

@@ -105,7 +105,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 
-#qsub -N "saving_features_resnet50_rf_levelp_s3" run.sh  "resnet50" "${rf_level_p_s3}" "${name_rf_level_p_s3}"
+qsub -N "saving_features_resnet50_rf_levelp_s3" run.sh  "resnet50" "${rf_level_p_s3}" "${name_rf_level_p_s3}"
 #qsub -N "saving_features_resnet50_rf_level1_s1" run.sh  "resnet50" "${rf_level1_s1}" "${name_rf_level1_s1}" 1
 #qsub -N "saving_features_resnet50_rf_level1_s2" run.sh  "resnet50" "${rf_level1_s2}" "${name_rf_level1_s2}" 1
 #qsub -N "saving_features_resnet50_rf_level3_s1" run.sh  "resnet50" "${rf_level3_s1}" "${name_rf_level3_s1}" 3
@@ -124,16 +124,17 @@ files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_
 #  done
 #done
 #qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}"
-#qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "_seed_2" "${name_rf_level_p_s3}"
 
-files_names=($name_rf_level0_s1 $name_rf_level1_s1  $name_rf_level2_s1 $name_rf_level3_s1 $name_rf_level4_s1 $name_rf_level_p_s1)
-files=($rf_level0_s1 $rf_level1_s1  $rf_level2_s1 $rf_level3_s1 $rf_level4_s1 $rf_level_p_s1)
-files_level=(0 1 2 3 4 0)
-files_type=("normal" "normal" "normal" "normal" "pytorch")
-max=${#files[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-qsub -N "smoothness_landscape${files_names[$idxA]}" run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
-done
+qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50"  "${name_rf_level_p_s3}" "_seed_2" "${rf_level_p_s3}"
+
+#files_names=($name_rf_level0_s1 $name_rf_level1_s1  $name_rf_level2_s1 $name_rf_level3_s1 $name_rf_level4_s1 $name_rf_level_p_s1)
+#files=($rf_level0_s1 $rf_level1_s1  $rf_level2_s1 $rf_level3_s1 $rf_level4_s1 $rf_level_p_s1)
+#files_level=(0 1 2 3 4 0)
+#files_type=("normal" "normal" "normal" "normal" "pytorch")
+#max=${#files[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#qsub -N "smoothness_landscape${files_names[$idxA]}" run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
+#done
 
 #./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
 #./run.sh  1 "0.0" "global" "resnet18" "cifar10" "0.9" "alternative" "1" "nsga" "2"
