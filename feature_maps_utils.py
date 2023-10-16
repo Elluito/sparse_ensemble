@@ -149,6 +149,7 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
         #     npaa.append(elem.reshape(1, -1))
         with open(file_name, "a+") as f:
             np.savetxt(f, elem.reshape(1, -1), delimiter=",")
+        print("Udated file {}".format(file_name))
     return feature_maps
 
 
