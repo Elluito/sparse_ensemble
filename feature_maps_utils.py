@@ -145,10 +145,10 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
         # print("Current layer: {}".format(i))
         # print("{} out of {} elements are 0".format(suma, n))
 
-        # with NpyAppendArray(file_name) as npaa:
-        #     npaa.append(elem.reshape(1, -1))
-        with open(file_name, "a+") as f:
-            np.savetxt(f, elem.reshape(1, -1), delimiter=",")
+        with NpyAppendArray(file_name) as npaa:
+            npaa.append(elem.reshape(1, -1))
+        # with open(file_name, "a+") as f:
+        #     np.savetxt(f, elem.reshape(1, -1), delimiter=",")
         print("Udated file {}".format(file_name))
     return feature_maps
 

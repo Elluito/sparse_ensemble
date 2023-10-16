@@ -38,7 +38,7 @@ name_rf_level4_s2 = "_seed_2_rf_level_4"
 
 
 def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
-                                  seed_name="_seed_1", rf_level=1):
+                                  seed_name="_seed_1", rf_level=0):
     from feature_maps_utils import save_layer_feature_maps_for_batch
 
     cfg = omegaconf.DictConfig(
@@ -57,9 +57,19 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
 
          })
     ################################# dataset cifar10 ###########################################################################
+
     from alternate_models.resnet import ResNet50_rf
+    from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
-        resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
+        if cfg.model_type == "alternative":
+            resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        if cfg.model_type == "hub":
+            resnet18_normal = resnet50()
+            in_features = resnet18_normal.fc.in_features
+            resnet18_normal.fc = torch.nn.Linear(in_features, 10)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -95,7 +105,14 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
-        resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
+        if cfg.model_type == "alternative":
+            resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        if cfg.model_type == "hub":
+            resnet18_normal = resnet50()
+            in_features = resnet18_normal.fc.in_features
+            resnet18_normal.fc = torch.nn.Linear(in_features, 100)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -178,49 +195,13 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
     ##### -1 beacuse I dont have the linear layer here
     number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
 
-    #########   Pytorch vs Pytorch architectures ##################################
-    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test,prefix_pytorch_test,number_layers=number_of_layers,name1="_seed_1",name2="_seed_2")
-    # filename = "similarity_experiments/{}_pytorch_V_pytorch_similarity.txt".format(cfg.architecture)
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename,similarity_for_networks,delimiter=",")
-
-    ######### Custom vs Custom architectures ##################################
-    #
-
-    # similarity_for_networks = representation_similarity_analysis(prefix_custom_test, prefix_custom_test,
-    #                                                              number_layers=number_of_layers, name1="_seed_1",
-    #                                                              name2="_seed_2", use_device="cuda")
-    # filename = "similarity_experiments/{}_custom_V_custom_similarity_cuda_1000.txt".format(cfg.architecture)
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename, similarity_for_networks, delimiter=",")
-    #
-    # #########   Pytorch vs Custom architectures ##################################
-    #
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
                                                                  name2=name2, type1="npy", type2="npy",
                                                                  use_device="cuda")
     filename = "similarity_experiments/{}_{}_V_{}_.txt".format(cfg.architecture, name1, name2)
-    # with open(filename,"wb") as f :
-    np.savetxt(filename, similarity_for_networks, delimiter=",")
 
-    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
-    #                                                              number_layers=number_of_layers, name1="_seed_2",
-    #                                                              name2="_seed_2", type1="txt", type2="npy",
-    #                                                              use_device="cuda")
-    # filename = "similarity_experiments/{}_pytorch_s2_V_custom_s2_similarity_cuda_1000.txt".format(cfg.architecture)
-    #
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename, similarity_for_networks, delimiter=",")
-    #
-    #
-    # similarity_for_networks = representation_similarity_analysis(prefix_pytorch_test, prefix_custom_test,
-    #                                                              number_layers=number_of_layers, name1="_seed_2",
-    #                                                              name2="_seed_1", type1="txt", type2="npy",
-    #                                                              use_device="cuda")
-    # filename = "similarity_experiments/{}_pytorch_s2_V_custom_s1_similarity_cuda_1000.txt".format(cfg.architecture)
-    # # with open(filename,"wb") as f :
-    # np.savetxt(filename, similarity_for_networks, delimiter=",")
+    np.savetxt(filename, similarity_for_networks, delimiter=",")
 
 
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
@@ -305,6 +286,10 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-e', '--experiment', type=int, default=1, help='',
                         required=False)
+    parser.add_argument('-mt1', '--modeltype1', type=str, default="alternative", help='',
+                        required=False)
+    parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
+                        required=False)
 
     #
     args = vars(parser.parse_args())
@@ -319,10 +304,10 @@ if __name__ == '__main__':
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
     if args["experiment"] == 1:
-        record_features_cifar10_model(args["architecture"], modeltype="hub", solution=args["solution"],
+        record_features_cifar10_model(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
                                       seed_name=args["seedname1"])
     #
     if args["experiment"] == 2:
-        features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1="hub",
-                                                   modeltype2="hub", name1=args["seedname1"],
+        features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
+                                                   modeltype2=args["modeltype2"], name1=args["seedname1"],
                                                    name2=args["seedname2"])
