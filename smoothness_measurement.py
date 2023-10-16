@@ -30,7 +30,7 @@ LR = 10 ** -2
 BATCH_SIZE = 512
 EPOCHS = 25
 # contour plot resolution
-STEPS = 20
+STEPS = 40
 
 def whole_dataset_loss(model,dataloader,no_use_y):
 
@@ -150,12 +150,12 @@ def main(args):
 
     #   Plotting ########################################
 
-    from smoothness_plotting import plot_3d
+    from smoothness_plotting import plot_3d,countour_plot
     f1 = open("loss_data_fin_train{}.pkl".format(args.name), "rb")
     loss_data_fin = pickle.load(f1)
     f1.close()
-
-    plot_3d(loss_data_fin, "{}_train".format(args.name), "Pytorch seed 1 trainset")
+    countour_plot(loss_data_fin)
+    # plot_3d(loss_data_fin, "{}_train".format(args.name), "Pytorch seed 1 trainset")
 
     # print("Is going to begin the hessian spectrum calculation data calculation")
     # t0 = time.time()

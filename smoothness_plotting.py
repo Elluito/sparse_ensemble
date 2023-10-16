@@ -28,7 +28,7 @@ LR = 10 ** -2
 BATCH_SIZE = 512
 EPOCHS = 25
 # contour plot resolution
-STEPS = 20
+STEPS = 40
 
 
 def main(file_loss_function,):
@@ -38,7 +38,7 @@ def main(file_loss_function,):
     file.close()
 def countour_plot(loss_data_fin):
 
-    plt.contour(loss_data_fin, levels=50)
+    plt.contour(loss_data_fin, levels=150)
     plt.title('Loss Contours around Trained Model')
     plt.show()
 def plot_3d(loss_data_fin,name,title):
