@@ -27,6 +27,26 @@ class Loss(Metric):
         return self.loss_fn(model_wrapper.forward(self.inputs), self.target).item()
 
 
+class BatchedLoss(Metric):
+    """ Computes a specified loss function over specified input-output pairs. """
+    def __init__(self, loss_fn, dataloader: torch.utils.data.DataLoader):
+        super().__init__()
+        self.loss_fn = loss_fn
+        self.dataloader = dataloader
+
+    def __call__(self, model_wrapper: ModelWrapper) -> float:
+
+        model_wrapper.eval()
+        test_loss = 0
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in enumerate(self.dataloader):
+                inputs, targets = inputs.cuda(), targets.cuda()
+                outputs = model_wrapper.forward(inputs)
+                loss =self.loss_fn(outputs, targets)
+                test_loss += loss.data.item()
+        return test_loss
+        # return self.loss_fn(model_wrapper.forward(self.inputs), self.target).item()
+
 class LossGradient(Metric):
     """ Computes the gradient of a specified loss function w.r.t. the model parameters
     over specified input-output pairs. """

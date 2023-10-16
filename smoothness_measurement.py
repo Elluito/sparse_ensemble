@@ -11,6 +11,8 @@ import loss_landscapes.metrics as metrics
 # libraries
 import copy
 import matplotlib
+
+matplotlib.use('tkAgg')
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import numpy as np
@@ -28,9 +30,20 @@ LR = 10 ** -2
 BATCH_SIZE = 512
 EPOCHS = 25
 # contour plot resolution
-STEPS = 40
+STEPS = 20
 
+def whole_dataset_loss(model,dataloader,no_use_y):
 
+    criterion = nn.CrossEntropyLoss()
+    model.eval()
+    test_loss = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(dataloader):
+            inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+            test_loss += loss.data.item()
+    return test_loss
 def main(args):
     cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
@@ -63,12 +76,12 @@ def main(args):
     trainset = torchvision.datasets.CIFAR10(
         root=data_path, train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=128, shuffle=True, num_workers=0)
+        trainset, batch_size=1000, shuffle=True, num_workers=0)
 
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
     testloader1 = torch.utils.data.DataLoader(
-        testset, batch_size=10, shuffle=False, num_workers=0)
+        testset, batch_size=128, shuffle=False, num_workers=0)
     testloader2 = torch.utils.data.DataLoader(
         testset, batch_size=1000, shuffle=False, num_workers=0)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
@@ -101,27 +114,48 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
 
     if args.solution:
-        net.load_state_dict(torch.load(args.solution)["net"])
+        temp_dict = torch.load(args.solution)["net"]
+        real_dict = {}
+        for k, item in temp_dict.items():
+            if k.startswith('module'):
+                new_key = k.replace("module.", "")
+                real_dict[new_key] = item
+        net.load_state_dict(real_dict)
 
     ###########################################################################
-    prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
-    prefix.mkdir(parents=True, exist_ok=True)
-    f1 = open("{}/_loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
-    x, y = next(iter(testloader2))
-    x, y = x.cuda(), y.cuda()
-    net.cuda()
-    net.eval()
-    criterion = torch.nn.CrossEntropyLoss()
-    metric = metrics.Loss(criterion, x, y)
+
+    # prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
+    # prefix.mkdir(parents=True, exist_ok=True)
+    # f1 = open("{}/loss_data_fin_{}.pkl".format(), "wb")
+    # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
+    # x, y = next(iter(trainloader))
+    # x, y = x.cuda(), y.cuda()
+    # net.cuda()
+    # net.eval()
+    # print(len(x))
+    # criterion = torch.nn.CrossEntropyLoss()
+    # metric = metrics.Loss(criterion,x, y)
     #
-    print("Is going to begin the random plane data calculation")
-    t0 = time.time()
-    loss_data_fin = loss_landscapes.random_plane(net, metric, 10, STEPS, normalization='filter',
-                                                 deepcopy_model=True)
-    t1 = time.time()
-    print("The calculation lasted {}s".format(t1 - t0))
-    pickle.dump(loss_data_fin, f1)
+    # #
+    # print("Is going to begin the random plane data calculation")
+    # t0 = time.time()
+    # loss_data_fin = loss_landscapes.random_plane(net, metric, 0.1, STEPS, normalization='filter',
+    #                                              deepcopy_model=True)
+    # t1 = time.time()
+    # print("The calculation lasted {}s".format(t1 - t0))
+    #
+    # print(loss_data_fin)
+    # pickle.dump(loss_data_fin, f1)
+    # f1.close()
+
+    #   Plotting ########################################
+
+    from smoothness_plotting import plot_3d
+    f1 = open("loss_data_fin_train{}.pkl".format(args.name), "rb")
+    loss_data_fin = pickle.load(f1)
     f1.close()
+
+    plot_3d(loss_data_fin, "{}_train".format(args.name), "Pytorch seed 1 trainset")
 
     # print("Is going to begin the hessian spectrum calculation data calculation")
     # t0 = time.time()
@@ -178,12 +212,14 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,pytorch]')
+    parser.add_argument('--type', default="pytorch", type=str, help='Type of implementation [normal,pytorch]')
     parser.add_argument('--RF_level', default=0, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--solution', '-s', default="", help='solution to use')
+    parser.add_argument('--solution', '-s',
+                        default="foreing_trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth",
+                        help='solution to use')
     parser.add_argument('--name', '-n', default="no_name", help='name of the loss files')
 
     args = parser.parse_args()

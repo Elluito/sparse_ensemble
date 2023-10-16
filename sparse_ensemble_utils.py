@@ -926,7 +926,7 @@ def get_layer_dict(model: torch.nn.Module):
             if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
                     isinstance(m, nn.BatchNorm3d):
                 layer_dict.append((name, m.weight.data.cpu().detach()))
-
+    #
     return layer_dict
 
 

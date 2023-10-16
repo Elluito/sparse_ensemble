@@ -14,7 +14,7 @@ import math
 import numpy as np
 import torch
 import torch.nn
-
+torch.manual_seed(1994)
 
 class ModelParameters:
     """
@@ -262,7 +262,8 @@ class ModelParameters:
         """
         # L-n norm of each filter where we treat each layer as a flat other
         if self.parameters[index[0]][index[1]].sum().item() == 0:
-            return 1
+            print("should not have entered here")
+            return 0.01
         else:
             return math.pow(torch.pow(self.parameters[index[0]][index[1]], order).sum().item(), 1.0 / order)
 
