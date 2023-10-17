@@ -50,7 +50,7 @@ echo "First similarity function"
 #echo "Change type of file"
 #python change_files.py --architecture $1 --modeltype hub --seedname1 $2
 #echo "Compare the new features with seed 1"
-python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5
+python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 #echo "Compare the new features with seed 2"
 #python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 "_seed_2"
 
