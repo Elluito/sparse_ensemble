@@ -41,7 +41,7 @@ def countour_plot(loss_data_fin):
     plt.contour(loss_data_fin, levels=150)
     plt.title('Loss Contours around Trained Model')
     plt.show()
-def plot_3d(loss_data_fin,name,title):
+def plot_3d(loss_data_fin,name,title,save=True):
     # for ii in range(0, 360, 1):
     #     fig = plt.figure()
     #     ax = plt.axes(projection='3d')
@@ -61,7 +61,10 @@ def plot_3d(loss_data_fin,name,title):
     ax.plot_surface(X, Y, loss_data_fin, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
     ax.set_title('Surface Plot of {}'.format(title))
     ax.view_init(elev=10., azim=7)
-    plt.savefig("loss_landscape_{}.png".format(name))
+    if save:
+        plt.savefig("loss_landscape_{}.png".format(name))
+    else:
+        plt.show()
 
 if __name__ =="__main__":
 

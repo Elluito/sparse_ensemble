@@ -168,7 +168,8 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
 
 
 def features_similarity_comparison_experiments(architecture="resnet18", modeltype1="alternative",
-                                               modeltype2="alternative", name1="_seed_1", name2="_seed_2"):
+                                               modeltype2="alternative", name1="_seed_1", name2="_seed_2",
+                                               filetype1="txt", filetype2="txt"):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": modeltype1,
@@ -197,7 +198,7 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
 
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
-                                                                 name2=name2, type1="npy", type2="npy",
+                                                                 name2=name2, type1=filetype1, type2=filetype2,
                                                                  use_device="cuda")
     filename = "similarity_experiments/{}_{}_V_{}_.txt".format(cfg.architecture, name1, name2)
 
@@ -290,6 +291,10 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
                         required=False)
+    parser.add_argument('-ft1', '--filetype1', type=str, default="txt", help='',
+                        required=False)
+    parser.add_argument('-ft2', '--filetype2', type=str, default="txt", help='',
+                        required=False)
 
     #
     args = vars(parser.parse_args())
@@ -310,4 +315,5 @@ if __name__ == '__main__':
     if args["experiment"] == 2:
         features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
                                                    modeltype2=args["modeltype2"], name1=args["seedname1"],
-                                                   name2=args["seedname2"])
+                                                   name2=args["seedname2"], filetype1=args["filetype1"],
+                                                   filetype2=args["filetype2"])
