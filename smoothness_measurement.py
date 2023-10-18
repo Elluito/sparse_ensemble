@@ -133,7 +133,7 @@ def main(args):
 
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
-    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix), "wb")
+    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix,args.name), "wb")
     # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
     x, y = next(iter(trainloader))
     x, y = x.cuda(), y.cuda()
