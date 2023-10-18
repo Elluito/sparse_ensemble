@@ -138,7 +138,7 @@ def main(args):
     net.eval()
     print(len(x))
     criterion = torch.nn.CrossEntropyLoss()
-    metric = metrics.sl_metrics.BatchedLoss(criterion, testloader1)
+    metric = metrics.sl_metrics.BatchedLoss(criterion,trainloader_hessian)
 
     #
     print("Is going to begin the random plane data calculation")
