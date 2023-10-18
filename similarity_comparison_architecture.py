@@ -68,7 +68,13 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
             resnet18_normal = resnet50()
             in_features = resnet18_normal.fc.in_features
             resnet18_normal.fc = torch.nn.Linear(in_features, 10)
-            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+            temp_dict = torch.load(cfg.solution)["net"]
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            resnet18_normal.load_state_dict(real_dict)
 
         current_directory = Path().cwd()
         data_path = "/datasets"
