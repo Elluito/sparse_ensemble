@@ -63,18 +63,20 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     if cfg.dataset == "cifar10":
         if cfg.model_type == "alternative":
             resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
-            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+            if solution:
+                resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
         if cfg.model_type == "hub":
             resnet18_normal = resnet50()
             in_features = resnet18_normal.fc.in_features
             resnet18_normal.fc = torch.nn.Linear(in_features, 10)
-            temp_dict = torch.load(cfg.solution)["net"]
-            real_dict = {}
-            for k, item in temp_dict.items():
-                if k.startswith('module'):
-                    new_key = k.replace("module.", "")
-                    real_dict[new_key] = item
-            resnet18_normal.load_state_dict(real_dict)
+            if solution:
+                temp_dict = torch.load(cfg.solution)["net"]
+                real_dict = {}
+                for k, item in temp_dict.items():
+                    if k.startswith('module'):
+                        new_key = k.replace("module.", "")
+                        real_dict[new_key] = item
+                resnet18_normal.load_state_dict(real_dict)
 
         current_directory = Path().cwd()
         data_path = "/datasets"
@@ -250,7 +252,6 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
                 t1 = time.time()
 
-                t0 = time.time()
                 print("Time for linear kernel: {}".format(t1 - t0))
                 del layeri_cuda
                 del layerj_cuda
