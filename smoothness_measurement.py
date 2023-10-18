@@ -79,8 +79,11 @@ def main(args):
         root=data_path, train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=1000, shuffle=True, num_workers=0)
+
+    indices = torch.arange(0, 10000)
+    smaller_trainset = torch.utils.data.Subset(trainset, indices)
     trainloader_hessian = torch.utils.data.DataLoader(
-        trainset[:10000], batch_size=10, shuffle=True, num_workers=4)
+        smaller_trainset, batch_size=10, shuffle=True, num_workers=4)
 
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
@@ -138,7 +141,7 @@ def main(args):
     net.eval()
     print(len(x))
     criterion = torch.nn.CrossEntropyLoss()
-    metric = metrics.sl_metrics.BatchedLoss(criterion,trainloader_hessian)
+    metric = metrics.sl_metrics.BatchedLoss(criterion, trainloader_hessian)
 
     #
     print("Is going to begin the random plane data calculation")
@@ -174,10 +177,7 @@ def main(args):
     # # f2.close()
     # # f3.close()
 
-
     # # ################  With torchessian
-
-
 
     m = 90
     l, w = torchessian.complete_mode.gauss_quadrature(
@@ -187,8 +187,8 @@ def main(args):
         m,
         buffer=20
     )
-    f2 = open("{}/l_{}.pkl".format(prefix,args.name), "wb")
-    f3 = open("{}/w_{}.pkl".format(prefix,args.name), "wb")
+    f2 = open("{}/l_{}.pkl".format(prefix, args.name), "wb")
+    f3 = open("{}/w_{}.pkl".format(prefix, args.name), "wb")
     pickle.dump(l, f2)
     pickle.dump(w, f3)
     f2.close()
