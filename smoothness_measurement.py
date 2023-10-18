@@ -79,6 +79,8 @@ def main(args):
         root=data_path, train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=1000, shuffle=True, num_workers=0)
+    trainloader_hessian = torch.utils.data.DataLoader(
+        trainset[:10000], batch_size=10, shuffle=True, num_workers=4)
 
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
@@ -126,10 +128,10 @@ def main(args):
 
     ###########################################################################
 
-    # prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
-    # prefix.mkdir(parents=True, exist_ok=True)
-    # f1 = open("{}/loss_data_fin_{}.pkl".format(), "wb")
-    f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
+    prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
+    prefix.mkdir(parents=True, exist_ok=True)
+    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix), "wb")
+    # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
     x, y = next(iter(trainloader))
     x, y = x.cuda(), y.cuda()
     net.cuda()
@@ -171,22 +173,27 @@ def main(args):
     # # pickle.dump(density_weight, f3)
     # # f2.close()
     # # f3.close()
-    # m = 90
-    # l, w = torchessian.complete_mode.gauss_quadrature(
-    #     net,
-    #     criterion,
-    #     testloader1,
-    #     m,
-    #     buffer=m
-    # )
-    # f2 = open("l{}.pkl".format(args.name), "wb")
-    # f3 = open("w{}.pkl".format(args.name), "wb")
-    # pickle.dump(l, f2)
-    # pickle.dump(w, f3)
-    # f2.close()
-    # f3.close()
+
 
     # # ################  With torchessian
+
+
+
+    m = 90
+    l, w = torchessian.complete_mode.gauss_quadrature(
+        net,
+        criterion,
+        trainloader_hessian,
+        m,
+        buffer=20
+    )
+    f2 = open("{}/l_{}.pkl".format(prefix,args.name), "wb")
+    f3 = open("{}/w_{}.pkl".format(prefix,args.name), "wb")
+    pickle.dump(l, f2)
+    pickle.dump(w, f3)
+    f2.close()
+    f3.close()
+
     # t1 = time.time()
     # print("The calculation lasted {}s".format(t1 - t0))
     #
