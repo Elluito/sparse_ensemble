@@ -115,17 +115,17 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "saving_features_resnet50_rf_level4_s1" run.sh  "resnet50" "${rf_level4_s1}" "${name_rf_level4_s1}" 4 alternative
 #qsub -N "saving_features_resnet50_rf_level4_s2" run.sh  "resnet50" "${rf_level4_s2}" "${name_rf_level4_s2}" 4 alternative
 
-
-files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
-max=${#files[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-  for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
-    echo "A: ${files[$idxA]}; B: ${files[$idxB]}" # Do whatever you're here for.
-    qsub -N "similarity_${files[$idxA]}_${files[$idxB]}" run.sh  "resnet50" "${files[$idxA]}" "${files[$idxB]}" "alternative" "alternative" "npy" "npy"
-  done
-done
-qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}" "alternative" "hub" "txt" "npy"
-qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "_seed_2" "${name_rf_level_p_s3}" "alternative" "hub" "txt" "npy"
+#
+#files=($name_rf_level1_s1 $name_rf_level1_s2 $name_rf_level2_s1 $name_rf_level2_s2 $name_rf_level3_s1 $name_rf_level3_s2 $name_rf_level4_s1 $name_rf_level4_s2)
+#max=${#files[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#  for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
+#    echo "A: ${files[$idxA]}; B: ${files[$idxB]}" # Do whatever you're here for.
+#    qsub -N "similarity_${files[$idxA]}_${files[$idxB]}" run.sh  "resnet50" "${files[$idxA]}" "${files[$idxB]}" "alternative" "alternative" "npy" "npy"
+#  done
+#done
+qsub -N "similarity_tird_seed_pytorch_1" run.sh  "resnet50" "_seed_1" "${name_rf_level_p_s3}" "hub" "hub" "txt" "npy"
+qsub -N "similarity_tird_seed_pytorch_2" run.sh  "resnet50" "_seed_2" "${name_rf_level_p_s3}" "hub" "hub" "txt" "npy"
 #
 #qsub -N "similarity_tird_seed_pytorch_1_k80" run.sh  "resnet50"  "${name_rf_level_p_s3}" "_seed_2" "${rf_level_p_s3}"
 #./run.sh  "resnet50"  "${name_rf_level_p_s3}" "_seed_2" "${rf_level_p_s3}"
