@@ -136,27 +136,27 @@ def main(args):
 
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
-    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
-    # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
-    x, y = next(iter(trainloader))
-    x, y = x.cuda(), y.cuda()
-    net.cuda()
-    net.eval()
-    print(len(x))
+    # f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
+    # # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
+    # x, y = next(iter(trainloader))
+    # x, y = x.cuda(), y.cuda()
+    # net.cuda()
+    # net.eval()
+    # print(len(x))
     criterion = torch.nn.CrossEntropyLoss()
-    metric = metrics.sl_metrics.BatchedLoss(criterion, trainloader_hessian)
-
+    # metric = metrics.sl_metrics.BatchedLoss(criterion, trainloader_hessian)
     #
-    print("Is going to begin the random plane data calculation")
-    t0 = time.time()
-    loss_data_fin = loss_landscapes.random_plane(net, metric, 0.15, STEPS, normalization='filter',
-                                                 deepcopy_model=True)
-    t1 = time.time()
-    print("The calculation lasted {}s".format(t1 - t0))
-
-    print(loss_data_fin)
-    pickle.dump(loss_data_fin, f1)
-    f1.close()
+    # #
+    # print("Is going to begin the random plane data calculation")
+    # t0 = time.time()
+    # loss_data_fin = loss_landscapes.random_plane(net, metric, 0.15, STEPS, normalization='filter',
+    #                                              deepcopy_model=True)
+    # t1 = time.time()
+    # print("The calculation lasted {}s".format(t1 - t0))
+    #
+    # print(loss_data_fin)
+    # pickle.dump(loss_data_fin, f1)
+    # f1.close()
 
     #   Plotting ########################################
 
