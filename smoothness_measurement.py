@@ -122,7 +122,7 @@ def main(args):
 
     if args.solution:
         temp_dict = torch.load(args.solution)["net"]
-        if args.type == "normal":
+        if args.type == "normal" and args.RF_level!=0:
             net.load_state_dict(temp_dict)
         else:
             real_dict = {}
