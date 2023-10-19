@@ -31,17 +31,25 @@ EPOCHS = 25
 STEPS = 40
 
 
-def main(file_loss_function,):
+def main(file_loss_function, name, title):
     file = open(file_loss_function, "rb")
     loss_data_fin = pickle.load(file)
-    # plot_3d()
     file.close()
-def countour_plot(loss_data_fin):
+    plot_3d(loss_data_fin=loss_data_fin, name=name, title=title)
+    countour_plot(loss_data_fin, title, name)
 
+
+def countour_plot(loss_data_fin, title, name):
+    plt.figure()
+    # X = np.array([[j for j in range(STEPS)] for i in range(STEPS)])
+    # Y = np.array([[i for _ in range(STEPS)] for i in range(STEPS)])
     plt.contour(loss_data_fin, levels=150)
-    plt.title('Loss Contours around Trained Model')
-    plt.show()
-def plot_3d(loss_data_fin,name,title,save=True):
+    plt.title('Loss Contours around {}'.format(title))
+    plt.savefig("smoothness_plots/countour_plot_{}.png".format(name))
+    plt.close()
+
+
+def plot_3d(loss_data_fin, name, title, save=True):
     # for ii in range(0, 360, 1):
     #     fig = plt.figure()
     #     ax = plt.axes(projection='3d')
@@ -62,13 +70,15 @@ def plot_3d(loss_data_fin,name,title,save=True):
     ax.set_title('Surface Plot of {}'.format(title))
     ax.view_init(elev=10., azim=7)
     if save:
-        plt.savefig("loss_landscape_{}.png".format(name))
+        plt.savefig("smoothness_plots/loss_landscape_{}.png".format(name))
     else:
         plt.show()
+    plt.close()
 
-if __name__ =="__main__":
-
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Smoothness plotting')
-    parser.add_argument('--file', default="", type=str, help='file with loss function',required=True)
+    parser.add_argument('--file', default="", type=str, help='file with loss function', required=True)
+    parser.add_argument('--name', default="", type=str, help='Name of the of the plot file', required=True)
+    parser.add_argument('--title', default="", type=str, help='Personalised title of the plots', required=True)
     args = vars(parser.parse_args())
-    plot_3d(args["file"])
+    main(args["file"], args["name"], args["title"])
