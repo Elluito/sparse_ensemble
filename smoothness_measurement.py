@@ -122,18 +122,21 @@ def main(args):
 
     if args.solution:
         temp_dict = torch.load(args.solution)["net"]
-        real_dict = {}
-        for k, item in temp_dict.items():
-            if k.startswith('module'):
-                new_key = k.replace("module.", "")
-                real_dict[new_key] = item
-        net.load_state_dict(real_dict)
+        if args.type == "normal":
+            net.load_state_dict(temp_dict)
+        else:
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            net.load_state_dict(real_dict)
 
     ###########################################################################
 
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
-    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix,args.name), "wb")
+    f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
     # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
     x, y = next(iter(trainloader))
     x, y = x.cuda(), y.cuda()
