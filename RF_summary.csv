@@ -1,9 +1,9 @@
 Name,Dense Accuracy,Pruned Accuracy
 _seed_1_rf_level_1,95.26,82.31
 _seed_2_rf_level_1,94.93,52.4
-_seed_1_rf_level_2,94.07,41.56
-_seed_2_rf_level_2,94.03,41.88
-_seed_1_rf_level_3,92.38,32.05
-_seed_2_rf_level_3,92.25,25.44
-_seed_1_rf_level_4,90.66,24.23
-_seed_2_rf_level_4,90.8,22.01
+_seed_1_rf_level_2,94.07,92.06
+_seed_2_rf_level_2,94.03,92.2
+_seed_1_rf_level_3,92.38,91.61
+_seed_2_rf_level_3,92.25,90.65
+_seed_1_rf_level_4,90.66,90.44
+_seed_2_rf_level_4,90.8,90.73
