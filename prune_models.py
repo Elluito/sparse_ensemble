@@ -231,16 +231,17 @@ def save_pruned_representations():
 def similarity_comparisons():
     for i in range(len(files)):
         for j in range(i, len(files)):
-            p_name1="pruned_{}".format(files_names[i])
-            p_name2="pruned_{}".format(files_names[j])
-            similarity_for_networks=features_similarity_comparison_experiments(architecture="resnet50", modeltype1="alternative",
-                                                       modeltype2="alternative", name1=p_name1,
-                                                       name2=p_name2, filetype1="npy",
-                                                       filetype2="npy")
-            filename = "similarity_experiments/{}_{}_V_{}_.txt".format("resnet50",p_name1,p_name2)
-
-            np.savetxt(filename, similarity_for_networks, delimiter=",")
-
+            p_name1 = "pruned_{}".format(files_names[i])
+            p_name2 = "pruned_{}".format(files_names[j])
+            features_similarity_comparison_experiments(architecture="resnet50",
+                                                                                 modeltype1="alternative",
+                                                                                 modeltype2="alternative",
+                                                                                 name1=p_name1,
+                                                                                 name2=p_name2, filetype1="npy",
+                                                                                 filetype2="npy")
+            # filename = "similarity_experiments/{}_{}_V_{}_.txt".format("resnet50", p_name1, p_name2)
+            #
+            # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
 
 def main():
@@ -287,6 +288,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    save_pruned_representations()
+    # main()
+    # save_pruned_representations()
     similarity_comparisons()
