@@ -1,17 +1,19 @@
 import torch
+import torchvision.transforms as transforms
+import torchvision
+from pathlib import Path
 from alternate_models.resnet import ResNet50_rf
 import pandas as pd
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
 from sparse_ensemble_utils import test
 import omegaconf
+
 # Level 0
-rf_level0_s1="trained_models/cifar10/resnet50_cifar10.pth"
-name_rf_level0_s1="_seed_1_rf_level_0"
+rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
+name_rf_level0_s1 = "_seed_1_rf_level_0"
 
-
-rf_level0_s2="trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
-name_rf_level0_s2="_seed_2_rf_level_0"
-
+rf_level0_s2 = "trained_models/cifar10/resnet50_normal_seed_2_tst_acc_95.65.pth"
+name_rf_level0_s2 = "_seed_2_rf_level_0"
 
 # level 1
 rf_level1_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_1_95.26.pth"
@@ -41,8 +43,156 @@ name_rf_level4_s2 = "_seed_2_rf_level_4"
 files_names = [name_rf_level1_s1, name_rf_level1_s2, name_rf_level2_s1, name_rf_level2_s2, name_rf_level3_s1,
                name_rf_level3_s2, name_rf_level4_s1, name_rf_level4_s2]
 files = [rf_level1_s1, rf_level1_s2, rf_level2_s1, rf_level2_s2, rf_level3_s1, rf_level3_s2, rf_level4_s1, rf_level4_s2]
-level = [1,1,2,2,3,3,4,4]
-def save_pruned_representations(name,file):
+level = [1, 1, 2, 2, 3, 3, 4, 4]
+modelstypes = ["alternative"] * len(level)
+
+
+def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modeltype="alternative", solution="",
+                                         seed_name="_seed_1", rf_level=0, model=None):
+    from feature_maps_utils import save_layer_feature_maps_for_batch
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype,
+         "solution": solution,
+         # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 1,
+         "num_workers": 0,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+    resnet18_normal = model
+    ################################# dataset cifar10 ###########################################################################
+
+    from alternate_models.resnet import ResNet50_rf
+    from torchvision.models import resnet18, resnet50
+    if cfg.dataset == "cifar10":
+        # if cfg.model_type == "alternative":
+        #     resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
+        #     if solution:
+        #         resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        # if cfg.model_type == "hub":
+        #     resnet18_normal = resnet50()
+        #     in_features = resnet18_normal.fc.in_features
+        #     resnet18_normal.fc = torch.nn.Linear(in_features, 10)
+        #     if solution:
+        #         temp_dict = torch.load(cfg.solution)["net"]
+        #         real_dict = {}
+        #         for k, item in temp_dict.items():
+        #             if k.startswith('module'):
+        #                 new_key = k.replace("module.", "")
+        #                 real_dict[new_key] = item
+        #         resnet18_normal.load_state_dict(real_dict)
+
+        current_directory = Path().cwd()
+        data_path = "/datasets"
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
+        # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        # val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        #                                          num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+    if cfg.dataset == "cifar100":
+        if cfg.model_type == "alternative":
+            resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        if cfg.model_type == "hub":
+            resnet18_normal = resnet50()
+            in_features = resnet18_normal.fc.in_features
+            resnet18_normal.fc = torch.nn.Linear(in_features, 100)
+            temp_dict = torch.load(cfg.solution)["net"]
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            resnet18_normal.load_state_dict(real_dict)
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+
+    current_directory = Path().cwd()
+    add_nobackup = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        add_nobackup = "/nobackup/sclaam/"
+
+    # prefix_custom_train = Path(
+    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    ######################## now the pytorch implementation ############################################################
+    maximun_samples = 2000
+    resnet18_normal.cuda()
+    o = 0
+    for x, y in testloader:
+        x = x.cuda()
+        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
+        # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
+
+        print("{} batch out of {}".format(o, len(testloader)))
+        if o == maximun_samples:
+            break
+        o += 1
+
+
+def save_pruned_representations():
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
          "model_type": "alternative",
@@ -67,9 +217,14 @@ def save_pruned_representations(name,file):
     for i in range(len(files)):
         state_dict_raw = torch.load(files[i])
         dense_accuracy_list.append(state_dict_raw["acc"])
-        net = ResNet50_rf(num_classes=10)
+        net = ResNet50_rf(num_classes=10, rf_level=level[i])
         net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
+        remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+        record_features_cifar10_model_pruned("resnet50", seed_name="pruned_{}".format(files_names[i]),
+                                             rf_level=level[i], model=net)
+
+
 def main():
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
@@ -95,7 +250,7 @@ def main():
     for i in range(len(files)):
         state_dict_raw = torch.load(files[i])
         dense_accuracy_list.append(state_dict_raw["acc"])
-        net = ResNet50_rf(num_classes=10,rf_level=level[i])
+        net = ResNet50_rf(num_classes=10, rf_level=level[i])
         net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
@@ -111,5 +266,8 @@ def main():
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
     df.to_csv("RF_summary.csv", index=False)
+
+
 if __name__ == '__main__':
     main()
+    save_pruned_representations()
