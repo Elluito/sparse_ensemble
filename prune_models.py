@@ -7,6 +7,8 @@ import pandas as pd
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
 from sparse_ensemble_utils import test
 import omegaconf
+from similarity_comparison_architecture import features_similarity_comparison_experiments
+import numpy as np
 
 # Level 0
 rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
@@ -40,6 +42,7 @@ rf_level4_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_4
 name_rf_level4_s1 = "_seed_1_rf_level_4"
 rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
 name_rf_level4_s2 = "_seed_2_rf_level_4"
+
 files_names = [name_rf_level1_s1, name_rf_level1_s2, name_rf_level2_s1, name_rf_level2_s2, name_rf_level3_s1,
                name_rf_level3_s2, name_rf_level4_s1, name_rf_level4_s2]
 files = [rf_level1_s1, rf_level1_s2, rf_level2_s1, rf_level2_s2, rf_level3_s1, rf_level3_s2, rf_level4_s1, rf_level4_s2]
@@ -225,6 +228,21 @@ def save_pruned_representations():
                                              rf_level=level[i], model=net)
 
 
+def similarity_comparisons():
+    for i in range(len(files)):
+        for j in range(i, len(files)):
+            p_name1="pruned_{}".format(files_names[i])
+            p_name2="pruned_{}".format(files_names[j])
+            similarity_for_networks=features_similarity_comparison_experiments(architecture="resnet50", modeltype1="alternative",
+                                                       modeltype2="alternative", name1=p_name1,
+                                                       name2=p_name2, filetype1="npy",
+                                                       filetype2="npy")
+            filename = "similarity_experiments/{}_{}_V_{}_.txt".format("resnet50",p_name1,p_name2)
+
+            np.savetxt(filename, similarity_for_networks, delimiter=",")
+
+
+
 def main():
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
@@ -271,3 +289,4 @@ def main():
 if __name__ == '__main__':
     main()
     save_pruned_representations()
+    similarity_comparisons()
