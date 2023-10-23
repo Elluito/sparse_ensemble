@@ -96,6 +96,10 @@ def main(args):
     # ################################### model #############################
     from torchvision.models import resnet18, resnet50
     from alternate_models.resnet import ResNet50_rf, ResNet18_rf
+
+
+    print("Solution")
+    print(args.solution)
     if args.model == "resnet18":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -119,11 +123,11 @@ def main(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
-
     if args.solution:
         temp_dict = torch.load(args.solution)["net"]
         if args.type == "normal" and args.RF_level!=0:
             net.load_state_dict(temp_dict)
+            print("Loaded solution!")
         else:
             real_dict = {}
             for k, item in temp_dict.items():
@@ -131,9 +135,10 @@ def main(args):
                     new_key = k.replace("module.", "")
                     real_dict[new_key] = item
             net.load_state_dict(real_dict)
+            print("Loaded solution!")
 
     ###########################################################################
-
+    return
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
     # f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
