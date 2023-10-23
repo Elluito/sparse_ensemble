@@ -123,7 +123,7 @@ def main(args):
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
     if args.solution:
-        temp_dict = torch.load(args.solution,map_location=torch.device('cpu'))["net"]
+        temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
         if args.type == "normal" and args.RF_level != 0:
             net.load_state_dict(temp_dict)
             print("Loaded solution!")
