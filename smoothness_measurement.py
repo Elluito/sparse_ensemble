@@ -123,9 +123,9 @@ def main(args):
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
     if args.solution:
-        temp_dict = torch.load(args.solution)["net"]
+        temp_dict = torch.load(args.solution,map_location=torch.device('cpu'))["net"]
         if args.type == "normal" and args.RF_level != 0:
-            net.load_state_dict(temp_dict, map_location=torch.device('cpu'))
+            net.load_state_dict(temp_dict)
             print("Loaded solution!")
         else:
             real_dict = {}
@@ -133,7 +133,7 @@ def main(args):
                 if k.startswith('module'):
                     new_key = k.replace("module.", "")
                     real_dict[new_key] = item
-            net.load_state_dict(real_dict, map_location=torch.device('cpu'))
+            net.load_state_dict(real_dict)
             print("Loaded solution!")
 
     ###########################################################################
