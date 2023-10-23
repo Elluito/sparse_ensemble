@@ -97,7 +97,6 @@ def main(args):
     from torchvision.models import resnet18, resnet50
     from alternate_models.resnet import ResNet50_rf, ResNet18_rf
 
-
     print("Solution")
     print(args.solution)
     if args.model == "resnet18":
@@ -125,8 +124,8 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.solution:
         temp_dict = torch.load(args.solution)["net"]
-        if args.type == "normal" and args.RF_level!=0:
-            net.load_state_dict(temp_dict)
+        if args.type == "normal" and args.RF_level != 0:
+            net.load_state_dict(temp_dict, map_location=torch.device('cpu'))
             print("Loaded solution!")
         else:
             real_dict = {}
@@ -134,10 +133,13 @@ def main(args):
                 if k.startswith('module'):
                     new_key = k.replace("module.", "")
                     real_dict[new_key] = item
-            net.load_state_dict(real_dict)
+            net.load_state_dict(real_dict, map_location=torch.device('cpu'))
             print("Loaded solution!")
 
     ###########################################################################
+    from sparse_ensemble_utils import test
+    training_test = test(net, use_cuda=False, testloader=trainloader_hessian, verbose=1)
+    print("Accuracy of 10k samples of training set {}".format(training_test))
     return
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
