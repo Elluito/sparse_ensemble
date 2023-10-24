@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=00:05:00
+#$ -l h_rt=45:00:00
 
 
 # ASk for some GPU
