@@ -330,7 +330,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+    parser.add_argument('--lr', default=0.002, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')

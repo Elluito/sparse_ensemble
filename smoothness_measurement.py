@@ -76,7 +76,7 @@ def main(args):
     ])
 
     trainset = torchvision.datasets.CIFAR10(
-        root=data_path, train=True, download=True, transform=transform_train)
+        root=data_path, train=True, download=True, transform=transform_test)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=1000, shuffle=True, num_workers=0)
 
@@ -87,12 +87,16 @@ def main(args):
 
     testset = torchvision.datasets.CIFAR10(
         root=data_path, train=False, download=True, transform=transform_test)
+
     testloader1 = torch.utils.data.DataLoader(
         testset, batch_size=128, shuffle=False, num_workers=0)
+
     testloader2 = torch.utils.data.DataLoader(
         testset, batch_size=1000, shuffle=False, num_workers=0)
+
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
+
     # ################################### model #############################
     from torchvision.models import resnet18, resnet50
     from alternate_models.resnet import ResNet50_rf, ResNet18_rf
@@ -105,6 +109,7 @@ def main(args):
             net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "cifar100":
+
             net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
 
     if args.model == "resnet50":
@@ -138,9 +143,9 @@ def main(args):
 
     ###########################################################################
     from sparse_ensemble_utils import test
-    training_test = test(net, use_cuda=False, testloader=trainloader_hessian, verbose=1)
-    print("Accuracy of 10k samples of training set {}".format(training_test))
-    return
+    # training_test = test(net, use_cuda=False, testloader=trainloader_hessian, verbose=1)
+    # print("Accuracy of 10k samples of training set {}".format(training_test))
+    # return
     prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
     prefix.mkdir(parents=True, exist_ok=True)
     # f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
@@ -197,8 +202,8 @@ def main(args):
         m,
         buffer=20
     )
-    f2 = open("{}/l_{}.pkl".format(prefix, args.name), "wb")
-    f3 = open("{}/w_{}.pkl".format(prefix, args.name), "wb")
+    f2 = open("{}/l_no_augmentations_{}.pkl".format(prefix, args.name), "wb")
+    f3 = open("{}/w_no_augmentations_{}.pkl".format(prefix, args.name), "wb")
     pickle.dump(l, f2)
     pickle.dump(w, f3)
     f2.close()
