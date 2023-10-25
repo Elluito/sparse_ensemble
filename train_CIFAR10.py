@@ -209,6 +209,7 @@ def main(args):
     global best_acc, testloader, device, criterion, trainloader, optimizer,net
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print("Device: {}".format(device))
     best_acc = 0  # best test accuracy
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
     cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
@@ -321,16 +322,22 @@ def main(args):
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     seed = time.time()
-
+    solution_name = "{}_{}_{}_{}_rf_level_{}".format(args.model, args.type, args.dataset, seed, args.RF_level)
+    state = {
+        'net': net.state_dict(),
+        'acc': 0,
+        'epoch': -1,
+    }
+    torch.save(state, './checkpoint/{}_initial_weights.pth'.format(solution_name))
     for epoch in range(start_epoch, start_epoch + 200):
         train(epoch)
-        test(epoch, "{}_{}_{}_{}_rf_level_{}".format(args.model, args.type, args.dataset, seed, args.RF_level))
+        test(epoch, solution_name)
         scheduler.step()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-    parser.add_argument('--lr', default=0.002, type=float, help='learning rate')
+    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
