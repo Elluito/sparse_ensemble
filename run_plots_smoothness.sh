@@ -52,19 +52,21 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-python smoothness_plotting.py --file $rf_level_p_s1 --name $name_rf_level_p_s1 --title "Seed 1 pytorch resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level_p_s2 --name $name_rf_level_p_s2 --title "Seed 2 pytorch resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level0_s1 --name $name_rf_level0_s1 --title "Seed 1 Custom resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level0_s2 --name $name_rf_level0_s2 --title "Seed 1 Custom resnet50 cifar10 "
-
-
-
-python smoothness_plotting.py --file $rf_level1_s1 --name $name_rf_level1_s1 --title "Seed 1 Level 1 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level1_s2 --name $name_rf_level1_s2 --title "Seed 2 Level 1  resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level2_s1 --name $name_rf_level2_s1 --title "Seed 2 Level 2 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level2_s2 --name $name_rf_level2_s2 --title "Seed 2 Level 2 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level3_s1 --name $name_rf_level3_s1 --title "Seed 1 Level 3 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level3_s2 --name $name_rf_level3_s2 --title "Seed 1 Level 3 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level4_s1 --name $name_rf_level4_s1 --title "Seed 1 Level 4 resnet50 cifar10 "
-python smoothness_plotting.py --file $rf_level4_s2 --name $name_rf_level4_s2 --title "Seed 2 Level 4 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level_p_s1 --name $name_rf_level_p_s1 --title "Seed 1 pytorch resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level_p_s2 --name $name_rf_level_p_s2 --title "Seed 2 pytorch resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level0_s1 --name $name_rf_level0_s1 --title "Seed 1 Custom resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level0_s2 --name $name_rf_level0_s2 --title "Seed 1 Custom resnet50 cifar10 "
+#
+#
+#
+#python smoothness_plotting.py --file $rf_level1_s1 --name $name_rf_level1_s1 --title "Seed 1 Level 1 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level1_s2 --name $name_rf_level1_s2 --title "Seed 2 Level 1  resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level2_s1 --name $name_rf_level2_s1 --title "Seed 2 Level 2 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level2_s2 --name $name_rf_level2_s2 --title "Seed 2 Level 2 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level3_s1 --name $name_rf_level3_s1 --title "Seed 1 Level 3 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level3_s2 --name $name_rf_level3_s2 --title "Seed 1 Level 3 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level4_s1 --name $name_rf_level4_s1 --title "Seed 1 Level 4 resnet50 cifar10 "
+#python smoothness_plotting.py --file $rf_level4_s2 --name $name_rf_level4_s2 --title "Seed 2 Level 4 resnet50 cifar10 "
+python smoothness_plotting.py --file $ --name $ --title "Seed 2 Level 4 resnet50 cifar10 "
+python smoothness_plotting.py --file $ --name $ --title "Seed 2 Level 4 resnet50 cifar10 "
 
