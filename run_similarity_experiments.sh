@@ -169,11 +169,11 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #rf_levels=("2")
 #
 
-qsub -N "trainig_Level_0" run.sh "resnet50" "cifar10" 2 0 alternative
-qsub -N "trainig_Level_1" run.sh "resnet50" "cifar10" 2 1 alternative
-qsub -N "trainig_Level_2" run.sh "resnet50" "cifar10" 2 2 alternative
-qsub -N "trainig_Level_3" run.sh "resnet50" "cifar10" 2 3 alternative
-qsub -N "trainig_Level_5" run.sh "resnet50" "cifar10" 2 4 alternative
+qsub -N "trainig_Level_0" run.sh "resnet50" "cifar10" 2 0 "alternative"
+qsub -N "trainig_Level_1" run.sh "resnet50" "cifar10" 2 1 "alternative"
+qsub -N "trainig_Level_2" run.sh "resnet50" "cifar10" 2 2 "alternative"
+qsub -N "trainig_Level_3" run.sh "resnet50" "cifar10" 2 3 "alternative"
+qsub -N "trainig_Level_5" run.sh "resnet50" "cifar10" 2 4 "alternative"
 #done
 #done
 #done
