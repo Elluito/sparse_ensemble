@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=45:00:00
+#$ -l h_rt=06:00:00
 
 
 # ASk for some GPU
@@ -15,7 +15,7 @@
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
 
-# -t 1-2
+#$ -t 1-2
 # -pe smp 3
 # Send emails when job starts and ends
 #$ -m be

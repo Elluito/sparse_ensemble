@@ -145,7 +145,7 @@ def format_time(seconds):
 
 # Training
 def train(epoch):
-    global best_acc, testloader, device, criterion, trainloader, optimizer,net
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net
     print('\nEpoch: %d' % epoch)
     net.train()
     train_loss = 0
@@ -168,7 +168,7 @@ def train(epoch):
                      % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
 
-def test(epoch, name="ckpt"):
+def test(epoch, name="ckpt", save_folder="./checkpoint"):
     global best_acc, testloader, device, criterion
     net.eval()
     test_loss = 0
@@ -197,16 +197,16 @@ def test(epoch, name="ckpt"):
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        if os.path.isfile('./checkpoint/{}_test_acc_{}.pth'.format(name, best_acc)):
-            os.remove('./checkpoint/{}_test_acc_{}.pth'.format(name, best_acc))
-        torch.save(state, './checkpoint/{}_test_acc_{}.pth'.format(name, acc))
+        if not os.path.isdir(save_folder):
+            os.mkdir(save_folder)
+        if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+            os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+        torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
         best_acc = acc
 
 
 def main(args):
-    global best_acc, testloader, device, criterion, trainloader, optimizer,net
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Device: {}".format(device))
@@ -247,7 +247,7 @@ def main(args):
         trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
 
     testset = torchvision.datasets.CIFAR10(
-        root=data_path , train=False, download=True, transform=transform_test)
+        root=data_path, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(
         testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
@@ -273,11 +273,11 @@ def main(args):
 
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
-        if args.type == "official" and args.dataset == "cifar10":
+        if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 10)
-        if args.type == "official" and args.dataset == "cifar100":
+        if args.type == "pytorch" and args.dataset == "cifar100":
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
@@ -311,7 +311,7 @@ def main(args):
     if args.resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
-        assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
+        assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
         checkpoint = torch.load('./checkpoint/resnet50_normal_cifar10_1693828675.8871784_test_acc_86.46.pth')
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
@@ -328,7 +328,9 @@ def main(args):
         'acc': 0,
         'epoch': -1,
     }
-    torch.save(state, './checkpoint/{}_initial_weights.pth'.format(solution_name))
+
+    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+
     for epoch in range(start_epoch, start_epoch + 200):
         train(epoch)
         test(epoch, solution_name)
@@ -343,6 +345,8 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location to save the models')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     args = parser.parse_args()

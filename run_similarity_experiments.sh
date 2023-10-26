@@ -155,15 +155,26 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 #files_names=($name_rf_level0_s2 $name_rf_level1_s2  $name_rf_level2_s2 $name_rf_level3_s2 $name_rf_level4_s2 $name_rf_level_p_s2)
 #files=($rf_level0_s2 $rf_level1_s2  $rf_level2_s2 $rf_level3_s2 $rf_level4_s2 $rf_level_p_s2)
-#
+
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-#qsub -N "loading_model_test_${files_names[$idxA]}" run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
-#echo "loading_model_test_${files_names[$idxA]}"
-#./run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
+#      qsub -N "${files_names[$idxA]}" run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
+#      echo "loading_model_test_${fles_names[$idxA]}"
+#      ./run.sh  "resnet50" "cifar10" "${files_level[$idxA]}" "${files_type[$idxA]}" "${files_names[$idxA]}" "${files[$idxA]}"
 #done
-#./run.sh  19 "0.0" "global" "${model}" "${dataset}" "0.9" "alternative" "1" "${sampler}" "2"
-#./run.sh  1 "0.0" "global" "resnet18" "cifar10" "0.9" "alternative" "1" "nsga" "2"
-##done
+
+#models=("resnet50")
+##Datasets
+#datasets=("cifar10" "cifar100")
+#types=("alternative")
+#rf_levels=("2")
+#
+
+qsub -N "trainig_Level_0" run.sh "resnet50" "cifar10" 2 0 alternative
+qsub -N "trainig_Level_1" run.sh "resnet50" "cifar10" 2 1 alternative
+qsub -N "trainig_Level_2" run.sh "resnet50" "cifar10" 2 2 alternative
+qsub -N "trainig_Level_3" run.sh "resnet50" "cifar10" 2 3 alternative
+qsub -N "trainig_Level_5" run.sh "resnet50" "cifar10" 2 4 alternative
+#done
 #done
 #done
 #
