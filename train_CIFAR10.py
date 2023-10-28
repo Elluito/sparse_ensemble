@@ -333,7 +333,7 @@ def main(args):
 
     for epoch in range(start_epoch, start_epoch + 200):
         train(epoch)
-        test(epoch, solution_name)
+        test(epoch, solution_name,save_folder=args.save_folder)
         scheduler.step()
 
 

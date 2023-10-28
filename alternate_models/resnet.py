@@ -299,11 +299,11 @@ if __name__ == '__main__':
     from torchvision.models import resnet18, resnet50
 
     print("Receptive field normal resnet18")
-    net = ResNet50_rf(num_classes=10, rf_level=4)
+    # net = ResNet18_rf(num_classes=10, rf_level=4)
 
-    # net = resnet50(pretrained=False)
+    net = resnet18(pretrained=False)
 
-    # net.fc = torch.nn.Linear(2048, 10)
+    net.fc = torch.nn.Linear(512, 10)
 
     # net.to(device)
 
