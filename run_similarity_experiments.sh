@@ -186,7 +186,7 @@ file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 
 max=${#files_level[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-  qsub -N "features_initial_weights_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnot50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
+  qsub -N "features_initial_weights_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
 done
 
 #seeds=(3 4 5)
