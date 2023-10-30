@@ -181,25 +181,27 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 #done
 #     initial weights feature representation
-files_level=(0 0 0 1 1 1 2 2 2 3 3 3 4 4 4)
-file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
-
-max=${#files_level[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-  qsub -N "features_initial_weights_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
-done
-
-#seeds=(3 4 5)
-#rf_levels=(0 1 2)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_max=${#seeds[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-#for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
+#files_level=(0 0 0 1 1 1 2 2 2 3 3 3 4 4 4)
+#file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 #
+#max=${#files_level[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#  qsub -N "features_initial_weights_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
+#done
+#
+
+seeds=(3 4 5)
+rf_levels=(0 1 2)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_max=${#seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
+
 #echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
+qsub -N "similarity_level_${files_level[$idxA]}_seeds_${file_seed[$idxB]}_${file_seed[$idxC]}" run.sh  "resnet50" "_no_train_seed_${file_seed[$idxB]}_rf_level_${files_level[$idxA]}" "_no_train_seed_${file_seed[$idxC]}_rf_level_${files_level[$idxA]}" "alternative" "alternative" "npy" "npy"
 #
 #
-#done
-#done
-#done
+done
+done
+done
