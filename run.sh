@@ -45,13 +45,23 @@ unset KMP_AFFINITY
 
 # To save the representations
 #echo "First similarity function"
-#python similarity_comparison_architecture.py --experiment 1 --architecture $1 --seedname1 $3 -rfl $4 --modeltype1 $5
-#echo "Change type of file"
-#python change_files.py --architecture $1 --modeltype hub --seedname1 $2
-#echo "Compare the new features with seed 1"
-#python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
-#echo "Compare the new features with seed 2"
-#python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 "_seed_2"
+#        Create features for given seed name
 
+python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
+
+#                 echo "Change type of file"
+
+#python change_files.py --architecture $1 --modeltype hub --seedname1 $2
+
+#       Calculate the similarity of two seeds
+
+#python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
+
+#
+
+#     Smoothness calculation
 #python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
+
+#     Training a model with specific RF
+
+#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5

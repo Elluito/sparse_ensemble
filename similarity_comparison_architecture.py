@@ -282,6 +282,147 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         simetric_similarity = similarity_matrix + np.transpose(similarity_matrix)
         simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
         return simetric_similarity
+def find_different_groups(architecture="resnet18", seed=1, modeltype="alternative", solution="",
+                                  seed_name="_seed_1", rf_level=0):
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype,
+         "solution": solution,
+         # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 1,
+         "num_workers": 0,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+    ################################# dataset cifar10 ###########################################################################
+
+    from alternate_models.resnet import ResNet50_rf
+    from torchvision.models import resnet18, resnet50
+    if cfg.dataset == "cifar10":
+        if cfg.model_type == "alternative":
+            resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
+            if solution:
+                resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        if cfg.model_type == "hub":
+            resnet18_normal = resnet50()
+            in_features = resnet18_normal.fc.in_features
+            resnet18_normal.fc = torch.nn.Linear(in_features, 10)
+            if solution:
+                temp_dict = torch.load(cfg.solution)["net"]
+                real_dict = {}
+                for k, item in temp_dict.items():
+                    if k.startswith('module'):
+                        new_key = k.replace("module.", "")
+                        real_dict[new_key] = item
+                resnet18_normal.load_state_dict(real_dict)
+
+        current_directory = Path().cwd()
+        data_path = "/datasets"
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
+        # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        # val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        #                                          num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+    if cfg.dataset == "cifar100":
+        if cfg.model_type == "alternative":
+            resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
+            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+        if cfg.model_type == "hub":
+            resnet18_normal = resnet50()
+            in_features = resnet18_normal.fc.in_features
+            resnet18_normal.fc = torch.nn.Linear(in_features, 100)
+            temp_dict = torch.load(cfg.solution)["net"]
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            resnet18_normal.load_state_dict(real_dict)
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+
+    current_directory = Path().cwd()
+    add_nobackup = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        add_nobackup = "/nobackup/sclaam/"
+
+    # prefix_custom_train = Path(
+    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    ######################## now the pytorch implementation ############################################################
+    maximun_samples = 2000
+    resnet18_normal.cuda()
+    o = 0
+    for x, y in testloader:
+        x = x.cuda()
+        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
+        # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
+
+        print("{} batch out of {}".format(o, len(testloader)))
+        if o == maximun_samples:
+            break
+        o += 1
 
 
 if __name__ == '__main__':
