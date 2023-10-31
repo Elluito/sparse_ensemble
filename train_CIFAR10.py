@@ -281,6 +281,13 @@ def main(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF(num_classes=10, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF(num_classes=100, rf_level=args.RF_level)
 
     # Training
 

@@ -169,11 +169,11 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #rf_levels=("2")
 #
 
-#qsub -N "training_Level_0" run.sh "resnet50" "cifar10" 2 0 "normal"
-#qsub -N "training_Level_1" run.sh "resnet50" "cifar10" 2 1 "normal"
-#qsub -N "training_Level_2" run.sh "resnet50" "cifar10" 2 2 "normal"
-#qsub -N "training_Level_3" run.sh "resnet50" "cifar10" 2 3 "normal"
-#qsub -N "training_Level_4" run.sh "resnet50" "cifar10" 2 4 "normal"
+qsub -N "training_Level_0" run.sh "vgg19" "cifar10" 2 0 "normal"
+#qsub -N "training_Level_1" run.sh "vgg19" "cifar10" 2 1 "normal"
+#qsub -N "training_Level_2" run.sh "vgg19" "cifar10" 2 2 "normal"
+#qsub -N "training_Level_3" run.sh "vgg19" "cifar10" 2 3 "normal"
+#qsub -N "training_Level_4" run.sh "vgg19" "cifar10" 2 4 "normal"
 #done
 #don
 # e
@@ -190,18 +190,18 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #
 
-seeds=(3 4 5)
-rf_levels=(0 1 2)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
-
-#echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
-qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50" "_no_train_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_no_train_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
+#seeds=(3 4 5)
+#rf_levels=(0 1 2)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
 #
-#
-done
-done
-done
+##echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
+#qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50" "_no_train_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_no_train_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
+##
+##
+#done
+#done
+#done

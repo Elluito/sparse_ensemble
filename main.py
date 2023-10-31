@@ -10231,6 +10231,109 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
 
     net.forward = features_only.__get__(net)  # bind method
 
+def get_features_only_until_block_layer_VGG(net, block=2, net_type=0):
+    # ResNet block to compute receptive field for
+    if net_type == 0:
+        def features_only(self, x):
+            x = self.conv1(x)
+            x = self.bn1(x)
+            x = self.relu(x)
+            x = self.maxpool(x)
+            if block == 0: return x
+
+            x = self.layer1(x)
+            if block == 1: return x
+
+            x = self.layer2(x)
+            if block == 2: return x
+
+            # x = self.layer3(x)
+            out = self.layer3[0].conv1(x)
+            out = self.layer3[0].bn1(out)
+            out = self.layer3[0].relu(out)
+
+            out = self.layer3[0].conv2(out)
+            out = self.layer3[0].bn2(out)
+            out = self.layer3[0].relu(out)
+
+            out = self.layer3[0].conv3(out)
+            out = self.layer3[0].bn3(out)
+
+            identity = self.layer3[0].downsample(x)
+
+            out += identity
+            out = self.layer3[0].relu(out)
+            x = out
+            out = self.layer3[1].conv1(x)
+            # out = self.layer3[1].conv2(out)
+            # def forward(self, x: Tensor) -> Tensor:
+            #     identity = x
+            #
+            #     out = self.conv1(x)
+            #     out = self.bn1(out)
+            #     out = self.relu(out)
+            #
+            #     out = self.conv2(out)
+            #     out = self.bn2(out)
+            #     out = self.relu(out)
+            #
+            #     out = self.conv3(out)
+            #     out = self.bn3(out)
+            #
+            #     if self.downsample is not None:
+            #         identity = self.downsample(x)
+            #
+            #     out += identity
+            #     out = self.relu(out)
+            #
+            #     return out
+            if block == 3: return out
+
+            x = self.layer4(x)
+
+            return x
+    else:
+        def features_only(self, x):
+            x = self.features(x)
+            # print("shape {}".format(x.size()))
+
+            # for i, layer in enumerate(self.features):
+            #
+            #     x = layer(x)
+            # x = F.relu(self.bn1(self.conv1(x)))
+            # x=self.maxpool(x)
+            # if block == 0: return x
+            # x = self.layer1(x)
+            # if block == 1: return x
+            # x = self.layer2(x)
+            # if block == 2: return x
+            #
+            # x = self.layer3(x)
+            # # out = self.layer3[0].conv1(x)
+            # # out = self.layer3[0].bn1(out)
+            # # out = F.relu(out)
+            # #
+            # # out = self.layer3[0].conv2(out)
+            # # out = self.layer3[0].bn2(out)
+            # # out = F.relu(out)
+            # #
+            # # out = self.layer3[0].conv3(out)
+            # # out = self.layer3[0].bn3(out)
+            # #
+            # # identity = self.layer3[0].shortcut(x)
+            # #
+            # # out += identity
+            # # out = F.relu(out)
+            # # out = self.layer3[1].conv1(x)
+            # # out = self.layer3[1].conv2(out)
+            # if block == 3: return x
+            #
+            # x = self.layer4(x)
+            # x = self.avgpool(x)
+            return x
+
+    net.forward = features_only.__get__(net)  # bind method
+
 
 def number_of_0_analysis_layer_two_models(pruned_model1, pruned_model_2, cfg,
                                           config_list=[], title=""):

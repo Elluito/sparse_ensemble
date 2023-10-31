@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=03:00:00
+#$ -l h_rt=07:00:00
 
 
 # ASk for some GPU
@@ -14,7 +14,7 @@
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
-# -t 1-3
+#$ -t 1-5
 # -pe smp 3
 # Send emails when job starts and ends
 #$ -m be
@@ -59,7 +59,7 @@ unset KMP_AFFINITY
 #       Calculate the similarity of two seeds
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
+#python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #
 
@@ -73,4 +73,4 @@ python similarity_comparison_architecture.py --experiment 2 --architecture $1 --
 #     Training a model with specific RF
 #############################################################
 
-#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
