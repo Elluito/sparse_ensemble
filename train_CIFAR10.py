@@ -284,10 +284,10 @@ def main(args):
     if args.model == "vgg19":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF(num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19", num_classes=10, rf_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF(num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19", num_classes=100, rf_level=args.RF_level)
 
     # Training
 
@@ -340,7 +340,7 @@ def main(args):
 
     for epoch in range(start_epoch, start_epoch + 200):
         train(epoch)
-        test(epoch, solution_name,save_folder=args.save_folder)
+        test(epoch, solution_name, save_folder=args.save_folder)
         scheduler.step()
 
 
