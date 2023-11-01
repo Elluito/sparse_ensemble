@@ -279,7 +279,7 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("/nobacup/sclaam/checkpoints/{}_*_level_{}.pth".format(args.model, args.RF_level))):
+            glob.glob("{}/{}_*_level_{}.pth".format(args.folder,args.model, args.RF_level))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
@@ -306,7 +306,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='One shot pruning statistic')
+    parser = argparse.ArgumentParser(description='One shot pruning statistics')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
