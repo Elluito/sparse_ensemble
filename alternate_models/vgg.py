@@ -115,23 +115,27 @@ def test():
     blocks = [0, 1, 2, 3, 4]
     receptive_fields = []
 
-    for i in blocks:
-        net = VGG_RF('VGG19_rf', rf_level=i)
-        # x = torch.randn(3, 3, 32, 32)
+    net = VGG_RF('VGG19_rf', rf_level=4)
+    y = net(torch.randn(3, 3, 32, 32))
+    print(y)
 
-        y = net(torch.randn(3, 3, 32, 32))
-        print(y)
-        get_features_only_until_block_layer_VGG(net, block=i, net_type=1)
-
-        rf = receptivefield(net, (1, 3, 1000, 1000))
-
-        # pdb.set_trace()
-        print("Receptive field for level {}".format(i))
-
-        print(rf)
-
-        receptive_fields.append(tuple(rf.rfsize))
-
+    # for i in blocks:
+    #     net = VGG_RF('VGG19_rf', rf_level=i)
+    #     # x = torch.randn(3, 3, 32, 32)
+    #
+    #     y = net(torch.randn(3, 3, 32, 32))
+    #     print(y)
+    #     get_features_only_until_block_layer_VGG(net, block=i, net_type=1)
+    #
+    #     rf = receptivefield(net, (1, 3, 1000, 1000))
+    #
+    #     # pdb.set_trace()
+    #     print("Receptive field for level {}".format(i))
+    #
+    #     print(rf)
+    #
+    #     receptive_fields.append(tuple(rf.rfsize))
+    #
     y = net(torch.randn(3, 3, 32, 32))
 
 

@@ -284,10 +284,10 @@ def main(args):
     if args.model == "vgg19":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
 
     # Training
 

@@ -1,8 +1,15 @@
+import os.path
+
 import torch
+import re
+
+os
+import argparse
+import glob
 import torchvision.transforms as transforms
 import torchvision
 from pathlib import Path
-from alternate_models.resnet import ResNet50_rf
+from alternate_models import *
 import pandas as pd
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
 from sparse_ensemble_utils import test
@@ -75,23 +82,6 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
     from alternate_models.resnet import ResNet50_rf
     from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
-        # if cfg.model_type == "alternative":
-        #     resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
-        #     if solution:
-        #         resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
-        # if cfg.model_type == "hub":
-        #     resnet18_normal = resnet50()
-        #     in_features = resnet18_normal.fc.in_features
-        #     resnet18_normal.fc = torch.nn.Linear(in_features, 10)
-        #     if solution:
-        #         temp_dict = torch.load(cfg.solution)["net"]
-        #         real_dict = {}
-        #         for k, item in temp_dict.items():
-        #             if k.startswith('module'):
-        #                 new_key = k.replace("module.", "")
-        #                 real_dict[new_key] = item
-        #         resnet18_normal.load_state_dict(real_dict)
-
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -100,8 +90,6 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
             data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
-        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
-        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
 
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
@@ -175,8 +163,6 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
         add_nobackup = "/nobackup/sclaam/"
 
-    # prefix_custom_train = Path(
-    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
     prefix_custom_test = Path(
         "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
@@ -234,17 +220,17 @@ def similarity_comparisons():
             p_name1 = "pruned_{}".format(files_names[i])
             p_name2 = "pruned_{}".format(files_names[j])
             features_similarity_comparison_experiments(architecture="resnet50",
-                                                                                 modeltype1="alternative",
-                                                                                 modeltype2="alternative",
-                                                                                 name1=p_name1,
-                                                                                 name2=p_name2, filetype1="npy",
-                                                                                 filetype2="npy")
+                                                       modeltype1="alternative",
+                                                       modeltype2="alternative",
+                                                       name1=p_name1,
+                                                       name2=p_name2, filetype1="npy",
+                                                       filetype2="npy")
             # filename = "similarity_experiments/{}_{}_V_{}_.txt".format("resnet50", p_name1, p_name2)
             #
             # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
 
-def main():
+def main(args):
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
          "model_type": "alternative",
@@ -263,13 +249,39 @@ def main():
          })
     train, val, testloader = get_datasets(cfg)
 
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19", num_classes=100, rf_level=args.RF_level)
+
     dense_accuracy_list = []
     pruned_accuracy_list = []
+    files_names = []
 
-    for i in range(len(files)):
-        state_dict_raw = torch.load(files[i])
+    for i, name in enumerate(
+            glob.glob("/nobacup/sclaam/checkpoints/{}_*_level_{}.pth".format(args.model, args.RF_level))):
+        state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
-        net = ResNet50_rf(num_classes=10, rf_level=level[i])
         net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
@@ -278,16 +290,33 @@ def main():
         weight_names, weights = zip(*get_layer_dict(net))
         zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
         pruning_rates_per_layer = list(map(zero_number, weights))
+        seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-        df2.to_csv("{}_pruning_rates.csv".format(files_names[i]), index=False)
+        df2.to_csv("{}_level_{}_seed_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file),
+                   index=False)
+        file_name = os.path.basename(name)
+        print(file_name)
+        files_names.append(file_name)
+
     df = pd.DataFrame({"Name": files_names,
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_summary.csv", index=False)
+    df.to_csv("RF_{}_{}_summary.csv".format(args.model, args.RF_level), index=False)
 
 
 if __name__ == '__main__':
-    # main()
+    parser = argparse.ArgumentParser(description='One shot pruning statistic')
+    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
+    parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
+    parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location where saved models are')
+    parser.add_argument('--name', default="", type=str, help='Name of the file')
+    args = parser.parse_args()
+    main(args)
     # save_pruned_representations()
-    similarity_comparisons()
+    # similarity_comparisons()
