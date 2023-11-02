@@ -230,7 +230,7 @@ echo $idxA
 
 for pathname in  "${file_names[@]}"; do
 #
-  echo "${pathname/${all_level_1_seeds[$idxA]}/"seed_${idxA}"}"
+  echo "${pathname/"${all_level_1_seeds[$idxA]}"/"seed_${idxA}"}"
 #
 #    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
 #        mv -i "$pathname" "${pathname%.*}.xml"
