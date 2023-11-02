@@ -223,18 +223,18 @@ max=${#all_level_1_seeds[@]}                                  # Take the length 
 echo $max
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
 echo "${directory}/.*${all_level_1_seeds[$idxA]}\.\*"
-#file_names=$(grep -i "${directory}.*${all_level_1_seeds[$idxA]}.*")
-#echo $file_names
+file_names=$(grep -i "${directory}/.*${all_level_1_seeds[$idxA]}.*")
+echo $file_names
 echo $idxA
 
-#for pathname in  "${file_names[@]}"; do
+for pathname in  "${file_names[@]}"; do
 #
-#  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
+  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
 #
 #    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
 #        mv -i "$pathname" "${pathname%.*}.xml"
 #    fi
-#done
+done
 done
 
 print_seed_rename () {
