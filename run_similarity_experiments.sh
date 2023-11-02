@@ -190,8 +190,6 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #
 
-#seeds=(3 4 5)
-#rf_levels=(0 1 2)
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_max=${#seeds[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
@@ -216,11 +214,14 @@ echo $level_1_seed0
 level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
 echo $level_1_seed1
 
+level1_seeds=($level_1_seed0 $level_1_seed1)
+
 level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
 echo $level_2_seed0
 level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
 echo $level_2_seed1
 
+level2_seeds=($level_2_seed0 $level_2_seed1)
 
 level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
 
@@ -228,14 +229,27 @@ echo $level_3_seed0
 level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
 echo $level_3_seed1
 
+level3_seeds=($level_3_seed0 $level_3_seed1)
+
 
 level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
 echo $level_4_seed0
 level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
 echo $level_4_seed1
+level4_seeds=($level_4_seed0 $level_4_seed1)
+
+levels_by_seed=($level1_seeds $level2_seeds $level3_seeds $level4_seeds)
 
 
-
+seeds=(0 1)
+rf_levels=(1 2 3 4)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_max=${#seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
+done
+done
 # all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
 # all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
 # echo $all_level_2_seeds
