@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 import torchvision
 import numpy as np
 import time
-from feature_maps_utils import load_layer_features
+from feature_maps_utils import load_layer_features, save_layer_feature_maps_for_batch
 import argparse
 
 # level 1
@@ -59,25 +59,34 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     ################################# dataset cifar10 ###########################################################################
 
     from alternate_models.resnet import ResNet50_rf
+    from alternate_models.vgg import VGG_RF
     from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
-        if cfg.model_type == "alternative":
-            resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
-            if solution:
-                resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
-        if cfg.model_type == "hub":
-            resnet18_normal = resnet50()
-            in_features = resnet18_normal.fc.in_features
-            resnet18_normal.fc = torch.nn.Linear(in_features, 10)
-            if solution:
-                temp_dict = torch.load(cfg.solution)["net"]
-                real_dict = {}
-                for k, item in temp_dict.items():
-                    if k.startswith('module'):
-                        new_key = k.replace("module.", "")
-                        real_dict[new_key] = item
-                resnet18_normal.load_state_dict(real_dict)
+        if cfg.architecture=="resnet50":
+            if cfg.model_type == "alternative":
+                net = ResNet50_rf(num_classes=10, rf_level=rf_level)
+                if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+            if cfg.model_type == "hub":
+                net = resnet50()
+                in_features = net.fc.in_features
+                net.fc = torch.nn.Linear(in_features, 10)
+                if solution:
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k, item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.", "")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
 
+        if cfg.model == "vgg19":
+
+            if cfg.model_type == "alternative":
+                net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
+
+            if args.type == "normal" and args.dataset == "cifar100":
+                net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -113,20 +122,33 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
-        if cfg.model_type == "alternative":
-            resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
-            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
-        if cfg.model_type == "hub":
-            resnet18_normal = resnet50()
-            in_features = resnet18_normal.fc.in_features
-            resnet18_normal.fc = torch.nn.Linear(in_features, 100)
-            temp_dict = torch.load(cfg.solution)["net"]
-            real_dict = {}
-            for k, item in temp_dict.items():
-                if k.startswith('module'):
-                    new_key = k.replace("module.", "")
-                    real_dict[new_key] = item
-            resnet18_normal.load_state_dict(real_dict)
+        if cfg.architecture== "resnet50":
+            if cfg.model_type == "alternative":
+
+                net = ResNet50_rf(num_classes=100, rf_level=rf_level)
+                if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+            if cfg.model_type == "hub":
+                net = resnet50()
+                in_features = net.fc.in_features
+                net.fc = torch.nn.Linear(in_features, 100)
+                if solution:
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k, item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.", "")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
+
+        if cfg.model == "vgg19":
+
+            if cfg.model_type == "alternative":
+                 net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
+                 if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -168,11 +190,11 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = 2000
-    resnet18_normal.cuda()
+    net.cuda()
     o = 0
     for x, y in testloader:
         x = x.cuda()
-        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
+        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(testloader)))
@@ -306,13 +328,13 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
     from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
         if cfg.model_type == "alternative":
-            resnet18_normal = ResNet50_rf(num_classes=10, rf_level=rf_level)
+            net = ResNet50_rf(num_classes=10, rf_level=rf_level)
             if solution:
-                resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+                net.load_state_dict(torch.load(cfg.solution)["net"])
         if cfg.model_type == "hub":
-            resnet18_normal = resnet50()
-            in_features = resnet18_normal.fc.in_features
-            resnet18_normal.fc = torch.nn.Linear(in_features, 10)
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = torch.nn.Linear(in_features, 10)
             if solution:
                 temp_dict = torch.load(cfg.solution)["net"]
                 real_dict = {}
@@ -320,7 +342,7 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
                     if k.startswith('module'):
                         new_key = k.replace("module.", "")
                         real_dict[new_key] = item
-                resnet18_normal.load_state_dict(real_dict)
+                net.load_state_dict(real_dict)
 
         current_directory = Path().cwd()
         data_path = "/datasets"
@@ -358,19 +380,19 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
         if cfg.model_type == "alternative":
-            resnet18_normal = ResNet50_rf(num_classes=100, rf_level=rf_level)
-            resnet18_normal.load_state_dict(torch.load(cfg.solution)["net"])
+            net = ResNet50_rf(num_classes=100, rf_level=rf_level)
+            net.load_state_dict(torch.load(cfg.solution)["net"])
         if cfg.model_type == "hub":
-            resnet18_normal = resnet50()
-            in_features = resnet18_normal.fc.in_features
-            resnet18_normal.fc = torch.nn.Linear(in_features, 100)
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = torch.nn.Linear(in_features, 100)
             temp_dict = torch.load(cfg.solution)["net"]
             real_dict = {}
             for k, item in temp_dict.items():
                 if k.startswith('module'):
                     new_key = k.replace("module.", "")
                     real_dict[new_key] = item
-            resnet18_normal.load_state_dict(real_dict)
+            net.load_state_dict(real_dict)
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -412,11 +434,11 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = 2000
-    resnet18_normal.cuda()
+    net.cuda()
     o = 0
     for x, y in testloader:
         x = x.cuda()
-        save_layer_feature_maps_for_batch(resnet18_normal, x, prefix_custom_test, seed_name=seed_name)
+        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(testloader)))

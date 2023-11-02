@@ -205,39 +205,63 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #done
 #done
+#########################################################
+#             Transform seed name into normal number
+#########################################################
+
+directory=/nobackup/sclaam/checkpoints
+
+level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+echo $level_1_seed0
+level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+echo $level_1_seed1
+
+level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+echo $level_2_seed0
+level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+echo $level_2_seed1
 
 
- directory=/nobackup/sclaam/checkpoints
- all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
-# echo $all_level_1_seeds
- all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
- echo $all_level_2_seeds
- all_level_3_seeds=($(ls $directory | grep -i "vgg19.*_level_3_.*" |cut -d_ -f4 |uniq))
- echo $all_level_3_seeds
- all_level_4_seeds=($(ls $directory | grep -i "vgg19.*_level_4_.*" |cut -d_ -f4 |uniq))
- echo $all_level_4_seeds
+level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+
+echo $level_3_seed0
+level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+echo $level_3_seed1
 
 
-max=${#all_level_4_seeds[@]}                                  # Take the length of that array
-echo $max
-for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-echo "${directory}/.*${all_level_4_seeds[$idxA]}\.\*"
-file_names=($(ls $directory | grep -i ".*${all_level_4_seeds[$idxA]}.*.pth"))
-echo $file_names
-echo ${#file_names[@]}                                  # Take the length of that array
-echo $idxA
+level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+echo $level_4_seed0
+level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+echo $level_4_seed1
 
-for pathname in  "${file_names[@]}"; do
-replace_string="seed_${idxA}"
-thing="${pathname/"${all_level_4_seeds[$idxA]}"/$replace_string}"
-  echo "${thing}"
-  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+
+
+# all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
+# all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
+# echo $all_level_2_seeds
+# all_level_3_seeds=($(ls $directory | grep -i "vgg19.*_level_3_.*" |cut -d_ -f4 |uniq))
+# echo $all_level_3_seeds
+# all_level_4_seeds=($(ls $directory | grep -i "vgg19.*_level_4_.*" |cut -d_ -f4 |uniq))
+# echo $all_level_4_seeds
 #
-#    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
-#        mv -i "$pathname" "${pathname%.*}.xml"
-#    fi
-done
-done
+#
+#max=${#all_level_4_seeds[@]}                                  # Take the length of that array
+#echo $max
+#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+#echo "${directory}/.*${all_level_4_seeds[$idxA]}\.\*"
+#file_names=($(ls $directory | grep -i ".*${all_level_4_seeds[$idxA]}.*.pth"))
+#echo $file_names
+#echo ${#file_names[@]}                                  # Take the length of that array
+#echo $idxA
+#
+#for pathname in  "${file_names[@]}"; do
+#replace_string="seed_${idxA}"
+#thing="${pathname/"${all_level_4_seeds[$idxA]}"/$replace_string}"
+#  echo "${thing}"
+#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+#done
+#done
+
 #
 #print_seed_rename () {
 #
