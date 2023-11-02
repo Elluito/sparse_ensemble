@@ -62,7 +62,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     from alternate_models.vgg import VGG_RF
     from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
-        if cfg.architecture=="resnet50":
+        if cfg.architecture == "resnet50":
             if cfg.model_type == "alternative":
                 net = ResNet50_rf(num_classes=10, rf_level=rf_level)
                 if solution:
@@ -120,7 +120,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
-        if cfg.architecture== "resnet50":
+        if cfg.architecture == "resnet50":
             if cfg.model_type == "alternative":
 
                 net = ResNet50_rf(num_classes=100, rf_level=rf_level)
@@ -139,12 +139,11 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
                             real_dict[new_key] = item
                     net.load_state_dict(real_dict)
 
-
         if cfg.architecture == "vgg19":
 
             if cfg.model_type == "alternative":
-                 net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
-                 if solution:
+                net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
+                if solution:
                     net.load_state_dict(torch.load(cfg.solution)["net"])
 
         current_directory = Path().cwd()
@@ -228,8 +227,12 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
         "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
 
     ##### -1 beacuse I dont have the linear layer here
-    number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
-
+    # number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
+    number_of_layers = 0
+    if cfg.architecture == "resnet50":
+        number_of_layers = 49
+    if cfg.architecture == "vgg19":
+        number_of_layers =16
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
                                                                  name2=name2, type1=filetype1, type2=filetype2,
@@ -302,9 +305,10 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         simetric_similarity = similarity_matrix + np.transpose(similarity_matrix)
         simetric_similarity[range(number_layers), range(number_layers)] *= 1 / 2
         return simetric_similarity
-def find_different_groups(architecture="resnet18", seed=1, modeltype="alternative", solution="",
-                                  seed_name="_seed_1", rf_level=0):
 
+
+def find_different_groups(architecture="resnet18", seed=1, modeltype="alternative", solution="",
+                          seed_name="_seed_1", rf_level=0):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": modeltype,
