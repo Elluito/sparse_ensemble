@@ -246,7 +246,6 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 seeds_max=${#seeds[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 
 
 levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
@@ -256,8 +255,9 @@ levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$id
 #temp=${levels_by_seed[$idxA]}
 #echo $temp
 #echo ${level1_seeds[$idxB]}
+echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 echo "solution ${levels_by_seed[$idxA]}"
-  qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxA]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxA]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
+qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
 
 done
 done
