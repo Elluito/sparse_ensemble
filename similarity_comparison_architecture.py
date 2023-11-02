@@ -85,8 +85,6 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
             if cfg.model_type == "alternative":
                 net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
 
-            if args.type == "normal" and args.dataset == "cifar100":
-                net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():

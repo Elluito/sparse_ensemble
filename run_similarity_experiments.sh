@@ -257,7 +257,7 @@ levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$id
 #echo $temp
 #echo ${level1_seeds[$idxB]}
 echo "solution ${levels_by_seed[$idxA]}"
-#  qsub -N "features_vgg19_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
+  qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxA]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxA]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
 
 done
 done
