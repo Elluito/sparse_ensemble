@@ -238,7 +238,6 @@ level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*")
 echo $level_4_seed1
 level4_seeds=($level_4_seed0 $level_4_seed1)
 
-levels_by_seed=($level1_seeds $level2_seeds $level3_seeds $level4_seeds)
 
 
 seeds=(0 1)
@@ -248,10 +247,16 @@ seeds_max=${#seeds[@]}                                  # Take the length of tha
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
 echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
-temp=${levels_by_seed[$idxA]@}
-echo $temp
-echo ${level1_seeds[$idxB]}
-echo "solution ${temp[$idxB]}"
+
+
+levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+
+
+
+#temp=${levels_by_seed[$idxA]}
+#echo $temp
+#echo ${level1_seeds[$idxB]}
+echo "solution ${levels_by_seed[$idxA]}"
 #  qsub -N "features_vgg19_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
 
 done
