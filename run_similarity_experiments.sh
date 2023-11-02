@@ -248,7 +248,7 @@ seeds_max=${#seeds[@]}                                  # Take the length of tha
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
 echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
-temp=${levels_by_seed[$idxA]}
+temp=${levels_by_seed[$idxA]@}
 echo $temp
 echo ${level1_seeds[$idxB]}
 echo "solution ${temp[$idxB]}"
