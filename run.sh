@@ -14,7 +14,7 @@
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
-#$ -t 1-5
+# -t 1-5
 # -pe smp 3
 # Send emails when job starts and ends
 #$ -m be
