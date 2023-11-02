@@ -218,18 +218,18 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
  echo $all_level_4_seeds
 
 
-max=${#all_level_1_seeds[@]}                                  # Take the length of that array
+max=${#all_level_2_seeds[@]}                                  # Take the length of that array
 echo $max
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-echo "${directory}/.*${all_level_1_seeds[$idxA]}\.\*"
-file_names=($(ls $directory | grep -i ".*${all_level_1_seeds[$idxA]}.*.pth"))
+echo "${directory}/.*${all_level_2_seeds[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${all_level_2_seeds[$idxA]}.*.pth"))
 echo $file_names
 echo ${#file_names[@]}                                  # Take the length of that array
 echo $idxA
 
 for pathname in  "${file_names[@]}"; do
 replace_string="seed_${idxA}"
-thing="${pathname/"${all_level_1_seeds[$idxA]}"/$replace_string}"
+thing="${pathname/"${all_level_2_seeds[$idxA]}"/$replace_string}"
   echo "${thing}"
   mv -i "${directory}/${pathname}" "${directory}/${thing}"
 #
@@ -238,31 +238,31 @@ thing="${pathname/"${all_level_1_seeds[$idxA]}"/$replace_string}"
 #    fi
 done
 done
-
-print_seed_rename () {
-
-max=${#($2[@])}                                  # Take the length of that array
-echo $max
-for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-echo "$1/.*${$2[$idxA]}\.\*"
-file_names=($(ls $2 | grep -i ".*${$2[$idxA]}.*.pth"))
-echo $file_names
-echo ${#file_names[@]}                                  # Take the length of that array
-echo $idxA
-
-for pathname in  "${file_names[@]}"; do
-replace_string="seed_${idxA}"
-thing="${pathname/"${$2[$idxA]}"/$replace_string}"
-  echo "${thing}"
-#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
 #
-#    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
-#        mv -i "$pathname" "${pathname%.*}.xml"
-#    fi
-done
-done
-}
-print_seed_rename $directory $all_level_2_seeds
+#print_seed_rename () {
+#
+#max=${#($2[@])}                                  # Take the length of that array
+#echo $max
+#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+#echo "$1/.*${$2[$idxA]}\.\*"
+#file_names=($(ls $2 | grep -i ".*${$2[$idxA]}.*.pth"))
+#echo $file_names
+#echo ${#file_names[@]}                                  # Take the length of that array
+#echo $idxA
+#
+#for pathname in  "${file_names[@]}"; do
+#replace_string="seed_${idxA}"
+#thing="${pathname/"${$2[$idxA]}"/$replace_string}"
+#  echo "${thing}"
+##  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+##
+##    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
+##        mv -i "$pathname" "${pathname%.*}.xml"
+##    fi
+#done
+#done
+#}
+#print_seed_rename $directory $all_level_2_seeds
 
 
 
