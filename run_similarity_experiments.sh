@@ -226,14 +226,14 @@ echo "${directory}/.*${all_level_1_seeds[$idxA]}\.\*"
 #echo $file_names
 echo $idxA
 
-for pathname in  "${file_names[@]}"; do
-
-  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
+#for pathname in  "${file_names[@]}"; do
+#
+#  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
 #
 #    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
 #        mv -i "$pathname" "${pathname%.*}.xml"
 #    fi
-done
+#done
 done
 
 print_seed_rename () {
