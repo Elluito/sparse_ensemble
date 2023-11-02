@@ -229,8 +229,9 @@ echo ${#file_names[@]}                                  # Take the length of tha
 echo $idxA
 
 for pathname in  "${file_names[@]}"; do
-thing="${pathname/"${all_level_1_seeds[$idxA]}"/"seed_${idxA}"}"
-  echo "${thing//\"//""}"
+replace_string="seed_${idxA}"
+thing="${pathname/"${all_level_1_seeds[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #
 #    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
 #        mv -i "$pathname" "${pathname%.*}.xml"
