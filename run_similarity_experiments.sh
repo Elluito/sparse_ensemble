@@ -218,18 +218,18 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
  echo $all_level_4_seeds
 
 
-max=${#all_level_3_seeds[@]}                                  # Take the length of that array
+max=${#all_level_4_seeds[@]}                                  # Take the length of that array
 echo $max
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-echo "${directory}/.*${all_level_3_seeds[$idxA]}\.\*"
-file_names=($(ls $directory | grep -i ".*${all_level_3_seeds[$idxA]}.*.pth"))
+echo "${directory}/.*${all_level_4_seeds[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${all_level_4_seeds[$idxA]}.*.pth"))
 echo $file_names
 echo ${#file_names[@]}                                  # Take the length of that array
 echo $idxA
 
 for pathname in  "${file_names[@]}"; do
 replace_string="seed_${idxA}"
-thing="${pathname/"${all_level_3_seeds[$idxA]}"/$replace_string}"
+thing="${pathname/"${all_level_4_seeds[$idxA]}"/$replace_string}"
   echo "${thing}"
   mv -i "${directory}/${pathname}" "${directory}/${thing}"
 #
