@@ -241,7 +241,7 @@ done
 
 print_seed_rename () {
 
-max=${#$2[@]}                                  # Take the length of that array
+max=${#($2[@])}                                  # Take the length of that array
 echo $max
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
 echo "$1/.*${$2[$idxA]}\.\*"
