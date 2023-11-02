@@ -216,22 +216,22 @@ echo $level_1_seed0
 level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
 echo $level_1_seed1
 
-level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_.*"))
 echo $level_2_seed0
-level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_.*"))
 echo $level_2_seed1
 
 
-level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_.*"))
 
 echo $level_3_seed0
-level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_.*"))
 echo $level_3_seed1
 
 
-level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_.*"))
 echo $level_4_seed0
-level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_.*"))
 echo $level_4_seed1
 
 
