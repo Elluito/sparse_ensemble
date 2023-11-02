@@ -225,11 +225,12 @@ for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
 echo "${directory}/.*${all_level_1_seeds[$idxA]}\.\*"
 file_names=($(ls $directory | grep -i ".*${all_level_1_seeds[$idxA]}.*.pth"))
 echo $file_names
+echo ${#files_names[@]}                                  # Take the length of that array
 echo $idxA
 
 for pathname in  "${file_names[@]}"; do
 #
-  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
+  echo "${pathname/${all_level_1_seeds[$idxA]}/"seed_$idxA"}"
 #
 #    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
 #        mv -i "$pathname" "${pathname%.*}.xml"
