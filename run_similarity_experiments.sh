@@ -209,7 +209,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 directory=/nobackup/sclaam/checkpoints
 
- all_level_1_seeds=$(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq)
+ all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
  echo $all_level_1_seeds
  all_level_2_seeds=$(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq)
  echo $all_level_2_seeds
