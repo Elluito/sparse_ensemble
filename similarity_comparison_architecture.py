@@ -80,7 +80,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
                             real_dict[new_key] = item
                     net.load_state_dict(real_dict)
 
-        if cfg.model == "vgg19":
+        if cfg.architecture == "vgg19":
 
             if cfg.model_type == "alternative":
                 net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
@@ -140,7 +140,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
                     net.load_state_dict(real_dict)
 
 
-        if cfg.model == "vgg19":
+        if cfg.architecture == "vgg19":
 
             if cfg.model_type == "alternative":
                  net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
