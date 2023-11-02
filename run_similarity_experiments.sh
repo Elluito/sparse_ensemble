@@ -221,7 +221,7 @@ directory=/nobackup/sclaam/checkpoints
 
 max=${#all_level_1_seeds[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-echo "${directory}.*${all_level_1_seeds[$idxA]}.*"
+echo "${directory}\/.*${all_level_1_seeds[$idxA]}.*"
 #file_names=$(grep -i "${directory}.*${all_level_1_seeds[$idxA]}.*")
 #echo $file_names
 echo $idxA
