@@ -211,27 +211,27 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 directory=/nobackup/sclaam/checkpoints
 
-level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_.*"))
+level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_test_acc.*"))
 echo $level_1_seed0
-level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_.*"))
+level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
 echo $level_1_seed1
 
-level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_.*"))
+level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
 echo $level_2_seed0
-level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_.*"))
+level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
 echo $level_2_seed1
 
 
-level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_.*"))
+level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
 
 echo $level_3_seed0
-level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_.*"))
+level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
 echo $level_3_seed1
 
 
-level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_.*"))
+level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
 echo $level_4_seed0
-level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_.*"))
+level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
 echo $level_4_seed1
 
 
