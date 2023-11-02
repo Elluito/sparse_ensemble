@@ -198,8 +198,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 ##echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
 #qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50" "_no_train_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_no_train_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
-##
-##
+
 #done
 #done
 #done
@@ -240,27 +239,50 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 
 
 
+#seeds=(0 1)
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#
+#
+#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#
+#
+##temp=${levels_by_seed[$idxA]}
+##echo $temp
+##echo ${level1_seeds[$idxB]}
+#echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
+#echo "solution ${levels_by_seed[$idxA]}"
+#qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
+#
+#done
+#done
+
+
+
 seeds=(0 1)
 rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 seeds_max=${#seeds[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
 
+#echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
 
-levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
-
-
-
-#temp=${levels_by_seed[$idxA]}
-#echo $temp
-#echo ${level1_seeds[$idxB]}
-echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
-echo "solution ${levels_by_seed[$idxA]}"
-qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
+qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "vgg19" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
 
 done
 done
+done
+
+
+
+
+
 # all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
 # all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
 # echo $all_level_2_seeds
