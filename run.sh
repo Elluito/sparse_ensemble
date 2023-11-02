@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=03:00:00
+#$ -l h_rt=45:00:00
 
 
 # ASk for some GPU
@@ -58,7 +58,7 @@ unset KMP_AFFINITY
 #       Calculate the similarity of two seeds
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
+#python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #
 
@@ -66,7 +66,7 @@ python similarity_comparison_architecture.py --experiment 2 --architecture $1 --
 #     Smoothness calculation
 #############################################################
 
-#python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
+python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
 
 #############################################################
 #     Training a model with specific RF

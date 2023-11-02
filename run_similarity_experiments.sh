@@ -240,10 +240,10 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 
 
 #seeds=(0 1)
-#rf_levels=(1 2 3 4)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+rf_levels=(1 2 3 4)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_max=${#seeds[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 #for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
 #
 #
@@ -257,8 +257,12 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 #echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 #echo "solution ${levels_by_seed[$idxA]}"
 #qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
+
+levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
+
+qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${levels_by_seed[$idxA]}"
 #
-#done
+done
 #done
 
 

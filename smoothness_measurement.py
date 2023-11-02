@@ -76,7 +76,7 @@ def main(args):
     ])
 
     trainset = torchvision.datasets.CIFAR10(
-        root=data_path, train=True, download=True, transform=transform_test)
+        root=data_path, train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=1000, shuffle=True, num_workers=0)
 

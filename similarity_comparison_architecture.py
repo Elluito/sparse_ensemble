@@ -256,7 +256,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
     #### because the similiarity is a simetrical
     for i in range(number_layers):
         if use_device == "cuda":
-            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1, type=type1)[:1000, :])
+            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1, type=type1))
         if use_device == "cpu":
             layer_i = load_layer_features(prefix1, i, name=name1)
         for j in range(i, number_layers):
