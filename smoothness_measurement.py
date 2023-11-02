@@ -100,6 +100,7 @@ def main(args):
     # ################################### model #############################
     from torchvision.models import resnet18, resnet50
     from alternate_models.resnet import ResNet50_rf, ResNet18_rf
+    from alternate_models.vgg import VGG_RF
 
     print("Solution")
     print(args.solution)
@@ -127,6 +128,13 @@ def main(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
+
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
     if args.solution:
         temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
         if args.type == "normal" and args.RF_level != 0:
