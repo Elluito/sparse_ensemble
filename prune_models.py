@@ -231,20 +231,26 @@ def similarity_comparisons():
 
 
 def main(args):
+
+    if args.model == "VGG19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+
+        exclude_layers = ["conv1", "linear"]
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
          "model_type": "alternative",
          # "model_type": "hub",
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_m
-         "dataset": "cifar10",
+         "dataset":args.dataset,
          "batch_size": 128,
-         "num_workers": 2,
+         "num_workers": args.num_workers,
          "amount": 0.9,
          "noise": "gaussian",
          "sigma": 0.005,
          "pruner": "global",
-         "exclude_layers": ["conv1", "linear"]
+         "exclude_layers": exclude_layers
 
          })
     train, val, testloader = get_datasets(cfg)
@@ -270,9 +276,9 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
 
     dense_accuracy_list = []
     pruned_accuracy_list = []

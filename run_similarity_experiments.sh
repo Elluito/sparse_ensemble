@@ -170,9 +170,9 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 
 #qsub -N "training_Level_0" run.sh "vgg19" "cifar10" 2 0 "normal"
-qsub -N "training_Level_1" run.sh "vgg19" "cifar10" 2 1 "normal"
-qsub -N "training_Level_2" run.sh "vgg19" "cifar10" 2 2 "normal"
-qsub -N "training_Level_3" run.sh "vgg19" "cifar10" 2 3 "normal"
+#qsub -N "training_Level_1" run.sh "vgg19" "cifar10" 2 1 "normal"
+#qsub -N "training_Level_2" run.sh "vgg19" "cifar10" 2 2 "normal"
+#qsub -N "training_Level_3" run.sh "vgg19" "cifar10" 2 3 "normal"
 #qsub -N "training_Level_4" run.sh "vgg19" "cifar10" 2 4 "normal"
 #done
 #don
@@ -205,3 +205,45 @@ qsub -N "training_Level_3" run.sh "vgg19" "cifar10" 2 3 "normal"
 #done
 #done
 #done
+
+
+directory=/nobackup/sclaam/checpoints
+
+ all_level_1_seeds=$(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq)
+ all_level_2_seeds=$(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq)
+ all_level_3_seeds=$(ls $directory | grep -i "vgg19.*_level_3_.*" |cut -d_ -f4 |uniq)
+ all_level_4_seeds=$(ls $directory | grep -i "vgg19.*_level_4_.*" |cut -d_ -f4 |uniq)
+
+
+max=${#all_level_1_seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+file_names=$(grep -i "${directory}.*${all_level_1_seeds[$idxA]}.*")
+
+for pathname in  "${file_names[@]}"; do
+
+  echo "${pathname/${all_level_1_seeds[$idxA]}/"$idxA"}"
+#
+#    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
+#        mv -i "$pathname" "${pathname%.*}.xml"
+#    fi
+done
+done
+
+print_seed_rename () {
+
+max=${#$1[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+
+file_names=$(grep -i "${2}.*${$1[$idxA]}.*")
+
+for pathname in  "${file_names[@]}"; do
+
+  echo "${pathname/${$1[$idxA]}/"$idxA"}"
+#
+#    if [[ -f $pathname ]] && grep -q -F "$string" "$pathname"; then
+#        mv -i "$pathname" "${pathname%.*}.xml"
+#    fi
+done
+done
+}
+print_seed_rename all_level_2_seeds directory
