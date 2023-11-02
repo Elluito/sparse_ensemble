@@ -250,6 +250,7 @@ for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to
 echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 temp=${levels_by_seed[$idxA]}
 echo $temp
+echo ${level1_seeds[$idxB]}
 echo "solution ${temp[$idxB]}"
 #  qsub -N "features_vgg19_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
 
