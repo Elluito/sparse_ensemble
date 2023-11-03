@@ -260,8 +260,11 @@ for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 t
 
 levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
 
-qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
-#
+#qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+qsub -N "vgg19_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+
+
 done
 #done
 

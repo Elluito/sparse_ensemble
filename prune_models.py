@@ -231,7 +231,6 @@ def similarity_comparisons():
 
 
 def main(args):
-
     if args.model == "VGG19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -243,7 +242,7 @@ def main(args):
          # "model_type": "hub",
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_m
-         "dataset":args.dataset,
+         "dataset": args.dataset,
          "batch_size": 128,
          "num_workers": args.num_workers,
          "amount": 0.9,
@@ -285,7 +284,7 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_*_level_{}.pth".format(args.folder,args.model, args.RF_level))):
+            glob.glob("{}/{}_*_level_{}.pth".format(args.folder, args.model, args.RF_level))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
