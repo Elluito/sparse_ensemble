@@ -231,7 +231,7 @@ def similarity_comparisons():
 
 
 def main(args):
-    if args.model == "VGG19":
+    if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
 
@@ -284,7 +284,7 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_*_level_{}.pth".format(args.folder, args.model, args.RF_level))):
+            glob.glob("{}/{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.RF_level))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
