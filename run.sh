@@ -44,20 +44,22 @@ unset KMP_AFFINITY
 
 # To save the representations
 #echo "First similarity function"
-#############################################################
-#        Create features for given seed name
-#############################################################
-
-#python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
 ########################################################
 #                Change type of file
 ########################################################
 #python change_files.py --architecture $1 --modeltype hub --seedname1 $2
 
+
+#############################################################
+#        Create features for given seed name
+#############################################################
+
+python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
+
+
 #############################################################
 #       Calculate the similarity of two seeds
 #############################################################
-
 #python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #
@@ -77,5 +79,5 @@ unset KMP_AFFINITY
 #############################################################
 #     One shot pruning results
 #############################################################
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
+#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
 

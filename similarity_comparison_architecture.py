@@ -186,7 +186,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
-    maximun_samples = 2000
+    maximun_samples = 10000
     net.cuda()
     o = 0
     for x, y in testloader:
