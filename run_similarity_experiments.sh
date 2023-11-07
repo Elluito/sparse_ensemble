@@ -242,15 +242,15 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 #                 Creating features loop and other not compartive experiments
 ########################################################################################################################
 
-seeds=(0 1)
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#seeds=(0 1)
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
 #
 #
-levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
 #
 #
 #
@@ -259,19 +259,19 @@ levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$id
 ##echo ${level1_seeds[$idxB]}
 #echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 #echo "solution ${levels_by_seed[$idxA]}"
-
-qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
-
-#levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
-
-#qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
-#qsub -N "vgg19_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-#qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-
-
-done
-done
-
+#
+#qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
+#
+##levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
+#
+##qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+##qsub -N "vgg19_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+##qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#
+#
+##done
+#done
+#
 
 
 ###############################################################################
@@ -279,21 +279,21 @@ done
 ###############################################################################
 
 #
-#seeds=(0 1)
-#rf_levels=(1 2 3 4)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_max=${#seeds[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-#for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
-#
+seeds=(0 1)
+rf_levels=(1 2 3 4)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_max=${#seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
+
 ##echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
 #
-#qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "vgg19" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
+qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "vgg19" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
 #
-#done
-#done
-#done
+done
+done
+done
 
 
 
