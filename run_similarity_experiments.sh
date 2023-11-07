@@ -259,6 +259,7 @@ levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$id
 ##echo ${level1_seeds[$idxB]}
 #echo "level ${rf_levels[$idxA]} seed ${seeds[$idxB]}"
 #echo "solution ${levels_by_seed[$idxA]}"
+
 qsub -N "features_vgg19_${rf_levels[$idxA]}_seed_${seeds[$idxB]}" run.sh  "vgg19" "${directory}/${levels_by_seed[$idxA]}" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}"  "${rf_levels[$idxA]}" "alternative"
 
 #levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
@@ -297,6 +298,9 @@ done
 
 
 
+###############################################################################
+#                  This is  for change names  for
+###############################################################################
 
 # all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
 # all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
