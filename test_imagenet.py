@@ -1,28 +1,16 @@
 import argparse
 import glob
 import os
-import accelerate
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-import torchvision
-import wandb
-from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
 import time
-from accelerate import Accelerator
-from main import prune_with_rate, remove_reparametrization, get_cifar_datasets, get_model
-from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, measure_and_record_gradient_flow, \
-    measure_and_record_gradient_flow_with_ACCELERATOR, disable_bn, mask_gradient, test_with_accelerator
+from main import get_model
+from sparse_ensemble_utils import sparsity, test_with_accelerator
 import omegaconf
-from shrinkbench.metrics.flops import flops
-from accelerate.state import PartialState, AcceleratorState
-import typing
 from torch.utils.data import random_split
 
 
