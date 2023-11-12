@@ -1,6 +1,8 @@
 import argparse
+import glob
 import os
 import accelerate
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -20,6 +22,8 @@ from sparse_ensemble_utils import apply_mask, apply_mask_with_hook, sparsity, me
 import omegaconf
 from shrinkbench.metrics.flops import flops
 from accelerate.state import PartialState, AcceleratorState
+import typing
+from torch.utils.data import random_split
 
 
 # from ffcv.writer import DatasetWriter
@@ -29,6 +33,12 @@ from accelerate.state import PartialState, AcceleratorState
 # from ffcv.fields.decoders import IntDecoder, RandomResizedCropRGBImageDecoder
 # Your dataset (`torch.utils.data.Dataset`) of (image, label) pairs
 
+# class TinyImageNetaValset(datasets.DatasetFolder):
+#     def __init__(self,dir,transformations):
+#         super(TinyImageNetaValset, self).__init__()
+#
+#     def find_classes(self, directory: str) -> typing.Tuple[typing.List[str], typing.Dict[str, int]]:
+#
 
 # ImageNet Recipe#################################
 
@@ -289,6 +299,96 @@ def test_pin_and_num_workers(args):
     return
 
 
+def load_tiny_imagenet(args):
+    normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
+                                           std=[0.2302, 0.2265, 0.2262])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
+    ])
+
+    # mean = 0.
+    # std = 0.
+    # nb_samples = 0.
+    #
+    # dataset = datasets.ImageFolder(args["traindir"], transform=transforms.Compose([
+    #     transforms.CenterCrop(64),
+    #     transforms.ToTensor(), normalize_train]))
+    #
+    #
+    #
+    # for data, targets in loader:
+    #     batch_samples = data.size(0)
+    #     data = data.view(batch_samples, data.size(1), -1)
+    #     mean += data.mean(2).sum(0)
+    #     std += data.std(2).sum(0)
+    #     nb_samples += batch_samples
+    #
+    # mean /= nb_samples
+    # std /= nb_samples
+    # print("mean of tiny imagenet train set: {}".format(mean))
+    # print("standar deviation of tiny imagenet train set: {}".format(std))
+
+    # mean = 0.
+    # std = 0.
+    # nb_samples = 0.
+    test_dataset = datasets.ImageFolder(args["valdir"], transform=transform_test)
+
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=args["batch_size"],
+                                              num_workers=args["num_workers"],
+                                              shuffle=False)
+    # for data, targets in loader:
+    #     batch_samples = data.size(0)
+    #     data = data.view(batch_samples, data.size(1), -1)
+    #     mean += data.mean(2).sum(0)
+    #     std += data.std(2).sum(0)
+    #     nb_samples += batch_samples
+    #
+    # mean /= nb_samples
+    # std /= nb_samples
+    # print("mean of tiny imagenet val set: {}".format(mean))
+    # print("standard deviation of tiny imagenet val set: {}".format(std))
+
+    whole_train_dataset = datasets.ImageFolder(
+        args["traindir"],
+        transforms.Compose([
+            transforms.RandomResizedCrop(64),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize_train,
+        ]))
+
+    train_data, val_data = random_split(whole_train_dataset, [95000, 5000])
+
+    train_loader = torch.utils.data.DataLoader(train_data,
+                                               batch_size=args["batch_size"],
+                                               num_workers=args["num_workers"],
+                                               shuffle=True)
+    val_loader = torch.utils.data.DataLoader(val_data,
+                                             batch_size=args["batch_size"],
+                                             num_workers=args["num_workers"],
+                                             shuffle=True)
+
+    return train_loader, val_loader, test_loader
+
+
+def change_directory_structure(tiny_imagenet_val_directory):
+    annotations_df = pd.read_csv(tiny_imagenet_val_directory + "/val_annotations.txt", sep="\t", header=None,
+                                 index_col=False)
+
+    classes = annotations_df[1].unique()
+    import os
+    import shutil
+    for i_class in classes:
+        os.mkdir(tiny_imagenet_val_directory + "/{}".format(i_class))
+    for name in glob.glob(tiny_imagenet_val_directory + "/images/*.JPEG"):
+        file_name = os.path.basename(name)
+        sample_class = annotations_df[annotations_df[0] == file_name][1][0]
+        shutil.copy(name, tiny_imagenet_val_directory + "/{}".format(sample_class))
+
+
 def load_imageNet(args):
     current_directory = Path().cwd()
     data_path = ""
@@ -507,7 +607,6 @@ def main(args):
 
     # print("Sparsity of model before \"prepare\": {}".format(sparsity(net)))
 
-
     optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
 
     criterion = nn.CrossEntropyLoss()
@@ -694,17 +793,17 @@ if __name__ == '__main__':
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
     # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=True)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=True)
     parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=False)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
     parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=False)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
     # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
     parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
                         required=False)
     parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
@@ -714,8 +813,13 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-fp', '--file_path', type=str, default="/nobackup/sclaam/trained_models/",
                         help='Location where the models is going to be saved', required=False)
+    parser.add_argument('--traindir', type=str, default="/home/luisaam/Documents/PhD/data/tiny_imagenet_200/train",
+                        help='Number of workers', required=False)
+    parser.add_argument('--valdir', type=str, default="/home/luisaam/Documents/PhD/data/tiny_imagenet_200/val",
+                        help='Number of workers', required=False)
 
     args = vars(parser.parse_args())
     # LeMain(args)
-    main(args)
+    # main(args)
+    load_tiny_imagenet(args)
     # test_num_workers()
