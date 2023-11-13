@@ -288,6 +288,13 @@ def test_pin_and_num_workers(args):
 
 
 def load_tiny_imagenet(args):
+
+
+
+
+
+
+
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 

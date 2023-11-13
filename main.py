@@ -2506,12 +2506,12 @@ def get_datasets(cfg: omegaconf.DictConfig):
         # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
         # Data loading code
 
-        current_directory = Path().cwd()
+        current_directory = path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data/"
-        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\MNIST"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets/"
         traindir = data_path + 'imagenet/' + 'train'
@@ -2585,6 +2585,22 @@ def get_datasets(cfg: omegaconf.DictConfig):
 
         return train_loader, val_loader, test_loader
 
+    if 'tiny_imagenet' == cfg.dataset:
+        from test_imagenet import load_tiny_imagenet
+
+        current_directory = path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data/"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "/home/luisaam/Documents/PhD/data/"
+        traindir = data_path + 'tiny_imagenet_200/' + 'train'
+        testdir = data_path + 'tiny_imagenet_200/' + 'val'
+        cfg.traindir=traindir
+        cfg.valdir=testdir
+        return load_tiny_imagenet(dict(cfg))
 
 def main(cfg: omegaconf.DictConfig):
     print("torch version: {}".format(torch.__version__))
