@@ -177,8 +177,8 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
-#qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
-#qsub -N "training_Level_1_rs" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 300
+qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
+qsub -N "training_Level_1_rs" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 300
 #qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
 #qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
@@ -308,25 +308,25 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #######################################################################################################################
 
 
-directory=/nobackup/sclaam/checkpoints
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-
-
-
-
-
-echo "solution ${levels_by_seed[$idxA]}"
-
-
-
-qsub -N "vgg19_tiny_imagenet_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-
-
-
-
-done
+#directory=/nobackup/sclaam/checkpoints
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+#
+#
+#
+#echo "solution ${levels_by_seed[$idxA]}"
+#
+#
+#
+#qsub -N "vgg19_tiny_imagenet_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#
+#
+#
+#
+#done
 
 ###############################################################################
 #                  This is  for change names  for
