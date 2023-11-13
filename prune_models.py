@@ -234,8 +234,8 @@ def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
-
         exclude_layers = ["conv1", "linear"]
+
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
          "model_type": "alternative",
@@ -284,7 +284,7 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.RF_level))):
+            glob.glob("{}/{}_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
@@ -297,7 +297,7 @@ def main(args):
         pruning_rates_per_layer = list(map(zero_number, weights))
         seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-        df2.to_csv("{}_level_{}_seed_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file),
+        df2.to_csv("{}_level_{}_seed_{}_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file,args.dataset),
                    index=False)
         file_name = os.path.basename(name)
         print(file_name)
@@ -307,7 +307,7 @@ def main(args):
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_{}_{}_summary.csv".format(args.model, args.RF_level), index=False)
+    df.to_csv("RF_{}_{}_{}_summary.csv".format(args.model,args.RF_level,args.dataset), index=False)
 
 
 if __name__ == '__main__':
