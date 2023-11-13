@@ -284,7 +284,7 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
+            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
