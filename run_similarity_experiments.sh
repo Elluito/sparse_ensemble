@@ -321,7 +321,7 @@ echo "solution ${levels_by_seed[$idxA]}"
 
 
 
-qsub -N "vgg19_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -N "vgg19_tiny_imagenet_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 
 
 
