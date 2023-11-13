@@ -170,17 +170,17 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 #                   Training a model on a given dataset with a given receptive field
 ########################################################################################################################
-qsub -N "training_Level_0_vgg" run.sh "vgg19" "tiny_imagenet" 2 0 "normal" 300
-qsub -N "training_Level_1_vgg" run.sh "vgg19" "tiny_imagenet" 2 1 "normal" 300
-qsub -N "training_Level_2_vgg" run.sh "vgg19" "tiny_imagenet" 2 2 "normal" 300
-qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
-qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
+#qsub -N "training_Level_0_vgg" run.sh "vgg19" "tiny_imagenet" 2 0 "normal" 300
+#qsub -N "training_Level_1_vgg" run.sh "vgg19" "tiny_imagenet" 2 1 "normal" 300
+#qsub -N "training_Level_2_vgg" run.sh "vgg19" "tiny_imagenet" 2 2 "normal" 300
+#qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
+#qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
-qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
-qsub -N "training_Level_1_rs" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 300
-qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
-qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
-qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
+#qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
+#qsub -N "training_Level_1_rs" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 300
+#qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
+#qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
+#qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
 
 ########################################################################################################################
 
@@ -213,34 +213,34 @@ qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
 
 directory=/nobackup/sclaam/checkpoints
 
-level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_test_acc.*"))
-echo $level_1_seed0
-level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
-echo $level_1_seed1
+#level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_test_acc.*"))
+#echo $level_1_seed0
+#level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
+#echo $level_1_seed1
+#
+#level1_seeds=($level_1_seed0 $level_1_seed1)
+#
+#level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
+#echo $level_2_seed0
+#level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
+#echo $level_2_seed1
+#
+#level2_seeds=($level_2_seed0 $level_2_seed1)
+#
+#level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+#
+#echo $level_3_seed0
+#level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
+#echo $level_3_seed1
+#
+#level3_seeds=($level_3_seed0 $level_3_seed1)
+#
 
-level1_seeds=($level_1_seed0 $level_1_seed1)
-
-level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
-echo $level_2_seed0
-level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
-echo $level_2_seed1
-
-level2_seeds=($level_2_seed0 $level_2_seed1)
-
-level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
-
-echo $level_3_seed0
-level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
-echo $level_3_seed1
-
-level3_seeds=($level_3_seed0 $level_3_seed1)
-
-
-level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
-echo $level_4_seed0
-level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
-echo $level_4_seed1
-level4_seeds=($level_4_seed0 $level_4_seed1)
+#level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
+#echo $level_4_seed0
+#level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
+#echo $level_4_seed1
+#level4_seeds=($level_4_seed0 $level_4_seed1)
 
 
 ########################################################################################################################
@@ -307,13 +307,14 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 #                  This is  for change names  for
 ###############################################################################
 
-# all_level_1_seeds=($(ls $directory | grep -i "vgg19.*_level_1_.*" |cut -d_ -f4 |uniq))
-# all_level_2_seeds=($(ls $directory | grep -i "vgg19.*_level_2_.*" |cut -d_ -f4 |uniq))
-# echo $all_level_2_seeds
-# all_level_3_seeds=($(ls $directory | grep -i "vgg19.*_level_3_.*" |cut -d_ -f4 |uniq))
-# echo $all_level_3_seeds
-# all_level_4_seeds=($(ls $directory | grep -i "vgg19.*_level_4_.*" |cut -d_ -f4 |uniq))
-# echo $all_level_4_seeds
+directory=/nobackup/sclaam/checkpoints
+ all_level_1_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f4 |uniq))
+ all_level_2_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f4 |uniq))
+ echo $all_level_2_seeds
+ all_level_3_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_3_.*" |cut -d_ -f4 |uniq))
+ echo $all_level_3_seeds
+ all_level_4_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f4 |uniq))
+ echo $all_level_4_seeds
 #
 #
 #max=${#all_level_4_seeds[@]}                                  # Take the length of that array
@@ -357,6 +358,7 @@ level4_seeds=($level_4_seed0 $level_4_seed1)
 #done
 #done
 #}
+
 #print_seed_rename $directory $all_level_2_seeds
 
 
