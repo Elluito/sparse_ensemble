@@ -6,15 +6,15 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=15:00:00
+#$ -l h_rt=01:00:00
 
 
 # ASk for some GPU
-#$ -l coproc_p100=1
+#$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
-#$ -t 1-5
+# -t 1-5
 # -pe smp 3
 # Send emails when job starts and ends
 #$ -m be
@@ -74,10 +74,10 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6
+#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6
 
 #############################################################
 #     One shot pruning results
 #############################################################
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
 
