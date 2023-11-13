@@ -265,6 +265,8 @@ def main(args):
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -278,6 +280,9 @@ def main(args):
             net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
             net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
 
     dense_accuracy_list = []
     pruned_accuracy_list = []
