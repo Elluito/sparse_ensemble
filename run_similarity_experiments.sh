@@ -319,7 +319,7 @@ directory=/nobackup/sclaam/checkpoints
  echo $all_level_4_seeds
 #
 #
-list_to_use=all_level_4_seeds
+list_to_use=$all_level_4_seeds
 max=${#list_to_use[@]}                                  # Take the length of that array
 echo $max
 for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
