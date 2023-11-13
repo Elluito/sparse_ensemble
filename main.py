@@ -2389,7 +2389,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
     if cfg.dataset == "cifar100":
-        current_directory = path().cwd()
+        current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data"
@@ -2506,7 +2506,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
         # Data loading code
 
-        current_directory = path().cwd()
+        current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data/"
@@ -2588,7 +2588,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
     if 'tiny_imagenet' == cfg.dataset:
         from test_imagenet import load_tiny_imagenet
 
-        current_directory = path().cwd()
+        current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data/"
@@ -10718,7 +10718,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1,
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
     if cfg.dataset == "cifar100":
-        current_directory = path().cwd()
+        current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data"
