@@ -289,12 +289,12 @@ def gradient_flow_calculation(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}_initial_weights_*.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
+            glob.glob("{}/{}_normal_{}_*_level_{}_initial_weights.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
 
         state_dict_raw = torch.load(name)
-        dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
         gradient_flow = cal_grad(net,trainloader=train)
+        gradient_flow_at_init_list.append(gradient_flow)
         file_name = os.path.basename(name)
         print(file_name)
         files_names.append(file_name)
