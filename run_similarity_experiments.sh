@@ -179,8 +179,8 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
 # -l coproc_p100=1
-qsub -l coproc_p100=1 -t 1-3 -N "training_Level_1_rs.1" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
-qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_imagenet" 10 1 "normal" 300
+#qsub -l coproc_p100=1 -t 1-3 -N "training_Level_1_rs.1" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
+#qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_imagenet" 10 1 "normal" 300
 #qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
 #qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
@@ -331,40 +331,40 @@ qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_
 #done
 
 ###############################################################################
-#                  This is  for change names  for
+#                  This is  for change names
 ###############################################################################
 
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 # all_level_1_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_1_seeds
 # echo "\n"
-# all_level_2_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_2_seeds
-# all_level_3_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_3_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_3_seeds
-# all_level_4_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_4_seeds
-##
-##
+ all_level_2_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_2_seeds
+ all_level_3_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_3_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_3_seeds
+ all_level_4_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_4_seeds
 #
-#declare -a list_to_use=("${all_level_3_seeds[@]}")
 #
-#max=${#list_to_use[@]}                                  # Take the length of that array
-#echo $max
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
-#
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
+
+declare -a list_to_use=("${all_level_2_seeds[@]}")
+
+max=${#list_to_use[@]}                                  # Take the length of that array
+echo $max
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+done
+done
 
 #
 #print_seed_rename () {
