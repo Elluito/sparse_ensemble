@@ -347,7 +347,7 @@ directory=/nobackup/sclaam/checkpoints
 #
 #
 
-declare -a list_to_use=("${all_level_3_seeds[@]}")
+declare -a list_to_use=("${all_level_4_seeds[@]}")
 
 max=${#list_to_use[@]}                                  # Take the length of that array
 echo $max
