@@ -299,7 +299,7 @@ def gradient_flow_calculation(args):
         grad_vect = parameters_to_vector(gradient_flow)
         # hg_vect = parameters_to_vector(hg)
         norm_grad = torch.norm(grad_vect)
-        gradient_flow_at_init_list.append(norm_grad)
+        gradient_flow_at_init_list.append(norm_grad.detach().cpu().numpy())
         file_name = os.path.basename(name)
         print(file_name)
         files_names.append(file_name)
