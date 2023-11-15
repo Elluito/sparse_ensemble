@@ -180,7 +180,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
 # -l coproc_p100=1
 #qsub -l coproc_p100=1 -t 1-3 -N "training_Level_1_rs.1" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
-#qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_imagenet" 10 1 "normal" 300
+#qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
 #qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
 #qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_rs" run.sh "resnet50" "tiny_imagenet" 2 4 "normal" 300
@@ -323,7 +323,8 @@ echo "solution ${levels_by_seed[$idxA]}"
 
 
 
-qsub -N "resnet50_tiny_imagenet_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#qsub -N "resnet50_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -N "vgg19_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 
 
 

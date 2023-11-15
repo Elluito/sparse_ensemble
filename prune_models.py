@@ -229,7 +229,79 @@ def similarity_comparisons():
             #
             # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
+def gradient_flow_calculation(args):
+    from flowandprune.imp_estimator import cal_grad
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
 
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
+
+         })
+    train, val, testloader = get_datasets(cfg)
+
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+
+    gradient_flow_at_init_list = []
+    pruned_accuracy_list = []
+    files_names = []
+
+    for i, name in enumerate(
+            glob.glob("{}/{}_normal_{}_*_level_{}_initial_weights_*.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
+
+        state_dict_raw = torch.load(name)
+        dense_accuracy_list.append(state_dict_raw["acc"])
+        net.load_state_dict(state_dict_raw["net"])
+        gradient_flow = cal_grad(net,trainloader=train)
+        file_name = os.path.basename(name)
+        print(file_name)
+        files_names.append(file_name)
+    df = pd.DataFrame({"Name": files_names,
+                       "Gradient Flow at init": gradient_flow_at_init_list ,
+                       })
+    df.to_csv("GF_init_{}_{}_{}_summary.csv".format(args.model,args.RF_level,args.dataset), index=False)
 def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
@@ -327,6 +399,7 @@ if __name__ == '__main__':
                         help='Location where saved models are')
     parser.add_argument('--name', default="", type=str, help='Name of the file')
     args = parser.parse_args()
-    main(args)
+    # main(args)
+    gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
