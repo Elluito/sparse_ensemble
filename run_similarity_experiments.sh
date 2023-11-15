@@ -311,7 +311,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 directory=/nobackup/sclaam/checkpoints
-rf_levels=(2 3 4)
+rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 
@@ -323,8 +323,8 @@ echo "solution ${levels_by_seed[$idxA]}"
 
 
 
-qsub -N "resnet50_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-#qsub -N "vgg19_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#qsub -N "resnet50_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -N "vgg19_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 
 
 
