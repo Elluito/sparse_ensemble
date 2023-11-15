@@ -293,6 +293,7 @@ def gradient_flow_calculation(args):
 
         state_dict_raw = torch.load(name)
         net.load_state_dict(state_dict_raw["net"])
+        net.cuda()
         gradient_flow = cal_grad(net,trainloader=train)
         gradient_flow_at_init_list.append(gradient_flow)
         file_name = os.path.basename(name)
