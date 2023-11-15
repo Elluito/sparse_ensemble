@@ -16,6 +16,7 @@ from sparse_ensemble_utils import test
 import omegaconf
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
+from torch.nn.utils import parameters_to_vector
 
 # Level 0
 rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
