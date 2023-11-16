@@ -219,7 +219,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 
 model="vgg19"
-dataset="tiny_imagenet"
+dataset="cifar10"
 init=true
 if [ $init ]; then
     solution_string="initial_weights"
