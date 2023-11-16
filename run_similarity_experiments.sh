@@ -268,7 +268,7 @@ echo $level_4_seed0
 #
 #
 
-seeds=(0)
+seeds="0"
 rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 seeds_max=${#seeds[@]}                                  # Take the length of that array
