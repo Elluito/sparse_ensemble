@@ -282,7 +282,7 @@ levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_see
 echo "${directory}/${levels_by_seed[$idxA]}"
 #echo "${levels_by_seed}"
 
-#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
 
 
 done
