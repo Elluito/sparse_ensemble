@@ -211,7 +211,7 @@ def main(args):
         buffer=20
     )
     f2 = open("{}/l_{}.pkl".format(prefix, args.name), "wb")
-    f3 = open("{}/w  z_{}.pkl".format(prefix, args.name), "wb")
+    f3 = open("{}/w_{}.pkl".format(prefix, args.name), "wb")
     pickle.dump(l, f2)
     pickle.dump(w, f3)
     f2.close()

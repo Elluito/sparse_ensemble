@@ -214,10 +214,27 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #             Transform seed name into normal number
 #########################################################
 
-#directory=/nobackup/sclaam/checkpoints
+########################################################################################################################
+#                 Hessian spectra of solutions
+########################################################################################################################
 
-#level_1_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_1_test_acc.*"))
-#echo $level_1_seed0
+model="vgg19"
+dataset="tiny_imagenet"
+init=true
+if [ $init ]; then
+    solution_string="initial_weights"
+
+else
+
+
+    solution_string="test_acc"
+fi
+
+
+directory=/nobackup/sclaam/checkpoints
+
+level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_1_${solution_string}.*"))
+echo $level_1_seed0
 #level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
 #echo $level_1_seed1
 #
@@ -245,7 +262,24 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #echo $level_4_seed1
 #level4_seeds=($level_4_seed0 $level_4_seed1)
 
-
+#
+#
+#seeds=(0)
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#
+#
+#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+#
+#
+#done
+#done
+#
 ########################################################################################################################
 #                 Creating features loop and other not comparative experiments
 ########################################################################################################################
@@ -272,7 +306,6 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 ##levels_by_seed=(${level1_seeds[0]} ${level2_seeds[0]} ${level3_seeds[0]} ${level4_seeds[0]})
 #
-##qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
 ##qsub -N "vgg19_pruning_summary_level_${rf_levels[$idxA]}" run.sh "vgg19" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 ##qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "cifar10" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 #
@@ -310,26 +343,28 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #######################################################################################################################
 
 
-directory=/nobackup/sclaam/checkpoints
-rf_levels=(2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 
+#directory=/nobackup/sclaam/checkpoints
+#rf_levels=(2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+#
+#
+#
+#echo "solution ${levels_by_seed[$idxA]}"
+#
+#
+#
+#qsub -N "resnet50_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+##qsub -N "vgg19_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#
+#
+#
+#
+#done
 
-
-
-
-echo "solution ${levels_by_seed[$idxA]}"
-
-
-
-qsub -N "resnet50_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-#qsub -N "vgg19_tiny_imagenet_gradient_flow_${rf_levels[$idxA]}" run.sh "vgg19" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-
-
-
-
-done
 
 ###############################################################################
 #                  This is  for changing names

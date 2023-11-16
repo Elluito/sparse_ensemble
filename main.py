@@ -1314,7 +1314,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
     if cal_val:
         performance_of_models_val = []
 
-    for individual_index in range(1):
+    for individual_index in range(10):
         ############### Here I ask for pr and for sigma ###################################
 
         current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -1397,120 +1397,128 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     difference_with_deterministic_list = []
     fitness_list = []
 
-    # if functions==1:
-    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
-    #     f1,f2 = trial_with_highest_difference.values
-    #     print("  Values: {},{}".format(f1, f2))
-    #     print("  Params: ")
-    #     for key, value in trial_with_highest_difference.params.items():
-    #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-    #         "pruning_rate"],trial_with_highest_difference.params["sigma"])
-    #     print(
-    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-    #             fitness_function_on_test_set, test_median_stochastic_performance,
-    #             fitness_function_on_test_set /trial_with_highest_difference.params[
-    #                 "pruning_rate"]))
-    # else:
-    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
-    #
-    #     f1 , f2 = trial_with_highest_difference.values
-    #     print("  Values: {},{}".format(f1, f2))
-    #     print("  Params: ")
-    #     for key, value in trial_with_highest_difference.params.items():
-    #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-    #         "pruning_rate"],trial_with_highest_difference.params["sigma"])
-    #     print(
-    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-    #             fitness_function_on_test_set, test_median_stochastic_performance,
-    #             fitness_function_on_test_set /trial_with_highest_difference.params[
-    #                 "pruning_rate"]))
+    if functions==1:
+        trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+        f1,f2 = trial_with_highest_difference.values
+        print("  Values: {},{}".format(f1, f2))
+        print("  Params: ")
+        for key, value in trial_with_highest_difference.params.items():
+            print("    {}: {}".format(key, value))
+        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
+            "pruning_rate"],trial_with_highest_difference.params["sigma"])
+        print(
+            "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+                fitness_function_on_test_set, test_median_stochastic_performance,
+                fitness_function_on_test_set /trial_with_highest_difference.params[
+                    "pruning_rate"]))
+    else:
+        trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
 
-    # for trial in trials:
-    #     f1, f2 = trial.values
-    #     pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
-    #     f1_list.append(f1)
-    #     f2_list.append(f2)
-    #     print("  Values: {},{}".format(f1, f2))
-    #
-    #     print("  Params: ")
-    #     for key, value in trial.params.items():
-    #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
-    #         "pruning_rate"], trial.params["sigma"])
-    #
-    #     difference_with_deterministic_list.append(difference)
-    #     fitness_list.append(fitness_function_on_test_set)
+        f1 , f2 = trial_with_highest_difference.values
+        print("  Values: {},{}".format(f1, f2))
+        print("  Params: ")
+        for key, value in trial_with_highest_difference.params.items():
+            print("    {}: {}".format(key, value))
+        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
+            "pruning_rate"],trial_with_highest_difference.params["sigma"])
+        print(
+            "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+                fitness_function_on_test_set, test_median_stochastic_performance,
+                fitness_function_on_test_set /trial_with_highest_difference.params[
+                    "pruning_rate"]))
 
-    # print(
-    #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-    #         fitness_function_on_test_set, test_median_stochastic_performance,
-    #         fitness_function_on_test_set / trial.params[
-    #             "pruning_rate"]))
-    #
-    # sigmas_list.append(sigma)
-    # pruning_rate_list.append(pr)
+    for trial in trials:
+        f1, f2 = trial.values
+        pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
+        f1_list.append(f1)
+        f2_list.append(f2)
+        print("  Values: {},{}".format(f1, f2))
 
-    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-    #                                                          one_batch_string))
-    #
-    # p["Sigma"] = sigmas_list
-    #
-    # p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
-    #                   "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
-    #
-    # p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-    #                                                          one_batch_string),index=False)
-    #
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+        fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
+            "pruning_rate"], trial.params["sigma"])
+
+        difference_with_deterministic_list.append(difference)
+        fitness_list.append(fitness_function_on_test_set)
+
+    print(
+        "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+            fitness_function_on_test_set, test_median_stochastic_performance,
+            fitness_function_on_test_set / trial.params[
+                "pruning_rate"]))
+
+    sigmas_list.append(sigma)
+    pruning_rate_list.append(pr)
+
     p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
                                                              one_batch_string))
-    # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
-    # plt.figure()
-    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
-    cmap = plt.cm.get_cmap('RdYlBu')
-    # cmap = mpl.cm.viridis
-    # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
-    # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
-    # diff = p["Difference with deterministic"]
-    # min_val = diff.min()
-    # q25 = diff.quantile(q=0.25)
-    # q50 = diff.quantile(q=0.50)
-    # q75 = diff.quantile(q=0.75)
-    # max_val = diff.max()
-    # bounds =[min_val,q25,0,q50,q75]
-    # bounds.sort()
 
-    # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
-    # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
-    # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-    # # fig.colorbar(
-    # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
-    # #     cax=ax,
-    # #     extend='both',
-    # #     ticks=bounds,
-    # #     spacing='proportional',
-    # #     orientation='horizontal',
-    # #     label='Discrete intervals, some other units',
-    # # )
+    p["Sigma"] = sigmas_list
+
+    p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
+                      "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
+
+    p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+                                                             one_batch_string),index=False)
+
+
+
+
+    #############################################################
+    #                   plotting pareto front
+    #############################################################
+
     #
-
-    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
-    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
-    p_more_than_0 = p[p["Difference with deterministic"] > 0]
-    sc_less_than_0 = plt.scatter(y=p_lees_than_0["Stochastic performance"], x=p_lees_than_0["Pruning rate"],
-                                 facecolors='none', edgecolors='k', s=15)
-    sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
-                     c=p_more_than_0["Difference with deterministic"], cmap=cmap,
-                     norm=matplotlib.colors.PowerNorm(gamma=2), s=15)
-
-    plt.ylabel("Stochastic performance on Val set")
-    plt.xlabel("Pruning rate")
-    plt.colorbar(sc, label="Difference with deterministic on test set")
-    # plt.legend()
-    plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".format(cfg.architecture, cfg.dataset, sampler, function_string,
-                                                         one_batch_string), bbox_inches="tight")
+    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                          one_batch_string))
+    # # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
+    # # plt.figure()
+    # # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
+    # cmap = plt.cm.get_cmap('RdYlBu')
+    # # cmap = mpl.cm.viridis
+    # # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
+    # # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
+    # # diff = p["Difference with deterministic"]
+    # # min_val = diff.min()
+    # # q25 = diff.quantile(q=0.25)
+    # # q50 = diff.quantile(q=0.50)
+    # # q75 = diff.quantile(q=0.75)
+    # # max_val = diff.max()
+    # # bounds =[min_val,q25,0,q50,q75]
+    # # bounds.sort()
+    #
+    # # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
+    # # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    # # # fig.colorbar(
+    # # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+    # # #     cax=ax,
+    # # #     extend='both',
+    # # #     ticks=bounds,
+    # # #     spacing='proportional',
+    # # #     orientation='horizontal',
+    # # #     label='Discrete intervals, some other units',
+    # # # )
+    # #
+    #
+    # # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    # p_more_than_0 = p[p["Difference with deterministic"] > 0]
+    # sc_less_than_0 = plt.scatter(y=p_lees_than_0["Stochastic performance"], x=p_lees_than_0["Pruning rate"],
+    #                              facecolors='none', edgecolors='k', s=15)
+    # sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
+    #                  c=p_more_than_0["Difference with deterministic"], cmap=cmap,
+    #                  norm=matplotlib.colors.PowerNorm(gamma=2), s=15)
+    #
+    # plt.ylabel("Stochastic performance on Val set")
+    # plt.xlabel("Pruning rate")
+    # plt.colorbar(sc, label="Difference with deterministic on test set")
+    # # plt.legend()
+    # plt.savefig("pareto_front_{}_{}_{}_{}_{}.png".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                      one_batch_string), bbox_inches="tight")
     # ax.zaxis.set_rotate_label(False)
     # ax.set_zlabel('$\sigma$', fontsize=35, rotation=0)
     # plt.show()
