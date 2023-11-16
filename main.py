@@ -7455,18 +7455,6 @@ def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int 
     # if number_experiment == 13:
 
 
-def pruning_rate_experiment_selector(cfg: omegaconf.DictConfig, number_experiment: int = 1):
-    if number_experiment == 1:
-        pass
-    if number_experiment == 2:
-        pass
-    if number_experiment == 3:
-        pass
-    if number_experiment == 4:
-        pass
-    if number_experiment == 5:
-        pass
-
 
 def test_sigma_experiment_selector():
     test_cfg = omegaconf.DictConfig({
