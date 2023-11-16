@@ -267,22 +267,23 @@ echo $level_4_seed0
 
 #
 #
-#seeds=(0)
-#rf_levels=(1 2 3 4)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_max=${#seeds[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-#
-#
-#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
-#
-#qsub -N "vgg19_smoothness_${rf_levels[$idxA]}" run.sh  "vgg19" "cifar10" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
-#
-#
-#done
-#done
-#
+
+seeds=(0)
+rf_levels=(1 2 3 4)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_max=${#seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+
+
+levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+
+qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+
+
+done
+done
+
 ########################################################################################################################
 #                 Creating features loop and other not comparative experiments
 ########################################################################################################################
