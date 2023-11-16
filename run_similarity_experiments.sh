@@ -279,6 +279,7 @@ for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to
 levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
 
 echo "${directory}/${levels_by_seed[$idxA]}"
+echo "${levels_by_seed}"
 
 #qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
 
