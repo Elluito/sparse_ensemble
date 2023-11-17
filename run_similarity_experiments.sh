@@ -179,7 +179,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #qsub -N "training_Level_0_rs" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 300
 # -l coproc_p100=1
-#qsub -l coproc_p100=1 -t 1-3 -N "training_Level_1_rs.1" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
+qsub -l coproc_p100=1 -t 1-5 -N "training_Level_1_rs.1" run.sh "resnet50" "tiny_imagenet"8 4 "normal" 300 "bs_32"
 #qsub -l coproc_k80=1 -t 4-5 -N  "training_Level_1_rs.2" run.sh "resnet50" "tiny_imagenet" 8 1 "normal" 300
 #qsub -N "training_Level_2_rs" run.sh "resnet50" "tiny_imagenet" 2 2 "normal" 300
 #qsub -N "training_Level_3_rs" run.sh "resnet50" "tiny_imagenet" 2 3 "normal" 300
@@ -217,71 +217,71 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 #                 Hessian spectra of solutions
 ########################################################################################################################
-
-model="resnet50"
-dataset="cifar10"
-init=true
-if [ $init ]; then
-    solution_string="initial_weights"
-
-else
-
-
-    solution_string="test_acc"
-fi
-
-
-directory=/nobackup/sclaam/checkpoints
-resnet50_normal_cifar10_seed_0_3_rf_level_1_initial_weights.pth
-level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_1_${solution_string}.*"))
-echo $level_1_seed0
-#level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
-#echo $level_1_seed1
 #
-#level1_seeds=($level_1_seed0 $level_1_seed1)
+#model="resnet50"
+#dataset="cifar10"
+#init=true
+#if [ $init ]; then
+#    solution_string="initial_weights"
 #
-#level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
-level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_2_${solution_string}.*"))
-echo $level_2_seed0
-#level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
-#echo $level_2_seed1
+#else
 #
-#level2_seeds=($level_2_seed0 $level_2_seed1)
 #
-level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_3_${solution_string}.*"))
-#level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+#    solution_string="test_acc"
+#fi
 #
-echo $level_3_seed0
-#level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
-#echo $level_3_seed1
 #
-#level3_seeds=($level_3_seed0 $level_3_seed1)
+#directory=/nobackup/sclaam/checkpoints
+#resnet50_normal_cifar10_seed_0_3_rf_level_1_initial_weights.pth
+#level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_1_${solution_string}.*"))
+#echo $level_1_seed0
+##level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
+##echo $level_1_seed1
+##
+##level1_seeds=($level_1_seed0 $level_1_seed1)
+##
+##level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
+#level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_2_${solution_string}.*"))
+#echo $level_2_seed0
+##level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
+##echo $level_2_seed1
+##
+##level2_seeds=($level_2_seed0 $level_2_seed1)
+##
+#level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_3_${solution_string}.*"))
+##level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+##
+#echo $level_3_seed0
+##level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
+##echo $level_3_seed1
+##
+##level3_seeds=($level_3_seed0 $level_3_seed1)
+##
 #
-
-#level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
-level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_rf_level_4_${solution_string}.*"))
-echo $level_4_seed0
-#level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
-#echo $level_4_seed1
-#level4_seeds=($level_4_seed0 $level_4_seed1)
-
-
-seeds="0"
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-
-
-#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
-
-levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
-echo "${directory}/${levels_by_seed[$idxA]}"
-#echo "${levels_by_seed}"
-
-qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
-
-done
-
+##level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
+#level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_rf_level_4_${solution_string}.*"))
+#echo $level_4_seed0
+##level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
+##echo $level_4_seed1
+##level4_seeds=($level_4_seed0 $level_4_seed1)
+#
+#
+#seeds="0"
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+##levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
+#echo "${directory}/${levels_by_seed[$idxA]}"
+##echo "${levels_by_seed}"
+#
+#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
+#
+#done
+#
 ########################################################################################################################
 #                 Creating features loop and other not comparative experiments
 ########################################################################################################################

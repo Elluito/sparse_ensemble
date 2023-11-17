@@ -349,7 +349,7 @@ def main(args):
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     seed = time.time()
-    solution_name = "{}_{}_{}_{}_rf_level_{}".format(args.model, args.type, args.dataset, seed, args.RF_level)
+    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,args.name)
     state = {
         'net': net.state_dict(),
         'acc': 0,
@@ -377,5 +377,6 @@ if __name__ == '__main__':
                         help='Location to save the models')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
+    parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     args = parser.parse_args()
     main(args)
