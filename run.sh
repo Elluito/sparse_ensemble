@@ -6,7 +6,7 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=45:00:00
+#$ -l h_rt=01:00:00
 
 
 # ASk for some GPU
@@ -68,7 +68,7 @@ unset KMP_AFFINITY
 #     Smoothness (Hessian) calculation
 #############################################################
 
-python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
+#python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4 --name $5 --solution $6
 
 #############################################################
 #     Training a model with specific RF
@@ -79,5 +79,5 @@ python smoothness_measurement.py --model $1 --dataset $2 --RF_level $3 --type $4
 #############################################################
 #     One shot pruning results
 #############################################################
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
 
