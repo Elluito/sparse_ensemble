@@ -218,74 +218,74 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #                 Hessian spectra of solutions
 ########################################################################################################################
 
-model="resnet50"
-dataset="cifar10"
-init=true
-if [ $init ]; then
-    solution_string="initial_weights"
-
-else
-
-
-    solution_string="test_acc"
-fi
-
-
-directory=/nobackup/sclaam/checkpoints
-
-level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_1_${solution_string}.*"))
-echo $level_1_seed0
-#level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
-#echo $level_1_seed1
+#model="resnet50"
+#dataset="cifar10"
+#init=true
+#if [ $init ]; then
+#    solution_string="initial_weights"
 #
-#level1_seeds=($level_1_seed0 $level_1_seed1)
+#else
 #
-#level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
-level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_2_${solution_string}.*"))
-echo $level_2_seed0
-#level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
-#echo $level_2_seed1
 #
-#level2_seeds=($level_2_seed0 $level_2_seed1)
+#    solution_string="test_acc"
+#fi
 #
-level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_3_${solution_string}.*"))
-#level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
 #
-echo $level_3_seed0
-#level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
-#echo $level_3_seed1
+#directory=/nobackup/sclaam/checkpoints
 #
-#level3_seeds=($level_3_seed0 $level_3_seed1)
+#level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_1_${solution_string}.*"))
+#echo $level_1_seed0
+##level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
+##echo $level_1_seed1
+##
+##level1_seeds=($level_1_seed0 $level_1_seed1)
+##
+##level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
+#level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_2_${solution_string}.*"))
+#echo $level_2_seed0
+##level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
+##echo $level_2_seed1
+##
+##level2_seeds=($level_2_seed0 $level_2_seed1)
+##
+#level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_3_${solution_string}.*"))
+##level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+##
+#echo $level_3_seed0
+##level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
+##echo $level_3_seed1
+##
+##level3_seeds=($level_3_seed0 $level_3_seed1)
+##
 #
-
-#level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
-level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_4_${solution_string}.*"))
-echo $level_4_seed0
-#level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
-#echo $level_4_seed1
-#level4_seeds=($level_4_seed0 $level_4_seed1)
-
-
-seeds="0"
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-
-
-#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
-
-levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
-echo "${directory}/${levels_by_seed[$idxA]}"
-#echo "${levels_by_seed}"
-
-qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
-
-
-done
-done
-
+##level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
+#level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_4_${solution_string}.*"))
+#echo $level_4_seed0
+##level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
+##echo $level_4_seed1
+##level4_seeds=($level_4_seed0 $level_4_seed1)
+#
+#
+#seeds="0"
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#
+#
+##levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
+#echo "${directory}/${levels_by_seed[$idxA]}"
+##echo "${levels_by_seed}"
+#
+#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
+#
+#
+#done
+#done
+#
 ########################################################################################################################
 #                 Creating features loop and other not comparative experiments
 ########################################################################################################################
@@ -324,10 +324,10 @@ done
 #                 Prune summary
 ########################################################################################################################
 
+directory=/nobackup/sclaam/checkpoints
 seeds=(0 1 2)
 rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 
 
