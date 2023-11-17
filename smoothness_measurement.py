@@ -154,7 +154,7 @@ def main(args):
     # training_test = test(net, use_cuda=False, testloader=trainloader_hessian, verbose=1)
     # print("Accuracy of 10k samples of training set {}".format(training_test))
     # return
-    prefix = Path("/nobackup/sclaam/smoothness/{}".format(args.model))
+    prefix = Path("/nobackup/sclaam/smoothness/{}/{}".format(args.model,args.dataset))
     prefix.mkdir(parents=True, exist_ok=True)
     # f1 = open("{}/loss_data_fin_{}.pkl".format(prefix, args.name), "wb")
     # # f1 = open("loss_data_fin_train{}.pkl".format(args.name), "wb")
