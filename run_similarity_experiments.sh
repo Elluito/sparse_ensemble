@@ -278,7 +278,7 @@ levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_see
 echo "${directory}/${levels_by_seed[$idxA]}"
 #echo "${levels_by_seed}"
 
-#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
+qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
 
 done
 
@@ -319,20 +319,20 @@ done
 ########################################################################################################################
 #                 Prune summary
 ########################################################################################################################
-
-directory=/nobackup/sclaam/checkpoints
-seeds=(0 1 2)
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-
-
-
-qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-
-
-done
-
+#
+#directory=/nobackup/sclaam/checkpoints
+#seeds=(0 1 2)
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+#
+#qsub -N "resnet50_pruning_summary_level_${rf_levels[$idxA]}" run.sh "resnet50" "tiny_imagenet" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#
+#
+#done
+#
 ###############################################################################
 #                 Similarity between seeds loop
 ###############################################################################
