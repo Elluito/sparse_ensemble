@@ -217,76 +217,76 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 #                 Hessian spectra of solutions
 ########################################################################################################################
-
-model="vgg19"
-dataset="cifar10"
-init=true
-if [ $init ]; then
-    solution_string="initial_weights"
-
-else
-
-
-    solution_string="test_acc"
-fi
-
-
-directory=/nobackup/sclaam/checkpoints
-
-level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_1_${solution_string}.*"))
-echo $level_1_seed0
-#level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
-#echo $level_1_seed1
 #
-#level1_seeds=($level_1_seed0 $level_1_seed1)
+#model="vgg19"
+#dataset="cifar10"
+#init=true
+#if [ $init ]; then
+#    solution_string="initial_weights"
 #
-#level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
-level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_2_${solution_string}.*"))
-echo $level_2_seed0
-#level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
-#echo $level_2_seed1
-#
-#level2_seeds=($level_2_seed0 $level_2_seed1)
-#
-level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_3_${solution_string}.*"))
-#level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
-#
-echo $level_3_seed0
-#level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
-#echo $level_3_seed1
-#
-#level3_seeds=($level_3_seed0 $level_3_seed1)
-#
-
-#level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
-level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_4_${solution_string}.*"))
-echo $level_4_seed0
-#level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
-#echo $level_4_seed1
-#level4_seeds=($level_4_seed0 $level_4_seed1)
-
+#else
 #
 #
-
-seeds="0"
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-
-
-#levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
-
-levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
-echo "${directory}/${levels_by_seed[$idxA]}"
-#echo "${levels_by_seed}"
-
-qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
-
-
-done
-done
+#    solution_string="test_acc"
+#fi
+#
+#
+#directory=/nobackup/sclaam/checkpoints
+#
+#level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_1_${solution_string}.*"))
+#echo $level_1_seed0
+##level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
+##echo $level_1_seed1
+##
+##level1_seeds=($level_1_seed0 $level_1_seed1)
+##
+##level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
+#level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_2_${solution_string}.*"))
+#echo $level_2_seed0
+##level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
+##echo $level_2_seed1
+##
+##level2_seeds=($level_2_seed0 $level_2_seed1)
+##
+#level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_3_${solution_string}.*"))
+##level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+##
+#echo $level_3_seed0
+##level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
+##echo $level_3_seed1
+##
+##level3_seeds=($level_3_seed0 $level_3_seed1)
+##
+#
+##level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
+#level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_rf_level_4_${solution_string}.*"))
+#echo $level_4_seed0
+##level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
+##echo $level_4_seed1
+##level4_seeds=($level_4_seed0 $level_4_seed1)
+#
+##
+##
+#
+#seeds="0"
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#
+#
+##levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
+#echo "${directory}/${levels_by_seed[$idxA]}"
+##echo "${levels_by_seed}"
+#
+#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}" "${directory}/${levels_by_seed[$idxA]}"
+#
+#
+#done
+#done
 
 ########################################################################################################################
 #                 Creating features loop and other not comparative experiments
@@ -377,38 +377,37 @@ done
 ###############################################################################
 #                  This is  for changing names
 ###############################################################################
-#
-#directory=/nobackup/sclaam/checkpoints
-## all_level_1_seeds=($(ls $directory | grep -i "vgg19_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
-## echo $all_level_1_seeds
-## echo "\n"
+
+directory=/nobackup/sclaam/checkpoints
+ all_level_1_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_1_seeds
 # all_level_2_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_2_seeds
 # all_level_3_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_3_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_3_seeds
 # all_level_4_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_4_seeds
-##
-##
 #
-#declare -a list_to_use=("${all_level_4_seeds[@]}")
 #
-#max=${#list_to_use[@]}                                  # Take the length of that array
-#echo $max
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
-#
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
+
+declare -a list_to_use=("${all_level_1_seeds[@]}")
+
+max=${#list_to_use[@]}                                  # Take the length of that array
+echo $max
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+done
+done
 
 #
 #print_seed_rename () {
