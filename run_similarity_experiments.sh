@@ -325,7 +325,7 @@ model="resnet50"
 dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 seeds=(0 1 2)
-rf_levels=(1 2 3 4)
+rf_levels=(1 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 
