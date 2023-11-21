@@ -331,7 +331,7 @@ for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 t
 
 
 
-qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}_32_bs" "normal" "${directory}"
+qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}" "_32_bs"
 
 
 done
