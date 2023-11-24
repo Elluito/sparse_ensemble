@@ -294,36 +294,50 @@ def test():
 # test()
 if __name__ == '__main__':
 
-    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     from main import get_features_only_until_block_layer
     from torchvision.models import resnet18, resnet50
+    import matplotlib.pyplot as plt
 
     print("Receptive field normal resnet18")
-    # net = ResNet18_rf(num_classes=10, rf_level=4)
 
-    net = resnet18(pretrained=False)
+    # net = resnet18(pretrained=False)
 
-    net.fc = torch.nn.Linear(512, 10)
+    # net.fc = torch.nn.Linear(512, 10)
 
     # net.to(device)
 
-    y = net(torch.randn(3, 3, 32, 32))
-    print(y)
-    blocks = [0, 1, 2, 3, 4]
-    receptive_fields = []
+    # y = net(torch.randn(3, 3, 32, 32))
+    # print(y)
+    blocks = [4]
+    receptive_fields = [1, 2, 3, 4]
 
-    for i in blocks:
+    fig, axs = plt.subplots(2, 2)
+    axs = axs.flatten()
+    for rf in receptive_fields:
+            samples = []
+            for j in range(10):
+                net = ResNet18_rf(num_classes=10, rf_level=rf)
+                get_features_only_until_block_layer(net, block=4, net_type=1)
 
-        get_features_only_until_block_layer(net, block=i, net_type=1)
+                in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
 
-        rf = receptivefield(net, (1, 3, 500, 500))
+                samples.append(torch.abs(in_grad))
 
-        # pdb.set_trace()
-        print("Receptive field for block {}".format(i))
+            stacked_samples = torch.stack(samples, dim=0)
+            mean = stacked_samples.mean(dim=0)
 
-        print(rf)
+            # plt.vlines(x=input_pos[0] - 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
+            # plt.vlines(x=input_pos[0] + 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
+            # plt.hlines(y=input_pos[1] - 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
+            # plt.hlines(y=input_pos[1] + 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
+            axs[rf-1].matshow(mean, cmap="magma")
+            axs[rf-1].set_title("RF {}".format(rf))
+    plt.tight_layout()
+    plt.show()
 
-        receptive_fields.append(tuple(rf.rfsize))
+            # pdb.set_trace()
 
-    y = net(torch.randn(3, 3, 32, 32))
-    # print(y.size())
+            # receptive_fields.append(tuple(rf.rfsize))
+
+        # print(y.size())

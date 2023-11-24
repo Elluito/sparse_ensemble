@@ -95,7 +95,8 @@ def test():
     # y = net(x)
     # print(y.size())
 
-    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+    import matplotlib.pyplot as plt
     from main import get_features_only_until_block_layer_VGG
     from feature_maps_utils import get_activations_shape
     from torchvision.models import resnet18, resnet50
@@ -112,31 +113,41 @@ def test():
     # shapes = get_activations_shape(net, x)
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
-    blocks = [0, 1, 2, 3, 4]
+    blocks = [1, 2, 3, 4]
+    # blocks = [4]
     receptive_fields = []
 
     net = VGG_RF('VGG19_rf', rf_level=4)
     y = net(torch.randn(3, 3, 32, 32))
     print(y)
+    fig, axs = plt.subplots(2, 2)
+    axs = axs.flatten()
+    for i in blocks:
+        samples = []
+        for j in range(10):
+            net = VGG_RF('VGG19_rf', rf_level=i)
+            # x = torch.randn(3, 3, 32, 32)
 
-    # for i in blocks:
-    #     net = VGG_RF('VGG19_rf', rf_level=i)
-    #     # x = torch.randn(3, 3, 32, 32)
-    #
-    #     y = net(torch.randn(3, 3, 32, 32))
-    #     print(y)
-    #     get_features_only_until_block_layer_VGG(net, block=i, net_type=1)
-    #
-    #     rf = receptivefield(net, (1, 3, 1000, 1000))
-    #
-    #     # pdb.set_trace()
-    #     print("Receptive field for level {}".format(i))
-    #
-    #     print(rf)
-    #
-    #     receptive_fields.append(tuple(rf.rfsize))
-    #
-    y = net(torch.randn(3, 3, 32, 32))
+            get_features_only_until_block_layer_VGG(net, block=4, net_type=1)
+
+            in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
+
+            samples.append(torch.abs(in_grad))
+        stacked_samples = torch.stack(samples, dim=0)
+        mean = stacked_samples.mean(dim=0)
+        axs[i-1].matshow(mean, cmap="magma")
+        axs[i-1].set_title("RF {}".format(i))
+        # axs[i-1].colorbar()
+        # plt.vlines(x=input_pos[0] - 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
+        # plt.vlines(x=input_pos[0] + 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
+        # plt.hlines(y=input_pos[1] - 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
+        # plt.hlines(y=input_pos[1] + 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
+        # rf = receptivefield(net, (1, 3, 1000, 1000))
+
+        # pdb.set_trace()
+
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':
