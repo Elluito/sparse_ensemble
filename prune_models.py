@@ -422,16 +422,10 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
 
 
 def pruning_fine_tuning_experiment(args):
-
-
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
         exclude_layers = ["conv1", "linear"]
-
-
-
 
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
@@ -483,17 +477,17 @@ def pruning_fine_tuning_experiment(args):
 
     dense_accuracy_list = []
     fine_tuned_accuracy = []
-
-    if not os.path.isdir(args.folder + "/pruned"):
-        os.mkdir(args.folder + "/pruned")
-    new_folder = "{}/pruned".format(args.folder)
+    folder_name = "{}/pruned/{}".format(args.folder, args.pruning_rate)
+    if not os.path.isdir(folder_name):
+        os.mkdir(folder_name)
+    # new_folder = "{}/pruned/{}".format(args.folder, args.pruning_rate)
 
     #
     # for i, name in enumerate(
     #         glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
     #                                                                      f"{args.RF_level}{args.name}"))):
 
-    state_dict_raw = torch.load(args.solution)
+    state_dict_raw = torch.load("{}/{}".format(args.folder, args.solution))
     dense_accuracy_list.append(state_dict_raw["acc"])
     net.load_state_dict(state_dict_raw["net"])
     prune_function(net, cfg)
@@ -506,7 +500,8 @@ def pruning_fine_tuning_experiment(args):
     # Strings in between _
 
     fine_tune_pruned_model_with_mask(net, dataLoader=train, testLoader=testloader, epochs=20,
-                                     exclude_layers=cfg.exclude_layers, cfg=cfg, save_folder=new_folder, name=base_name)
+                                     exclude_layers=cfg.exclude_layers, cfg=cfg, save_folder=folder_name,
+                                     name=base_name)
 
     # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
     #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
