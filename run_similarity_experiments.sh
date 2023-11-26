@@ -365,6 +365,8 @@ directory=/nobackup/sclaam/checkpoints
 
 level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
 
+echo $level_1_seeds
+
 level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
 
 level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
