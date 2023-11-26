@@ -494,6 +494,7 @@ def pruning_fine_tuning_experiment(args):
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 
     file_name = args.solution
+    print(file_name)
     index_until_test = file_name.index("test_acc")
     base_name = file_name[:index_until_test]
 
