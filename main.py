@@ -2386,7 +2386,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
 
         trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
 
-        cifar10_train, cifar10_val = random_split(trainset, [95000, 5000])
+        cifar10_train, cifar10_val = random_split(trainset, [len(trainset) - 5000, 5000])
 
         trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
                                                   num_workers=cfg.num_workers)
