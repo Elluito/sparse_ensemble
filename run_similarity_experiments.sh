@@ -379,7 +379,7 @@ level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
 
 
-declare -a list_to_use=("${level_1_seeds[@]}")
+declare -a list_to_use=("${level_2_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
