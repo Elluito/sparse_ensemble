@@ -379,11 +379,12 @@ level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
 
 
-declare -a list_to_use=("${level_2_seeds[@]}")
+declare -a list_to_use=("${level_1_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
 #directory=/nobackup/sclaam/checkpoints
+
 #seeds=(0 1 2)
 #rf_levels=(1 4)
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
