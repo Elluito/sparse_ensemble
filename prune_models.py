@@ -1,9 +1,8 @@
-import os.path
+import os
 
 import torch
 import re
 
-os
 import argparse
 import glob
 import torchvision.transforms as transforms
@@ -18,6 +17,7 @@ from similarity_comparison_architecture import features_similarity_comparison_ex
 import numpy as np
 from torch.nn.utils import parameters_to_vector
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
 rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
 name_rf_level0_s1 = "_seed_1_rf_level_0"
@@ -230,6 +230,7 @@ def similarity_comparisons():
             #
             # np.savetxt(filename, similarity_for_networks, delimiter=",")
 
+
 def gradient_flow_calculation(args):
     from flowandprune.imp_estimator import cal_grad
     if args.model == "vgg19":
@@ -290,12 +291,12 @@ def gradient_flow_calculation(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}_initial_weights.pth".format(args.folder, args.model,args.dataset, args.RF_level))):
-
+            glob.glob("{}/{}_normal_{}_*_level_{}_initial_weights.pth".format(args.folder, args.model, args.dataset,
+                                                                              args.RF_level))):
         state_dict_raw = torch.load(name)
         net.load_state_dict(state_dict_raw["net"])
         net.cuda()
-        gradient_flow = cal_grad(net,trainloader=train)
+        gradient_flow = cal_grad(net, trainloader=train)
         grad_vect = parameters_to_vector(gradient_flow)
         # hg_vect = parameters_to_vector(hg)
         norm_grad = torch.norm(grad_vect)
@@ -304,9 +305,209 @@ def gradient_flow_calculation(args):
         print(file_name)
         files_names.append(file_name)
     df = pd.DataFrame({"Name": files_names,
-                       "Gradient Flow at init": gradient_flow_at_init_list ,
+                       "Gradient Flow at init": gradient_flow_at_init_list,
                        })
-    df.to_csv("GF_init_{}_{}_{}_summary.csv".format(args.model,args.RF_level,args.dataset), index=False)
+    df.to_csv("GF_init_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset), index=False)
+
+
+def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+                                     testLoader: torch.utils.data.DataLoader,
+                                     epochs=1,
+                                     initial_flops=0, exclude_layers=[],
+                                     fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                     cfg=None, save_folder="", name=""):
+    from main import get_mask
+    from sparse_ensemble_utils import disable_bn, disable_all_except, disable_exclude_layers, mask_gradient
+    from train_CIFAR10 import progress_bar
+
+    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+    grad_clip = 0
+    # if cfg.gradient_cliping:
+    #     grad_clip = 0.1
+    # names, weights = zip(*get_layer_dict(pruned_model))
+
+    mask_dict = get_mask(model=pruned_model)
+    for n in exclude_layers:
+        if n in list(mask_dict.keys()):
+            mask_dict.pop(n)
+
+    total_sparse_FLOPS = initial_flops
+    # first_time = 1
+
+    data, y = next(iter(dataLoader))
+    # forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+
+    file_path = None
+
+    pruned_model.cuda()
+    pruned_model.train()
+    # disable_bn(pruned_model)
+    # if not fine_tune_exclude_layers:
+    #     disable_exclude_layers(pruned_model, exclude_layers)
+    # if not fine_tune_non_zero_weights:
+    #     disable_all_except(pruned_model, exclude_layers)
+    #
+    criterion = nn.CrossEntropyLoss()
+
+    pruned_model.train()
+    train_loss = 0
+    correct = 0
+    total = 0
+    best_acc = 0
+    for epoch in range(epochs):
+        #################################
+        # Train
+        #################################
+        for batch_idx, (inputs, targets) in enumerate(dataLoader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            optimizer.zero_grad()
+            outputs = pruned_model(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+
+            # Mask the gradient
+            mask_gradient(pruned_model, mask_dict=mask_dict)
+            # if grad_clip:
+            #     nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+
+            optimizer.step()
+            lr_scheduler.step()
+
+            train_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+            print(100. * correct / total, correct, total)
+            progress_bar(batch_idx, len(dataLoader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                         % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+
+        #################################
+        #    TEST
+        #################################
+
+        test_loss = 0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for batch_idx, (inputs, targets) in enumerate(testLoader):
+                inputs, targets = inputs.to(device), targets.to(device)
+                outputs = pruned_model(inputs)
+                loss = criterion(outputs, targets)
+                test_loss += loss.item()
+                _, predicted = outputs.max(1)
+                total += targets.size(0)
+                correct += predicted.eq(targets).sum().item()
+                progress_bar(batch_idx, len(testLoader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                             % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+        # Save checkpoint.
+        acc = 100. * correct / total
+        if acc > best_acc:
+            print('Saving..')
+            state = {
+                'net': pruned_model.state_dict(),
+                'acc': acc,
+                'epoch': epoch,
+            }
+            if not os.path.isdir(save_folder):
+                os.mkdir(save_folder)
+            if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+                os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+            torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+            best_acc = acc
+
+    return total_sparse_FLOPS
+
+
+def pruning_fine_tuning_experiment(args):
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
+
+         })
+    train, val, testloader = get_datasets(cfg)
+
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+
+    dense_accuracy_list = []
+    fine_tuned_accuracy = []
+
+    if not os.path.isdir(args.folder + "/pruned"):
+        os.mkdir(args.folder + "/pruned")
+    new_folder = "{}/pruned".format(args.folder)
+
+    #
+    # for i, name in enumerate(
+    #         glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+    #                                                                      f"{args.RF_level}{args.name}"))):
+
+    state_dict_raw = torch.load(args.solution)
+    dense_accuracy_list.append(state_dict_raw["acc"])
+    net.load_state_dict(state_dict_raw["net"])
+    prune_function(net, cfg)
+    remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+
+    file_name = os.path.basename(args.solution)
+    index_until_test = file_name.index("test_acc")
+    base_name = file_name[:index_until_test]
+
+    # Strings in between _
+
+    fine_tune_pruned_model_with_mask(net, dataLoader=train, testLoader=testloader, epochs=20,
+                                     exclude_layers=cfg.exclude_layers, cfg=cfg, save_folder=new_folder, name=base_name)
+
+    # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+    #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    #
+    # strings_in_between = re.findall("(?<=\_)(.*?)(?=\_)", file_name)
+
+
 def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
@@ -366,7 +567,8 @@ def main(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model,args.dataset, f"{args.RF_level}{args.name}"))):
+            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                         f"{args.RF_level}{args.name}"))):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
@@ -379,8 +581,9 @@ def main(args):
         pruning_rates_per_layer = list(map(zero_number, weights))
         seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-        df2.to_csv("{}_level_{}_seed_{}_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file,args.dataset),
-                   index=False)
+        df2.to_csv(
+            "{}_level_{}_seed_{}_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file, args.dataset),
+            index=False)
         file_name = os.path.basename(name)
         print(file_name)
         files_names.append(file_name)
@@ -389,7 +592,7 @@ def main(args):
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_{}_{}_{}_summary.csv".format(args.model,args.RF_level,args.dataset), index=False)
+    df.to_csv("RF_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset), index=False)
 
 
 if __name__ == '__main__':
@@ -403,8 +606,11 @@ if __name__ == '__main__':
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
     parser.add_argument('--name', default="", type=str, help='Name of the file')
+    parser.add_argument('--solution', default="", type=str, help='Solution to use')
+    parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
-    main(args)
+    # main(args)
+    pruning_fine_tuning_experiment(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()

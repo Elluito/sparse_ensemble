@@ -802,6 +802,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         disable_all_except(pruned_model, exclude_layers)
 
     criterion = nn.CrossEntropyLoss()
+    best_acc
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
@@ -857,6 +858,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             # state_dict = pruned_model.state_dict()
             # temp_name = weights_path / "epoch_{}.pth".format(epoch)
             # torch.save(state_dict,temp_name)
+
         if FLOP_limit != 0:
             if total_sparse_FLOPS > FLOP_limit:
                 break
@@ -870,6 +872,13 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         torch.save(state_dict, temp_name)
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+
+    if not os.path.isdir(save_folder):
+        os.mkdir(save_folder)
+    if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+        os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+    best_acc = acc
 
     if use_wandb:
         if gradient_flow_file_prefix != "":

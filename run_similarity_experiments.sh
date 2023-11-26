@@ -320,13 +320,20 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 #                 Prune summary
 ########################################################################################################################
-#
-model="resnet50"
-dataset="tiny_imagenet"
+
+
+
+
+
+
+
+
 directory=/nobackup/sclaam/checkpoints
-seeds=(0 1 2)
+seeds=(0 1 2 3 4)
 rf_levels=(1 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
+number_of_elements_by_seed=${#[@]}
+
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 
 
@@ -335,6 +342,63 @@ qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "
 
 
 done
+
+
+
+
+
+########################################################################################################################
+#                 Prune and fine tune summary
+########################################################################################################################
+#
+
+
+model="resnet50"
+dataset="cifar10"
+init=false
+if [ $init ]; then
+    solution_string="initial_weights"
+
+else
+
+
+    solution_string="test_acc"
+fi
+
+
+directory=/nobackup/sclaam/checkpoints
+
+level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
+
+level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
+
+level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
+
+level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
+
+
+
+declare -a list_to_use=("${level_1_seeds[@]}")
+
+#model="resnet50"
+#dataset="tiny_imagenet"
+#directory=/nobackup/sclaam/checkpoints
+#seeds=(0 1 2)
+#rf_levels=(1 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
+
+
+#qsub -N "${model}_pruning_fine_tuning_summary_level_1_${idxB}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+
+
+
+done
+#done
+
 #
 ###############################################################################
 #                 Similarity between seeds loop
