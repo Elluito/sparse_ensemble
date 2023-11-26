@@ -326,23 +326,23 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-
-
-directory=/nobackup/sclaam/checkpoints
-seeds=(0 1 2 3 4)
-rf_levels=(1 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-number_of_elements_by_seed=${#[@]}
-
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-
-
-
-qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}" "_32_bs"
-
-
-done
-
+#
+#
+#directory=/nobackup/sclaam/checkpoints
+#seeds=(0 1 2 3 4)
+#rf_levels=(1 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#number_of_elements_by_seed=${#[@]}
+#
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+#
+#qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}" "_32_bs"
+#
+#
+#done
+#
 
 
 
@@ -355,7 +355,7 @@ done
 
 model="resnet50"
 dataset="cifar10"
-init=false
+init=0
 if [ $init ]; then
     solution_string="initial_weights"
 
