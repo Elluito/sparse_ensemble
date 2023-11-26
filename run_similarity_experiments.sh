@@ -379,7 +379,7 @@ level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
 
 
-declare -a list_to_use=("${level_1_seeds[@]}")
+declare -a list_to_use=("${level_2_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
@@ -393,7 +393,7 @@ seeds_per_level=${#list_to_use[@]}                            # Take the length 
 for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 
 
-qsub -N "${model}_pruning_fine_tuning_summary_level_1_${idxB}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+qsub -N "${model}_pruning_fine_tuning_summary_level_1_${idxB}" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
 
