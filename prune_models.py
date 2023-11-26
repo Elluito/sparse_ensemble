@@ -422,10 +422,16 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
 
 
 def pruning_fine_tuning_experiment(args):
+
+
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
         exclude_layers = ["conv1", "linear"]
+
+
+
 
     cfg = omegaconf.DictConfig(
         {"architecture": "resnet50",
@@ -601,7 +607,7 @@ if __name__ == '__main__':
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
+    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,tiny_imagenet]')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
