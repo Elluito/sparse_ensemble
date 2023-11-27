@@ -324,9 +324,9 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                                 momentum=0.9, weight_decay=5e-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
-    grad_clip = 0
+    # grad_clip = 0
     # if cfg.gradient_cliping:
-    #     grad_clip = 0.1
+    grad_clip = 0.1
     # names, weights = zip(*get_layer_dict(pruned_model))
 
     mask_dict = get_mask(model=pruned_model)
@@ -370,8 +370,8 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
 
             # Mask the gradient
             mask_gradient(pruned_model, mask_dict=mask_dict)
-            # if grad_clip:
-            #     nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+            if grad_clip:
+                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
 
             optimizer.step()
             lr_scheduler.step()
@@ -388,6 +388,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
         #    TEST
         #################################
 
+        print("\nTest Set\n")
         test_loss = 0
         correct = 0
         total = 0
@@ -503,7 +504,7 @@ def pruning_fine_tuning_experiment(args):
 
     # Strings in between _
 
-    fine_tune_pruned_model_with_mask(net, dataLoader=train, testLoader=testloader, epochs=20,
+    fine_tune_pruned_model_with_mask(net, dataLoader=train, testLoader=testloader, epochs=2,
                                      exclude_layers=cfg.exclude_layers, cfg=cfg, save_folder=folder_name,
                                      name=base_name)
 
