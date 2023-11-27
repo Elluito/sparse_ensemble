@@ -354,7 +354,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 model="vgg19"
-dataset="tiny_imagenet"
+dataset="cifar10"
 init=0
 #solution_string="initial_weights"
 solution_string="test_acc"
@@ -378,7 +378,7 @@ level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solut
 
 
 
-declare -a list_to_use=("${level_4_seeds[@]}")
+declare -a list_to_use=("${level_1_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
@@ -392,7 +392,7 @@ seeds_per_level=${#list_to_use[@]}                            # Take the length 
 for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 
 
-qsub -N "${model}_pruning_fine_tuning_summary_level_4_${idxB}" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${idxB}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 done
