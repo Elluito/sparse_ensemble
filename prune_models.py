@@ -490,6 +490,7 @@ def pruning_fine_tuning_experiment(args):
 
     state_dict_raw = torch.load("{}/{}".format(args.folder, args.solution))
     dense_accuracy_list.append(state_dict_raw["acc"])
+    print(state_dict_raw["acc"])
     net.load_state_dict(state_dict_raw["net"])
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
