@@ -514,6 +514,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -618,9 +619,9 @@ if __name__ == '__main__':
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
-    if args.experiment==1:
+    if args.experiment == 1:
         main(args)
-    if args.experiment==2:
+    if args.experiment == 2:
         pruning_fine_tuning_experiment(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
