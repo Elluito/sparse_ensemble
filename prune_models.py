@@ -495,8 +495,11 @@ def pruning_fine_tuning_experiment(args):
 
     file_name = args.solution
     print(file_name)
-    index_until_test = file_name.index("test_acc")
-    base_name = file_name[:index_until_test]
+    if "test_acc" in file_name:
+        index_until_test = file_name.index("test_acc")
+        base_name = file_name[:index_until_test]
+    else:
+        base_name = file_name
 
     # Strings in between _
 
