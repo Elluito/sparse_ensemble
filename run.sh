@@ -84,5 +84,5 @@ unset KMP_AFFINITY
 #############################################################
 #     Fine tuning pruning results
 #############################################################
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --name $7 --solution $8 --pruning_rate $9 --experiment "${10}"
-echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --name $7 --solution $8 --pruning_rate $9 --experiment "${10}"
+#echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
