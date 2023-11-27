@@ -393,10 +393,8 @@ for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from
 
 
 qsub -N "${model}_pruning_fine_tuning_summary_level_3_${idxB}" run.sh "${model}" "${dataset}" "2" "3" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
-
-
-
 done
 #done
 
