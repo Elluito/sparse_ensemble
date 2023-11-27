@@ -16,6 +16,7 @@ import omegaconf
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
 from torch.nn.utils import parameters_to_vector
+from sparse_ensemble_utils import disable_bn, disable_all_except, disable_exclude_layers, mask_gradient, sparsity
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -317,17 +318,18 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                                      fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
                                      cfg=None, save_folder="", name=""):
     from main import get_mask
-    from sparse_ensemble_utils import disable_bn, disable_all_except, disable_exclude_layers, mask_gradient
     from train_CIFAR10 import progress_bar
 
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
+    pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
+    print("Pruned accuracy inside fine tuning:{}".format(pruned_accuracy))
     # grad_clip = 0
     # if cfg.gradient_cliping:
     grad_clip = 0.1
-    # names, weights = zip(*get_layer_dict(pruned_model))
+    names, weights = zip(*get_layer_dict(pruned_model))
 
     mask_dict = get_mask(model=pruned_model)
     for n in exclude_layers:
@@ -337,14 +339,11 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
     total_sparse_FLOPS = initial_flops
     # first_time = 1
 
-    data, y = next(iter(dataLoader))
     # forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
-
-    file_path = None
 
     pruned_model.cuda()
     pruned_model.train()
-    # disable_bn(pruned_model)
+    disable_bn(pruned_model)
     # if not fine_tune_exclude_layers:
     #     disable_exclude_layers(pruned_model, exclude_layers)
     # if not fine_tune_non_zero_weights:
@@ -357,6 +356,8 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
     correct = 0
     total = 0
     best_acc = 0
+    pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
+    print("Pruned after disable_bn :{}".format(pruned_accuracy))
     for epoch in range(epochs):
         #################################
         # Train
@@ -370,17 +371,17 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
 
             # Mask the gradient
             mask_gradient(pruned_model, mask_dict=mask_dict)
-            if grad_clip:
-                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+            # if grad_clip:
+            #     nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
 
             optimizer.step()
-            lr_scheduler.step()
+            # lr_scheduler.step()
 
             train_loss += loss.item()
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-            print(100. * correct / total, correct, total)
+            print("Accuracy: {:2.3f}%, Correct: {} , Total: {}".format(100. * correct / total, correct, total))
             progress_bar(batch_idx, len(dataLoader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
@@ -392,6 +393,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
         test_loss = 0
         correct = 0
         total = 0
+        pruned_model.eval()
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(testLoader):
                 inputs, targets = inputs.to(device), targets.to(device)
@@ -403,8 +405,13 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                 correct += predicted.eq(targets).sum().item()
                 progress_bar(batch_idx, len(testLoader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                              % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+                print('Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                      % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
         # Save checkpoint.
         acc = 100. * correct / total
+        print("Total test accuracy: {}".format(acc))
+        pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
+        print("Pruned accuracy with \"test\" function :{}".format(pruned_accuracy))
         if acc > best_acc:
             print('Saving..')
             state = {
@@ -419,7 +426,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
             torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
             best_acc = acc
 
-    return total_sparse_FLOPS
+    return best_acc
 
 
 def pruning_fine_tuning_experiment(args):
@@ -480,7 +487,7 @@ def pruning_fine_tuning_experiment(args):
     fine_tuned_accuracy = []
     folder_name = "{}/pruned/{}".format(args.folder, args.pruning_rate)
     if not os.path.isdir(folder_name):
-        os.mkdir(folder_name)
+        os.makedirs(folder_name)
     # new_folder = "{}/pruned/{}".format(args.folder, args.pruning_rate)
 
     #
@@ -494,7 +501,8 @@ def pruning_fine_tuning_experiment(args):
     net.load_state_dict(state_dict_raw["net"])
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-
+    pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    print("Pruned accuracy:{}".format(pruned_accuracy))
     file_name = args.solution
     print(file_name)
     if "test_acc" in file_name:
@@ -505,9 +513,12 @@ def pruning_fine_tuning_experiment(args):
 
     # Strings in between _
 
-    fine_tune_pruned_model_with_mask(net, dataLoader=train, testLoader=testloader, epochs=2,
-                                     exclude_layers=cfg.exclude_layers, cfg=cfg, save_folder=folder_name,
-                                     name=base_name)
+    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=10,
+                                                      exclude_layers=cfg.exclude_layers, cfg=cfg,
+                                                      save_folder=folder_name,
+                                                      name=base_name)
+    print("Final accuracy:{}".format(final_accuracy))
+    print("Sparsity: {}".format(sparsity(net)))
 
     # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
     #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
@@ -516,7 +527,6 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -620,7 +630,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
-    parser.add_argument('--name', default="", type=str, help='Name of the file',required=False)
+    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()

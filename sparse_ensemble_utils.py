@@ -297,7 +297,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
             test_loss / len(testloader), correct, total,
             100. * correct.item() / total))
-    net.cpu()
+    # net.cpu()
     if count_flops:
         return 100. * correct.item() / total, sparse_flops
     else:
