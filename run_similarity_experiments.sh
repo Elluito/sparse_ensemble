@@ -356,6 +356,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 model="vgg19"
 dataset="cifar10"
 init=0
+experiment=1
 #solution_string="initial_weights"
 solution_string="test_acc"
 directory=/nobackup/sclaam/checkpoints

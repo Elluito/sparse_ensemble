@@ -608,7 +608,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
-    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
+    parser.add_argument('--experiment', default=2, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
@@ -622,9 +622,13 @@ if __name__ == '__main__':
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
     if args.experiment == 1:
-        main(args)
+        # main(args)
+        print("Experiment 1")
+        print(args)
     if args.experiment == 2:
-        pruning_fine_tuning_experiment(args)
+        # pruning_fine_tuning_experiment(args)
+        print("Experiment 2")
+        print(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
