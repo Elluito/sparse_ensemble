@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_tiny_imagenet_seed_0_rf_level_2_test_acc_53.43.pth,53.43,51.95
+vgg19_normal_tiny_imagenet_seed_1_rf_level_2_test_acc_53.44.pth,53.44,50.32
+vgg19_normal_tiny_imagenet_seed_4_rf_level_2_test_acc_53.26.pth,53.26,51.15
+vgg19_normal_tiny_imagenet_seed_2_rf_level_2_test_acc_52.94.pth,52.94,51.59
+vgg19_normal_tiny_imagenet_seed_3_rf_level_2_test_acc_53.17.pth,53.17,50.65
