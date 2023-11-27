@@ -84,5 +84,6 @@ unset KMP_AFFINITY
 #############################################################
 #     Fine tuning pruning results
 #############################################################
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --solution $8 --pruning_rate $9 --experiment "${10}"
+#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --solution $8 --pruning_rate $9 --experiment "${10}"
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
+python prune_models.py  --model "vgg19" --dataset "tiny_imagenet" --num_workers "4" --RF_level 4 --type "normal" --folder /nobackup/sclaam/checkpoints --solution vgg19_normal_tiny_imagenet_seed_3_rf_level_4_test_acc_39.03.pth --pruning_rate 0.9 --experiment 2
