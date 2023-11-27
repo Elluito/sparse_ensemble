@@ -354,7 +354,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 model="resnet50"
-dataset="cifar10"
+dataset="tiny_imagenet"
 init=0
 #solution_string="initial_weights"
 solution_string="test_acc"
