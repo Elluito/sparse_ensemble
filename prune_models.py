@@ -622,13 +622,13 @@ if __name__ == '__main__':
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
     if args.experiment == 1:
-        # main(args)
         print("Experiment 1")
         print(args)
+        main(args)
     if args.experiment == 2:
-        # pruning_fine_tuning_experiment(args)
         print("Experiment 2")
         print(args)
+        pruning_fine_tuning_experiment(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
