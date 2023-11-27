@@ -577,6 +577,7 @@ def main(args):
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
                                                                          f"{args.RF_level}{args.name}"))):
+        print(name)
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
@@ -617,7 +618,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
-    parser.add_argument('--name', default="", type=str, help='Name of the file')
+    parser.add_argument('--name', default="", type=str, help='Name of the file',required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
