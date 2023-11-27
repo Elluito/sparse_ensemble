@@ -363,23 +363,22 @@ solution_string="test_acc"
 
 directory=/nobackup/sclaam/checkpoints
 
-#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
-level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
-
-echo $level_1_seeds
-
-#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
-level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
-
-#level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
-level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3.pth"))
-
-#level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
-level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
+level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
+#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
 
 
+level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
+#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
 
-declare -a list_to_use=("${level_4_seeds[@]}")
+level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
+#level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3.pth"))
+
+level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
+#level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
+
+
+
+declare -a list_to_use=("${level_1_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
@@ -393,7 +392,7 @@ seeds_per_level=${#list_to_use[@]}                            # Take the length 
 for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 
 
-qsub -N "${model}_pruning_fine_tuning_summary_level_4_${idxB}" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+qsub -N "${model}_pruning_fine_tuning_summary_level_1_${idxB}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
 
