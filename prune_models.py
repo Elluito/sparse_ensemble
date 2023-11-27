@@ -528,7 +528,7 @@ def main(args):
          "dataset": args.dataset,
          "batch_size": 128,
          "num_workers": args.num_workers,
-         "amount": 0.9,
+         "amount": args.pruning_rate,
          "noise": "gaussian",
          "sigma": 0.005,
          "pruner": "global",
@@ -587,7 +587,8 @@ def main(args):
         seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
         df2.to_csv(
-            "{}_level_{}_seed_{}_{}_pruning_rates.csv".format(args.model, args.RF_level, seed_from_file, args.dataset),
+            "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+                                                                           args.dataset, args.pruning_rate),
             index=False)
         file_name = os.path.basename(name)
         print(file_name)
@@ -597,11 +598,14 @@ def main(args):
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset), index=False)
+    df.to_csv("RF_{}_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+              index=False)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
+
+    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
@@ -614,8 +618,10 @@ if __name__ == '__main__':
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     args = parser.parse_args()
-    # main(args)
-    pruning_fine_tuning_experiment(args)
+    if args.experiment==1:
+        main(args)
+    if args.experiment==2:
+        pruning_fine_tuning_experiment(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
