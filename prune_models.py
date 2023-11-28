@@ -590,7 +590,7 @@ def main(args):
     print(things)
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+            glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
                                                                          args.RF_level))):
         print(name)
         state_dict_raw = torch.load(name)
