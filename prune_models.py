@@ -585,7 +585,7 @@ def main(args):
     files_names = []
     things = list(glob.glob(
         "{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
-    print("Glob text:{}".format("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+    print("Glob text:{}".format("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print(things)
 
     for i, name in enumerate(
