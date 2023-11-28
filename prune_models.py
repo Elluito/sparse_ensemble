@@ -586,7 +586,7 @@ def main(args):
 
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
-                                                                         f"{args.RF_level}{args.name}"))):
+                                                                         f"{args.RF_level}"))):
         print(name)
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
@@ -609,6 +609,120 @@ def main(args):
         file_name = os.path.basename(name)
         print(file_name)
         files_names.append(file_name)
+
+    df = pd.DataFrame({"Name": files_names,
+                       "Dense Accuracy": dense_accuracy_list,
+                       "Pruned Accuracy": pruned_accuracy_list,
+                       })
+    df.to_csv("RF_{}_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+              index=False)
+
+
+def fine_tune_summary(args):
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
+
+         })
+    train, val, testloader = get_datasets(cfg)
+
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+
+    dense_accuracy_list = []
+    pruned_accuracy_list = []
+    files_names = []
+
+    for i, name in enumerate(
+            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                         f"{args.RF_level}{args.name}"))):
+        print(name)
+        state_dict_raw = torch.load(name)
+
+        dense_accuracy_list.append(state_dict_raw["acc"])
+
+        print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+
+        net.load_state_dict(state_dict_raw["net"])
+
+        prune_function(net, cfg)
+
+        remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+
+        pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+
+        print("Pruned accuracy:{}".format(pruned_accuracy))
+
+        pruned_accuracy_list.append(pruned_accuracy)
+
+        weight_names, weights = zip(*get_layer_dict(net))
+
+        zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+
+        pruning_rates_per_layer = list(map(zero_number, weights))
+
+        seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+
+        df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+
+        df2.to_csv(
+            "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+                                                                           args.dataset, args.pruning_rate),
+            index=False)
+
+        # print(file_name)
+        file_name = os.path.basename(name)
+        if "test_acc" in file_name:
+            index_until_test = file_name.index("test_acc")
+            base_name = file_name[:index_until_test]
+        else:
+
+            base_name = file_name
+        for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
+            files_names.append(file_name)
 
     df = pd.DataFrame({"Name": files_names,
                        "Dense Accuracy": dense_accuracy_list,
@@ -642,6 +756,8 @@ if __name__ == '__main__':
         print("Experiment 2")
         print(args)
         pruning_fine_tuning_experiment(args)
+    if args.experiment == 3:
+        fine_tune_summary(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
