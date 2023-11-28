@@ -583,10 +583,14 @@ def main(args):
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
+    things = list(glob.glob(
+        "{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+    print("Glob text:{}".format("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+    print(things)
 
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
-                                                                         f"{args.RF_level}"))):
+                                                                         args.RF_level))):
         print(name)
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
