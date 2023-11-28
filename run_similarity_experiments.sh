@@ -488,6 +488,8 @@ number_pruning_rates=${#pruning_rates[@]}                            # Take the 
 
 model="resnet50"
 dataset="cifar10"
+pruning_rates=("0.5" "0.6" "0.7" "0.8")
+number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
 init=0
 #solution_string="initial_weights"
 solution_string="test_acc"
@@ -515,7 +517,7 @@ seeds_per_level=${#list_to_use[@]}                            # Take the length 
 #for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
 for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 #for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
-qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "${pruning_rates[$idxA]}" "1"
+qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "${pruning_rates[$idxA]}" "1"
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 done
 #done
