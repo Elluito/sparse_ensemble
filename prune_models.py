@@ -624,6 +624,7 @@ def main(args):
 
 
 def fine_tune_summary(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
