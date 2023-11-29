@@ -687,7 +687,7 @@ def fine_tune_summary(args):
             glob.glob("{}/{}_normal_{}_*_level_{}*".format(args.folder, args.model, args.dataset,
                                                                          args.RF_level))):
         print(name)
-        if "initial_weights" or "32_bs" in name:
+        if "initial_weights" in name or "32_bs" in name:
             continue
         state_dict_raw = torch.load(name)
 
