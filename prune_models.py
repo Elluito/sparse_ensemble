@@ -591,7 +591,7 @@ def main(args):
 
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
-                                                                         args.RF_level))):
+                                                              args.RF_level))):
         print(name)
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
@@ -683,9 +683,11 @@ def fine_tune_summary(args):
     files_names = []
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
-                                                                         f"{args.RF_level}{args.name}"))):
+            glob.glob("{}/{}_normal_{}_*_level_{}*".format(args.folder, args.model, args.dataset,
+                                                                         args.RF_level))):
         print(name)
+        if "initial_weights" in name:
+            continue
         state_dict_raw = torch.load(name)
 
         dense_accuracy_list.append(state_dict_raw["acc"])
@@ -783,10 +785,11 @@ def fine_tune_summary(args):
     #         files_names.append(pruned_name)
     df = pd.DataFrame({"Name": files_names,
                        "Dense Accuracy": dense_accuracy_list,
-                       "Pruned Accuracy": pruned_accuracy_list,
+                       "Pruned Fine Tuned Accuracy": fine_tuned_accuracy,
                        })
-    df.to_csv("RF_{}_{}_{}_{}_fine_tuned_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
-              index=False)
+    df.to_csv(
+        "RF_{}_{}_{}_{}_fine_tuned_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+        index=False)
 
 
 if __name__ == '__main__':
