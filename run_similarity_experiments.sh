@@ -487,7 +487,7 @@ number_pruning_rates=${#pruning_rates[@]}                            # Take the 
 
 
 model="resnet50"
-dataset="cifar10"
+dataset="tiny_imagenet"
 pruning_rates=("0.5" "0.6" "0.7" "0.8")
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
 init=0
@@ -495,14 +495,14 @@ init=0
 solution_string="test_acc"
 directory=/nobackup/sclaam/checkpoints
 #level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
-level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
+#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
 
-#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
-level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
-#level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
-level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3.pth"))
-#level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
-level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
+level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
+#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
+level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
+#level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3.pth"))
+level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
+#level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
 declare -a list_to_use=("${level_1_seeds[@]}")
 
