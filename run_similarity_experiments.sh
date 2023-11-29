@@ -486,7 +486,7 @@ number_pruning_rates=${#pruning_rates[@]}                            # Take the 
 ########################################################################################################################
 
 
-model="resnet50"
+model="vgg19"
 dataset="tiny_imagenet"
 pruning_rates=("0.5" "0.6" "0.7" "0.8")
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
@@ -494,7 +494,7 @@ init=0
 #solution_string="initial_weights"
 solution_string="test_acc"
 directory=/nobackup/sclaam/checkpoints
-#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
+level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
 #level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
 
 level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
