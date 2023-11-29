@@ -679,6 +679,7 @@ def fine_tune_summary(args):
 
     dense_accuracy_list = []
     pruned_accuracy_list = []
+    fine_tuned_accuracy = []
     files_names = []
 
     for i, name in enumerate(
@@ -723,17 +724,68 @@ def fine_tune_summary(args):
         if "test_acc" in file_name:
             index_until_test = file_name.index("test_acc")
             base_name = file_name[:index_until_test]
+
         else:
 
             base_name = file_name
-        for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
-            files_names.append(file_name)
 
+        for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
+            files_names.append(pruned_name)
+            state_dict_raw = torch.load(pruned_name)
+            fine_tuned_accuracy.append(state_dict_raw["acc"])
+
+    # for i, name in enumerate(
+    #         glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
+    #                                                                      args.RF_level))):
+    #     print(name)
+    #     state_dict_raw = torch.load(name)
+    #
+    #     dense_accuracy_list.append(state_dict_raw["acc"])
+    #
+    #     print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+    #
+    #     net.load_state_dict(state_dict_raw["net"])
+    #
+    #     prune_function(net, cfg)
+    #
+    #     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+    #
+    #     pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    #
+    #     print("Pruned accuracy:{}".format(pruned_accuracy))
+    #
+    #     pruned_accuracy_list.append(pruned_accuracy)
+    #
+    #     weight_names, weights = zip(*get_layer_dict(net))
+    #
+    #     zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+    #
+    #     pruning_rates_per_layer = list(map(zero_number, weights))
+    #
+    #     seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+    #
+    #     df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+    #
+    #     df2.to_csv(
+    #         "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+    #                                                                        args.dataset, args.pruning_rate),
+    #         index=False)
+    #
+    #     # print(file_name)
+    #     file_name = os.path.basename(name)
+    #     if "test_acc" in file_name:
+    #         index_until_test = file_name.index("test_acc")
+    #         base_name = file_name[:index_until_test]
+    #     else:
+    #
+    #         base_name = file_name
+    #     for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
+    #         files_names.append(pruned_name)
     df = pd.DataFrame({"Name": files_names,
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_{}_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+    df.to_csv("RF_{}_{}_{}_{}_fine_tuned_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
               index=False)
 
 
