@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Fine Tuned Accuracy
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_3_rf_level_2__test_acc_44.53.pth,61.2,44.53
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_2_rf_level_2__test_acc_44.74.pth,62.21,44.74
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_4_rf_level_2__test_acc_43.5.pth,61.85,43.5
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_0_rf_level_2__test_acc_46.47.pth,61.75,46.47
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_1_rf_level_2__test_acc_43.56.pth,62.14,43.56
