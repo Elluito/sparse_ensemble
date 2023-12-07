@@ -9599,7 +9599,7 @@ def LeMain(args):
     print(args)
     # cfg.solution = ""
     # truncated_network_unrestricted_training(cfg)
-    # truncated_network_fine_tune_linear_layer_only(cfg)
+    truncated_network_fine_tune_linear_layer_only(cfg)
     # explore_models_shapes()
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     features_similarity_comparison_experiments(cfg.architecture)

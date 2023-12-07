@@ -256,6 +256,7 @@ def _project_rf(input, output, offset_x=0, offset_y=0, return_pos=False, net=Non
     out_grad[tuple(pos)] = 1
     for c in range(number_of_channels):
         out_grad2[0, c, pos2[y_dim], pos2[x_dim]] = 1
+    print(output.shape)
     np_out_grad = out_grad.detach().numpy()
     # clear gradient first
     if input.grad is not None:
