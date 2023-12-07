@@ -504,7 +504,7 @@ level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solut
 level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
 #level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
-declare -a list_to_use=("${level_1_seeds[@]}")
+#declare -a list_to_use=("${level_1_seeds[@]}")
 
 #model="resnet50"
 #dataset="tiny_imagenet"
@@ -552,13 +552,13 @@ declare -a list_to_use=("${level_1_seeds[@]}")
 ###done
 #done
 
-declare -a list_to_use=("${level_4_seeds[@]}")
+declare -a list_to_use=("${level_2_seeds[@]}")
 
 seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
 for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-qsub -N "${model}_${dataset}_finet_Tuning_pruning_level_4_" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+qsub -N "${model}_${dataset}_finet_Tuning_pruning_level_4_" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 #qsub -N "${model}_${dataset}pruning_summary_level_4_${idxB}" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
