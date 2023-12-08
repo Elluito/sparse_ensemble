@@ -6,11 +6,11 @@
 #$ -cwd -V
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=4:00:00
+#$ -l h_rt=10:00:00
 
 
 # ASk for some GPU
-#$ -l coproc_p100=1
+#$ -l coproc_k80=1
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l h_vmem=16G
@@ -74,7 +74,7 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 
-#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6 --name $7
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6 --name $7
 
 #############################################################
 #     One shot pruning results
@@ -84,7 +84,7 @@ unset KMP_AFFINITY
 #############################################################
 #     Fine tuning pruning results
 #############################################################
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --name $7 --solution $8 --pruning_rate "${9}" --experiment "${10}"
+#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --name $7 --solution $8 --pruning_rate "${9}" --experiment "${10}"
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --solution $7 --experiment $8
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"

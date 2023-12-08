@@ -210,9 +210,11 @@ class ResNetRF(nn.Module):
         if self.rf_level == 4:
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
         if self.rf_level == 5:
-            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=32, padding=15)
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
         if self.rf_level == 6:
-            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=32, padding=15)
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
         if self.fix_points is None:
             self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
                                    stride=1, padding=1, bias=False)
@@ -306,7 +308,7 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     blocks = [4]
-    receptive_fields = [5]
+    receptive_fields = [7]
 
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
@@ -315,7 +317,14 @@ def test():
         y = net(torch.randn(3, 3, 32, 32))
         print(y)
         get_features_only_until_block_layer(net, block=4, net_type=1)
-        le_rf = receptivefield(net, (1, 3, 3500, 3500))
+        size = [1, 3, 200, 200]
+        if rf == 5:
+            size = [1, 3, 1500, 1500]
+        if rf == 6:
+            size = [1, 3, 2000, 2000]
+        if rf == 7:
+            size = [1, 3, 3100, 3100]
+        le_rf = receptivefield(net, size)
         # y = net(torch.randn(3, 3, 32, 32))
         print(le_rf)
         # samples = []
