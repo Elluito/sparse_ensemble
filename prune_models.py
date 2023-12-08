@@ -513,7 +513,7 @@ def pruning_fine_tuning_experiment(args):
 
     # Strings in between _
 
-    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=100,
+    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=200,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
                                                       name=base_name)
