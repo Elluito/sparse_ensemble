@@ -486,7 +486,7 @@ number_pruning_rates=${#pruning_rates[@]}                            # Take the 
 ########################################################################################################################
 
 
-model="vgg19"
+model="resnet50"
 dataset="tiny_imagenet"
 pruning_rates=("0.5" "0.6" "0.7" "0.8")
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
