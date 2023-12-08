@@ -11,7 +11,7 @@ import typing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import dnn_mode_connectivity.curves as curves
+import sparse_ensemble.dnn_mode_connectivity.curves as curves
 
 
 class BasicBlock(nn.Module):
