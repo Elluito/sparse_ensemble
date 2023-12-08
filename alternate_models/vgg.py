@@ -58,8 +58,8 @@ class VGG_RF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
             self.config = cfg[vgg_name]
         if self.rf_level == 5:
-            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=32, padding=1)
-            self.config = [64, 64, 128, 128, 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
 
         self.features = self._make_layers(self.config)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -90,8 +90,8 @@ class VGG_RF(nn.Module):
                 layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
             else:
                 layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
-                               nn.BatchNorm2d(x),
-                               nn.ReLU(inplace=True)]
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
                 in_channels = x
 
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
