@@ -308,7 +308,7 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     blocks = [4]
-    receptive_fields = [7]
+    receptive_fields = [5, 6]
 
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
