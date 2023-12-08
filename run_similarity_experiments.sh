@@ -559,7 +559,7 @@ seeds_per_level=${#list_to_use[@]}                            # Take the length 
 for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 
-qsub -N "${model}_${dataset}_fine_Tuning_pruning_level_2_" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+qsub -N "${model}_${dataset}_fine_Tuning_pruning_level_2_${idxB}" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 
 #qsub -N "${model}_${dataset}pruning_summary_level_4_${idxB}" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
 
