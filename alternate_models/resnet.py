@@ -209,6 +209,10 @@ class ResNetRF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
         if self.rf_level == 4:
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=32, padding=15)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=32, padding=15)
         if self.fix_points is None:
             self.conv1 = nn.Conv2d(3, 64, kernel_size=3,
                                    stride=1, padding=1, bias=False)
@@ -302,37 +306,46 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     blocks = [4]
-    receptive_fields = [1, 2, 3, 4]
+    receptive_fields = [5]
 
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
     for rf in receptive_fields:
-        samples = []
-        for j in range(10):
-            net = ResNet18_rf(num_classes=10, rf_level=rf)
-            get_features_only_until_block_layer(net, block=4, net_type=1)
-
-            in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
-
-            samples.append(torch.abs(in_grad))
-
-        stacked_samples = torch.stack(samples, dim=0)
-        mean = stacked_samples.mean(dim=0)
+        net = ResNet50_rf(num_classes=10, rf_level=rf)
+        y = net(torch.randn(3, 3, 32, 32))
+        print(y)
+        get_features_only_until_block_layer(net, block=4, net_type=1)
+        le_rf = receptivefield(net, (1, 3, 3500, 3500))
+        # y = net(torch.randn(3, 3, 32, 32))
+        print(le_rf)
+        # samples = []
+        # for j in range(10):
+        #     net = ResNet50_rf(num_classes=10, rf_level=rf)
+        #     get_features_only_until_block_layer(net, block=4, net_type=1)
+        #
+        #     in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
+        #
+        #     samples.append(torch.abs(in_grad))
+        #
+        # stacked_samples = torch.stack(samples, dim=0)
+        # mean = stacked_samples.mean(dim=0)
 
         # plt.vlines(x=input_pos[0] - 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
         # plt.vlines(x=input_pos[0] + 16, ymin=input_pos[1] - 16, ymax=input_pos[1] + 16, color='r')
         # plt.hlines(y=input_pos[1] - 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
         # plt.hlines(y=input_pos[1] + 16, xmin=input_pos[0] - 16, xmax=input_pos[0] + 16, color='r')
-        axs[rf-1].matshow(mean, cmap="magma")
-        axs[rf-1].set_title("RF {}".format(rf))
-    plt.tight_layout()
-    plt.show()
+        # axs[rf-1].matshow(mean, cmap="magma")
+        # axs[rf-1].set_title("RF {}".format(rf))
+
+    # plt.tight_layout()
+    # plt.show()
 
     # pdb.set_trace()
 
     # receptive_fields.append(tuple(rf.rfsize))
 
     # print(y.size())
+
 
 # test()
 if __name__ == '__main__':

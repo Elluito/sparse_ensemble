@@ -321,9 +321,14 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
     from train_CIFAR10 import progress_bar
 
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
-                                momentum=0.9, weight_decay=5e-4)
+                                momentum=0.99, weight_decay=5e-4)
     # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-
+    # Assuming optimizer uses lr = 0.05 for all groups
+    # lr = 0.05     if epoch < 30
+    # lr = 0.005    if 30 <= epoch < 60
+    # lr = 0.0005   if 60 <= epoch < 90
+    # ...
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
     pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
     print("Pruned accuracy inside fine tuning:{}".format(pruned_accuracy))
     # grad_clip = 0
@@ -359,6 +364,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
     pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
     print("Pruned after disable_bn :{}".format(pruned_accuracy))
     for epoch in range(epochs):
+        print("Epoch: {}".format(epoch))
         #################################
         # Train
         #################################
@@ -408,7 +414,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                 print('Loss: %.3f | Acc: %.3f%% (%d/%d)'
                       % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
         # Save checkpoint.
-        acc = 100. * correct / total
+        acc: float = 100. * correct / total
         print("Total test accuracy: {}".format(acc))
         pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
         print("Pruned accuracy with \"test\" function :{}".format(pruned_accuracy))
@@ -425,6 +431,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                 os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
             torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
             best_acc = acc
+        scheduler.step()
 
     return best_acc
 
