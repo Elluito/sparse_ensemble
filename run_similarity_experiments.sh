@@ -177,7 +177,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
-qsub  -l coproc_k80=1  -t 1-5 -N "training_Level_5_rs" run.sh "resnet50" "tiny_imagenet" 2 5 "normal" 300
+#qsub  -l coproc_k80=1  -t 1-5 -N "training_Level_5_rs" run.sh "resnet50" "tiny_imagenet" 2 5 "normal" 300
 qsub  -l coproc_k80=1 -t 1-5 -N "training_Level_6_rs" run.sh "resnet50" "tiny_imagenet" 2 6 "normal" 300
 qsub -l coproc_k80=1 -t 1-5 -N "training_Level_7_rs" run.sh "resnet50" "tiny_imagenet" 2 7 "normal" 300
 # -l coproc_p100=1
