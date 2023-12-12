@@ -328,7 +328,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 model="resnet50"
 dataset="tiny_imagenet"
 seeds=(0 1 2 3 4)
@@ -336,7 +336,7 @@ rf_levels=(5 6 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 number_of_elements_by_seed=${#[@]}
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-qsub -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 done
 
 ########################################################################################################################
