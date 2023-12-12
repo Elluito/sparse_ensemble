@@ -336,7 +336,7 @@ rf_levels=(5 6 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 number_of_elements_by_seed=${#[@]}
 for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-qsub -l coproc_p100=1-N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+qsub -l coproc_p100=1 -N "${model}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 done
 
 ########################################################################################################################
