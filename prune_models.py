@@ -806,7 +806,7 @@ def fine_tune_summary(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
-    parser.add_argument('--experiment', default=2, type=int, help='Experiment to perform')
+    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')

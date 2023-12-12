@@ -226,10 +226,10 @@ def main(args):
         data_path = "/nobackup/sclaam/data"
     elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
         data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-        data_path = "./datasets"
     elif 'lla98-mtc03' == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "./datasets"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "/home/luisaam/Documents/PhD/data/"
 
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
@@ -266,7 +266,8 @@ def main(args):
         from test_imagenet import load_tiny_imagenet
         trainloader, valloader, testloader = load_tiny_imagenet(
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-             "num_workers": args.num_workers, "batch_size": 32})
+             "num_workers": args.num_workers, "batch_size": 128})
+
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
