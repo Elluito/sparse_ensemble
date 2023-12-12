@@ -226,7 +226,7 @@ def main(args):
         data_path = "/nobackup/sclaam/data"
     elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
         data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-    elif 'lla98-mtc03' == current_directory.owner() or "luisaam" in current_directory.__str__():
+    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
         data_path = "./datasets"
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
@@ -288,12 +288,12 @@ def main(args):
     if args.model == "resnet50":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level,multiplier=args.width)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level,multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level,multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -359,7 +359,7 @@ def main(args):
         'epoch': -1,
     }
 
-    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    # torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
         train(epoch)

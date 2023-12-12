@@ -197,7 +197,7 @@ class ResNetRF(nn.Module):
                  fixed_points=None,
                  RF_level=1):
         super(ResNetRF, self).__init__()
-        self.in_planes = 64
+        self.in_planes = 64*multiplier
         self.fix_points = fixed_points
         self.rf_level = RF_level
         self.relu = nn.ReLU()
