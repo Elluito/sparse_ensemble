@@ -360,7 +360,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ##level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 #declare -a list_to_use=("${level_1_seeds[@]}")
 #
-model="resnet50"
+model="vgg19"
 dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 #
@@ -370,6 +370,7 @@ rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+
 ##for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 #
