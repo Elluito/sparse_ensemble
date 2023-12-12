@@ -278,11 +278,12 @@ def ResNet50(num_classes=10, fix_points=None):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
 
 
-def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multplier=1):
+def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     if rf_level == 0:
         return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
     else:
-        return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes, fix_points, RF_level=rf_level, multiplier=multplier)
+        return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
+                        multiplier=multiplier)
 
 
 def ResNet101():
