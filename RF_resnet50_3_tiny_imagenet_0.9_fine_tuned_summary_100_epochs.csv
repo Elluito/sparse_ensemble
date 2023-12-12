@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Fine Tuned Accuracy,Fine-tuning Best Epoch
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_1_rf_level_3__test_acc_50.43.pth,59.61,50.43,36
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_2_rf_level_3__test_acc_49.29.pth,58.72,49.29,44
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_3_rf_level_3__test_acc_49.14.pth,59.04,49.14,9
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_4_rf_level_3__test_acc_50.29.pth,59.32,50.29,38
+/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_tiny_imagenet_seed_0_rf_level_3__test_acc_49.98.pth,58.81,49.98,12
