@@ -821,8 +821,8 @@ if __name__ == '__main__':
     if args.experiment == 1:
         print("Experiment 1")
         print(args)
-        # main(args)
-        pruning_fine_tuning_experiment(args)
+        main(args)
+        # pruning_fine_tuning_experiment(args)
     if args.experiment == 2:
         print("Experiment 2")
         print(args)

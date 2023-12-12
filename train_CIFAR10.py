@@ -380,5 +380,6 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
+    parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     args = parser.parse_args()
     main(args)
