@@ -177,9 +177,9 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
-#qsub  -l coproc_k80=1  -t 1-5 -N "training_Level_5_rs" run.sh "resnet50" "tiny_imagenet" 2 5 "normal" 300
-qsub  -l coproc_p100=1 -t 1-5 -N "training_Level_6_rs" run.sh "resnet50" "tiny_imagenet" 2 6 "normal" 300
-qsub -l coproc_p100=1 -t 1-5 -N "training_Level_7_rs" run.sh "resnet50" "tiny_imagenet" 2 7 "normal" 300
+#qsub  -l coproc_p100=1  -N "training_Level_5_rs" run.sh "resnet50" "tiny_imagenet" 8 5 "normal" 300
+#qsub  -l coproc_p100=1 -t 1-5 -N "training_Level_6_rs" run.sh "resnet50" "tiny_imagenet" 2 6 "normal" 300
+#qsub -l coproc_p100=1 -t 1-5 -N "training_Level_7_rs" run.sh "resnet50" "tiny_imagenet" 2 7 "normal" 300
 # -l coproc_p100=1
 #qsub -l coproc_p100=1 -t 1-5 -N "TL_4_BS_64_rs" run.sh "resnet50" "tiny_imagenet" 8 4 "normal" 300 "bs_32"
 #qsub -l coproc_p100=1 -t 1-5 -N "TL_2_BS_64_rs" run.sh "resnet50" "tiny_imagenet" 8 2 "normal" 300 "bs_32"
@@ -360,23 +360,24 @@ qsub -l coproc_p100=1 -t 1-5 -N "training_Level_7_rs" run.sh "resnet50" "tiny_im
 ##level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 #declare -a list_to_use=("${level_1_seeds[@]}")
 #
-##model="resnet50"
-##dataset="tiny_imagenet"
-##directory=/nobackup/sclaam/checkpoints
+model="resnet50"
+dataset="tiny_imagenet"
+directory=/nobackup/sclaam/checkpoints
 #
 ##seeds=(0 1 2)
 pruning_rates=("0.5" "0.6" "0.7" "0.8")
-##rf_levels=(1 4)
-##levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+rf_levels=(1 2 3 4)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
 ##for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-#for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
+for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 #
 #qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+qsub -N "${model}_${dataset}_pruning_fine_tuning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "3"
 #
 ##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
-#done
+done
 ##done
 #
 #declare -a list_to_use=("${level_2_seeds[@]}")
