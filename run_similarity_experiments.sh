@@ -360,7 +360,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ##level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 #declare -a list_to_use=("${level_1_seeds[@]}")
 #
-model="vgg19"
+model="resnet50"
 dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 #
