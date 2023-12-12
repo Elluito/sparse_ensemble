@@ -193,14 +193,15 @@ class ResNetCurve(nn.Module):
 
 
 class ResNetRF(nn.Module):
-    def __init__(self, block: typing.Union[BasicBlock, Bottleneck], num_blocks, num_classes=10, multiplier=1, fixed_points=None,
+    def __init__(self, block: typing.Union[BasicBlock, Bottleneck], num_blocks, num_classes=10, multiplier=1,
+                 fixed_points=None,
                  RF_level=1):
         super(ResNetRF, self).__init__()
         self.in_planes = 64
         self.fix_points = fixed_points
         self.rf_level = RF_level
         self.relu = nn.ReLU()
-        self.width_multiplier=multiplier
+        self.width_multiplier = multiplier
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         if self.rf_level == 1:
             self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
@@ -217,14 +218,14 @@ class ResNetRF(nn.Module):
         if self.rf_level == 7:
             self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
         if self.fix_points is None:
-            self.conv1 = nn.Conv2d(3, 64*self.width_multiplier, kernel_size=3,
+            self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
                                    stride=1, padding=1, bias=False)
-            self.bn1 = nn.BatchNorm2d(64*self.width_multiplier)
-            self.layer1 = self._make_layer(block, 64*self.width_multiplier, num_blocks[0], stride=1)
-            self.layer2 = self._make_layer(block, 128*self.width_multiplier, num_blocks[1], stride=2)
-            self.layer3 = self._make_layer(block, 256*self.width_multiplier, num_blocks[2], stride=2)
-            self.layer4 = self._make_layer(block, 512*self.width_multiplier, num_blocks[3], stride=2)
-            self.linear = nn.Linear(512 * block.expansion*self.width_multiplier, num_classes)
+            self.bn1 = nn.BatchNorm2d(64 * self.width_multiplier)
+            self.layer1 = self._make_layer(block, 64 * self.width_multiplier, num_blocks[0], stride=1)
+            self.layer2 = self._make_layer(block, 128 * self.width_multiplier, num_blocks[1], stride=2)
+            self.layer3 = self._make_layer(block, 256 * self.width_multiplier, num_blocks[2], stride=2)
+            self.layer4 = self._make_layer(block, 512 * self.width_multiplier, num_blocks[3], stride=2)
+            self.linear = nn.Linear(512 * block.expansion * self.width_multiplier, num_classes)
         if self.fix_points is not None:
             self.conv1 = curves.Conv2d(3, 64, kernel_size=3,
                                        stride=1, padding=1, bias=False, fix_points=self.fix_points)
@@ -262,7 +263,7 @@ def ResNet18(num_classes=10, fix_points=None):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
 
 
-def ResNet18_rf(num_classes=10, fix_points=None, rf_level=1):
+def ResNet18_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     if rf_level == 0:
         return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
     else:
@@ -277,11 +278,11 @@ def ResNet50(num_classes=10, fix_points=None):
     return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
 
 
-def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1):
+def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multplier=1):
     if rf_level == 0:
         return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
     else:
-        return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes, fix_points, RF_level=rf_level)
+        return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes, fix_points, RF_level=rf_level, multiplier=multplier)
 
 
 def ResNet101():
