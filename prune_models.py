@@ -534,6 +534,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -603,10 +604,10 @@ def main(args):
         state_dict_raw = torch.load(name)
         dense_accuracy_list.append(state_dict_raw["acc"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-        net.load_state_dict(state_dict_raw["net"])
+        net.load_state_dict(state_dict_raw["net"],map_location="cpu")
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-        pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+        pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
         print("Pruned accuracy:{}".format(pruned_accuracy))
         pruned_accuracy_list.append(pruned_accuracy)
         weight_names, weights = zip(*get_layer_dict(net))
