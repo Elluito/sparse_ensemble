@@ -14,6 +14,7 @@ import argparse
 import wandb
 from alternate_models import *
 from pathlib import Path
+import pandas as pd
 
 # =======================================UTILS===========================================================================
 ''' Some helper functions for PyTorch, including:
@@ -166,7 +167,9 @@ def train(epoch):
         print(100. * correct / total, correct, total)
         # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-        print('Loss: %.3f | Acc: %.3f%% (%d/%d)'%(train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+        print(
+            'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+    return 100. * correct / total, correct, total
 
 
 def test(epoch, name="ckpt", save_folder="./checkpoint"):
@@ -188,10 +191,12 @@ def test(epoch, name="ckpt", save_folder="./checkpoint"):
 
             # progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             #              % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-            print('Loss: %.3f | Acc: %.3f%% (%d/%d)'%(test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+            print('Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
     # Save checkpoint.
     acc = 100. * correct / total
+
     if acc > best_acc:
         print('Saving..')
         state = {
@@ -205,6 +210,7 @@ def test(epoch, name="ckpt", save_folder="./checkpoint"):
             os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
         torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
         best_acc = acc
+    return acc
 
 
 def main(args):
@@ -268,7 +274,6 @@ def main(args):
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
              "num_workers": args.num_workers, "batch_size": 128})
 
-
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -288,12 +293,12 @@ def main(args):
     if args.model == "resnet50":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level,multiplier=args.width)
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level,multiplier=args.width)
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level,multiplier=args.width)
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -352,7 +357,8 @@ def main(args):
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     seed = time.time()
-    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,args.name)
+    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
+                                                        args.name)
     state = {
         'net': net.state_dict(),
         'acc': 0,
@@ -362,8 +368,19 @@ def main(args):
     torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
-        train(epoch)
-        test(epoch, solution_name, save_folder=args.save_folder)
+        train_acc = train(epoch)
+        test_acc = test(epoch, solution_name, save_folder=args.save_folder)
+        if args.record:
+            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
         scheduler.step()
 
 
@@ -374,7 +391,8 @@ if __name__ == '__main__':
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
+    parser.add_argument('--dataset', default="cifar10", type=str,
+                        help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location to save the models')
@@ -382,5 +400,6 @@ if __name__ == '__main__':
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
     main(args)
