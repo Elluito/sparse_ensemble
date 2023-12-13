@@ -177,7 +177,9 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_3_vgg" run.sh "vgg19" "tiny_imagenet" 2 3 "normal" 300
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
-#qsub  -l coproc_p100=1  -N "training_Level_5_rs" run.sh "resnet50" "tiny_imagenet" 8 5 "normal" 300
+qsub  -l coproc_p100=1  -N "train_Level_7_rs_width_2" run.sh "resnet50" "tiny_imagenet" 8 7 "normal" 300 "width_2" 2
+qsub  -l coproc_p100=1  -N "train_Level_7_rs_width_3" run.sh "resnet50" "tiny_imagenet" 8 7 "normal" 300 "width_3" 3
+#qsub  -l coproc_p100=1  -N "train_Level_5_rs_width_2" run.sh "resnet50" "tiny_imagenet" 8 5 "normal" 300 "width_2" "2"
 #qsub  -l coproc_p100=1 -t 1-5 -N "training_Level_6_rs" run.sh "resnet50" "tiny_imagenet" 2 6 "normal" 300
 #qsub -l coproc_p100=1 -t 1-5 -N "training_Level_7_rs" run.sh "resnet50" "tiny_imagenet" 2 7 "normal" 300
 # -l coproc_p100=1
@@ -328,17 +330,17 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-directory=/nobackup/sclaam/checkpoints
-model="resnet50"
-dataset="tiny_imagenet"
-seeds=(0 1 2 3 4)
-rf_levels=(5 6 7)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-number_of_elements_by_seed=${#[@]}
-
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-done
+#directory=/nobackup/sclaam/checkpoints
+#model="resnet50"
+#dataset="tiny_imagenet"
+#seeds=(0 1 2 3 4)
+#rf_levels=(5 6 7)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#number_of_elements_by_seed=${#[@]}
+#
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#done
 
 ########################################################################################################################
 #                 Prune and fine tune summary

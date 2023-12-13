@@ -359,7 +359,7 @@ def main(args):
         'epoch': -1,
     }
 
-    # torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
         train(epoch)
