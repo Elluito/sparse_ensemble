@@ -520,7 +520,7 @@ def pruning_fine_tuning_experiment(args):
 
     # Strings in between _
 
-    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=200,
+    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=args.epochs,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
                                                       name=base_name)
@@ -818,6 +818,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
+    parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
     args = parser.parse_args()
     if args.experiment == 1:
         print("Experiment 1")
