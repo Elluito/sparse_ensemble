@@ -592,13 +592,13 @@ def main(args):
     pruned_accuracy_list = []
     files_names = []
     things = list(glob.glob(
-        "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+        "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+        "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print(things)
 
     for i, name in enumerate(
-            glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
+            glob.glob("{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
                                                               args.RF_level))):
         print(name)
         state_dict_raw = torch.load(name)
