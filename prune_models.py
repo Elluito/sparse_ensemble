@@ -534,7 +534,6 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -599,12 +598,12 @@ def main(args):
 
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
-                                                              args.RF_level))):
+                                                                        args.RF_level))):
         print(name)
-        state_dict_raw = torch.load(name)
+        state_dict_raw = torch.load(name, map_location="cpu")
         dense_accuracy_list.append(state_dict_raw["acc"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-        net.load_state_dict(state_dict_raw["net"],map_location="cpu")
+        net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
         pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
@@ -632,7 +631,6 @@ def main(args):
 
 
 def fine_tune_summary(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -690,11 +688,11 @@ def fine_tune_summary(args):
     pruned_accuracy_list = []
     fine_tuned_accuracy = []
     files_names = []
-    fine_tuning_best_epoch=[]
+    fine_tuning_best_epoch = []
 
     for i, name in enumerate(
             glob.glob("{}/{}_normal_{}_*_level_{}*".format(args.folder, args.model, args.dataset,
-                                                                         args.RF_level))):
+                                                           args.RF_level))):
         print(name)
         if "initial_weights" in name or "32_bs" in name:
             continue
@@ -799,7 +797,8 @@ def fine_tune_summary(args):
                        "Fine-tuning Best Epoch": fine_tuning_best_epoch,
                        })
     df.to_csv(
-        "RF_{}_{}_{}_{}_fine_tuned_summary_100_epochs.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+        "RF_{}_{}_{}_{}_fine_tuned_summary_100_epochs.csv".format(args.model, args.RF_level, args.dataset,
+                                                                  args.pruning_rate),
         index=False)
 
 
