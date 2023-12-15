@@ -791,11 +791,11 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 # echo $all_level_3_seeds
 # all_level_4_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_4_seeds
- all_level_5_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_5_.*" |cut -d_ -f5 |uniq))
+ all_level_5_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_5_.*" |cut -d_ -f5 |uniq))
  echo $all_level_5_seeds
- all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_6_.*" |cut -d_ -f5 |uniq))
+ all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_6_.*" |cut -d_ -f5 |uniq))
  echo $all_level_6_seeds
- all_level_7_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_7_.*" |cut -d_ -f5 |uniq))
+ all_level_7_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_7_.*" |cut -d_ -f5 |uniq))
  echo $all_level_7_seeds
 
 
