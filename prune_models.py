@@ -822,7 +822,7 @@ if __name__ == '__main__':
     if args.experiment == 1:
         print("Experiment 1")
         print(args)
-        # main(args)
+        main(args)
         # pruning_fine_tuning_experiment(args)
     if args.experiment == 2:
         print("Experiment 2")
@@ -831,8 +831,8 @@ if __name__ == '__main__':
         pruning_fine_tuning_experiment(args)
     if args.experiment == 3:
         # pruning_fine_tuning_experiment(args)
-        # fine_tune_summary(args)
-        main(args)
+        fine_tune_summary(args)
+        # main(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()

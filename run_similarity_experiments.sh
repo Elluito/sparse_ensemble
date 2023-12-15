@@ -171,6 +171,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 ########################################################################################################################
 #                   Training a model on a given dataset with a given receptive field
 ########################################################################################################################
+
 #qsub -N "training_Level_0_vgg" run.sh "vgg19" "tiny_imagenet" 2 0 "normal" 300
 #qsub -N "training_Level_1_vgg" run.sh "vgg19" "tiny_imagenet" 2 1 "normal" 300
 #qsub -N "training_Level_2_vgg" run.sh "vgg19" "tiny_imagenet" 2 2 "normal" 300
@@ -178,7 +179,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_2_rs_record" run.sh "resnet50" "cifar10" 8 2 "normal" 200 "recording" 1 1
-qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record" run.sh "resnet50" "cifar10" 8 7 "normal" 400 "recording" 1 1
+#qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record" run.sh "resnet50" "cifar10" 8 7 "normal" 400 "recording" 1 1
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_2_rs_record" run.sh "resnet50" "tiny_imagenet" 8 2 "normal" 300 "recording" 1 1
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_7_rs_record" run.sh "resnet50" "tiny_imagenet" 8 7 "normal" 300 "recording" 1 1
 #qsub  -l coproc_k80=1 -t 1-5  -N "train_Level_5_rs_" run.sh "resnet50" "cifar10" 2 5 "normal" 200 "no_recording" 1 0
@@ -331,15 +332,14 @@ qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record" run.sh "resnet50" "cif
 
 
 
-
+#
 #directory=/nobackup/sclaam/checkpoints
 #model="resnet50"
-#dataset="tiny_imagenet"
-#seeds=(0 1 2 3 4)
+#dataset="cifar10"
+##seeds=(0 1 2 3 4)
 #rf_levels=(5 6 7)
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#number_of_elements_by_seed=${#[@]}
-#
+##number_of_elements_by_seed=${#[@]}
 #for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
 #qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
 #done
@@ -791,88 +791,90 @@ qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record" run.sh "resnet50" "cif
 # echo $all_level_3_seeds
 # all_level_4_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_4_seeds
-# all_level_5_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_5_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_5_seeds
-# all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_6_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_6_seeds
-# all_level_7_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_7_.*" |cut -d_ -f5 |uniq))
-# echo $all_level_7_seeds
+ all_level_5_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_5_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_5_seeds
+ all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_6_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_6_seeds
+ all_level_7_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10.*_level_7_.*" |cut -d_ -f5 |uniq))
+ echo $all_level_7_seeds
 
 
 
+
+declare -a list_to_use=("${all_level_5_seeds[@]}")
 #
-#declare -a list_to_use=("${all_level_5_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
+max=${#list_to_use[@]}                                  # Take the length of that array
 #
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
+echo $max
+#
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+done
+done
+
+
+
+
+
+declare -a list_to_use=("${all_level_6_seeds[@]}")
 #
+max=${#list_to_use[@]}                                  # Take the length of that array
 #
+echo $max
 #
-#
-#
-#declare -a list_to_use=("${all_level_6_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
-#
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+done
+done
+
+
+
+
+
+
+declare -a list_to_use=("${all_level_7_seeds[@]}")
 #
+max=${#list_to_use[@]}                                  # Take the length of that array
 #
+echo $max
 #
-#
-#
-#
-#declare -a list_to_use=("${all_level_7_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
-#
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
 #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
-#
+done
+done
+
+
+########################################################################################################################
 
 #
 #print_seed_rename () {
