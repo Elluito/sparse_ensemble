@@ -1,9 +1,5 @@
 '''Train CIFAR10 with PyTorch.'''
-import torch
-import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 import sys
@@ -11,7 +7,6 @@ import time
 import torch.nn.init as init
 import os
 import argparse
-import wandb
 from alternate_models import *
 from pathlib import Path
 import pandas as pd
