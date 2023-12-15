@@ -59,6 +59,7 @@ level = [1, 1, 2, 2, 3, 3, 4, 4]
 modelstypes = ["alternative"] * len(level)
 
 
+
 def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modeltype="alternative", solution="",
                                          seed_name="_seed_1", rf_level=0, model=None):
     from feature_maps_utils import save_layer_feature_maps_for_batch
@@ -600,7 +601,7 @@ def main(args):
             glob.glob("{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
                                                                         args.RF_level))):
         print(name)
-        state_dict_raw = torch.load(name, map_location="cpu")
+        state_dict_raw = torch.load(name, map_location=device)
         dense_accuracy_list.append(state_dict_raw["acc"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
         net.load_state_dict(state_dict_raw["net"])
