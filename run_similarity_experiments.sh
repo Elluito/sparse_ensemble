@@ -782,7 +782,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #                  This is  for changing names
 ###############################################################################
 
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 # all_level_1_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_1_seeds
 # all_level_2_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f5 |uniq))
