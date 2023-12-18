@@ -351,7 +351,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     seed = time.time()
     solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
                                                         args.name)
@@ -377,7 +377,7 @@ def main(args):
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
-        scheduler.step()
+        # scheduler.step()
 
 
 if __name__ == '__main__':
