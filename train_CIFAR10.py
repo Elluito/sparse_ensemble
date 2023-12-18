@@ -222,7 +222,7 @@ def main(args):
     # Data
     print('==> Preparing data..')
     current_directory = Path().cwd()
-    data_path = "/datasets"
+    data_path = "."
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
         data_path = "/nobackup/sclaam/data"
     elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
@@ -231,6 +231,7 @@ def main(args):
         data_path = "./datasets"
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
+    print(data_path)
 
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
