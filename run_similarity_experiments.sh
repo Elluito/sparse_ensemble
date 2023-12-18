@@ -180,11 +180,11 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_2_rs_record" run.sh "resnet50" "cifar10" 8 2 "normal" 200 "recording" 1 1
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record" run.sh "resnet50" "cifar10" 8 7 "normal" 400 "recording" 1 1
-qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 8 3 "normal" 200 "no_recording" 2 0
-qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_3" run.sh "resnet50" "tiny_imagenet" 8 3 "normal" 200 "no_recording" 3 0
+qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 4 3 "normal" 200 "no_recording_width_2" 2 0
+qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_3" run.sh "resnet50" "tiny_imagenet" 4 3 "normal" 200 "no_recording_width_3" 3 0
 
-qsub  -l coproc_p100=1  -N "train_tnim_Level_5_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 8 5 "normal" 200 "no_recording" 2 0
-qsub  -l coproc_p100=1  -N "train_tnim_Level_5_rs_no_record_width_3" run.sh "resnet50" "tiny_imagenet" 8 5 "normal" 200 "no_recording" 3 0
+qsub  -l coproc_p100=1  -N "train_tnim_Level_5_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 4 5 "normal" 200 "no_recording_width_2" 2 0
+qsub  -l coproc_p100=1  -N "train_tnim_Level_5_rs_no_record_width_3" run.sh "resnet50" "tiny_imagenet" 4 5 "normal" 200 "no_recording_width_3" 3 0
 
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_7_rs_record" run.sh "resnet50" "tiny_imagenet" 8 7 "normal" 200 "recording" 1 1
 #qsub  -l coproc_k80=1 -t 1-5  -N "train_Level_5_rs_" run.sh "resnet50" "cifar10" 2 5 "normal" 200 "no_recording" 1 0
