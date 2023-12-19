@@ -179,7 +179,9 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "training_Level_4_vgg" run.sh "vgg19" "tiny_imagenet" 2 4 "normal" 300
 
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_2_rs_record" run.sh "resnet50" "cifar10" 8 2 "normal" 200 "recording" 1 1
-qsub  -l coproc_p100=1  -N "train_cf10_Level_7_rs_record_tmax_=_epochs" run.sh "resnet50" "cifar10" 8 7 "normal" 400 "recording_tmax_=_epochs" 1 1
+qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_7_rs18_record_depth_experiment" run.sh "resnet18" "tiny_imagenet" 2 7 "normal" 200 "no_recording" 1 1
+qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_5_rs18_record_depth_experiment" run.sh "resnet18" "tiny_imagenet" 2 5 "normal" 200 "no_recording" 1 1
+qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_3_rs18_record_depth_experiment" run.sh "resnet18" "tiny_imagenet" 2 3 "normal" 200 "no_recording" 1 1
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 4 3 "normal" 200 "no_recording_width_2" 2 0
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_3" run.sh "resnet50" "tiny_imagenet" 4 3 "normal" 200 "no_recording_width_3" 3 0
 #

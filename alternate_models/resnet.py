@@ -197,7 +197,7 @@ class ResNetRF(nn.Module):
                  fixed_points=None,
                  RF_level=1):
         super(ResNetRF, self).__init__()
-        self.in_planes = 64*multiplier
+        self.in_planes = 64 * multiplier
         self.fix_points = fixed_points
         self.rf_level = RF_level
         self.relu = nn.ReLU()
@@ -267,7 +267,8 @@ def ResNet18_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     if rf_level == 0:
         return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
     else:
-        return ResNetRF(BasicBlock, [2, 2, 2, 2], num_classes, fix_points, RF_level=rf_level)
+        return ResNetRF(BasicBlock, [2, 2, 2, 2], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
+                        multiplier=multiplier)
 
 
 def ResNet34():
@@ -283,6 +284,13 @@ def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
         return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
     else:
         return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
+                        multiplier=multiplier)
+
+def ResNet24_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
+    if rf_level == 0:
+        return ResNet(Bottleneck, [2, 2, 2, 2], num_classes, fix_points)
+    else:
+        return ResNetRF(Bottleneck, [2, 2, 2, 2], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
                         multiplier=multiplier)
 
 
@@ -316,7 +324,7 @@ def test():
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
     for rf in receptive_fields:
-        net = ResNet50_rf(num_classes=10, rf_level=rf)
+        net = ResNet18_rf(num_classes=10, rf_level=rf)
         y = net(torch.randn(3, 3, 32, 32))
         print(y)
         get_features_only_until_block_layer(net, block=4, net_type=1)
