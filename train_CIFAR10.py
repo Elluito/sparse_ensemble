@@ -305,6 +305,25 @@ def main(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
+    if args.model == "resnet24":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(" There is no implementation for this combination {}, {} {} ".format(args.model,args.type,args.dataset))
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError(" There is no implementation for this combination {}, {} {} ".format(args.model,args.type,args.dataset))
     if args.model == "vgg19":
 
         if args.type == "normal" and args.dataset == "cifar10":
