@@ -309,7 +309,6 @@ def main(args):
 
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet24_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
