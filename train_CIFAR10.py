@@ -402,20 +402,20 @@ def main(args):
 
     for epoch in range(137, 200):
         print(epoch)
-        # train_acc = train(epoch)
-        # test_acc = test(epoch, solution_name, save_folder=args.save_folder)
-        # if args.record:
-        #     filepath = "{}/{}.csv".format(args.save_folder, solution_name)
-        #     if Path(filepath).is_file():
-        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, mode="a", header=False, index=False)
-        #     else:
-        #         # Try to read the file to see if it is
-        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, sep=",", index=False)
-        # scheduler.step()
+        train_acc = train(epoch)
+        test_acc = test(epoch, solution_name, save_folder=args.save_folder)
+        if args.record:
+            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        scheduler.step()
 
 
 if __name__ == '__main__':
