@@ -281,7 +281,7 @@ def main(args):
     if args.model == "resnet18":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level,multiplier=args.width)
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
 
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
@@ -317,12 +317,16 @@ def main(args):
             # # net = resnet50()
             # # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
-            raise NotImplementedError(" There is no implementation for this combination {}, {} {} ".format(args.model,args.type,args.dataset))
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
         if args.type == "pytorch" and args.dataset == "cifar100":
             # net = resnet50()
             # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 100)
-            raise NotImplementedError(" There is no implementation for this combination {}, {} {} ".format(args.model,args.type,args.dataset))
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
     if args.model == "vgg19":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -358,46 +362,60 @@ def main(args):
     # if device == 'cuda':
     #     net = torch.nn.DataParallel(net)
     #     cudnn.benchmark = True
-
+    solution_name = ""
     if args.resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
-        checkpoint = torch.load('./checkpoint/resnet50_normal_cifar10_1693828675.8871784_test_acc_86.46.pth')
+        checkpoint = torch.load(
+            '{}/resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp_test_acc_51.04.pth'.format(
+                args.save_folder))
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
+        assert start_epoch == 137, "The start epochs is not 137"
+        solution_name = "resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp"
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     seed = time.time()
-    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
-                                                        args.name)
-    state = {
-        'net': net.state_dict(),
-        'acc': 0,
-        'epoch': -1,
-    }
 
-    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    # solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
+    #                                                     args.name)
+    # state = {
+    #     'net': net.state_dict(),
+    #     'acc': 0,
+    #     'epoch': -1,
+    # }
 
-    for epoch in range(start_epoch, start_epoch + args.epochs):
-        train_acc = train(epoch)
-        test_acc = test(epoch, solution_name, save_folder=args.save_folder)
-        if args.record:
-            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
-            if Path(filepath).is_file():
-                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, mode="a", header=False, index=False)
-            else:
-                # Try to read the file to see if it is
-                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, sep=",", index=False)
+    # torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    lr_list = []
+    for i in range(start_epoch):
+        for param_group in optimizer.param_groups:
+            lr_list.append(param_group['lr'])
+            break
         scheduler.step()
+    print("First learning rate:{}".format(lr_list[0]))
+    print("Last learning rate:{}".format(lr_list[-1]))
+
+    for epoch in range(137, 200):
+        print(epoch)
+        # train_acc = train(epoch)
+        # test_acc = test(epoch, solution_name, save_folder=args.save_folder)
+        # if args.record:
+        #     filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+        #     if Path(filepath).is_file():
+        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, mode="a", header=False, index=False)
+        #     else:
+        #         # Try to read the file to see if it is
+        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, sep=",", index=False)
+        # scheduler.step()
 
 
 if __name__ == '__main__':
