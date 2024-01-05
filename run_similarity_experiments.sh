@@ -535,7 +535,7 @@ rf_levels=(3 5 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<rf_levels; idxB++));do              # iterate idxB from 0 to length
+for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 #qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 qsub -N "${model}_${dataset}pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" #"${[$idxB]}" "3"
@@ -543,21 +543,21 @@ done
 ##done
 
 
-declare -a list_to_use=("${level_2_seeds[@]}")
-
-seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
-
-#for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
-
-for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
-
-#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-
-qsub -N "${model}_${dataset}pruning_summary_level_2" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
-
-#echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+#declare -a list_to_use=("${level_2_seeds[@]}")
+#
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+#
+##for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
+#
+#for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
+#
+##for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+#
+#qsub -N "${model}_${dataset}pruning_summary_level_2" run.sh "${model}" "${dataset}" "2" "2" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
+#
+##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+##done
 #done
-done
 
 #
 #declare -a list_to_use=("${level_3_seeds[@]}")
@@ -565,18 +565,18 @@ done
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 ##for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
+#for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 #qsub -N "${model}_${dataset}pruning_summary_level_3_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "3" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-qsub -N "${model}_${dataset}pruning_summary_level_3" run.sh "${model}" "${dataset}" "2" "3" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
+#qsub -N "${model}_${dataset}pruning_summary_level_3" run.sh "${model}" "${dataset}" "2" "3" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 ##done
-done
+#done
 
-declare -a list_to_use=("${level_4_seeds[@]}")
+#declare -a list_to_use=("${level_4_seeds[@]}")
 
-seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<levels_max; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
+#for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from 0 to length
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 
 #qsub -N "${model}_${dataset}_fine_Tuning_pruning_level_4_${idxB}" run.sh "${model}" "${dataset}" "0" "4" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
@@ -584,7 +584,7 @@ for ((idxB=0; idxB<seeds_per_level; idxB++));do              # iterate idxB from
 #qsub -N "${model}_${dataset}pruning_summary_level_4_${idxB}" run.sh "${model}" "${dataset}" "2" "4" "normal" "${directory}" "${list_to_use[$idxB]}" "3"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
-done
+#done
 #done
 
 
