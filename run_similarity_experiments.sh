@@ -810,7 +810,9 @@ directory=/nobackup/sclaam/checkpoints
 
 #
 #
+echo " "
 echo "Level 5 \n"
+echo " "
 #
 declare -a list_to_use=("${all_level_5_seeds[@]}")
 #
@@ -834,8 +836,10 @@ done
 done
 
 
+echo " "
 echo "Level 7 \n"
 
+echo " "
 
 
 declare -a list_to_use=("${all_level_7_seeds[@]}")
@@ -862,7 +866,9 @@ done
 #
 #
 #
-echo "Level 3 \n"
+echo " "
+echo "Level 3 "
+echo " "
 #
 #
 declare -a list_to_use=("${all_level_3_seeds[@]}")
