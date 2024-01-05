@@ -797,15 +797,15 @@ directory=/nobackup/sclaam/checkpoints
 # echo $all_level_1_seeds
 # all_level_2_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_2_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_2_seeds
- all_level_3_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet.*_level_3_.*no_recording.*" |cut -d_ -f4 |uniq))
+ all_level_3_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet.*_level_3_.*no_recording.*" |cut -d_ -f5 |uniq))
  echo $all_level_3_seeds
 # all_level_4_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_4_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_4_seeds
- all_level_5_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet_.*_level_5_.*no_recording.*" |cut -d_ -f4 |uniq))
+ all_level_5_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet_.*_level_5_.*no_recording.*" |cut -d_ -f5 |uniq))
  echo $all_level_5_seeds
 # all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_6_.*no_recording.*" |cut -d_ -f4 |uniq))
 # echo $all_level_6_seeds
- all_level_7_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet_.*_level_7_.*no_recording.*" |cut -d_ -f4 |uniq))
+ all_level_7_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet_.*_level_7_.*no_recording.*" |cut -d_ -f5 |uniq))
  echo $all_level_7_seeds
 
 #
