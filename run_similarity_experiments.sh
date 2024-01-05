@@ -810,6 +810,7 @@ directory=/nobackup/sclaam/checkpoints
 
 #
 #
+echo "Level 5 \n"
 #
 declare -a list_to_use=("${all_level_5_seeds[@]}")
 #
@@ -833,10 +834,11 @@ done
 done
 
 
+echo "Level 7 \n"
 
 
 
-declare -a list_to_use=("${all_level_6_seeds[@]}")
+declare -a list_to_use=("${all_level_7_seeds[@]}")
 #
 max=${#list_to_use[@]}                                  # Take the length of that array
 #
@@ -860,28 +862,29 @@ done
 #
 #
 #
+echo "Level 3 \n"
 #
 #
-#declare -a list_to_use=("${all_level_7_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
+declare -a list_to_use=("${all_level_3_seeds[@]}")
 #
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
-##  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+max=${#list_to_use[@]}                                  # Take the length of that array
+#
+echo $max
+#
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
+#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+done
+done
 
 
 ########################################################################################################################
