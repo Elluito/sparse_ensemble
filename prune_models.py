@@ -535,6 +535,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -588,6 +589,21 @@ def main(args):
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
 
+    if args.model == "resnet24":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
@@ -601,34 +617,34 @@ def main(args):
             glob.glob("{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
                                                                         args.RF_level))):
         print(name)
-        state_dict_raw = torch.load(name, map_location=device)
-        dense_accuracy_list.append(state_dict_raw["acc"])
-        print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-        net.load_state_dict(state_dict_raw["net"])
-        prune_function(net, cfg)
-        remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-        pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
-        print("Pruned accuracy:{}".format(pruned_accuracy))
-        pruned_accuracy_list.append(pruned_accuracy)
-        weight_names, weights = zip(*get_layer_dict(net))
-        zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
-        pruning_rates_per_layer = list(map(zero_number, weights))
-        seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
-        df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-        df2.to_csv(
-            "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
-                                                                           args.dataset, args.pruning_rate),
-            index=False)
-        file_name = os.path.basename(name)
-        print(file_name)
-        files_names.append(file_name)
+        # state_dict_raw = torch.load(name, map_location=device)
+        # dense_accuracy_list.append(state_dict_raw["acc"])
+        # print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+        # net.load_state_dict(state_dict_raw["net"])
+        # prune_function(net, cfg)
+        # remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+        # pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
+        # print("Pruned accuracy:{}".format(pruned_accuracy))
+        # pruned_accuracy_list.append(pruned_accuracy)
+        # weight_names, weights = zip(*get_layer_dict(net))
+        # zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+        # pruning_rates_per_layer = list(map(zero_number, weights))
+        # seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+        # df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+        # df2.to_csv(
+        #     "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+        #                                                                    args.dataset, args.pruning_rate),
+        #     index=False)
+        # file_name = os.path.basename(name)
+        # print(file_name)
+        # files_names.append(file_name)
 
-    df = pd.DataFrame({"Name": files_names,
-                       "Dense Accuracy": dense_accuracy_list,
-                       "Pruned Accuracy": pruned_accuracy_list,
-                       })
-    df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
-              index=False)
+    # df = pd.DataFrame({"Name": files_names,
+    #                    "Dense Accuracy": dense_accuracy_list,
+    #                    "Pruned Accuracy": pruned_accuracy_list,
+    #                    })
+    # df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+    #           index=False)
 
 
 def fine_tune_summary(args):
@@ -801,94 +817,6 @@ def fine_tune_summary(args):
         "RF_{}_{}_{}_{}_fine_tuned_summary_100_epochs.csv".format(args.model, args.RF_level, args.dataset,
                                                                   args.pruning_rate),
         index=False)
-
-
-class DecoderRNN(nn.Module):
-    def __init__(self, vocab_size, embed_size=256, hidden_size=512, num_layers=1, max_seq_length=47):
-        """Set the hyper-parameters and build the layers."""
-        super(DecoderRNN, self).__init__()
-        # we want a specific output size, which is the size of our embedding, so
-        # we feed our extracted features from the last fc layer (dimensions 1 x 2048)
-        # into a Linear layer to resize
-        self.resize = nn.Linear(2048, embed_size)
-
-        # batch normalisation helps to speed up training
-        self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
-
-        # what is an embedding layer?
-        # Answer: The embedding layer works like a lookup table where each word in the vocab is
-        #         represented via a vector of embed size, which in this case is 256
-        self.embed = nn.Embedding(vocab_size, embed_size)
-
-        # TO COMPLETE
-        self.rnn = nn.RNN(embed_size, hidden_size, batch_first=True)
-
-        self.linear = nn.Linear(hidden_size, vocab_size)
-        self.max_seq_length = max_seq_length
-
-    def forward(self, features, captions, lengths):
-        """Decode image feature vectors and generates captions."""
-        embeddings = self.embed(captions)
-        im_features = self.resize(features)
-        im_features = self.bn(im_features)
-
-        embeddings = torch.cat((im_features.unsqueeze(1), embeddings), 1)
-
-        packed = pack_padded_sequence(embeddings, lengths, batch_first=True, enforce_sorted=False)
-        # pack_padded_sequence returns a PackedSequence object, which contains two items:
-        # the packed data (data cut off at its true length and flattened into one list), and
-        # the batch_sizes, or the number of elements at each sequence step in the batch.
-        # For instance, given data [a, b, c] and [x] the PackedSequence would contain data
-        # [a, x, b, c] with batch_sizes=[2,1,1].
-
-        hiddens, _ = self.rnn(packed)
-        outputs = self.linear(hiddens.data)
-        return outputs
-
-    def sample(self, features, states=None):
-        """Generate captions for given image features using greedy search."""
-        sampled_ids = []
-
-        inputs = self.bn(self.resize(features)).unsqueeze(1)
-        for i in range(self.max_seq_length):
-            hiddens, states = self.rnn(inputs, states)  # hiddens: (batch_size, 1, hidden_size)
-            outputs = self.linear(hiddens.squeeze(1))  # outputs:  (batch_size, vocab_size)
-            _, predicted = outputs.max(1)  # predicted: (batch_size)
-            sampled_ids.append(predicted)
-            inputs = self.embed(predicted)  # inputs: (batch_size, embed_size)
-            inputs = inputs.unsqueeze(1)  # inputs: (batch_size, 1, embed_size)
-        sampled_ids = torch.stack(sampled_ids, 1)  # sampled_ids: (batch_size, max_seq_length)
-        return sampled_ids
-
-
-def mock_func():
-    # load data and targets and compute the loss based on outputs
-    embed_size = 256
-    vocab_size = 3102
-    nepochs = 5
-    losses = np.zeros(nepochs)
-    loss_fn = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(decoder.parameters())
-    decoder.train()
-    lin2 = nn.Linear(embed_size, vocab_size)
-
-    for epoch in range(nepochs):
-        running_loss = 0.0
-        n = 0
-
-        for features, captions, lengths in train_loader:
-            optimizer.zero_grad()
-
-            targets_embeddings = decoder.embed(captions)
-            targets = pack_padded_sequence(targets_embeddings, lengths, batch_first=True, enforce_sorted=False)
-            targets = targets.data
-            outputs = decoder(features, captions, lengths)
-            print(f'outputs are: {outputs}, output shape {outputs.shape}')
-            print(f'targets are: {targets}, targets shape {targets.shape}')
-            break
-            loss = loss_fn(outputs, targets)
-            loss.backward()
-            optimizer.step()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
