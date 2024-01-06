@@ -526,12 +526,12 @@ level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solut
 
 declare -a list_to_use=("${level_1_seeds[@]}")
 
-model="resnet24"
-dataset="tiny_imagenet"
+model="resnet50"
+dataset="cifar10"
 directory=/nobackup/sclaam/checkpoints
 
 seeds=(0 1 2)
-rf_levels=(3 5 7)
+rf_levels=(2 3 4 5 6 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length

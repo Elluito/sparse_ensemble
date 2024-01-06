@@ -635,16 +635,17 @@ def main(args):
             "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
                                                                            args.dataset, args.pruning_rate),
             index=False)
-        file_name = os.path.basename(name)
-        print(file_name)
-        files_names.append(file_name)
-
-    df = pd.DataFrame({"Name": files_names,
-                       "Dense Accuracy": dense_accuracy_list,
-                       "Pruned Accuracy": pruned_accuracy_list,
-                       })
-    df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
-              index=False)
+        print("Done")
+    #     file_name = os.path.basename(name)
+    #     print(file_name)
+    #     files_names.append(file_name)
+    #
+    # df = pd.DataFrame({"Name": files_names,
+    #                    "Dense Accuracy": dense_accuracy_list,
+    #                    "Pruned Accuracy": pruned_accuracy_list,
+    #                    })
+    # df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+    #           index=False)
 
 
 def fine_tune_summary(args):
