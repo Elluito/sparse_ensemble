@@ -630,7 +630,14 @@ def main(args):
         weight_names, weights = zip(*get_layer_dict(net))
         zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
         pruning_rates_per_layer = list(map(zero_number, weights))
-        seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+
+        seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
+        seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)[0].split("_")[2]
+        if  seed_from_file2:
+            seed_from_file= seed_from_file2
+        else:
+            seed_from_file= seed_from_file1
+
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
         df2.to_csv(
             "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
