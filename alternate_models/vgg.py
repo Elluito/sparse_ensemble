@@ -44,7 +44,7 @@ class VGG_RF(nn.Module):
         super(VGG_RF, self).__init__()
         self.rf_level = rf_level
         self.maxpool = None
-        self.config = None
+        self.config = cfg[vgg_name]
         if self.rf_level == 1:
             self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
             self.config = cfg[vgg_name]
