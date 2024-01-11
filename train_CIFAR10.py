@@ -232,6 +232,11 @@ def main(args):
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
+    batch_size = 128
+    if "32" in args.name:
+        batch_size = 32
+    if "64" in args.name:
+        batch_size = 64
 
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
@@ -268,7 +273,7 @@ def main(args):
         from test_imagenet import load_tiny_imagenet
         trainloader, valloader, testloader = load_tiny_imagenet(
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-             "num_workers": args.num_workers, "batch_size": 32})
+             "num_workers": args.num_workers, "batch_size": batch_size})
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
@@ -400,7 +405,7 @@ def main(args):
     # print("First learning rate:{}".format(lr_list[0]))
     # print("Last learning rate:{}".format(lr_list[-1]))
 
-    for epoch in range(start_epoch, start_epoch+args.epochs):
+    for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
         train_acc = train(epoch)
         test_acc = test(epoch, solution_name, save_folder=args.save_folder)
@@ -434,6 +439,7 @@ if __name__ == '__main__':
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for trainig')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
     main(args)
