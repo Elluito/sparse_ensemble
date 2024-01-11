@@ -374,7 +374,7 @@ def main(args):
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
         assert start_epoch == 137, "The start epochs is not 137"
-        solution_name = "resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp"
+        # solution_name = "resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp"
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
@@ -382,25 +382,25 @@ def main(args):
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     seed = time.time()
 
-    # solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
-    #                                                     args.name)
-    # state = {
-    #     'net': net.state_dict(),
-    #     'acc': 0,
-    #     'epoch': -1,
-    # }
+    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
+                                                        args.name)
+    state = {
+        'net': net.state_dict(),
+        'acc': 0,
+        'epoch': -1,
+    }
 
-    # torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
-    lr_list = []
-    for i in range(start_epoch):
-        for param_group in optimizer.param_groups:
-            lr_list.append(param_group['lr'])
-            break
-        scheduler.step()
-    print("First learning rate:{}".format(lr_list[0]))
-    print("Last learning rate:{}".format(lr_list[-1]))
+    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    # lr_list = []
+    # for i in range(start_epoch):
+    #     for param_group in optimizer.param_groups:
+    #         lr_list.append(param_group['lr'])
+    #         break
+    #     scheduler.step()
+    # print("First learning rate:{}".format(lr_list[0]))
+    # print("Last learning rate:{}".format(lr_list[-1]))
 
-    for epoch in range(137, 200):
+    for epoch in range(start_epoch, start_epoch+args.epochs):
         print(epoch)
         train_acc = train(epoch)
         test_acc = test(epoch, solution_name, save_folder=args.save_folder)

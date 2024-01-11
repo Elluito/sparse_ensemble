@@ -180,9 +180,9 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_2_rs_record" run.sh "resnet50" "cifar10" 8 2 "normal" 200 "recording" 1 1
 
-#qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_7_rs18_record_depth_experiment" run.sh "resnet24" "tiny_imagenet" 2 7 "normal" 200 "no_recording" 1 1
-#qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_5_rs18_record_depth_experiment" run.sh "resnet24" "tiny_imagenet" 2 5 "normal" 200 "no_recording" 1 1
-#qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_3_rs18_record_depth_experiment" run.sh "resnet24" "tiny_imagenet" 2 3 "normal" 200 "no_recording" 1 1
+qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_0_vgg_record_depth_experiment" run.sh "vgg19" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
+qsub -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "resnet50" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
+qsub -t 1-5 -l coproc_p100=1  -N "train_tnim_Level_0_50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 200 "no_recording" 1 0
 
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_2" run.sh "resnet50" "tiny_imagenet" 4 3 "normal" 200 "no_recording_width_2" 2 0
 #qsub  -l coproc_p100=1  -N "train_tnim_Level_3_rs_no_record_width_3_finish" run.sh "resnet50" "tiny_imagenet" 8 3 "normal" 200 "no_recording_width_3_second_attemp" 3 0
@@ -505,41 +505,44 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #
 ########################################################################################################################
 #         fine tuning solutions
-#
-model="vgg19"
-dataset="tiny_imagenet"
-pruning_rates=("0.5" "0.6" "0.7" "0.8")
-number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-init=0
+
+#model="vgg19"
+#dataset="tiny_imagenet"
+#pruning_rates=("0.5" "0.6" "0.7" "0.8")
+#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+#init=0
 #solution_string="initial_weights"
-solution_string="test_acc"
-directory=/nobackup/sclaam/checkpoints
-level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
+#solution_string="test_acc"
+#directory=/nobackup/sclaam/checkpoints
+#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_${solution_string}.*"))
 #level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
 
-level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
+#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2_${solution_string}.*"))
 #level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
-level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
+#level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3_${solution_string}.*"))
 #level_3_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_3.pth"))
-level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
+#level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
 #level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 
-declare -a list_to_use=("${level_1_seeds[@]}")
+#declare -a list_to_use=("${level_1_seeds[@]}")
 
-model="resnet50"
-dataset="cifar10"
-directory=/nobackup/sclaam/checkpoints
+#model="resnet50"
+#dataset="cifar10"
+#directory=/nobackup/sclaam/checkpoints
 
-seeds=(0 1 2)
-rf_levels=(3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds=(0 1 2)
+#rf_levels=(3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+
 #qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
-qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" #"${[$idxB]}" "3"
-done
+
+#qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" #"${[$idxB]}" "3"
+#done
 ##done
 
 #qsub -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" #"${[$idxB]}" "3"
