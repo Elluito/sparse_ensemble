@@ -528,7 +528,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 model="resnet50"
 dataset="cifar10"
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 
 #seeds=(0 1 2)
 rf_levels=(1 3)
