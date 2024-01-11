@@ -268,7 +268,7 @@ def main(args):
         from test_imagenet import load_tiny_imagenet
         trainloader, valloader, testloader = load_tiny_imagenet(
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-             "num_workers": args.num_workers, "batch_size": 128})
+             "num_workers": args.num_workers, "batch_size": 32})
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
