@@ -658,8 +658,10 @@ def main(args):
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
     count_fn = lambda w: w.nelement()
     total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
-    total_not_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
+    total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
     new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate
+    if new_pruning_rate > 0.98:
+        return 0.98
     return new_pruning_rate
 
 
