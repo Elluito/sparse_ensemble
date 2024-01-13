@@ -181,7 +181,8 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub  -l coproc_p100=1  -N "train_cf10_Level_2_rs_record" run.sh "resnet50" "cifar10" 8 2 "normal" 200 "recording" 1 1
 
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "vgg19" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
-#qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 200 "no_recording" 1 0
+            #             this did not happened
+#qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "resnet50" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
 
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_tinm_Level_0_r50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 200 "no_recording_bs_32" 1 0
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_tinm_Level_1_r50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 200 "no_recording_bs_32" 1 0
@@ -550,7 +551,9 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 #qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
-qsub -l h_rt=3:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "0" "${rf_levels[$idxB]}" "normal" "${directory}" "4" #"${[$idxB]}" "3"
+qsub -l h_rt=3:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "0" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
+
+
 done
 ##done
 
