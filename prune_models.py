@@ -767,9 +767,9 @@ def n_shallow_layer_experiment(args):
             print("Dense accuracy:{}".format(state_dict_raw["acc"]))
             net.load_state_dict(state_dict_raw["net"])
 
-            excluded_weights = [w for k, w in help_dict if k in cfg.exclude_layer]
+            excluded_weights = [w for k, w in help_dict.items()if k in cfg.exclude_layer]
 
-            not_excluded_weights = [w for k, w in help_dict if k not in cfg.exclude_layer]
+            not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layer]
             new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
             cfg.amount = new_pr
             prune_function(net, cfg)
