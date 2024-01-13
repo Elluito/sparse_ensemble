@@ -778,7 +778,6 @@ def n_shallow_layer_experiment(args):
             print("Pruned accuracy at layer {} with index {}:{}".format(layer_name, name2index[layer_name],
                                                                         pruned_accuracy))
 
-
             if abs(dense_accuracy - pruned_accuracy) < 3:
                 n_shallow_layer_index_list.append(name2index[layer_name])
                 n_shallow_layer_name_list.append(layer_name)
@@ -804,8 +803,8 @@ def n_shallow_layer_experiment(args):
         print("Done")
     #
     df = pd.DataFrame({"Name": files_names,
-                       "N Shallow layer index":n_shallow_layer_index_list,
-                       "N Shallow layer name":n_shallow_layer_name_list,
+                       "N Shallow layer index": n_shallow_layer_index_list,
+                       "N Shallow layer name": n_shallow_layer_name_list,
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list
                        })
@@ -1015,6 +1014,8 @@ if __name__ == '__main__':
     if args.experiment == 3:
         # pruning_fine_tuning_experiment(args)
         fine_tune_summary(args)
+    if args.experiment == 4:
+        n_shallow_layer_experiment(args)
         # main(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()

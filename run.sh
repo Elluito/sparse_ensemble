@@ -74,13 +74,13 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6 --name $7 --width $8 --record $9
+#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6 --name $7 --width $8 --record $9
 
 
 #############################################################
 #     One shot pruning results
 #############################################################
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --experiment $8
 #--name $7
 
 #############################################################
