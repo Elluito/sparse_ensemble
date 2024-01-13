@@ -536,7 +536,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-model="resnet50"
+model="vgg19"
 dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 #
