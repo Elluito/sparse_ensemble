@@ -537,7 +537,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 model="vgg19"
-dataset="tiny_imagenet"
+dataset="cifar10"
 directory=/nobackup/sclaam/checkpoints
 #
 #seeds=(0 1 2)
