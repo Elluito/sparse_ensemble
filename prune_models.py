@@ -753,6 +753,7 @@ def n_shallow_layer_experiment(args):
     names_to_use = [i for i in weight_names_begining if i not in cfg.exclude_layers]
     n_shallow_layer_index_list = []
     n_shallow_layer_name_list = []
+    adjusted_prunig_rate=[]
 
     # names_to_use = set(weight_names_begining).difference(cfg.exclude_layers)
 
@@ -777,7 +778,7 @@ def n_shallow_layer_experiment(args):
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
             pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
-            print("Pruned accuracy at layer {} with index {}:{}".format(layer_name, name2index[layer_name],
+            print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name, name2index[layer_name],new_pr,
                                                                         pruned_accuracy))
 
             if abs(dense_accuracy - pruned_accuracy) < 3:
@@ -786,6 +787,7 @@ def n_shallow_layer_experiment(args):
                 dense_accuracy_list.append(dense_accuracy)
                 pruned_accuracy_list.append(dense_accuracy)
                 files_names.append(file_name)
+                adjusted_prunig_rate.append(new_pr)
 
                 break
             # pruning_rates_per_layer = list(map(zero_number, weights))
