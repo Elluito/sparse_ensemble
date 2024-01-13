@@ -541,7 +541,7 @@ dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 #
 #seeds=(0 1 2)
-rf_levels=(1 2 3 4 5 6 7)
+rf_levels=(2 3 4 5 6 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
