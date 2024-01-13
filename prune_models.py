@@ -761,7 +761,7 @@ def n_shallow_layer_experiment(args):
         file_name = os.path.basename(name)
         print(file_name)
         for layer_name in names_to_use:
-            cfg.exclude_layer.extend(layer_name)
+            cfg.exclude_layer.append(layer_name)
             state_dict_raw = torch.load(name, map_location=device)
             dense_accuracy = state_dict_raw["acc"]
             print("Dense accuracy:{}".format(state_dict_raw["acc"]))
