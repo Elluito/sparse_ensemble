@@ -81,7 +81,7 @@ unset KMP_AFFINITY
 #############################################################
 #     One shot pruning results
 #############################################################
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --experiment $7 --name $8
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --experiment $7 # --name $8
 #--name $7
 
 #############################################################
