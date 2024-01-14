@@ -182,7 +182,7 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "vgg19" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
             #             this did not happened
-#qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "resnet50" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_cifar10_Level_0_r50_record_depth_experiment" run.sh "resnet50" "cifar10" 2 0 "normal" 200 "no_recording" 1 0
 
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_tinm_Level_0_r50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 0 "normal" 200 "no_recording_bs_32" 1 0
 #qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1  -N "train_tinm_Level_1_r50_record_depth_experiment" run.sh "resnet50" "tiny_imagenet" 2 1 "normal" 200 "no_recording_bs_32" 1 0
@@ -536,27 +536,27 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-model="resnet50"
-dataset="cifar10"
-directory=/nobackup/sclaam/checkpoints
+#model="resnet50"
+#dataset="cifar10"
+#directory=/nobackup/sclaam/checkpoints
 #
 #seeds=(0 1 2)
-rf_levels=(1 2)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#rf_levels=(1 2)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 
 #qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
-qsub -l h_rt=15:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}_more_time" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
+#qsub -l h_rt=15:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}_more_time" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
 #qsub -l h_rt=1:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "1"
 
 
 
-done
+#done
 
 ##done
 
