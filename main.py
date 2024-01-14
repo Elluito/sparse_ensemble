@@ -458,6 +458,7 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
             print(name)
+
     return modules
 
 
@@ -2244,6 +2245,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
     if type == "global":
+        print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
         print("Length of weigths to prune:{}".format(len(weights))
               )
