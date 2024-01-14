@@ -664,7 +664,8 @@ def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, gl
     total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
     print("Total excluded: {}".format(total_excluded))
     print("Total not excluded: {}".format(total_not_excluded))
-    print("Total excluded/Total not excluded: {}".format(total_excluded/total_not_excluded))
+    if total_not_excluded != 0:
+        print("Total excluded/Total not excluded: {}".format(total_excluded / total_not_excluded))
     if total_not_excluded == 0:
         return -1
     new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate
@@ -783,6 +784,7 @@ def n_shallow_layer_experiment(args):
             excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layer]
 
             not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layer]
+
             new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
             cfg.amount = new_pr
             print("Excluded layers: {}".format(cfg.exclude_layer))
@@ -790,7 +792,7 @@ def n_shallow_layer_experiment(args):
                 n_shallow_layer_index_list.append(name2index[layer_name])
                 n_shallow_layer_name_list.append(layer_name)
                 dense_accuracy_list.append(dense_accuracy)
-                pruned_accuracy_list.append(dense_accuracy)
+                pruned_accuracy_list.append(0)
                 files_names.append(file_name)
                 adjusted_prunig_rate.append(new_pr)
                 break
@@ -808,7 +810,7 @@ def n_shallow_layer_experiment(args):
                 n_shallow_layer_index_list.append(name2index[layer_name])
                 n_shallow_layer_name_list.append(layer_name)
                 dense_accuracy_list.append(dense_accuracy)
-                pruned_accuracy_list.append(dense_accuracy)
+                pruned_accuracy_list.append(pruned_accuracy)
                 files_names.append(file_name)
                 adjusted_prunig_rate.append(new_pr)
                 break

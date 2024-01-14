@@ -457,6 +457,7 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
+            print(name)
     return modules
 
 
@@ -2244,7 +2245,8 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
     if type == "global":
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
-        print("Weigths to prune:{}".format(weights))
+        print("Length of weigths to prune:{}".format(len(weights))
+              )
         if criterion == "l1":
             prune.global_unstructured(
                 weights,
