@@ -538,8 +538,8 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 model="vgg19"
 dataset="tiny_imagenet"
-#directory=/nobackup/sclaam/checkpoints
-directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
+directory=/nobackup/sclaam/checkpoints
+#directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
 #seeds=(0 1 2)
 rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
