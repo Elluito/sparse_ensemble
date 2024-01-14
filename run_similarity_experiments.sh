@@ -551,8 +551,8 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 #qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
-#qsub -l h_rt=15:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}_more_time" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
-qsub -l h_rt=1:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "1" "_"
+#qsub-l coproc_p100=1 -l h_rt=15:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}_more_time" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
+qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "1" "_"
 
 
 
