@@ -662,6 +662,9 @@ def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, gl
     count_fn = lambda w: w.nelement()
     total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
     total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
+    print("Total excluded: {}".format(total_excluded))
+    print("Total not excluded: {}".format(total_not_excluded))
+    print("Total excluded/Total not excluded: {}".format(total_excluded/total_not_excluded))
     if total_not_excluded == 0:
         return -1
     new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate

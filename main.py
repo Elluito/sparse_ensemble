@@ -2244,6 +2244,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
     if type == "global":
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
+        print("Weigths to prune:{}".format(weights))
         if criterion == "l1":
             prune.global_unstructured(
                 weights,
