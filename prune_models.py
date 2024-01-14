@@ -605,11 +605,12 @@ def main(args):
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
-    search_string = "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
-                                                                      args.RF_level)
+    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
+                                                                         args.RF_level, args.name)
     things = list(glob.glob(search_string))
     if len(things) < 2:
         search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
     print("Glob text:{}".format(
         "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print(things)
@@ -661,7 +662,7 @@ def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, gl
     count_fn = lambda w: w.nelement()
     total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
     total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
-    if total_not_excluded==0:
+    if total_not_excluded == 0:
         return -1
     new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate
     if new_pruning_rate > 0.98:
@@ -757,7 +758,7 @@ def n_shallow_layer_experiment(args):
     names_to_use = [i for i in weight_names_begining if i not in cfg.exclude_layers]
     n_shallow_layer_index_list = []
     n_shallow_layer_name_list = []
-    adjusted_prunig_rate=[]
+    adjusted_prunig_rate = []
 
     # names_to_use = set(weight_names_begining).difference(cfg.exclude_layers)
 
@@ -776,7 +777,7 @@ def n_shallow_layer_experiment(args):
             print("Dense accuracy:{}".format(state_dict_raw["acc"]))
             net.load_state_dict(state_dict_raw["net"])
 
-            excluded_weights = [w for k, w in help_dict.items()if k in cfg.exclude_layer]
+            excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layer]
 
             not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layer]
             new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
@@ -794,8 +795,11 @@ def n_shallow_layer_experiment(args):
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
             pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
-            print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name, name2index[layer_name],new_pr,
-                                                                        pruned_accuracy))
+            print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name,
+                                                                                                     name2index[
+                                                                                                         layer_name],
+                                                                                                     new_pr,
+                                                                                                     pruned_accuracy))
 
             if abs(dense_accuracy - pruned_accuracy) < 3:
                 n_shallow_layer_index_list.append(name2index[layer_name])
