@@ -749,7 +749,7 @@ def n_shallow_layer_experiment(args):
     search_string = "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
                                                                       args.RF_level)
     things = list(glob.glob(search_string))
-    if len(things) < 2:
+    if len(things) < 1:
         search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
     print("Glob text:{}".format(
         "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
@@ -763,43 +763,45 @@ def n_shallow_layer_experiment(args):
     n_shallow_layer_index_list = []
     n_shallow_layer_name_list = []
     adjusted_prunig_rate = []
-
+    reset_exclude_layers = exclude_layers
     # names_to_use = set(weight_names_begining).difference(cfg.exclude_layers)
 
     for i, name in enumerate(
             glob.glob(search_string)):
         print("************************ {} ******************************".format(name))
-        cfg.exclude_layer = exclude_layers
+        temp_list = []
+        temp_list.extend(reset_exclude_layers)
         file_name = os.path.basename(name)
         print(file_name)
         print(names_to_use)
-        print(cfg.exclude_layer)
+        print(cfg.exclude_layers)
+
+        best_layer_name = None
+        best_pruned_acc = 0
+        best_new_pr = 0.9
+        best_dense_accuracy = 0
         for layer_name in names_to_use:
-            cfg.exclude_layer.append(layer_name)
+            temp_list.append(layer_name)
+            cfg.exclude_layers = temp_list
+
             state_dict_raw = torch.load(name, map_location=device)
             dense_accuracy = state_dict_raw["acc"]
             print("Dense accuracy:{}".format(state_dict_raw["acc"]))
             net.load_state_dict(state_dict_raw["net"])
 
-            excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layer]
+            excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layers]
 
-            not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layer]
+            not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layers]
 
             new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
             cfg.amount = new_pr
-            print("Excluded layers: {}".format(cfg.exclude_layer))
+            print("Excluded layers: {}".format(cfg.exclude_layers))
             if new_pr == -1:
-                n_shallow_layer_index_list.append(name2index[layer_name])
-                n_shallow_layer_name_list.append(layer_name)
-                dense_accuracy_list.append(dense_accuracy)
-                pruned_accuracy_list.append(0)
-                files_names.append(file_name)
-                adjusted_prunig_rate.append(new_pr)
                 break
 
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-            pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
+            pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
             print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name,
                                                                                                      name2index[
                                                                                                          layer_name],
@@ -807,13 +809,16 @@ def n_shallow_layer_experiment(args):
                                                                                                      pruned_accuracy))
 
             if abs(dense_accuracy - pruned_accuracy) < 3:
-                n_shallow_layer_index_list.append(name2index[layer_name])
-                n_shallow_layer_name_list.append(layer_name)
-                dense_accuracy_list.append(dense_accuracy)
-                pruned_accuracy_list.append(pruned_accuracy)
-                files_names.append(file_name)
-                adjusted_prunig_rate.append(new_pr)
+                best_layer_name = layer_name
+                best_pruned_acc = pruned_accuracy
+                best_dense_accuracy = dense_accuracy
+                best_new_pr = new_pr
                 break
+            if pruned_accuracy>best_pruned_acc:
+                best_layer_name = layer_name
+                best_pruned_acc = pruned_accuracy
+                best_dense_accuracy = dense_accuracy
+                best_new_pr = new_pr
 
             # pruning_rates_per_layer = list(map(zero_number, weights))
             #
@@ -829,6 +834,13 @@ def n_shallow_layer_experiment(args):
             #     "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
             #                                                                    args.dataset, args.pruning_rate),
             #     index=False)
+
+        n_shallow_layer_index_list.append(name2index[best_layer_name])
+        n_shallow_layer_name_list.append(best_layer_name)
+        dense_accuracy_list.append(best_dense_accuracy)
+        pruned_accuracy_list.append(best_pruned_acc)
+        files_names.append(file_name)
+        adjusted_prunig_rate.append(best_new_pr)
         print("Done")
     #
     df = pd.DataFrame({"Name": files_names,
