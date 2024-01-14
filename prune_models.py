@@ -631,9 +631,11 @@ def main(args):
         pruning_rates_per_layer = list(map(zero_number, weights))
 
         seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
-        seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)[0].split("_")[2]
+
+        seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
+
         if seed_from_file2:
-            seed_from_file = seed_from_file2
+            seed_from_file = seed_from_file2[0].split("_")[2]
         else:
             seed_from_file = seed_from_file1
 
@@ -643,16 +645,16 @@ def main(args):
                                                                            args.dataset, args.pruning_rate),
             index=False)
         print("Done")
-    #     file_name = os.path.basename(name)
-    #     print(file_name)
-    #     files_names.append(file_name)
-    #
-    # df = pd.DataFrame({"Name": files_names,
-    #                    "Dense Accuracy": dense_accuracy_list,
-    #                    "Pruned Accuracy": pruned_accuracy_list,
-    #                    })
-    # df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
-    #           index=False)
+        file_name = os.path.basename(name)
+        print(file_name)
+        files_names.append(file_name)
+
+    df = pd.DataFrame({"Name": files_names,
+                       "Dense Accuracy": dense_accuracy_list,
+                       "Pruned Accuracy": pruned_accuracy_list,
+                       })
+    df.to_csv("RF_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+              index=False)
 
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
