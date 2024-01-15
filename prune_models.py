@@ -768,6 +768,8 @@ def n_shallow_layer_experiment(args):
 
     for i, name in enumerate(
             glob.glob(search_string)):
+        if "width" in name and "width" not in args.name:
+            continue
         print("************************ {} ******************************".format(name))
         temp_list = []
         temp_list.extend(reset_exclude_layers)
