@@ -536,12 +536,12 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-model="resnet50"
+model="vgg19"
 dataset="cifar10"
 directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
 #seeds=(0 1 2)
-rf_levels=(3 5 7)
+rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
