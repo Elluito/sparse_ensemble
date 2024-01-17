@@ -675,6 +675,7 @@ def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, gl
 
 
 def n_shallow_layer_experiment(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -796,10 +797,14 @@ def n_shallow_layer_experiment(args):
             not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layers]
 
             new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
+            if new_pr == -1 or new_pr > 0.95:
+                # best_layer_name = layer_name
+                # best_pruned_acc = pruned_accuracy
+                # best_dense_accuracy = dense_accuracy
+                # best_new_pr = new_pr
+                break
             cfg.amount = new_pr
             print("Excluded layers: {}".format(cfg.exclude_layers))
-            if new_pr == -1:
-                break
 
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
