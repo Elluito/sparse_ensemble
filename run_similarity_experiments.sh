@@ -226,9 +226,9 @@ level_6_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_${solut
 #level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
 level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_${solution_string}.*"))
 
- all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f4 |uniq))
- all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_${solution_string}.*" |cut -d_ -f4 |uniq))
- all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_${solution_string}.*" |cut -d_ -f4 |uniq))
+ all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
+ all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*" |cut -d_ -f5 ))
+ all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
 declare -a list_to_use_files=("${level_5_files[@]}")
 declare -a list_to_use_seeds=("${all_level_5_seeds[@]}")
