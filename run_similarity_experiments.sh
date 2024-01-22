@@ -233,7 +233,7 @@ level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${sol
 declare -a list_to_use_files=("${level_6_files[@]}")
 declare -a list_to_use_seeds=("${all_level_6_seeds[@]}")
 
-files_level=(6 5 5 5 5)
+files_level=(6 6 6 6 5)
 #file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 #
 max=${#list_to_use_files[@]}                                  # Take the length of that array
@@ -241,7 +241,7 @@ echo "Beginingn of the loop"
 echo "${max}"
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
-  qsub -l coproc_p100=1 -l h_rt=10:00:00 -N "features_${files_level[$idxA]}_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_6"  "6" "alternative"
+  qsub -l coproc_p100=1 -l h_rt=10:00:00 -N "features_6_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_6"  "6" "alternative"
 #echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
   if [ $idxA -gt 1 ]
   then
