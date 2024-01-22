@@ -54,7 +54,7 @@ unset KMP_AFFINITY
 #        Create features for given seed name
 #############################################################
 
-#python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
+python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
 
 
 #############################################################
@@ -81,7 +81,7 @@ unset KMP_AFFINITY
 #############################################################
 #     One shot pruning results
 #############################################################
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --experiment $7
+#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --experiment $7
 #--name $8
 #--name $7
 
