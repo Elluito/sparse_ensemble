@@ -233,7 +233,7 @@ level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${sol
 declare -a list_to_use_files=("${level_6_files[@]}")
 declare -a list_to_use_seeds=("${all_level_6_seeds[@]}")
 
-files_level=(5 5 5 5 5)
+files_level=(6 5 5 5 5)
 #file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 #
 max=${#list_to_use_files[@]}                                  # Take the length of that array
