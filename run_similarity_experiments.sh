@@ -230,8 +230,8 @@ level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${sol
  all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*" |cut -d_ -f5 ))
  all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
-declare -a list_to_use_files=("${level_6_files[@]}")
-declare -a list_to_use_seeds=("${all_level_6_seeds[@]}")
+declare -a list_to_use_files=("${level_7_files[@]}")
+declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
 
 files_level=(6 6 6 6 5)
 #file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
