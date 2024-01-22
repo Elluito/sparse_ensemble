@@ -230,8 +230,8 @@ level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_${solut
  all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*" |cut -d_ -f5 ))
  all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
-declare -a list_to_use_files=("${level_5_files[@]}")
-declare -a list_to_use_seeds=("${all_level_5_seeds[@]}")
+declare -a list_to_use_files=("${level_6_files[@]}")
+declare -a list_to_use_seeds=("${all_level_6_seeds[@]}")
 
 files_level=(5 5 5 5 5)
 #file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
@@ -241,6 +241,7 @@ echo "Beginingn of the loop"
 echo "${max}"
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
+#  qsub -N "features_${files_level[$idxA]}_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_5"  "5" "alternative"
 echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
 done
 #
