@@ -219,14 +219,14 @@ experiment=1
 #solution_string="initial_weights"
 solution_string="test_acc"
 directory=/nobackup/sclaam/checkpoints
-level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_${solution_string}.*"))
+level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*"))
 #level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
 
 level_6_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_${solution_string}.*"))
 #level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
 level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_${solution_string}.*"))
 
- all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_${solution_string}.*" |cut -d_ -f4 |uniq))
+ all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f4 |uniq))
  all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_${solution_string}.*" |cut -d_ -f4 |uniq))
  all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_${solution_string}.*" |cut -d_ -f4 |uniq))
 
