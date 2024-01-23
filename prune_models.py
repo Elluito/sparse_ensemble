@@ -309,6 +309,79 @@ def gradient_flow_calculation(args):
                        "Gradient Flow at init": gradient_flow_at_init_list,
                        })
     df.to_csv("GF_init_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset), index=False)
+def logistic_probes_for_model(args):
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": args.solution,
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
+
+         })
+    train, val, testloader = get_datasets(cfg)
+
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+
+    if args.model == "resnet24":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+    state_dict_raw = torch.load(args.solution, map_location=device)
+    net.load_state_dict(state_dict_raw["net"])
+
+
 
 
 def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,

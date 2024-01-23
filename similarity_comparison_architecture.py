@@ -200,6 +200,176 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         o += 1
 
 
+def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alternative", solution="",
+                               seed_name="_seed_1", rf_level=0, train=1):
+    from feature_maps_utils import save_layer_feature_maps_for_batch
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype,
+         "solution": solution,
+         # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 1,
+         "num_workers": 0,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+    ################################# dataset cifar10 ###########################################################################
+
+    from alternate_models.resnet import ResNet50_rf
+    from alternate_models.vgg import VGG_RF
+    from torchvision.models import resnet18, resnet50
+    if cfg.dataset == "cifar10":
+        if cfg.architecture == "resnet50":
+            if cfg.model_type == "alternative":
+                net = ResNet50_rf(num_classes=10, rf_level=rf_level)
+                if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+            if cfg.model_type == "hub":
+                net = resnet50()
+                in_features = net.fc.in_features
+                net.fc = torch.nn.Linear(in_features, 10)
+                if solution:
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k, item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.", "")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
+        if cfg.architecture == "vgg19":
+
+            if cfg.model_type == "alternative":
+                net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
+
+        current_directory = Path().cwd()
+        data_path = "/datasets"
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+        # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
+        #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+
+        # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        # val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        #                                          num_workers=cfg.num_workers)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+    if cfg.dataset == "cifar100":
+        if cfg.architecture == "resnet50":
+            if cfg.model_type == "alternative":
+
+                net = ResNet50_rf(num_classes=100, rf_level=rf_level)
+                if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+            if cfg.model_type == "hub":
+                net = resnet50()
+                in_features = net.fc.in_features
+                net.fc = torch.nn.Linear(in_features, 100)
+                if solution:
+                    temp_dict = torch.load(cfg.solution)["net"]
+                    real_dict = {}
+                    for k, item in temp_dict.items():
+                        if k.startswith('module'):
+                            new_key = k.replace("module.", "")
+                            real_dict[new_key] = item
+                    net.load_state_dict(real_dict)
+
+        if cfg.architecture == "vgg19":
+
+            if cfg.model_type == "alternative":
+                net = VGG_RF("VGG19_rf", num_classes=100, rf_level=rf_level)
+                if solution:
+                    net.load_state_dict(torch.load(cfg.solution)["net"])
+
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets"
+
+        transform_train = transforms.compose([
+            transforms.randomcrop(32, padding=4),
+            transforms.randomhorizontalflip(),
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+        transform_test = transforms.compose([
+            transforms.totensor(),
+            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
+
+        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+                                                  num_workers=cfg.num_workers)
+        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+
+        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+                                                 num_workers=cfg.num_workers)
+
+    current_directory = Path().cwd()
+    add_nobackup = ""
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        add_nobackup = "/nobackup/sclaam/"
+
+    # prefix_custom_train = Path(
+    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_custom_test = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    ######################## now the pytorch implementation ############################################################
+    maximun_samples = 20000
+    net.cuda()
+    o = 0
+    dataloader = None
+    if train:
+        dataloader = trainloader
+    else:
+        dataloader = testloader
+
+    for x, y in dataloader:
+
+        x = x.cuda()
+        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=seed_name)
+        # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
+
+        print("{} batch out of {}".format(o, len(testloader)))
+        if o == maximun_samples:
+            break
+        o += 1
+
+
 def features_similarity_comparison_experiments(architecture="resnet18", modeltype1="alternative",
                                                modeltype2="alternative", name1="_seed_1", name2="_seed_2",
                                                filetype1="txt", filetype2="txt"):
@@ -232,7 +402,7 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
     if cfg.architecture == "resnet50":
         number_of_layers = 49
     if cfg.architecture == "vgg19":
-        number_of_layers =16
+        number_of_layers = 16
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=name1,
                                                                  name2=name2, type1=filetype1, type2=filetype2,
@@ -473,6 +643,8 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-ft2', '--filetype2', type=str, default="txt", help='',
                         required=False)
+    parser.add_argument('-t', '--train', type=int, default=1, help='',
+                        required=False)
 
     #
     args = vars(parser.parse_args())
@@ -495,3 +667,6 @@ if __name__ == '__main__':
                                                    modeltype2=args["modeltype2"], name1=args["seedname1"],
                                                    name2=args["seedname2"], filetype1=args["filetype1"],
                                                    filetype2=args["filetype2"])
+    if args["experiment"] == 3:
+        save_features_for_logistic(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
+                                   seed_name=args["seedname1"], train=args["train"])
