@@ -232,8 +232,8 @@ all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth
 all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f6 ))
 all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
-declare -a list_to_use_files=("${level_4_files[@]}")
-declare -a list_to_use_seeds=("${all_level_4_seeds[@]}")
+declare -a list_to_use_files=("${level_7_files[@]}")
+declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
 
 files_level=(0)
 file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
