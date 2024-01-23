@@ -211,43 +211,44 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 #     initial weights feature representation
 
+#
+#model="resnet50"
+#dataset="cifar10"
+#init=0
+#experiment=1
+##solution_string="initial_weights"
+#solution_string="no_recording_test_acc"
+#directory=/nobackup/sclaam/checkpoints
+#level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*"))
+##level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
+#
+#level_6_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*"))
+##level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
+#level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*"))
+#
+# all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
+# all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*" |cut -d_ -f5 ))
+# all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
+#
+#declare -a list_to_use_files=("${level_7_files[@]}")
+#declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
 
-model="resnet50"
-dataset="cifar10"
-init=0
-experiment=1
-#solution_string="initial_weights"
-solution_string="no_recording_test_acc"
-directory=/nobackup/sclaam/checkpoints
-level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*"))
-#level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
-
-level_6_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*"))
-#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
-level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*"))
-
- all_level_5_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
- all_level_6_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_6_.*${solution_string}.*" |cut -d_ -f5 ))
- all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
-
-declare -a list_to_use_files=("${level_7_files[@]}")
-declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
-
-files_level=(6 6 6 6 5)
+#files_level=(6 6 6 6 5)
 #file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 #
-max=${#list_to_use_files[@]}                                  # Take the length of that array
-echo "Beginingn of the loop"
-echo "${max}"
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#max=${#list_to_use_files[@]}                                  # Take the length of that array
+#echo "Beginingn of the loop"
+#echo "${max}"
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
-  qsub -l coproc_p100=1 -l h_rt=10:00:00 -N "features_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
+#  qsub -l coproc_p100=1 -l h_rt=10:00:00 -N "features_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
+#  qsub -l coproc_p100=1 -l h_rt=15:00:00 -N "Similarity${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
 #echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
-  if [ $idxA -gt 1 ]
-  then
-  break
-  fi
-done
+#  if [ $idxA -gt 1 ]
+#  then
+#  break
+#  fi
+#done
 #
 
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
@@ -807,21 +808,22 @@ done
 ###############################################################################
 
 #
-#seeds=(0 1)
-#rf_levels=(1 2 3 4)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_max=${#seeds[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-#for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
+seeds=(0 1 2)
+rf_levels=(5 6 7)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+seeds_max=${#seeds[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
+
+##echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
 #
-###echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
-##
-#qsub -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "vgg19" "_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
-##
-#done
-#done
-#done
+qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50"  "trained_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "trained_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
+
+trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7
+done
+done
+done
 
 
 
