@@ -229,7 +229,7 @@ level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${sol
 
 #all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
 all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth" |cut -d_ -f6 ))
-all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f5 ))
+all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f6 ))
 all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
 declare -a list_to_use_files=("${level_4_files[@]}")
