@@ -232,8 +232,8 @@ all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth
 all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f5 ))
 all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
-declare -a list_to_use_files=("${level_1_files[@]}")
-declare -a list_to_use_seeds=("${all_level_1_seeds[@]}")
+declare -a list_to_use_files=("${level_4_files[@]}")
+declare -a list_to_use_seeds=("${all_level_4_seeds[@]}")
 
 files_level=(0)
 file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
@@ -812,23 +812,23 @@ done
 ###############################################################################
 
 #
-seeds=(0 1 2)
-rf_levels=(5 6 7)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-seeds_max=${#seeds[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
-for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
-
-##echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
+#seeds=(0 1 2)
+#rf_levels=(5 6 7)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_max=${#seeds[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#for ((idxB=0; idxB<seeds_max; idxB++)); do              # iterate idxA from 0 to length
+#for ((idxC=idxB+1; idxC<seeds_max; idxC++)); do              # iterate idxA from 0 to length
 #
-qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50"  "trained_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "trained_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
-
-#trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7
-done
-done
-done
-
+###echo "seed_${seeds[$idxB]}_VS_seed_${seeds[$idxC]}_level_${rf_levels[$idxA]}"
+##
+##qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50"  "trained_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "trained_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
+#
+##trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7
+#done
+#done
+#done
+#
 
 
 #######################################################################################################################
