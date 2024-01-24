@@ -62,7 +62,11 @@ python similarity_comparison_architecture.py --experiment 1 --architecture $1 --
 #############################################################
 #python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
+#############################################################
+#       Calculate the describing statistisc of all feature layers of a solution
+#############################################################
 #
+python similarity_comparison_architecture.py --experiment 4 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #############################################################
 #     Smoothness (Hessian) calculation

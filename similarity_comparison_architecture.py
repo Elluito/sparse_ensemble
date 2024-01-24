@@ -1,3 +1,5 @@
+import pandas as pd
+
 print("I'm about to begin the similarity comparison")
 import omegaconf
 from pathlib import Path
@@ -618,6 +620,49 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
             break
         o += 1
 
+def describe_statistics_of_layer_representations(architecture="resnet18", modeltype1="alternative",
+                                               modeltype2="alternative", name1="_seed_1", name2="_seed_2",
+                                               filetype1="txt", filetype2="txt"):
+
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype1,
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 128,
+         "num_workers": 2,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+
+    prefix_custom_train = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_modeltype1_test = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    cfg.model_type = modeltype2
+    prefix_modeltype2_test = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+
+    ##### -1 beacuse I dont have the linear layer here
+    # number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
+    number_of_layers = 0
+    if cfg.architecture == "resnet50":
+        number_of_layers = 49
+    if cfg.architecture == "vgg19":
+        number_of_layers = 16
+
+
+
+    for i in range(number_of_layers):
+        # if use_device == "cuda":
+            layer_i = pd.DataFrame(load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1))
+            print("##### Layer {} ###########".format(i))
+            layer_i.describe()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
@@ -670,3 +715,9 @@ if __name__ == '__main__':
     if args["experiment"] == 3:
         save_features_for_logistic(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
                                    seed_name=args["seedname1"], train=args["train"])
+    if args["experiment"]== 4:
+
+        describe_statistics_of_layer_representations(architecture=args["architecture"], modeltype1=args["modeltype1"],
+                                                   modeltype2=args["modeltype2"], name1=args["seedname1"],
+                                                   name2=args["seedname2"], filetype1=args["filetype1"],
+                                                   filetype2=args["filetype2"])
