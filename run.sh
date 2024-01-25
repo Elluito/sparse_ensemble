@@ -54,7 +54,7 @@ unset KMP_AFFINITY
 #        Create features for given seed name
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
+#python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
 
 
 #############################################################

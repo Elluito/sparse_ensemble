@@ -1,17 +1,44 @@
 import re
-import matplotlib.lines as mlines
+import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
+sns.reset_orig()
+sns.reset_defaults()
+matplotlib.rc_file_defaults()
+
+plt.rcParams.update({
+    "axes.linewidth": 0.5,
+    'axes.edgecolor': 'black',
+    "grid.linewidth": 0.4,
+    "lines.linewidth": 1,
+    'xtick.bottom': True,
+    'xtick.color': 'black',
+    "xtick.direction": "out",
+    "xtick.major.size": 3,
+    "xtick.major.width": 0.5,
+    "xtick.minor.size": 1.5,
+    "xtick.minor.width": 0.5,
+    'ytick.left': True,
+    'ytick.color': 'black',
+    "ytick.major.size": 3,
+    "ytick.major.width": 0.5,
+    "ytick.minor.size": 1.5,
+    "ytick.minor.width": 0.5,
+    "figure.figsize": [3.3, 2.5],
+    "text.usetex": True,
+    "font.family": "serif",
+    "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",
+})
+
+fs = 12
+import matplotlib.lines as mlines
 import pandas as pd
 import torch
-import torchvision
 import numpy as np
 import matplotlib.patches as mpatches
-import torchvision.transforms as transforms
-import torch.optim as optim
 import torchessian as torchessian
-from torchvision.models.resnet import conv3x3, resnet18, ResNet
 import pickle
+
 def main():
     #################### Plot training #############################################
 
@@ -105,8 +132,595 @@ def main():
     plt.legend(prop={"size": 15},loc="upper left")
     plt.tight_layout()
     plt.savefig("paper_plots/resnet50_tiny_ImageNet_training.pdf", bbox_inches="tight")
-    return 0
     #################### Similarity Plots #############################################
+
+    """# ResNet50 receptive field levels in trained models
+
+    ## Level 1 receptive field
+    """
+
+    m1 = np.loadtxt(
+        "similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_2_rf_level_1_.txt",
+        delimiter=",")
+
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m1, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level1_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m1[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level1_in_block_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m1[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level1_out_block_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """###  IN and out of block similairties"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m1[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level1_in_out_block_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """## Level 2 receptive field
+
+    """
+
+    m2 = np.loadtxt(
+        "similarity_experiments/resnet50__seed_1_rf_level_2_V__seed_2_rf_level_2_.txt",
+        delimiter=",")
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m2, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level2_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m2[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    plt.savefig("paper_plots/resnet50_level2_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m2[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level2_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """###  IN and aout of block similairties"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m2[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level2_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """## Level 3 receptive field"""
+
+    m3 = np.loadtxt(
+        "similarity_experiments/resnet50__seed_1_rf_level_3_V__seed_2_rf_level_3_.txt",
+        delimiter=",")
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m3, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level3_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m3[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level3_in_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m3[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level3_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """###  In and out of block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m3[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level3_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """## Level 4 receptive field"""
+
+    m4 = np.loadtxt(
+        "similarity_experiments/resnet50__seed_1_rf_level_4_V__seed_2_rf_level_4_.txt",
+        delimiter=",")
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m4, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(m4)), rotation=90)
+    plt.yticks(range(len(m4)))
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level4_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m4[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+
+    plt.savefig("paper_plots/resnet50_level4_in_similarity_cifar10.pdf", bbox_inches="tight")
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m4[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level4_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### IN block and out block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m4[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level4_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    # Mean similarity after layer 25 for all levels
+    half_m1 = m1[24:, 24:]
+    half_m2 = m2[24:, 24:]
+    half_m3 = m3[24:, 24:]
+    half_m4 = m4[24:, 24:]
+    print("Upper half")
+    print("Mean \"Similarity\" for half m1 {}".format(np.mean(half_m1)))
+    print("Mean \"Similarity\" for half m2 {}".format(np.mean(half_m2)))
+    print("Mean \"Similarity\" for half m3 {}".format(np.mean(half_m3)))
+    print("Mean \"Similarity\" for half m4 {}".format(np.mean(half_m4)))
+    print("Lower Half")
+    half_m1 = m1[:24, 24:]
+    half_m2 = m2[:24, 24:]
+    half_m3 = m3[:24, 24:]
+    half_m4 = m4[:24, 24:]
+    print("Mean \"Similarity\" for half m1 {}".format(np.mean(half_m1)))
+    print("Mean \"Similarity\" for half m2 {}".format(np.mean(half_m2)))
+    print("Mean \"Similarity\" for half m3 {}".format(np.mean(half_m3)))
+    print("Mean \"Similarity\" for half m4 {}".format(np.mean(half_m4)))
+
+    """## Level 5"""
+
+    m5_1 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_5_V_trained_seed_1_rf_level_5_.txt",
+        delimiter=",")
+    m5_2 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_5_V_trained_seed_2_rf_level_5_.txt",
+        delimiter=",")
+    m5_3 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_1_rf_level_5_V_trained_seed_2_rf_level_5_.txt",
+        delimiter=",")
+    m5 = (m5_1 + m5_2 + m5_3) / 3
+
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m5, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # ax.tick_params(range(49))
+    plt.xticks(range(len(m5)), rotation=90)
+    plt.yticks(range(len(m5)))
+    # plt.colorbar()
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level5_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m5[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level5_in_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m5[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level5_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### IN block and out block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m5[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level5_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """## Level 6"""
+
+    m6_1 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_6_V_trained_seed_1_rf_level_6_.txt",
+        delimiter=",")
+    m6_2 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_6_V_trained_seed_2_rf_level_6_.txt",
+        delimiter=",")
+    m6_3 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_1_rf_level_6_V_trained_seed_2_rf_level_6_.txt",
+        delimiter=",")
+    m6 = (m6_1 + m6_2 + m6_3) / 3
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m6, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(m6)), rotation=90)
+    plt.yticks(range(len(m6)))
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level6_similarity_cifar10.pdf", bbox_inches="tight")
+
+    print("M6_1 row 2:{} with min of {:0.26f} and max of {:0.26f} and mean {:0.26f}".format(m6_1[2, :],
+                                                                                            np.min(m6_1[2, :]),
+                                                                                            np.max(m6_1[2, :]),
+                                                                                            np.mean(m6_1[2, :])))
+    print("M6_2 row 2:{} with min of {:0.26f} and max of {:0.26f} and mean {:0.26f}".format(m6_2[2, :],
+                                                                                            np.min(m6_2[2, :]),
+                                                                                            np.max(m6_2[2, :]),
+                                                                                            np.mean(m6_2[2, :])))
+    print("M6_3 row 2:{} with min of {:0.26f} and max of {:0.26f} and mean {:0.26f}".format(m6_3[2, :],
+                                                                                            np.min(m6_3[2, :]),
+                                                                                            np.max(m6_3[2, :]),
+                                                                                            np.mean(m6_3[2, :])))
+
+    """### In block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m6[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level6_in_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m6[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level6_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block and outblock similarities
+
+    """
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m6[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    # plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level6_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """## Level 7
+
+    """
+
+    m7_1 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_7_V_trained_seed_1_rf_level_7_.txt",
+        delimiter=",")
+    m7_2 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_0_rf_level_7_V_trained_seed_2_rf_level_7_.txt",
+        delimiter=",")
+    m7_3 = np.loadtxt(
+        "similarity_experiments/resnet50_trained_seed_1_rf_level_7_V_trained_seed_2_rf_level_7_.txt",
+        delimiter=",")
+    # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+    m7 = (m7_1 + m7_2 + m7_3) / 3
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(m7, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    plt.colorbar()
+    plt.xticks(range(len(m7)), rotation=90)
+    plt.yticks(range(len(m7)))
+    ax.axhline(y=24.5, color='g', linewidth=2)
+    ax.axvline(x=24.5, color='g', linewidth=2)
+    plt.savefig("paper_plots/resnet50_level7_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### In block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    sim_inbloc_v_inblock = m7[in_block_layers, :]
+    sim_inbloc_v_inblock = sim_inbloc_v_inblock[:, in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_inbloc_v_inblock, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    plt.colorbar()
+    plt.xticks(range(32), in_block_layers, rotation=90)
+    plt.yticks(range(32), in_block_layers)
+    plt.savefig("paper_plots/resnet50_level7_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+
+
+    """### Out block similarities"""
+
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m7[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, out_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    plt.colorbar()
+    plt.xticks(range(len(out_block_layers)), out_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
+    plt.savefig("paper_plots/resnet50_level7_out_similarity_cifar10.pdf", bbox_inches="tight")
+
+
+    """### IN and out block similarities"""
+
+    in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38,
+                       40, 41, 43, 44, 46, 47]
+    out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+    sim_out_V_out = m7[out_block_layers, :]
+    sim_out_V_out = sim_out_V_out[:, in_block_layers]
+    # sim_inbloc_v_inblock=m4[in_block_layers,in_block_layers]
+    fig, ax = plt.subplots(figsize=(10, 10))
+    plt.imshow(sim_out_V_out, cmap='magma', vmin=0, vmax=1)
+    ax = plt.gca()
+    ax.invert_yaxis()
+    plt.colorbar()
+    plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
+    plt.yticks(range(len(out_block_layers)), out_block_layers)
+    plt.savefig("paper_plots/resnet50_level7_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # ax.axhline(y = 24.5, color='g',linewidth = 2)
+    # ax.axvline(x = 24.5, color='g',linewidth = 2)
 
 
     ############## Hessian Spectra  ####################################################
