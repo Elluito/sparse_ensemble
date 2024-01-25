@@ -825,7 +825,7 @@ file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
 #qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "similarity_level_${rf_levels[$idxA]}_seeds_${seeds[$idxB]}_${seeds[$idxC]}" run.sh  "resnet50"  "_trained_seed_${seeds[$idxB]}_rf_level_${rf_levels[$idxA]}" "trained_seed_${seeds[$idxC]}_rf_level_${rf_levels[$idxA]}" "alternative" "alternative" "npy" "npy"
 #qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "statistics_features_level_1_seeds_0" run.sh  "resnet50"  "_trained_seed_0_rf_level_7" "_trained_seed_0_rf_level_7" "alternative" "alternative" "npy" "npy"
 #qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "statistics_features_level_4_seeds_0" run.sh  "resnet50"  "_trained_seed_0_rf_level_7" "_trained_seed_0_rf_level_7" "alternative" "alternative" "npy" "npy"
-qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "statistics_features_level_7_seeds_0" run.sh  "resnet50"  "_trained_seed_0_rf_level_7" "_trained_seed_0_rf_level_7" "alternative" "alternative" "npy" "npy"
+qsub -l coproc_p100=1 -l h_rt=00:30:00 -N "statistics_features_level_7_seeds_0" run.sh  "resnet50"  "_trained_seed_0_rf_level_7" "_trained_seed_0_rf_level_7" "alternative" "alternative" "npy" "npy"
 #
 ##trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7
 #done
