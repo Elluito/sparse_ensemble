@@ -232,8 +232,8 @@ all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth
 all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f6 ))
 all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
 
-declare -a list_to_use_files=("${level_1_files[@]}")
-declare -a list_to_use_seeds=("${all_level_1_seeds[@]}")
+declare -a list_to_use_files=("${level_4_files[@]}")
+declare -a list_to_use_seeds=("${all_level_4_seeds[@]}")
 
 files_level=(0)
 file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
@@ -244,8 +244,8 @@ max=${#files_level[@]}                                  # Take the length of tha
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
 #  qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "features_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
-qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "logistic_features_train_1_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "1"
-qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "logistic_features_test_1_seed_${list_to_use_seeds[$idxA]}" run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "0"
+qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "logistic_features_train_4_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "1"
+qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "logistic_features_test_4_seed_${list_to_use_seeds[$idxA]}" run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "0"
 #  qsub -l coproc_p100=1 -l h_rt=15:00:00 -N "Similarity${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
 #echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
   if [ $idxA -gt 0 ]
