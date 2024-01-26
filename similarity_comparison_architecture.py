@@ -620,11 +620,10 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
             break
         o += 1
 
+
 def describe_statistics_of_layer_representations(architecture="resnet18", modeltype1="alternative",
-                                               modeltype2="alternative", name1="_seed_1", name2="_seed_2",
-                                               filetype1="txt", filetype2="txt"):
-
-
+                                                 modeltype2="alternative", name1="_seed_1", name2="_seed_2",
+                                                 filetype1="txt", filetype2="txt"):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": modeltype1,
@@ -656,13 +655,25 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
     if cfg.architecture == "vgg19":
         number_of_layers = 16
 
-
-
     for i in range(number_of_layers):
         # if use_device == "cuda":
-            layer_i = pd.DataFrame(load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1))
-            print("##### Layer {} ###########".format(i))
-            layer_i.describe()
+        layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
+        mean_per_feature = np.mean(layer_feature, axis=0)
+        sd_per_feature = np.std(layer_feature, axis=0)
+
+        # layer_i = pd.DataFrame(layer_feature)
+        print("##### Layer {} ###########".format(i))
+        num_features = len(mean_per_feature)
+        print("Feature length: {}".format(num_features))
+        print("How many 0 are in the mean vector per feature? : {}".format(
+            num_features - np.count_nonzero(mean_per_feature)))
+        print("How many 0 are in the standard deviation vector per feature?: {}".format(
+            num_features - np.count_nonzero(sd_per_feature)))
+        print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
+        print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
+        print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
+        # layer_i.describe()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
@@ -715,9 +726,8 @@ if __name__ == '__main__':
     if args["experiment"] == 3:
         save_features_for_logistic(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
                                    seed_name=args["seedname1"], train=args["train"])
-    if args["experiment"]== 4:
-
+    if args["experiment"] == 4:
         describe_statistics_of_layer_representations(architecture=args["architecture"], modeltype1=args["modeltype1"],
-                                                   modeltype2=args["modeltype2"], name1=args["seedname1"],
-                                                   name2=args["seedname2"], filetype1=args["filetype1"],
-                                                   filetype2=args["filetype2"])
+                                                     modeltype2=args["modeltype2"], name1=args["seedname1"],
+                                                     name2=args["seedname2"], filetype1=args["filetype1"],
+                                                     filetype2=args["filetype2"])
