@@ -344,12 +344,14 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
     add_nobackup = ""
     if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
         add_nobackup = "/nobackup/sclaam/"
-
-    # prefix_custom_train = Path(
-    #     "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
-    prefix_custom_test = Path(
+    prefix = None
+    if train:
+        prefix=prefix_custom_train = Path(
+        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    else:
+        prefix=prefix_custom_test = Path(
         "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
-    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    prefix.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = 20000
     net.cuda()
