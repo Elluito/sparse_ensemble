@@ -624,6 +624,7 @@ def find_different_groups(architecture="resnet18", seed=1, modeltype="alternativ
 def describe_statistics_of_layer_representations(architecture="resnet18", modeltype1="alternative",
                                                  modeltype2="alternative", name1="_seed_1", name2="_seed_2",
                                                  filetype1="txt", filetype2="txt"):
+    from CKA_similarity.CKA import CKA
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": modeltype1,
@@ -654,7 +655,9 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         number_of_layers = 49
     if cfg.architecture == "vgg19":
         number_of_layers = 16
+    feature_length_list=[]
 
+    kernel = CKA()
     for i in range(number_of_layers):
         # if use_device == "cuda":
         layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
@@ -672,6 +675,39 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
         print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
         print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
+
+        print("##### Minus mean Layer {} ###########".format(i))
+        layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
+        mean_per_feature = np.mean(layer_feature, axis=0)
+        layer_feature = layer_feature-mean_per_feature
+        sd_per_feature = np.std(layer_feature, axis=0)
+        # layer_i = pd.DataFrame(layer_feature)
+        num_features = len(mean_per_feature)
+        print("Feature length: {}".format(num_features))
+        print("How many 0 are in the mean vector per feature? : {}".format(
+            num_features - np.count_nonzero(mean_per_feature)))
+        print("How many 0 are in the standard deviation vector per feature?: {}".format(
+            num_features - np.count_nonzero(sd_per_feature)))
+        print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
+        print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
+        print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
+        #
+        # print("##### Minus mean and kernel centering Layer {} ###########".format(i))
+        # layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
+        # mean_per_feature = np.mean(layer_feature, axis=0)
+        # layer_feature = layer_feature-mean_per_feature
+        # layer_feature
+        # sd_per_feature = np.std(layer_feature, axis=0)
+        # # layer_i = pd.DataFrame(layer_feature)
+        # num_features = len(mean_per_feature)
+        # print("Feature length: {}".format(num_features))
+        # print("How many 0 are in the mean vector per feature? : {}".format(
+        #     num_features - np.count_nonzero(mean_per_feature)))
+        # print("How many 0 are in the standard deviation vector per feature?: {}".format(
+        #     num_features - np.count_nonzero(sd_per_feature)))
+        # print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
+        # print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
+        # print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
         # layer_i.describe()
 
 
