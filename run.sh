@@ -56,6 +56,11 @@ unset KMP_AFFINITY
 
 #python similarity_comparison_architecture.py --experiment 1 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5
 
+#############################################################
+#        Create features for given seed name for logistic regression
+#############################################################
+
+python similarity_comparison_architecture.py --experiment 3 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --train $6
 
 #############################################################
 #       Calculate the similarity of two seeds
@@ -63,10 +68,10 @@ unset KMP_AFFINITY
 #python similarity_comparison_architecture.py --experiment 2 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #############################################################
-#       Calculate the describing statistisc of all feature layers of a solution
+#       Calculate the describing statistics of all feature layers of a solution
 #############################################################
 #
-python similarity_comparison_architecture.py --experiment 4 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
+#python similarity_comparison_architecture.py --experiment 4 --architecture $1 --seedname1 $2 --seedname2 $3 --modeltype1 $4 --modeltype2 $5 --filetype1 $6 --filetype2 $7
 
 #############################################################
 #     Smoothness (Hessian) calculation

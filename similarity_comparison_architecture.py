@@ -366,7 +366,7 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
         save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
-        print("{} batch out of {}".format(o, len(testloader)))
+        print("{} batch out of {}".format(o, len(dataloader)))
         if o == maximun_samples:
             break
         o += 1
@@ -655,8 +655,15 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         number_of_layers = 49
     if cfg.architecture == "vgg19":
         number_of_layers = 16
-    feature_length_list=[]
+    feature_length_list = []
+    layer_index_list = []
+    max_all_rep_list = []
+    mean_all_rep_list = []
 
+    feature_length_minus_mean_list = []
+    layer_index_minus_mean_list = []
+    max_all_rep_minus_mean_list = []
+    mean_all_rep_minus_mean_list = []
     kernel = CKA()
     for i in range(number_of_layers):
         # if use_device == "cuda":
@@ -675,11 +682,16 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
         print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
         print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
+        feature_length_list.append(num_features)
+        layer_index_list.append(i)
+        max_all_rep_list.append(np.max(layer_feature))
+        mean_all_rep_list.append(np.mean(mean_per_feature))
 
         print("##### Minus mean Layer {} ###########".format(i))
         layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
         mean_per_feature = np.mean(layer_feature, axis=0)
-        layer_feature = layer_feature-mean_per_feature
+        layer_feature = layer_feature - mean_per_feature
+        mean_per_feature = np.mean(layer_feature, axis=0)
         sd_per_feature = np.std(layer_feature, axis=0)
         # layer_i = pd.DataFrame(layer_feature)
         num_features = len(mean_per_feature)
@@ -691,6 +703,10 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         print("Mean of the whole features over all samples: {}".format(np.mean(mean_per_feature)))
         print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
         print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
+        feature_length_minus_mean_list.append(num_features)
+        layer_index_minus_mean_list.append(i)
+        max_all_rep_minus_mean_list.append(np.max(layer_feature))
+        mean_all_rep_minus_mean_list.append(np.mean(mean_per_feature))
         #
         # print("##### Minus mean and kernel centering Layer {} ###########".format(i))
         # layer_feature = load_layer_features(prefix_modeltype1_test, i, name=name1, type=filetype1)
@@ -709,6 +725,28 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
         # print("SD of the whole features over all samples: {}".format(np.std(layer_feature)))
         # print("Maximum of the whole features over all samples: {}".format(np.max(layer_feature)))
         # layer_i.describe()
+        #      feature_length_minus_mean_list = []
+        # layer_index_minus_mean_list = []
+        # max_all_rep_minus_mean_list = []
+        # mean_all_rep_minus_mean_list = []
+        df1 = pd.DataFrame(
+            {"Representation Length": feature_length_list,
+             "Representations Index": layer_index_list,
+             "Maximum Value of Representations": max_all_rep_list,
+             "Mean Value of Representations": mean_all_rep_list
+             }
+        )
+        df2 = pd.DataFrame(
+            {"Representation Length": feature_length_minus_mean_list,
+             "Representations Index": layer_index_minus_mean_list,
+             "Maximum Value of Representations": max_all_rep_minus_mean_list,
+             "Mean Value of Representations": mean_all_rep_minus_mean_list
+             }
+
+        )
+        df1.to_csv("Representations_statistics_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
+              index=False)
+
 
 
 if __name__ == '__main__':
