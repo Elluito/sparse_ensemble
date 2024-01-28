@@ -448,6 +448,7 @@ def experiment_training_logistic_function(architecture="resnet18", modeltype1="a
 
 def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_test, layer_index, seed_name="",
                                      type="npy"):
+    print("Type used for loading:{}".format(type))
     train_x = load_layer_features(prefix_train, layer_index, seed_name, type)
     samples, n_features = train_x.shape
     train_y = np.loadtxt("cifar10_train_20k.txt")
