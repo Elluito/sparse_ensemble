@@ -378,7 +378,7 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
     for x, y in dataloader:
         save_y.append(int(y.cpu().detach().item()))
         x = x.cuda()
-        # save_layer_feature_maps_for_batch(net, x,prefix, seed_name=seed_name)
+        save_layer_feature_maps_for_batch(net, x,prefix, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(dataloader)))
