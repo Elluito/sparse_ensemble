@@ -51,6 +51,27 @@ class LogisticRegressionModel(nn.Module):
         out = torch.sigmoid(self.linear(x))
         return out
 
+class WrapperVisionModel(nn.Module):
+    def __init__(self,, output_dim):
+        super(WrapperVisionModel, self).__init__()
+        self.linear = nn.Linear(input_dim, output_dim)
+
+    def new_forward(self, x):
+
+
+        out = self.relu(self.bn1(self.conv1(x)))
+        out1 = self.layer1(out)
+        out2 = self.layer2(out1)
+        out3 = self.layer3(out2)
+        out4 = self.layer4(out3)
+        return out1.view(out1.size(0), -1),out2.view(out2.size(0), -1),out3.view(out.size(0), -1),out3.view(out.size(0), -1),out4.view(out.size(0), -1)
+
+    net.__setattr__("fc2", nn.Linear(256, 10))
+    net.forward = new_fowrard.__get__(net)  # bind method
+
+    def forward(self, x):
+        out = torch.sigmoid(self.linear(x))
+        return out
 
 def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
                                   seed_name="_seed_1", rf_level=0):
@@ -462,7 +483,9 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
     criterion = nn.CrossEntropyLoss()
     model = LogisticRegressionModel(n_features, 10)
     learning_rate = 0.1
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate,
+         momentum = 0.9, weight_decay = 5e-4)
+
 
     train_dataset = torch.utils.data.TensorDataset(torch.tensor(train_x), torch.tensor(train_y))
     test_dataset = torch.utils.data.TensorDataset(torch.tensor(test_x), torch.tensor(test_y))
