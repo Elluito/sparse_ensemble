@@ -56,18 +56,18 @@ class WrapperVisionModel(nn.Module):
         super(WrapperVisionModel, self).__init__()
         self.linear = nn.Linear(input_dim, output_dim)
 
-    def new_forward(self, x):
+            def new_forward(self, x):
 
 
-        out = self.relu(self.bn1(self.conv1(x)))
-        out1 = self.layer1(out)
-        out2 = self.layer2(out1)
-        out3 = self.layer3(out2)
-        out4 = self.layer4(out3)
-        return out1.view(out1.size(0), -1),out2.view(out2.size(0), -1),out3.view(out.size(0), -1),out3.view(out.size(0), -1),out4.view(out.size(0), -1)
+                out = self.relu(self.bn1(self.conv1(x)))
+                out1 = self.layer1(out)
+                out2 = self.layer2(out1)
+                out3 = self.layer3(out2)
+                out4 = self.layer4(out3)
+                return out1.view(out1.size(0), -1),out2.view(out2.size(0), -1),out3.view(out.size(0), -1),out3.view(out.size(0), -1),out4.view(out.size(0), -1)
 
-    net.__setattr__("fc2", nn.Linear(256, 10))
-    net.forward = new_fowrard.__get__(net)  # bind method
+        net.__setattr__("fc2", nn.Linear(256, 10))
+        net.forward = new_fowrard.__get__(net)  # bind method
 
     def forward(self, x):
         out = torch.sigmoid(self.linear(x))
