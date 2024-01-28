@@ -3,9 +3,11 @@ import pandas as pd
 print("I'm about to begin the similarity comparison")
 import omegaconf
 from pathlib import Path
+
 import re
 import torch
 import torchvision.transforms as transforms
+import torch.nn as nn
 import torchvision
 import numpy as np
 import time
@@ -37,6 +39,17 @@ rf_level4_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_4
 name_rf_level4_s1 = "_seed_1_rf_level_4"
 rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
 name_rf_level4_s2 = "_seed_2_rf_level_4"
+
+
+# Same as linear regression!
+class LogisticRegressionModel(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(LogisticRegressionModel, self).__init__()
+        self.linear = nn.Linear(input_dim, output_dim)
+
+    def forward(self, x):
+        out = self.linear(x)
+        return out
 
 
 def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
@@ -227,29 +240,29 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
     from alternate_models.vgg import VGG_RF
     from torchvision.models import resnet18, resnet50
     if cfg.dataset == "cifar10":
-        if cfg.architecture == "resnet50":
-            if cfg.model_type == "alternative":
-                net = ResNet50_rf(num_classes=10, rf_level=rf_level)
-                if solution:
-                    net.load_state_dict(torch.load(cfg.solution)["net"])
-            if cfg.model_type == "hub":
-                net = resnet50()
-                in_features = net.fc.in_features
-                net.fc = torch.nn.Linear(in_features, 10)
-                if solution:
-                    temp_dict = torch.load(cfg.solution)["net"]
-                    real_dict = {}
-                    for k, item in temp_dict.items():
-                        if k.startswith('module'):
-                            new_key = k.replace("module.", "")
-                            real_dict[new_key] = item
-                    net.load_state_dict(real_dict)
-
-        if cfg.architecture == "vgg19":
-
-            if cfg.model_type == "alternative":
-                net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
-
+        # if cfg.architecture == "resnet50":
+        #     if cfg.model_type == "alternative":
+        #         net = ResNet50_rf(num_classes=10, rf_level=rf_level)
+        #         if solution:
+        #             net.load_state_dict(torch.load(cfg.solution)["net"])
+        #     if cfg.model_type == "hub":
+        #         net = resnet50()
+        #         in_features = net.fc.in_features
+        #         net.fc = torch.nn.Linear(in_features, 10)
+        #         if solution:
+        #             temp_dict = torch.load(cfg.solution)["net"]
+        #             real_dict = {}
+        #             for k, item in temp_dict.items():
+        #                 if k.startswith('module'):
+        #                     new_key = k.replace("module.", "")
+        #                     real_dict[new_key] = item
+        #             net.load_state_dict(real_dict)
+        #
+        # if cfg.architecture == "vgg19":
+        #
+        #     if cfg.model_type == "alternative":
+        #         net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
+        #
         current_directory = Path().cwd()
         data_path = "/datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
@@ -273,7 +286,7 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
 
-        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_train)
+        trainset = torchvision.datasets.CIFAR10(root=data_path, train=True, download=True, transform=transform_test)
 
         # cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
@@ -346,32 +359,158 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
         add_nobackup = "/nobackup/sclaam/"
     prefix = None
     if train:
-        prefix=prefix_custom_train = Path(
-        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+        prefix = prefix_custom_train = Path(
+            "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "train"))
     else:
-        prefix=prefix_custom_test = Path(
-        "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+        prefix = prefix_custom_test = Path(
+            "{}features/{}/{}/{}/{}/".format(add_nobackup, cfg.dataset, cfg.architecture, cfg.model_type, "test"))
     prefix.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = 20000
-    net.cuda()
+    # net.cuda()
     o = 0
     dataloader = None
     if train:
         dataloader = trainloader
     else:
         dataloader = testloader
-
+    save_y = []
     for x, y in dataloader:
-
+        save_y.append(int(y.cpu().detach().item()))
         x = x.cuda()
-        save_layer_feature_maps_for_batch(net, x,prefix, seed_name=seed_name)
+        # save_layer_feature_maps_for_batch(net, x,prefix, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(dataloader)))
         if o == maximun_samples:
             break
         o += 1
+    if train:
+        np.savetxt("{}_train_20k.txt".format(cfg.dataset), save_y, delimiter=",")
+    else:
+        np.savetxt("{}_test_20k.txt".format(cfg.dataset), save_y, delimiter=",")
+
+
+def test_function(model, test_loader, epoch):
+    # Calculate Accuracy
+    correct = 0
+    total = 0
+    # Iterate through test dataset
+    for features, labels in test_loader:
+        # Load images to a Torch Variable
+        images = features.cuda()
+
+        # Forward pass only to get logits/output
+        outputs = model(images)
+
+        # Get predictions from the maximum value
+        _, predicted = torch.max(outputs.data, 1)
+
+        # Total number of labels
+        total += labels.size(0)
+
+        # Total correct predictions
+        correct += (predicted == labels).sum()
+
+    accuracy = 100 * correct / total
+
+    # Print Loss
+    print('Epoch {}: Test accuracy {}.'.format(epoch, accuracy))
+    return accuracy
+
+
+def experiment_training_logistic_function(architecture="resnet18", modeltype1="alternative",
+                                          modeltype2="alternative", name1="_seed_1", name2="_seed_2",
+                                          filetype1="txt", filetype2="txt", rf_level=1, layer_index=0):
+    cfg = omegaconf.DictConfig(
+        {"architecture": architecture,
+         "model_type": modeltype1,
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         "dataset": "cifar10",
+         "batch_size": 128,
+         "num_workers": 2,
+         "amount": 0.9,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": ["conv1", "linear"]
+
+         })
+
+    prefix_modeltype1_train = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "train"))
+    prefix_modeltype1_test = Path(
+        "/nobackup/sclaam/features/{}/{}/{}/{}/".format(cfg.dataset, cfg.architecture, cfg.model_type, "test"))
+    train_logistic_on_specific_layer(cfg.architecture, rf_level=rf_level, prefix_train=prefix_modeltype1_train,
+                                     prefix_test=prefix_modeltype1_test, layer_index=layer_index, seed_name=name1,
+                                     type=filetype1)
+
+
+def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_test, layer_index, seed_name="",
+                                     type="npy"):
+    train_x = load_layer_features(prefix_train, layer_index, seed_name, type)
+    samples, n_features = train_x.shape
+    train_y = np.loadtxt("cifar10_train_20k.txt")
+    test_x = load_layer_features(prefix_test, layer_index, seed_name, type)
+    test_y = np.loadtxt("cifar10_test_20k.txt")
+    criterion = nn.CrossEntropyLoss()
+    model = LogisticRegressionModel(n_features, 10)
+    learning_rate = 0.001
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+    train_dataset = torch.utils.data.TensorDataset(torch.tensor(train_x), torch.tensor(train_y))
+    test_dataset = torch.utils.data.TensorDataset(torch.tensor(test_x), torch.tensor(test_y))
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=128, shuffle=True, num_workers=0)
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=128, shuffle=True, num_workers=0)
+
+    iter = 0
+    num_epochs = 400
+    accuracy_list = []
+    epoch_list = []
+    best_test_accuracy = 0
+    model.cuda()
+    for epoch in range(num_epochs):
+        for i, (features, labels) in enumerate(train_loader):
+            # Load images as Variable
+            images = features.cuda()
+            labels = labels.cuda()
+
+            # Clear gradients w.r.t. parameters
+            optimizer.zero_grad()
+
+            # Forward pass to get output/logits
+            outputs = model(images)
+
+            # Calculate Loss: softmax --> cross entropy loss
+            loss = criterion(outputs, labels)
+
+            # Getting gradients w.r.t. parameters
+            loss.backward()
+
+            # Updating parameters
+            optimizer.step()
+
+            iter += 1
+        train_accuracy = test_function(model, train_loader, epoch)
+        test_accuracy = test_function(model, test_loader, epoch)
+        epoch_list.append(epoch)
+        accuracy_list.append(test_accuracy)
+        if test_accuracy > best_test_accuracy:
+            best_test_accuracy = test_accuracy
+    print("Best test Accuracy: {}".format(best_test_accuracy))
+    df = pd.DataFrame(
+        {
+            "Epoch": epoch_list,
+            "Train Accuracy": train_accuracy,
+            "Test Accuracy": test_accuracy,
+        }
+
+    )
+    df.to_csv(
+        "logistic_{}_{}_layer_{}_{}.csv".format(model_name, rf_level, layer_index, best_test_accuracy),
+        index=False)
 
 
 def features_similarity_comparison_experiments(architecture="resnet18", modeltype1="alternative",
@@ -746,9 +885,10 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
              }
 
         )
-        df1.to_csv("Representations_statistics_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate),
-              index=False)
-
+        df1.to_csv("Representations_statistics_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level,
+                                                                                        args.dataset,
+                                                                                        args.pruning_rate),
+                   index=False)
 
 
 if __name__ == '__main__':
@@ -764,6 +904,8 @@ if __name__ == '__main__':
     parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
                         required=False)
     parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
+                        required=False)
+    parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
                         required=False)
     parser.add_argument('-e', '--experiment', type=int, default=1, help='',
                         required=False)
@@ -807,3 +949,9 @@ if __name__ == '__main__':
                                                      modeltype2=args["modeltype2"], name1=args["seedname1"],
                                                      name2=args["seedname2"], filetype1=args["filetype1"],
                                                      filetype2=args["filetype2"])
+    if args["experiment"] == 5:
+        experiment_training_logistic_function(architecture=args["architecture"], modeltype1=args["modeltype1"],
+                                              modeltype2=args["modeltype2"], name1=args["seedname1"],
+                                              name2=args["seedname2"], filetype1=args["filetype1"],
+                                              filetype2=args["filetype2"], rf_level=args["rf_level"],
+                                              layer_index=args["layer_index"])
