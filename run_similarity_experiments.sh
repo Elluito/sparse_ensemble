@@ -257,7 +257,8 @@ max=${#files_level[@]}                                  # Take the length of tha
 
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 
-qsub -l coproc_p100=1 -l h_rt=20:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
+qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
+
   if [ $idxA -gt 0 ]
   then
   break
