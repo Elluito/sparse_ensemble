@@ -914,9 +914,9 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
                         required=False)
-    parser.add_argument('-ft1', '--filetype1', type=str, default="txt", help='',
+    parser.add_argument('-ft1', '--filetype1', type=str, default="npy", help='',
                         required=False)
-    parser.add_argument('-ft2', '--filetype2', type=str, default="txt", help='',
+    parser.add_argument('-ft2', '--filetype2', type=str, default="npy", help='',
                         required=False)
     parser.add_argument('-t', '--train', type=int, default=1, help='',
                         required=False)
