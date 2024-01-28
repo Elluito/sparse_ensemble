@@ -461,7 +461,7 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
     test_y = np.loadtxt("cifar10_test_20k.txt")
     criterion = nn.CrossEntropyLoss()
     model = LogisticRegressionModel(n_features, 10)
-    learning_rate = 0.1
+    learning_rate = 0.0001
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     train_dataset = torch.utils.data.TensorDataset(torch.tensor(train_x), torch.tensor(train_y))
