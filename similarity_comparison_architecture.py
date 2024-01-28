@@ -421,7 +421,7 @@ def test_function(model, test_loader, epoch):
 
 def experiment_training_logistic_function(architecture="resnet18", modeltype1="alternative",
                                           modeltype2="alternative", name1="_seed_1", name2="_seed_2",
-                                          filetype1="txt", filetype2="txt", rf_level=1, layer_index=0):
+                                          filetype1="npy", filetype2="txt", rf_level=1, layer_index=0):
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": modeltype1,
