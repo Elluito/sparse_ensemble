@@ -391,7 +391,10 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
         np.savetxt("{}_test_20k.txt".format(cfg.dataset), save_y, delimiter=",")
 
 
-def test_function(model, test_loader, epoch):
+def test_function(model, test_loader, epoch, train=False):
+    print_string = "Test"
+    if train:
+        print_string = "Train"
     # Calculate Accuracy
     correct = 0
     total = 0
@@ -458,8 +461,8 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
     test_y = np.loadtxt("cifar10_test_20k.txt")
     criterion = nn.CrossEntropyLoss()
     model = LogisticRegressionModel(n_features, 10)
-    learning_rate = 0.01
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    learning_rate = 0.1
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     train_dataset = torch.utils.data.TensorDataset(torch.tensor(train_x), torch.tensor(train_y))
     test_dataset = torch.utils.data.TensorDataset(torch.tensor(test_x), torch.tensor(test_y))
@@ -497,7 +500,7 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
             optimizer.step()
 
             iter += 1
-        train_accuracy = test_function(model, train_loader, epoch)
+        train_accuracy = test_function(model, train_loader, epoch, train=True)
         test_accuracy = test_function(model, test_loader, epoch)
         epoch_list.append(epoch)
         accuracy_list.append(test_accuracy)
