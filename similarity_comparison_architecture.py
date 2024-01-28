@@ -399,6 +399,8 @@ def test_function(model, test_loader, epoch):
     for features, labels in test_loader:
         # Load images to a Torch Variable
         images = features.cuda()
+        labels = labels.type(torch.LongTensor)
+        labels = labels.cuda()
 
         # Forward pass only to get logits/output
         outputs = model(images)
