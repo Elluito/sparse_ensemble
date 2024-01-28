@@ -48,7 +48,7 @@ class LogisticRegressionModel(nn.Module):
         self.linear = nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        out = self.linear(x)
+        out = torch.sigmoid(self.linear(x))
         return out
 
 
