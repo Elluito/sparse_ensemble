@@ -481,6 +481,7 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
         for i, (features, labels) in enumerate(train_loader):
             # Load images as Variable
             labels = labels.type(torch.LongTensor)
+            features = features.requires_grad_()
             images = features.cuda()
             labels = labels.cuda()
 
