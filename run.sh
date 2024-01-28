@@ -60,13 +60,13 @@ unset KMP_AFFINITY
 #        Create features for given seed name for logistic regression
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 3 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --train $6
+#python similarity_comparison_architecture.py --experiment 3 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --train $6
 
 #############################################################
 #        Train logistic regression on a particular set of features
 #############################################################
 
-#python similarity_comparison_architecture.py --experiment 5 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --layer_index $6
+python similarity_comparison_architecture.py --experiment 5 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --layer_index $6
 #############################################################
 #       Calculate the similarity of two seeds
 #############################################################
