@@ -420,7 +420,7 @@ def test_function(model, test_loader, epoch, train=False):
     accuracy = 100 * correct / total
 
     # Print Loss
-    print('Epoch {}: Test accuracy {}.'.format(epoch, accuracy))
+    print('Epoch {}: {} accuracy {}.'.format(epoch,print_string, accuracy))
     return accuracy
 
 
