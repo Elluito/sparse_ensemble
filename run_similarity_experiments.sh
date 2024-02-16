@@ -99,10 +99,27 @@ name_rf_level_p_s2="_seed_2_rf_level_p"
 
 rf_level_p_s3="trained_models/cifar10/resnet50_pytorch_cifar10_seed_3_test_acc_89.33.pth"
 name_rf_level_p_s3="_seed_3_rf_level_p"
-
-
-
-
+#
+#datasets
+#models
+#declare -A pruning_rates
+#declare -A sigmas
+#pruning_rates()
+#
+#
+#max1=${#files[@]}                                  # Take the length of that array
+#max2=${#files[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#  for ((idxB=idxA+1; idxB<max; idxB++)); do         # iterate idxB from idxA to length
+#qsub -N "fine_tune_stochastic pruning_${}_${}_${}__${}_${}" run.sh
+#done
+#done
+qsub -l h_rt=6:00:00 -t 1-10 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar10_resnet18_0.005_0.9" run.sh "11" "0.005" "global" "resnet18" "cifar10" "0.9" "alternative" "200"
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar10_resnet50_0.003_0.95" run.sh "11" "0.003" "global" "resnet50" "cifar10" "0.95" "alternative" "200"
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar10_vgg19_0.003_0.95" run.sh "11" "0.003" "global" "vgg19" "cifar10" "0.95" "alternative" "200"
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar100_resnet18_0.003_0.9" run.sh "11" "0.003" "global" "resnet18" "cifar100" "0.9" "alternative" "200"
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar100_resnet50_0.001_0.85" run.sh "11" "0.001" "global" "resnet50" "cifar100" "0.85" "alternative" "200"
+qsub -l h_rt=6:00:00 -t 1-5 -l coproc_p100=1 -N "fine_tune_stochastic pruning_cifar100_vgg19_0.001_0.8" run.sh "11" "0.001" "global" "vgg19" "cifar100" "0.8" "alternative" "200"
 
 #python main.py -exp 18 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
 
@@ -210,87 +227,90 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 #     initial weights feature representation
+#####################################################
+#             Logistic features
+#####################################################
+
+#model="resnet50"
+#dataset="cifar10"
+#init=0
+#experiment=1
+##solution_string="initial_weights"
+#solution_string="no_recording_test_acc"
+#directory=/nobackup/sclaam/checkpoints
+##directory=trained_models
+#level_1_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_.*${solution_string}.*"))
+#level_1_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
+#
+##level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_.*${solution_string}.*"))
+#level_4_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
+##level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
+#level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*"))
+#
+##all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
+#all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth" |cut -d_ -f6 ))
+#all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f6 ))
+#all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
+#
+#declare -a list_to_use_files=("${level_4_files[@]}")
+#declare -a list_to_use_seeds=("${all_level_4_seeds[@]}")
+#
+#files_level=(0)
+#file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
+#
+#max=${#files_level[@]}                                  # Take the length of that array
+##echo "Beginning of the loop"
+##echo "${max}"
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+##  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
+##  qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "features_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_4_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "1"
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_4_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "0"
+##  qsub -l coproc_p100=1 -l h_rt=15:00:00 -N "Similarity${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
+##echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
+#  if [ $idxA -gt 0 ]
+#  then
+#  break
+#  fi
+#done
+#declare -a list_to_use_files=("${level_7_files[@]}")
+#declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
+#
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+
+#qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
+
+
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7" "7" "alternative" "1"
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_7_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7" "7" "alternative" "0"
+#
+#
+#  if [ $idxA -gt 0 ]
+#  then
+#  break
+#  fi
+#
+#done
+
+#declare -a list_to_use_files=("${level_7_files[@]}")
+#declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+
+#qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
 
 #
-model="resnet50"
-dataset="cifar10"
-init=0
-experiment=1
-#solution_string="initial_weights"
-solution_string="no_recording_test_acc"
-directory=/nobackup/sclaam/checkpoints
-#directory=trained_models
-level_1_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1_.*${solution_string}.*"))
-level_1_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth"))
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_1_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "1"
+#qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_1_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "0"
+#
+#
+#  if [ $idxA -gt 0 ]
+#  then
+#  break
+#  fi
+#
+#done
 
-#level_5_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_.*${solution_string}.*"))
-level_4_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
-#level_2_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_2.pth"))
-level_7_files=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*"))
-
-#all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_5_.*${solution_string}.*" |cut -d_ -f5 ))
-all_level_1_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_1.pth" |cut -d_ -f6 ))
-all_level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth" |cut -d_ -f6 ))
-all_level_7_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_7_.*${solution_string}.*" |cut -d_ -f5 ))
-
-declare -a list_to_use_files=("${level_4_files[@]}")
-declare -a list_to_use_seeds=("${all_level_4_seeds[@]}")
-
-files_level=(0)
-file_seed=(3 4 5 3 4 5 3 4 5 3 4 5 3 4 5)
-
-max=${#files_level[@]}                                  # Take the length of that array
-#echo "Beginning of the loop"
-#echo "${max}"
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-#  qsub -N "features_${files_level[$idxA]}_seed_${file_seed[$idxA]}" run.sh  "resnet50" "/nobackup/sclaam/checkpoints/resnet50_normal_cifar10_seed_${file_seed[$indxA]}_rf_level_${files_level[$indxA]}_initial_weights.pth" "_no_train_seed_${file_seed[$idxA]}_rf_level_${files_level[$idxA]}"  "${files_level[$idxA]}" "alternative"
-#  qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "features_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_4_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "1"
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_4_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "0"
-#  qsub -l coproc_p100=1 -l h_rt=15:00:00 -N "Similarity${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7"  "7" "alternative"
-#echo "solution: ${list_to_use_files[$idxA]} , seed in the same index: ${list_to_use_seeds[$idxA]}"
-  if [ $idxA -gt 0 ]
-  then
-  break
-  fi
-done
-declare -a list_to_use_files=("${level_7_files[@]}")
-declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
-
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-
-#qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
-
-
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_7_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7" "7" "alternative" "1"
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_7_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_7" "7" "alternative" "0"
-
-
-  if [ $idxA -gt 0 ]
-  then
-  break
-  fi
-
-done
-
-declare -a list_to_use_files=("${level_7_files[@]}")
-declare -a list_to_use_seeds=("${all_level_7_seeds[@]}")
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-
-#qsub -l coproc_p100=1 -l h_rt=01:00:00 -N "test_training_logistic"  run.sh "resnet50" "solution_not_used" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_4" "4" "alternative" "47"
-
-
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_train_1_seed_${list_to_use_seeds[$idxA]}" run.sh  "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "1"
-qsub -l coproc_p100=1 -l h_rt=4:00:00 -N "logistic_features_test_1_seed_${list_to_use_seeds[$idxA]}"  run.sh "resnet50" "${directory}/${list_to_use_files[$idxA]}" "_trained_seed_${list_to_use_seeds[$idxA]}_rf_level_1" "1" "alternative" "0"
-
-
-  if [ $idxA -gt 0 ]
-  then
-  break
-  fi
-
-done
-
+##############################################################################################
 
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_max=${#seeds[@]}                                  # Take the length of that array
