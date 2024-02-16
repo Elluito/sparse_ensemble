@@ -1,15 +1,24 @@
 import re
+import torchessian as torchessian
+import pandas as pd
+import torch
+import numpy as np
+import pickle
 import matplotlib.ticker as ticker
 import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+fs = 12
+fig_size = (5, 3)
 sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
 in_block_layers = [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 26, 28, 29, 31, 32, 34, 35, 37, 38, 40,
                    41, 43, 44, 46, 47]
 out_block_layers = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+vgg_rfs = [180, 181, 359, 537, 715]
+
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
@@ -33,18 +42,14 @@ plt.rcParams.update({
     "font.family": "serif",
     "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",
 })
-
-fs = 12
+plt.grid(ls='--', alpha=0.5)
 import matplotlib.lines as mlines
-import pandas as pd
-import torch
-import numpy as np
 import matplotlib.patches as mpatches
-import torchessian as torchessian
-import pickle
-
+# import matplotlib2tikz
+import tikzplotlib
 
 def main():
+    global vgg_rfs
     #################### Plot training #############################################
 
     hfont = {'fontname': 'Times New Roman'}
@@ -76,8 +81,7 @@ def main():
     rf7_3["Test Accuracy"] = rf7_3["test accuracy"]
 
     # sns.plot(data=all_df, x="Dense Accuracy", y="Pruned Fine Tuned Accuracy", hue="Receptive Field",size="Receptive Field",sizes=(20, 200))
-    fig, ax = plt.subplots()
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     plt.plot(rf2["Epoch"], rf2["Test Accuracy"], label="RF 213 Test")
     plt.plot(rf2["Epoch"], rf2["Training Accuracy"], label="RF 213 Training")
@@ -87,16 +91,17 @@ def main():
     # plt.plot(rf7_2["Epoch"],rf7_2["Training Accuracy"],label="RF 3100 Training 2X epochs")
     plt.plot(rf7_3["Epoch"], rf7_3["Test Accuracy"], label="RF 3100 Test")
     plt.plot(rf7_3["Epoch"], rf7_3["Training Accuracy"], label="RF 3100 Train")
-    plt.xlabel("Epochs", fontsize=15)
-    plt.ylabel("Accuracy", fontsize=15)
-    ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.tick_params(axis='both', which='minor', labelsize=15)
+    plt.xlabel("Epochs", fontsize=fs)
+    plt.ylabel("Accuracy", fontsize=fs)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.tick_params(axis='both', which='minor', labelsize=fs)
     # plt.xlim(-5,750)
 
-    plt.legend(prop={"size": 15}, loc="lower right")
+    plt.legend(prop={"size": fs*0.7}, loc="lower right")
     plt.tight_layout()
-    plt.savefig("paper_plots/resnet50_CIFAR10_training.pdf", bbox_inches="tight")
-
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_CIFAR10_training.pgf",  bbox_inches="tight", pad_inches=0.05)
+    # tikzplotlib.save("paper_plots/resnet50_CIFAR10_training.tex")
     ### Tiny ImageNet
     plt.figure()
     rf2 = pd.read_csv("resnet50_normal_tiny_imagenet_300_epoch_rf_level_2_recording.csv", delimiter=",")
@@ -117,22 +122,26 @@ def main():
 
     # sns.plot(data=all_df, x="Dense Accuracy", y="Pruned Fine Tuned Accuracy", hue="Receptive Field",size="Receptive Field",sizes=(20, 200))
 
-    # fig, ax = plt.subplots()
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     plt.plot(rf2["Epoch"], rf2["Test Accuracy"], label="RF 213 Test")
     plt.plot(rf2["Epoch"], rf2["Training Accuracy"], label="RF 213 Training")
     plt.plot(rf7["Epoch"], rf7["Test Accuracy"], label="RF 3100 Test")
     plt.plot(rf7["Epoch"], rf7["Training Accuracy"], label="RF 3100 Training")
-    plt.xlabel("Epochs", fontsize=15)
-    plt.ylabel("Accuracy", fontsize=15)
+    plt.xlabel("Epochs", fontsize=fs)
+    plt.ylabel("Accuracy", fontsize=fs)
     # plt.legend()
     plt.xlim(-5, 200)
-    ax.tick_params(axis='both', which='major', labelsize=15)
-    ax.tick_params(axis='both', which='minor', labelsize=15)
-    plt.legend(prop={"size": 15}, loc="upper left")
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.tick_params(axis='both', which='minor', labelsize=fs)
+    plt.legend(prop={"size": fs*0.7}, loc="upper left")
     plt.tight_layout()
-    plt.savefig("paper_plots/resnet50_tiny_ImageNet_training.pdf", bbox_inches="tight")
+    plt.grid(ls='--', alpha=0.5)
+    # plt.savefig("paper_plots/resnet50_tiny_ImageNet_training.pgf",  bbox_inches="tight", pad_inches=0.05,backend="pgf")
+    # tikzplotlib.save("paper_plots/resnet50_tiny_ImageNet_training.tex")
+    # return 0
+
+
     #################### Similarity Plots #############################################
 
     # """# ResNet50 receptive field levels in trained models
@@ -153,7 +162,7 @@ def main():
     # # plt.colorbar()
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level1_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level1_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -172,7 +181,7 @@ def main():
     # plt.yticks(range(32), in_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level1_in_block_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level1_in_block_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### Out block similarities"""
@@ -190,7 +199,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level1_out_block_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level1_out_block_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """###  IN and out of block similairties"""
@@ -210,7 +219,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level1_in_out_block_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level1_in_out_block_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """## Level 2 receptive field
@@ -229,7 +238,7 @@ def main():
     # # plt.colorbar()
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level2_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level2_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -246,7 +255,7 @@ def main():
     # # plt.colorbar()
     # plt.xticks(range(32), in_block_layers, rotation=90)
     # plt.yticks(range(32), in_block_layers)
-    # plt.savefig("paper_plots/resnet50_level2_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level2_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
     #
@@ -266,7 +275,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level2_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level2_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """###  IN and aout of block similairties"""
@@ -286,7 +295,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level2_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level2_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """## Level 3 receptive field"""
@@ -303,7 +312,7 @@ def main():
     # # plt.colorbar()
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level3_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level3_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -322,7 +331,7 @@ def main():
     # plt.yticks(range(32), in_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level3_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level3_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### Out block similarities"""
@@ -340,7 +349,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level3_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level3_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """###  In and out of block similarities"""
@@ -360,7 +369,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level3_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level3_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """## Level 4 receptive field"""
@@ -379,7 +388,7 @@ def main():
     # plt.yticks(range(len(m4)))
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level4_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level4_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -399,7 +408,7 @@ def main():
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
     #
-    # plt.savefig("paper_plots/resnet50_level4_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level4_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     # """### Out block similarities"""
     #
@@ -416,7 +425,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level4_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level4_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### IN block and out block similarities"""
@@ -436,7 +445,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level4_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level4_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # # Mean similarity after layer 25 for all levels
@@ -484,7 +493,7 @@ def main():
     # # plt.colorbar()
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level5_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level5_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -503,7 +512,7 @@ def main():
     # plt.yticks(range(32), in_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level5_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level5_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### Out block similarities"""
@@ -521,7 +530,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level5_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level5_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### IN block and out block similarities"""
@@ -541,7 +550,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level5_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level5_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """## Level 6"""
@@ -567,7 +576,7 @@ def main():
     # plt.yticks(range(len(m6)))
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level6_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level6_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     # print("M6_1 row 2:{} with min of {:0.26f} and max of {:0.26f} and mean {:0.26f}".format(m6_1[2, :],
     #                                                                                         np.min(m6_1[2, :]),
@@ -597,7 +606,7 @@ def main():
     # plt.yticks(range(32), in_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level6_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level6_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### Out block similarities"""
@@ -615,7 +624,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level6_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level6_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block and outblock similarities
@@ -637,7 +646,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level6_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level6_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """## Level 7
@@ -665,7 +674,7 @@ def main():
     # plt.yticks(range(len(m7)))
     # ax.axhline(y=24.5, color='g', linewidth=2)
     # ax.axvline(x=24.5, color='g', linewidth=2)
-    # plt.savefig("paper_plots/resnet50_level7_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level7_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### In block similarities"""
@@ -681,7 +690,7 @@ def main():
     # plt.colorbar()
     # plt.xticks(range(32), in_block_layers, rotation=90)
     # plt.yticks(range(32), in_block_layers)
-    # plt.savefig("paper_plots/resnet50_level7_in_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level7_in_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
     #
@@ -701,7 +710,7 @@ def main():
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
-    # plt.savefig("paper_plots/resnet50_level7_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level7_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     #
     #
     # """### IN and out block similarities"""
@@ -719,7 +728,7 @@ def main():
     # plt.colorbar()
     # plt.xticks(range(len(in_block_layers)), in_block_layers, rotation=90)
     # plt.yticks(range(len(out_block_layers)), out_block_layers)
-    # plt.savefig("paper_plots/resnet50_level7_in_out_similarity_cifar10.pdf", bbox_inches="tight")
+    # plt.savefig("paper_plots/resnet50_level7_in_out_similarity_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
     # # ax.axhline(y = 24.5, color='g',linewidth = 2)
     # # ax.axvline(x = 24.5, color='g',linewidth = 2)
     #
@@ -758,24 +767,32 @@ def main():
     # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
     m7 = (m7_1 + m7_2 + m7_3) / 3
 
+    colorbar_ticks = [0, 0.2, 0.4, 0.6, 0.8, 1]
+
     all_ms = [m1, m2, m3, m4, m5, m7]
     all_rf = [110, 213, 318, 423, 1415, 3100]
-    fig, axes = plt.subplots(3, 2, figsize=(5, 5), sharex="all", sharey="all", layout="compressed")
+    fig, axes = plt.subplots(3, 2, figsize=fig_size, sharex="all", sharey="all", layout="compressed")
+    fig_multiplier = 0.55
     for i, ax in enumerate(axes.flat):
         im = ax.imshow(all_ms[i], cmap="magma", vmin=0, vmax=1)
         ax.invert_yaxis()
-        ax.set_title("{}".format(all_rf[i]), size=fs)
-        ax.tick_params(axis='both', which='major', labelsize=fs)
+        ax.set_title("{}".format(all_rf[i]), size=fs * fig_multiplier)
+        ax.tick_params(axis='both', which='major', labelsize=fs * fig_multiplier)
         # ax.tick_params(axis='both', which='minor', labelsize=15)
         ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
         # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(10))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
     cb = plt.colorbar(im, ax=axes, shrink=0.6)
-    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs)
-    cb.ax.tick_params(axis='y', which='major', labelsize=fs)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * fig_multiplier)
+    cb.ax.tick_params(axis='y', which='major', labelsize=fs * fig_multiplier)
+    cb.set_ticks(colorbar_ticks)
+    cb.set_ticklabels(colorbar_ticks)
     # cb.ax.tick_params(axis='y', which='minor', labelsize=15)
-    plt.savefig("paper_plots/all_sim_plots.pdf", bbox_inches="tight")
+    fig.text(0.47, -0.019, 'Layer Rep.', ha='center', size=fs * fig_multiplier)
+    fig.text(0.25, 0.5, 'Layer Rep.', va='center', rotation="vertical", size=fs * fig_multiplier)
+    plt.savefig("paper_plots/all_sim_plots2.pdf",  bbox_inches="tight", pad_inches=0.05,backend="pgf")
+    plt.savefig("paper_plots/all_sim_plots2.eps",  bbox_inches="tight", pad_inches=0.05)
 
     ######################## all inside block plots
 
@@ -796,12 +813,13 @@ def main():
     all_ms = [sim_inbloc_v_inblock1, sim_inbloc_v_inblock2, sim_inbloc_v_inblock3, sim_inbloc_v_inblock4,
               sim_inbloc_v_inblock5, sim_inbloc_v_inblock7]
     all_rf = [110, 213, 318, 423, 1415, 3100]
-    fig, axes = plt.subplots(3, 2, figsize=(5, 5), sharex="all", sharey="all", layout="compressed")
+    fig, axes = plt.subplots(3, 2, figsize=fig_size, sharex="all", sharey="all", layout="compressed")
+    fig_multiplier = 0.55
     for i, ax in enumerate(axes.flat):
         im = ax.imshow(all_ms[i], cmap="magma", vmin=0, vmax=1)
         ax.invert_yaxis()
-        ax.set_title("{}".format(all_rf[i]), size=fs)
-        ax.tick_params(axis='both', which='major', labelsize=fs)
+        ax.set_title("{}".format(all_rf[i]), size=fs * fig_multiplier)
+        ax.tick_params(axis='both', which='major', labelsize=fs * fig_multiplier)
         # ax.tick_params(axis='both', which='minor', labelsize=15)
         plt.xticks(range(len(in_block_layers)), in_block_layers)
         plt.yticks(range(len(in_block_layers)), in_block_layers)
@@ -810,16 +828,16 @@ def main():
         ax.yaxis.set_major_locator(ticker.MultipleLocator(6))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
     cb = plt.colorbar(im, ax=axes, shrink=0.6)
-    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs)
-    cb.ax.tick_params(axis='y', which='major', labelsize=fs)
-    cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * fig_multiplier)
+    cb.ax.tick_params(axis='y', which='major', labelsize=fs * 0.5)
+    # cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
     # plt.xticks(range(len(m7)),
     #  )
     # plt.yticks(range(len(m7)))
-    fig.text(0.5, -0.04, 'Inside Block Rep.', ha='center', size=fs)
-    fig.text(0.1, 0.5, 'Inside Block Rep.', va='center', rotation="vertical", size=fs)
-    plt.savefig("paper_plots/in_sim_plots.pdf", bbox_inches="tight")
-
+    fig.text(0.47, -0.019, 'In-Block Rep.', ha='center', size=fs * fig_multiplier)
+    fig.text(0.25, 0.5, 'In-Block Rep.', va='center', rotation="vertical", size=fs * fig_multiplier)
+    plt.savefig("paper_plots/in_sim_plots.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/in_sim_plots.eps",  bbox_inches="tight", pad_inches=0.05)
 
     ######################## all inside block plots
 
@@ -840,12 +858,13 @@ def main():
     all_ms = [sim_inbloc_v_inblock1, sim_inbloc_v_inblock2, sim_inbloc_v_inblock3, sim_inbloc_v_inblock4,
               sim_inbloc_v_inblock5, sim_inbloc_v_inblock7]
     all_rf = [110, 213, 318, 423, 1415, 3100]
-    fig, axes = plt.subplots(3, 2, figsize=(5,5), sharex="all", sharey="all", layout="compressed")
+    fig, axes = plt.subplots(3, 2, figsize=fig_size, sharex="all", sharey="all", layout="compressed")
+    fig_multiplier = 0.55
     for i, ax in enumerate(axes.flat):
         im = ax.imshow(all_ms[i], cmap="magma", vmin=0, vmax=1)
         ax.invert_yaxis()
-        ax.set_title("{}".format(all_rf[i]), size=fs)
-        ax.tick_params(axis='both', which='major', labelsize=fs)
+        ax.set_title("{}".format(all_rf[i]), size=fs * fig_multiplier)
+        ax.tick_params(axis='both', which='major', labelsize=fs * fig_multiplier)
         # ax.tick_params(axis='both', which='minor', labelsize=15)
         plt.xticks(range(len(out_block_layers)), out_block_layers)
         plt.yticks(range(len(out_block_layers)), out_block_layers)
@@ -854,14 +873,15 @@ def main():
         ax.yaxis.set_major_locator(ticker.MultipleLocator(3))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
     cb = plt.colorbar(im, ax=axes, shrink=0.6)
-    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs)
-    cb.ax.tick_params(axis='y', which='major', labelsize=fs)
-    cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * fig_multiplier)
+    cb.ax.tick_params(axis='y', which='major', labelsize=fs * fig_multiplier)
+    # cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
     # plt.xlabel("Outside Block representations",size=15)
     # plt.ylabel("Outside Block representations",size=15)
-    fig.text(0.5, -0.04, 'Outside Block Rep.', ha='center', size=fs)
-    fig.text(0.1, 0.5, 'Outside Block Rep.', va='center', rotation='vertical', size=fs)
-    plt.savefig("paper_plots/out_sim_plots.pdf", bbox_inches="tight")
+    fig.text(0.48, -0.018, 'Out-of-Block Rep.', ha='center', size=fs * fig_multiplier)
+    fig.text(0.26, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs * fig_multiplier)
+    plt.savefig("paper_plots/out_sim_plots.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/out_sim_plots.eps",  bbox_inches="tight", pad_inches=0.05)
 
     ######################## all outside-inside block plots ############################
 
@@ -882,12 +902,12 @@ def main():
     all_ms = [sim_inbloc_v_inblock1, sim_inbloc_v_inblock2, sim_inbloc_v_inblock3, sim_inbloc_v_inblock4,
               sim_inbloc_v_inblock5, sim_inbloc_v_inblock7]
     all_rf = [110, 213, 318, 423, 1415, 3100]
-    fig, axes = plt.subplots(3, 2, figsize=(5,5), sharex="all", sharey="all", layout="compressed")
+    fig, axes = plt.subplots(3, 2, figsize=fig_size, sharex="all", sharey="all", layout="compressed")
     for i, ax in enumerate(axes.flat):
         im = ax.imshow(all_ms[i], cmap="magma", vmin=0, vmax=1)
         ax.invert_yaxis()
-        ax.set_title("{}".format(all_rf[i]), size=fs)
-        ax.tick_params(axis='both', which='major', labelsize=fs)
+        ax.set_title("{}".format(all_rf[i]), size=fs * 0.6)
+        ax.tick_params(axis='both', which='major', labelsize=fs * 0.5)
         # ax.tick_params(axis='both', which='minor', labelsize=15)
         plt.yticks(range(len(out_block_layers)), out_block_layers)
         plt.xticks(range(len(in_block_layers)), in_block_layers)
@@ -895,16 +915,67 @@ def main():
         # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(3))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-    cb = plt.colorbar(im, ax=axes, shrink=0.8)
-    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs)
-    cb.ax.tick_params(axis='y', which='major', labelsize=fs)
-    cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
+    cb = plt.colorbar(im, ax=axes, shrink=0.6)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * 0.6)
+    cb.ax.tick_params(axis='y', which='major', labelsize=fs * 0.5)
+    # cb.ax.tick_params(axis='y', which='minor', labelsize=fs*0.5)
     # plt.xlabel("Outside Block representations",size=15)
     # plt.ylabel("Outside Block representations",size=15)
-    fig.text(0.5, 0.03, 'Inside Block Rep.', ha='center', size=fs)
-    fig.text(-0.03, 0.5, 'Outside Block Rep.', va='center', rotation='vertical', size=fs)
-    plt.savefig("paper_plots/in_out_sim_plots.pdf", bbox_inches="tight")
-    return 0
+    fig.text(0.5, -0.019, 'In-Block Rep.', ha='center', size=fs * 0.6)
+    fig.text(0.135, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs * 0.6)
+    plt.savefig("paper_plots/in_out_sim_plots.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/in_out_sim_plots.pdf",  bbox_inches="tight", pad_inches=0.05,backend="pgf")
+    plt.savefig("paper_plots/in_out_sim_plots.eps",  bbox_inches="tight", pad_inches=0.05)
+    ###################   VGG ##########################################################
+    m1 = np.loadtxt(
+        "similarity_experiments/vgg19__seed_0_rf_level_1_V__seed_1_rf_level_1_.txt",
+        delimiter=",")
+    m2 = np.loadtxt(
+        "similarity_experiments/vgg19__seed_0_rf_level_2_V__seed_1_rf_level_2_.txt",
+        delimiter=",")
+    m3 = np.loadtxt(
+        "similarity_experiments/vgg19__seed_0_rf_level_3_V__seed_1_rf_level_3_.txt",
+        delimiter=",")
+    m4 = np.loadtxt(
+        "similarity_experiments/vgg19__seed_0_rf_level_4_V__seed_1_rf_level_4_.txt",
+        delimiter=",")
+
+    # m1 = np.loadtxt("similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_2_rf_level_1_.txt",delimiter=",")
+    # m2 = np.loadtxt("similarity_experiments/resnet50__seed_1_rf_level_2_V__seed_2_rf_level_2_.txt",delimiter=",")
+    # m3 = np.loadtxt("similarity_experiments/resnet50__seed_1_rf_level_3_V__seed_2_rf_level_3_.txt",delimiter=",")
+    # m4 = np.loadtxt("similarity_experiments/resnet50__seed_1_rf_level_4_V__seed_2_rf_level_4_.txt",delimiter=",")
+    # m5_1=np.loadtxt("similarity_experiments/resnet50_trained_seed_0_rf_level_5_V_trained_seed_1_rf_level_5_.txt",delimiter=",")
+    # m5_2=np.loadtxt("similarity_experiments/resnet50_trained_seed_0_rf_level_5_V_trained_seed_2_rf_level_5_.txt",delimiter=",")
+    # m5_3=np.loadtxt("similarity_experiments/resnet50_trained_seed_1_rf_level_5_V_trained_seed_2_rf_level_5_.txt",delimiter=",")
+    # m5 = (m5_1+m5_2+m5_3)/3
+    # m7_1 =np.loadtxt("similarity_experiments/resnet50_trained_seed_0_rf_level_7_V_trained_seed_1_rf_level_7_.txt",delimiter=",")
+    # m7_2 =np.loadtxt("similarity_experiments/resnet50_trained_seed_0_rf_level_7_V_trained_seed_2_rf_level_7_.txt",delimiter=",")
+    # m7_3 =np.loadtxt("similarity_experiments/resnet50_trained_seed_1_rf_level_7_V_trained_seed_2_rf_level_7_.txt",delimiter=",")
+    # # similarity_experiments/resnet50__seed_1_rf_level_1_V__seed_1_rf_level_2_.txt
+    # m7 = (m7_1+m7_2+m7_3)/3
+
+    all_ms = [m1, m2, m3, m4]
+    fig, axes = plt.subplots(2, 2, figsize=fig_size, sharex="all", sharey="all", layout="compressed")
+    fig_multiplier = 0.55
+
+    for i, ax in enumerate(axes.flat):
+        im = ax.imshow(all_ms[i], cmap="magma", vmin=0, vmax=1)
+        ax.invert_yaxis()
+        ax.set_title("{}".format(vgg_rfs[i + 1]), size=fs * fig_multiplier)
+        ax.tick_params(axis='both', which='major', labelsize=fs * fig_multiplier)
+        # ax.tick_params(axis='both', which='minor', labelsize=15)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(3))
+        # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(3))
+        # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
+    cb = plt.colorbar(im, ax=axes, shrink=0.6)
+    cb.ax.tick_params(axis='y', which='major', labelsize=fs * fig_multiplier)
+    cb.ax.tick_params(axis='y', which='minor', labelsize=fs * fig_multiplier)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * fig_multiplier)
+    plt.savefig("paper_plots/all_sim_plots_vgg.pgf",  bbox_inches="tight", pad_inches=0.05)
+    # matplotlib2tikz.save("paper_plots/all_sim_plots_vgg.tex")
+    # return 0
+
     ############## Hessian Spectra  ####################################################
     m = 90
     ### Trained
@@ -974,7 +1045,7 @@ def main():
     l_file.close()
 
     support = torch.linspace(-11, 18, 10000)
-    fig, ax = plt.subplots(figsize=(15, 7))
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     density = torchessian.F(support, l_s2_level0.real, w_s2_level0.real, m)
     ax.plot(support.numpy(), density.numpy(), color='m')
     # density = torchessian.F(support,l_s1_level1.real,w_s1_level1.real,m)
@@ -997,14 +1068,14 @@ def main():
     green_patch = mpatches.Patch(color='green', label='RF (423,423)')
     # yellow_patch = mpatches.Patch(color='yellow', label='RF (427,427) seed 1')
     # plt.legend(handles=[m_patch,c_patch,red_patch, blue_patch,gree_patch])
-    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": 15})
+    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
     plt.xlabel("$\lambda$", fontsize=15)
     plt.ylabel("$P(\lambda)$", fontsize=15)
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.tick_params(axis='both', which='minor', labelsize=15)
     # plt.title("Hessian spectre comparisons")
     plt.xlim(-11, 18)
-    plt.savefig("paper_plots/Hessian_spectre_resnet50_trained_cifar10.pdf", bbox_inches="tight")
+    plt.savefig("paper_plots/Hessian_spectre_resnet50_trained_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
 
     ############ VGG
     l_file = open("smoothness/vgg19/l_seed_0_rf_level_1.pkl", "rb")
@@ -1037,8 +1108,7 @@ def main():
     w_file.close()
     l_file.close()
     support = torch.linspace(-20, 36, 1000000)
-    fig, ax = plt.subplots(figsize=(15, 7))
-    # fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     density = torchessian.F(support, l_s0_level1.real, w_s0_level1.real, m)
     ax.plot(support.numpy(), density.numpy(), color='m')
     # density = torchessian.f(support,l_s1_level1.real,w_s1_level1.real,m)
@@ -1062,13 +1132,13 @@ def main():
     # yellow_patch = mpatches.patch(color='yellow', label='level 4 seed 1')
     # plt.legend(handles=[m_patch,c_patch,red_patch, blue_patch,gree_patch])
     plt.xlim(-20, 36)
-    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": 15})
+    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
     # plt.title("hessian spectre comparisons")
     plt.xlabel("$\lambda$", fontsize=15)
     plt.ylabel("$P(\lambda)$", fontsize=15)
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.tick_params(axis='both', which='minor', labelsize=15)
-    plt.savefig("paper_plots/Hessian_spectre_vgg_trained_cifar10.pdf", bbox_inches="tight")
+    plt.savefig("paper_plots/Hessian_spectre_vgg_trained_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
 
     ### Initialisation
 
@@ -1120,8 +1190,7 @@ def main():
 
     # support = torch.linspace(-4000,4000, 10000000 )
     support = torch.linspace(-900000, 90000, 10000000)
-    fig, ax = plt.subplots(figsize=(15, 7))
-    # fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     density = torchessian.F(support, l_s0_level1.real, w_s0_level1.real, m)
     ax.plot(support.numpy(), density.numpy(), color='m')
     # density = torchessian.f(support,l_s1_level1.real,w_s1_level1.real,m)
@@ -1143,14 +1212,14 @@ def main():
     blue_patch = mpatches.Patch(color='blue', label='RF (318,318)')
     green_patch = mpatches.Patch(color='green', label='RF (427,427)')
     # plt.legend(handles=[m_patch,c_patch,red_patch, blue_patch,gree_patch])
-    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": 15})
+    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
     # plt.title("hessian spectre comparisons at initialisation")
     plt.xlabel("$\lambda$", fontsize=15)
     plt.ylabel("$P(\lambda)$", fontsize=15)
     plt.xlim(-90000, 90000)
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.tick_params(axis='both', which='minor', labelsize=15)
-    plt.savefig("paper_plots/Hessian_spectre_resnet50_init_cifar10.pdf", bbox_inches="tight")
+    plt.savefig("paper_plots/Hessian_spectre_resnet50_init_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
 
     ############ VGG
     # Level 1
@@ -1200,8 +1269,7 @@ def main():
 
     support = torch.linspace(-2400, 2400, 100000)
     # support = torch.linspace(min(min_values),max(max_values), 1000000 )
-    fig, ax = plt.subplots(figsize=(15, 7))
-    # fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     density = torchessian.F(support, l_s0_level1.real, w_s0_level1.real, m)
     ax.plot(support.numpy(), density.numpy(), color='m')
     # density = torchessian.f(support,l_s1_level1.real,w_s1_level1.real,m)
@@ -1223,15 +1291,15 @@ def main():
     blue_patch = mpatches.Patch(color='blue', label='RF (537,537)')
     green_patch = mpatches.Patch(color='green', label='RF (715,715)')
     # plt.legend(handles=[m_patch,c_patch,red_patch, blue_patch,gree_patch])
-    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": 15})
-    plt.xlabel("$\lambda$", fontsize=10)
-    plt.ylabel("$P(\lambda)$", fontsize=10)
+    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
+    plt.xlabel("$\lambda$", fontsize=15)
+    plt.ylabel("$P(\lambda)$", fontsize=15)
     plt.xlim(-2300, 2300)
-    ax.tick_params(axis='both', which='major', labelsize=10)
-    ax.tick_params(axis='both', which='minor', labelsize=10)
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    ax.tick_params(axis='both', which='minor', labelsize=15)
     # plt.title("hessian spectre comparisons at initialisation")
-    plt.savefig("paper_plots/Hessian_spectre_vgg_init_cifar10.pdf", bbox_inches="tight")
-    ############################ Pruning R4esults CIFAR10 ##############################################################
+    plt.savefig("paper_plots/Hessian_spectre_vgg_init_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
+    ############################ Pruning Results CIFAR10 ##############################################################
     df = pd.read_csv("cifa10_pruning_results.csv", delimiter=",")
 
     custom_RS_18_RF = [3, 5, 7, 9, 11, 13, 17, 21, 25, 29, 37, 45, 53, 61, 77, 109, 133]
@@ -1263,8 +1331,7 @@ def main():
     color1 = "crimson"
     color2 = "cornflowerblue"
     df["Accuracy Reduction (Dense-Pruned)"] = df["Dense Accuracy"] - df["Pruned Accuracy"]
-    fig, ax = plt.subplots()
-    # sns.lineplot(data=df, x="dense test accuracy", y="Pruned test accuracy", hue="Level",err_style="bars", errorbar=("se", 2))
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     sns.lineplot(data=df, x="Receptive Field", y="Dense Accuracy", color=color1, style="Model", err_style="bars",
                  errorbar=("se", 2), legend=False, ax=ax)
     ax2 = plt.twinx()
@@ -1282,7 +1349,7 @@ def main():
     ax.tick_params(axis='both', which='major', labelsize=12)
     ax2.tick_params(axis='both', which='major', labelsize=12)
     ax.set_xlabel("Receptive Field", size=12)
-    plt.savefig("paper_plots/Pruned_results_CIFAR10.pdf", bbox_inches="tight")
+    plt.savefig("paper_plots/Pruned_results_CIFAR10.pgf",  bbox_inches="tight", pad_inches=0.05)
     ############################ Pruning Results Tiny Imagenet ##############################################################
 
     df_vgg = pd.read_csv("vgg_19_tiny_imagenet.csv", delimiter=",")
@@ -1309,7 +1376,7 @@ def main():
     color1 = "crimson"
     color2 = "cornflowerblue"
     df["Accuracy Reduction (Dense-Pruned)"] = df["Dense Accuracy"] - df["Pruned Accuracy"]
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     # sns.lineplot(data=df, x="dense test accuracy", y="Pruned test accuracy", hue="Level",err_style="bars", errorbar=("se", 2))
     sns.lineplot(data=df, x="Receptive Field", y="Dense Accuracy", color=color1, style="Model", err_style="bars",
                  errorbar=("se", 2), legend=False, ax=ax)
@@ -1328,7 +1395,536 @@ def main():
     ax.tick_params(axis='both', which='major', labelsize=12)
     ax2.tick_params(axis='both', which='major', labelsize=12)
     ax.set_xlabel("Receptive Field", size=12)
-    plt.savefig("paper_plots/Pruned_results_TinyImageNet.pdf", bbox_inches="tight")
+    plt.savefig("paper_plots/Pruned_results_TinyImageNet.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    ##################################### Pruning rate per Layers ######################################################
+    # Level 1 VGG
+    full_dataframe_and_seed0 = pd.read_csv(
+        "vgg19_level_1_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("vgg19_level_1_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("vgg19_level_1_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("vgg19_level_1_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("vgg19_level_1_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/vgg_level1_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """### Level 3"""
+
+    full_dataframe_and_seed0 = pd.read_csv("vgg19_level_3_seed_0_cifar10_pruning_rates_global_pr_0.9.csv",
+                                           delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("vgg19_level_3_seed_1_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("vgg19_level_3_seed_2_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("vgg19_level_3_seed_3_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("vgg19_level_3_seed_4_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size)
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/vgg_level3_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+    return 0
+    """### Level 4"""
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "vgg19_level_4_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("vgg19_level_4_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("vgg19_level_4_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("vgg19_level_4_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("vgg19_level_4_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/vgg_level4_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """## Resnet50
+
+    ## Level 1
+    """
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_1_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    # seed1 = pd.read_csv("resnet50_level_2_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",delimiter=",")
+    # seed1["Layer"]= range(len(seed1))
+    seed2 = pd.read_csv("resnet50_level_1_seed_5_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("resnet50_level_1_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("resnet50_level_1_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.set_xticklabels(
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level1_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """### Level 2"""
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_2_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    # seed1 = pd.read_csv("resnet50_level_2_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",delimiter=",")
+    # seed1["Layer"]= range(len(seed1))
+    seed2 = pd.read_csv("resnet50_level_2_seed_5_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("resnet50_level_2_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("resnet50_level_2_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.set_xticklabels(
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    # ax.xaxis.set_major_locator(ticker.LinearLocator(3))
+    # ax.xaxis.set_minor_locator(ticker.LinearLocator(31))
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    # fig.set_figheight(fig_size[0])
+    # fig.set_figwidth(fig_size[1])
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level2_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """### Level 7
+
+    """
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_7_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("resnet50_level_7_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("resnet50_level_7_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("resnet50_level_7_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("resnet50_level_7_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.xticks(rotation=90)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level7_cifar10_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """# Tiny ImageNet
+
+    ## VGG
+
+    ### Level 1
+    """
+    full_dataframe_and_seed0 = pd.read_csv(
+        "vgg19_level_1_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("vgg19_level_1_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("vgg19_level_1_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("vgg19_level_1_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("vgg19_level_1_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    # plt.barplot(all_df['Layer'],all_df["Pruning Rate"])
+    plt.ylabel("Pruning Rate", fontsize=fs*1.1)
+    plt.xlabel("Layer", fontsize=fs*1.1)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs*1.1)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/vgg_level1_tiny_imagenet_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """### Level 4"""
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "vgg19_level_4_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv("vgg19_level_4_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv("vgg19_level_4_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv("vgg19_level_4_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv("vgg19_level_4_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+                        delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/vgg_level4_tiny_imagenet_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """## ReseNet50
+
+    ### Level 2
+    """
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_2_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv(
+        "resnet50_level_2_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv(
+        "resnet50_level_2_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv(
+        "resnet50_level_2_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv(
+        "resnet50_level_2_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    # plt.xticks(rotation=90)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level2_tiny_imagenet_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
+
+    """### Level 3"""
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_3_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv(
+        "resnet50_level_3_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv(
+        "resnet50_level_3_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv(
+        "resnet50_level_3_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv(
+        "resnet50_level_3_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    # plt.xticks(rotation=90)
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level3_tiny_imagenet_pruning_rates_layer.pgf")
+
+    """### Level 5
+
+    """
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_5_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv(
+        "resnet50_level_5_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv(
+        "resnet50_level_5_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv(
+        "resnet50_level_5_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    # seed4 = pd.read_csv("resnet50_level_5_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",delimiter=",")
+
+    # seed4["Layer"]= range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3], ignore_index=True)
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size,layout="compressed")
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    # plt.xticks(rotation=90)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level5_tiny_imagenet_pruning_rates_layer.pgf")
+
+
+
+
+
+
+
+
+
+
+    """### Level 7"""
+
+    full_dataframe_and_seed0 = pd.read_csv(
+        "resnet50_level_7_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
+    seed1 = pd.read_csv(
+        "resnet50_level_7_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1["Layer"] = range(len(seed1))
+    seed2 = pd.read_csv(
+        "resnet50_level_7_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2["Layer"] = range(len(seed2))
+    seed3 = pd.read_csv(
+        "resnet50_level_7_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3["Layer"] = range(len(seed3))
+    seed4 = pd.read_csv(
+        "resnet50_level_7_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+
+    seed4["Layer"] = range(len(seed4))
+    all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
+
+    # full_dataframe_and_seed0["pr2"]= seed1["pr"]
+    # full_dataframe_and_seed0["pr3"]= seed2["pr"]
+    # full_dataframe_and_seed0["pr4"]= seed3["pr"]
+    # full_dataframe_and_seed0["pr5"]= seed4["pr"]
+    # full_dataframe_and_seed0
+    # index_layers=[]
+    # use=[index_layers.append(num) for num in le_list for le_list in [list(range(len(seed1)))]*5]
+    # print(use)
+
+    all_df["Pruning Rate"] = all_df["pr"]
+
+    fig, ax = plt.subplots(figsize=fig_size)
+    sns.barplot(data=all_df, x="Layer", y="Pruning Rate", color="cornflowerblue")
+    plt.ylabel("Pruning Rate", fontsize=fs)
+    plt.xlabel("Layer", fontsize=fs)
+    # plt.legend()
+    # plt.xlim(-5,200)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    ax.tick_params(axis='both', which='major', labelsize=fs)
+    # plt.xticks(rotation=90)
+    # 
+    # 
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig("paper_plots/resnet50_level7_tiny_imagenet_pruning_rates_layer.pgf",  bbox_inches="tight", pad_inches=0.05)
 
 
 if __name__ == '__main__':

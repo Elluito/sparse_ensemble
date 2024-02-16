@@ -66,7 +66,7 @@ unset KMP_AFFINITY
 #        Train logistic regression on a particular set of features
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 5 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --layer_index $6
+#python similarity_comparison_architecture.py --experiment 5 --architecture $1 --solution $2 --seedname1 $3 -rfl $4 --modeltype1 $5 --layer_index $6
 #############################################################
 #       Calculate the similarity of two seeds
 #############################################################
@@ -107,3 +107,14 @@ python similarity_comparison_architecture.py --experiment 5 --architecture $1 --
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
 #python prune_models.py  --model "vgg19" --dataset "tiny_imagenet" --num_workers "4" --RF_level 4 --type "normal" --folder "~/" --solution "vgg19_normal_tiny_imagenet_seed_3_rf_level_4_test_acc_39.03.pth" --pruning_rate 0.9 --experiment 2
+
+
+
+#################################################################
+#             Stochastic pruning
+#################################################################
+
+#############################################################
+#     Fine tuning pruning results
+#############################################################
+main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
