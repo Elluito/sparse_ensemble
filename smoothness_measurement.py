@@ -164,13 +164,13 @@ def main(args):
     # net.eval()
     # print(len(x))
     criterion = torch.nn.CrossEntropyLoss()
-    # metric = metrics.sl_metrics.BatchedLoss(criterion, trainloader_hessian)
+    metric = metrics.sl_metrics.BatchedLoss(criterion, trainloader_hessian)
     #
     # #
     # print("Is going to begin the random plane data calculation")
     # t0 = time.time()
-    # loss_data_fin = loss_landscapes.random_plane(net, metric, 0.15, STEPS, normalization='filter',
-    #                                              deepcopy_model=True)
+    loss_data_fin = loss_landscapes.random_plane(net, metric, 0.15, STEPS, normalization='filter',
+                                                 deepcopy_model=True)
     # t1 = time.time()
     # print("The calculation lasted {}s".format(t1 - t0))
     #

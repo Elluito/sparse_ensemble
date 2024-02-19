@@ -34,7 +34,7 @@ def point(model: typing.Union[torch.nn.Module, ModelWrapper], metric: Metric) ->
 # noinspection DuplicatedCode
 def linear_interpolation(model_start: typing.Union[torch.nn.Module, ModelWrapper],
                          model_end: typing.Union[torch.nn.Module, ModelWrapper],
-                         metric: Metric, steps=100, deepcopy_model=False) -> np.ndarray:
+                         metric: Metric, steps=100, deepcopy_model=False,reference_model1=None,reference_model2=None) -> np.ndarray:
     """
     Returns the computed value of the evaluation function applied to the model or
     agent along a linear subspace of the parameter space defined by two end points.
@@ -74,11 +74,15 @@ def linear_interpolation(model_start: typing.Union[torch.nn.Module, ModelWrapper
     start_point = model_start_wrapper.get_module_parameters()
     end_point = end_model_wrapper.get_module_parameters()
     direction = (end_point - start_point) / steps
-
+    # ref_vector1 = torch.nn.utils.parameters_to_vector(reference_model1.parameters())
+    # ref_vector2 = torch.nn.utils.parameters_to_vector(reference_model2.parameters())
+    # best index_1 = 0
+    # best index_2 = 0
     data_values = []
     for i in range(steps):
         # add a step along the line to the model parameters, then evaluate
         start_point.add_(direction)
+
         data_values.append(metric(model_start_wrapper))
 
     return np.array(data_values)

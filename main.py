@@ -2411,26 +2411,26 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
 
-        transform_train = transforms.compose([
-            transforms.randomcrop(32, padding=4),
-            transforms.randomhorizontalflip(),
-            transforms.totensor(),
-            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
-        transform_test = transforms.compose([
-            transforms.totensor(),
-            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
 
-        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+        trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
 
-        trainloader = torch.utils.data.dataloader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
+        trainloader = torch.utils.data.DataLoader(cifar10_train, batch_size=cfg.batch_size, shuffle=True,
                                                   num_workers=cfg.num_workers)
-        val_loader = torch.utils.data.dataloader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
+        val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
                                                  num_workers=cfg.num_workers)
-        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
-        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+        testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
 
@@ -11046,8 +11046,8 @@ if __name__ == '__main__':
     # # ##############################################################################
     # #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # # ##############################################################################
-    #
-    #
+
+
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
@@ -11070,6 +11070,7 @@ if __name__ == '__main__':
     parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
     parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
                         required=False)
+
     parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
                         help='Use log scale for sigma in pr,sigma optim', required=False)
@@ -11077,7 +11078,9 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument('-fnc', '--functions', type=int, default=1,
                         help='Type of functions for MOO optim of sigma and pr', required=False)
+
     args = vars(parser.parse_args())
+
     LeMain(args)
 
     #
