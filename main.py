@@ -3804,6 +3804,7 @@ def check_noise_impact_in_weights_by_layer(cfg):
     #                 y1="Survived",
     #                 y2="Pruned",
     #                 ylabel="Count",
+
     #                 path="test_pr_{}.pdf".format(cfg.amount),
     #                 title="Pruning rate " f"{cfg.amount} " + f" Pruning Threshold={threshold}",
     #                 label1="Survived",

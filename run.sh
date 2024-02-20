@@ -118,8 +118,24 @@ unset KMP_AFFINITY
 #     Fine tuning pruning results
 #############################################################
 #main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8
-python stochastic_loss_landscape --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test" -nw 4
-python stochastic_loss_landscape --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test" -nw 4
-python stochastic_loss_landscape --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test" -nw 4
-python stochastic_loss_landscape --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test" -nw 4
-python stochastic_loss_landscape --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test" -nw 4
+
+  if [ $1 -eq 0 ]
+  then
+    python stochastic_loss_landscape.py --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test" -nw 4
+  fi
+  if [ $1 -eq 1 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test" -nw 4
+  fi
+  if [ $1 -eq 2 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test" -nw 4
+  fi
+  if [ $1 -eq 3 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test" -nw 4
+  fi
+  if [ $1 -eq 4 ]
+  then
+python stochastic_loss_landscape.py  --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test" -nw 4
+  fi

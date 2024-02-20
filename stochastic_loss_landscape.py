@@ -25,6 +25,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 steps = 100
+low_t = -7
+high_t = 7
+# b = 1.5
 fs = 12
 fig_size = (5, 3)
 sns.reset_orig()
@@ -75,8 +78,8 @@ def load_cfg(args):
     if args["dataset"] == "cifar10":
         if args["modeltype"] == "alternative":
             if args["architecture"] == "resnet18":
-                # solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-                solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
@@ -138,6 +141,19 @@ def load_cfg(args):
 
     cfg.exclude_layers = exclude_layers
     return cfg
+
+
+def W_hat(begining, end, w):
+    return begining + w * (end - begining)
+
+
+def little_test(targets, outputs):
+    total = 0
+    correct = 0
+    _, predicted = outputs.max(1)
+    total += targets.size(0)
+    correct += predicted.eq(targets).sum().item()
+    return correct/total
 
 
 def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=True):
@@ -243,8 +259,9 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
     best_model.cuda()
     vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_pruning_model.parameters())
     vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(best_model.parameters())
-    begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, -0.5).to("cuda")
-    end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, 1.5).to("cuda")
+
+    begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning,low_t).to("cuda")
+    end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning,low_t).to("cuda")
     model_begining = copy.deepcopy(pruned_model)
     torch.nn.utils.vector_to_parameters(begining, model_begining.parameters())
     model_end = copy.deepcopy(pruned_model)
@@ -252,7 +269,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
 
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
-    metric_testloader = metrics.sl_metrics.BatchedLoss(criterion, testloader)
+    metric_testloader = metrics.sl_metrics.BatchedLoss(little_test, testloader)
     print("Calculating train loss")
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
     print("Calculating test loss")
@@ -260,7 +277,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     np.save("smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
-    np.save("smoothness/testloss_line_{}_one_shot.npy".format(name), loss_data_test)
+    np.save("smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
     torch.save(best_model.state_dict(), "smoothness/{}_stochastic_one_shot.pth".format(name))
     torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_one_shot.pth".format(name))
 
