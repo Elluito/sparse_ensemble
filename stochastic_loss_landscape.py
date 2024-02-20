@@ -24,6 +24,7 @@ import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+steps = 100
 fs = 12
 fig_size = (5, 3)
 sns.reset_orig()
@@ -55,6 +56,7 @@ plt.rcParams.update({
 plt.grid(ls='--', alpha=0.5)
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
+
 
 def load_cfg(args):
     solution = ""
@@ -136,6 +138,8 @@ def load_cfg(args):
 
     cfg.exclude_layers = exclude_layers
     return cfg
+
+
 def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
@@ -211,8 +215,8 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
         #     _, unit_sparse_flops = flops(noisy_sample, data)
         #     first_iter = 0
 
-        noisy_sample_performance = test(noisy_sample, use_cuda,valloader, verbose=0,
-                                                                 count_flops=False, batch_flops=unit_sparse_flops)
+        noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0,
+                                        count_flops=False, batch_flops=unit_sparse_flops)
 
         if cfg.use_wandb:
             test_accuracy = test(noisy_sample, use_cuda, [get_random_batch(testloader)], verbose=0)
@@ -249,14 +253,16 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
     metric_testloader = metrics.sl_metrics.BatchedLoss(criterion, testloader)
-    loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, 300)
-    loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, 300)
+    print("Calculating train loss")
+    loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
+    print("Calculating test loss")
+    loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, steps)
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("smoothness/trainloss_line_{}.npy".format(name), loss_data_train)
-    np.save("smoothness/testloss_line_{}.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "smoothness/{}_stochastic.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic.pth".format(name))
+    np.save("smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
+    np.save("smoothness/testloss_line_{}_one_shot.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_one_shot.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_one_shot.pth".format(name))
 
 
 def plot_line_(cfg):
@@ -265,40 +271,46 @@ def plot_line_(cfg):
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     train_loss = np.load("smoothness/trainloss_line_{}_one_shot.npy".format(name))
     test_loss = np.load("smoothness/testloss_line_{}_one_shot.npy".format(name))
-    stochastic_loss_index = 75
-    deterministic_loss_index = 225
-    stochastic_state_dict = torch.load("smoothness/{}_stochastic.pth".format(name))
-    deterministic_state_dict = torch.load("smoothness/{}_deterministic.pth".format(name))
+    stochastic_loss_index = int((0.5 * steps) // 2)
+    deterministic_loss_index = int((1.5 * steps) // 2)
+    stochastic_state_dict = torch.load("smoothness/{}_stochastic_one_shot.pth".format(name))
+    deterministic_state_dict = torch.load("smoothness/{}_deterministic_one_shot.pth".format(name))
     sto_model = copy.deepcopy(model)
     det_model = copy.deepcopy(model)
-
+    sto_model.load_state_dict(stochastic_state_dict)
+    det_model.load_state_dict(deterministic_state_dict)
     vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_model.parameters())
     vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(sto_model.parameters())
 
     # point = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, -0.5)
-    t_range = torch.range(-0.5, 1.5, (1.5 + 0.5) / 300)
+    t_range = torch.arange(-0.5, 1.5, (1.5 + 0.5) / (steps))
     distance_vector = []
     for t in t_range:
         point = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, t)
         distance = torch.norm(vector_stochastic_pruning - point)
         if t <= 0:
-            distance_vector.append(-distance)
+            distance_vector.append(-distance.detach().cpu().numpy())
         else:
-            distance_vector.append(distance)
+            distance_vector.append(distance.detach().cpu().numpy())
 
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     plt.plot(distance_vector, train_loss, color="cornflowerblue", label="Train Loss")
     plt.plot(distance_vector, test_loss, color="limegreen", label="Test Loss")
-    plt.scatter(distance_vector[stochastic_loss_index], train_loss[stochastic_loss_index], c="cornflowerblue", marker="O", label="Stochastic pruning")
-    plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="limegreen", marker="S", label="Deterministic pruning")
-    plt.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="cornflowerblue", marker="O", label="Stochastic pruning")
-    plt.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen", marker="S", label="Deterministic pruning")
-    plt.show()
+    # plt.legend()
+    # plt.show()
+    plt.scatter(distance_vector[stochastic_loss_index], train_loss[stochastic_loss_index], c="cornflowerblue",
+                marker="o", label="Stochastic pruning")
+    plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="cornflowerblue",
+                marker="s", label="Deterministic pruning")
+    plt.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="limegreen",
+                marker="o", label="Stochastic pruning")
+    plt.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen",
+                marker="s", label="Deterministic pruning")
+    plt.legend()
+    plt.savefig("paper_plots/line_{}.pdf".format(name))
 
 
 if __name__ == '__main__':
-
-
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
@@ -334,4 +346,3 @@ if __name__ == '__main__':
     cfg = load_cfg(args)
     linear_interpolation_oneshot_GMP(cfg)
     plot_line_(cfg)
-

@@ -9421,7 +9421,12 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame, title, file):
     plt.title(title, fontsize=20)
     plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
 
-
+def flops_until_thresh(args):
+    df = pd.read_csv(args["file"])
+    is_det = False
+    if "deterministic" in args["file"]:
+        is_det = True
+    get_statistics_on_FLOPS_until_threshold(df,args["threshold"],is_det)
 def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: float, is_det=False):
     if not is_det:
         all_df: pd.DataFrame = None
