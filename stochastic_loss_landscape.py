@@ -368,5 +368,5 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
     cfg = load_cfg(args)
-    # linear_interpolation_oneshot_GMP(cfg)
-    plot_line_(cfg)
+    linear_interpolation_oneshot_GMP(cfg)
+    # plot_line_(cfg)
