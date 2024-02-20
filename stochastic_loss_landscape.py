@@ -24,7 +24,7 @@ import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-steps = 100
+steps = 200
 low_t = -7
 high_t = 7
 # b = 1.5
@@ -153,7 +153,7 @@ def little_test(targets, outputs):
     _, predicted = outputs.max(1)
     total += targets.size(0)
     correct += predicted.eq(targets).sum().item()
-    return correct/total
+    return correct / total
 
 
 def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=True):
@@ -260,8 +260,8 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
     vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_pruning_model.parameters())
     vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(best_model.parameters())
 
-    begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning,low_t).to("cuda")
-    end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning,low_t).to("cuda")
+    begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, low_t).to("cuda")
+    end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, high_t).to("cuda")
     model_begining = copy.deepcopy(pruned_model)
     torch.nn.utils.vector_to_parameters(begining, model_begining.parameters())
     model_end = copy.deepcopy(pruned_model)
@@ -288,8 +288,6 @@ def plot_line_(cfg):
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     train_loss = np.load("smoothness/trainloss_line_{}_one_shot.npy".format(name))
     test_loss = np.load("smoothness/testloss_line_{}_one_shot.npy".format(name))
-    stochastic_loss_index = int((0.5 * steps) // 2)
-    deterministic_loss_index = int((1.5 * steps) // 2)
     stochastic_state_dict = torch.load("smoothness/{}_stochastic_one_shot.pth".format(name))
     deterministic_state_dict = torch.load("smoothness/{}_deterministic_one_shot.pth".format(name))
     sto_model = copy.deepcopy(model)
@@ -298,9 +296,18 @@ def plot_line_(cfg):
     det_model.load_state_dict(deterministic_state_dict)
     vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_model.parameters())
     vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(sto_model.parameters())
+    # t_range = torch.arange(low_t, high_t, (high_t - low_t) / (steps))
+
+    stochastic_loss_index = int((-low_t * steps) // (high_t - low_t))
+    # deterministic_loss_index = int((1.5 * steps) // 2) if low
+    deterministic_loss_index = int(((1 - low_t) * steps) // (high_t - low_t))
+    #
+    # begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, t_range[stochastic_loss_index]).to(
+    #     "cuda")
+    # end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning,t_range[deterministic_loss_index]).to("cuda")
 
     # point = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, -0.5)
-    t_range = torch.arange(-0.5, 1.5, (1.5 + 0.5) / (steps))
+    t_range = torch.arange(low_t, high_t, (high_t - low_t) / (steps))
     distance_vector = []
     for t in t_range:
         point = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, t)
@@ -361,5 +368,5 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
     cfg = load_cfg(args)
-    linear_interpolation_oneshot_GMP(cfg)
+    # linear_interpolation_oneshot_GMP(cfg)
     plot_line_(cfg)
