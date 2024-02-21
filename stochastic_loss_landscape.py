@@ -153,7 +153,7 @@ def little_test(outputs, targets):
     _, predicted = outputs.max(1)
     total += targets.size(0)
     correct += predicted.eq(targets).sum().item()
-    return correct / total
+    return torch.tensor(correct / total)
 
 
 def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=True):

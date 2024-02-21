@@ -9887,8 +9887,6 @@ def MDS_projection_plot(cfg):
     plt.savefig("MDS_projections_resnet18_cifar10.pdf", bbox_inches="tight")
 
 
-def plot_projection_prediction():
-    pass
 
 
 def test_predictions_for_cfg(cfg, stochastic=False, name=""):
