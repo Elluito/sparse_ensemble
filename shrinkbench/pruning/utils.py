@@ -73,8 +73,8 @@ def get_activations(model, input):
             # single ReLU layer?
             # activations[module] = output.detach().cpu().numpy().copy()
             # return
-        assert module not in activations, \
-            f"{module} already in activations"
+        # assert module not in activations, \
+        #     f"{module} already in activations"
         # TODO [0] means first input, not all models have a single input
         activations[module] = (input[0].detach().cpu().numpy().copy(),
                                output.detach().cpu().numpy().copy(),)
