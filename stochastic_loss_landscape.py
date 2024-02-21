@@ -147,7 +147,7 @@ def W_hat(begining, end, w):
     return begining + w * (end - begining)
 
 
-def little_test(targets, outputs):
+def little_test(outputs, targets):
     total = 0
     correct = 0
     _, predicted = outputs.max(1)
@@ -156,29 +156,28 @@ def little_test(targets, outputs):
     return correct / total
 
 
-def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=True):
+def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
-    if cfg.use_wandb:
-        os.environ["wandb_start_method"] = "thread"
-        # now = date.datetime.now().strftime("%m:%s")
-        wandb.init(
-            entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
-            project="stochastic_pruning",
-            name=f"one_shot_stochastic_pruning_static_sigma_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
-            notes="This experiment is to test if iterative global stochastic pruning, compares to one-shot stochastic pruning",
-            reinit=True,
-        )
+    # if cfg.use_wandb:
+    #     os.environ["wandb_start_method"] = "thread"
+    #     # now = date.datetime.now().strftime("%m:%s")
+    #     wandb.init(
+    #         entity="luis_alfredo",
+    #         config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+    #         project="stochastic_pruning",
+    #         name=f"one_shot_stochastic_pruning_static_sigma_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
+    #         notes="This experiment is to test if iterative global stochastic pruning, compares to one-shot stochastic pruning",
+    #         reinit=True,
+    #     )
 
     pruned_model = get_model(cfg)
     pruned_model.cuda()
     det_pruning_model = copy.deepcopy(pruned_model)
     names, weights = zip(*get_layer_dict(det_pruning_model))
     number_of_layers = len(names)
-    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
 
     if cfg.pruner == "global":
         prune_with_rate(det_pruning_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
@@ -228,6 +227,133 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
         # if first_iter:
+        #     _, unit_sparse_flops = flops(noisy_sample, data.cuda())
+        #     first_iter = 0
+
+        noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0,
+                                        count_flops=False, batch_flops=unit_sparse_flops)
+
+        if cfg.use_wandb:
+            test_accuracy = test(noisy_sample, use_cuda, [get_random_batch(testloader)], verbose=0)
+            log_dict = {"val_set_accuracy": noisy_sample_performance, "individual": n,
+                        "sparse_flops": initial_flops,
+                        "test_set_accuracy": test_accuracy
+                        }
+            wandb.log(log_dict)
+        if noisy_sample_performance > best_accuracy:
+            best_accuracy = noisy_sample_performance
+            best_model = noisy_sample
+            test_accuracy = test(best_model, use_cuda, [get_random_batch(testloader)], verbose=0)
+            if cfg.use_wandb:
+                log_dict = {"best_val_set_accuracy": best_accuracy, "individual": n,
+                            "sparsity": sparsity(best_model),
+                            "sparse_flops": initial_flops,
+                            "test_set_accuracy": test_accuracy
+                            }
+                wandb.log(log_dict)
+    #####################################################################
+    #               Now the linear interpolation and the calculation of the loss
+    #####################################################################
+    det_pruning_model.cuda()
+    best_model.cuda()
+    vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_pruning_model.parameters())
+    vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(best_model.parameters())
+
+    begining = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, low_t).to("cuda")
+    end = torch.lerp(vector_stochastic_pruning, vector_deterministic_pruning, high_t).to("cuda")
+    model_begining = copy.deepcopy(pruned_model)
+    torch.nn.utils.vector_to_parameters(begining, model_begining.parameters())
+    model_end = copy.deepcopy(pruned_model)
+    torch.nn.utils.vector_to_parameters(end, model_end.parameters())
+
+    criterion = torch.nn.CrossEntropyLoss()
+    metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
+    metric_testloader = metrics.sl_metrics.BatchedLoss(little_test, testloader)
+    print("Calculating train loss")
+    print("Done!")
+    loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
+    print("Calculating test loss")
+    loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, steps)
+    print("Done!")
+    identifier = cfg.id
+    name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
+    np.save("smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
+    np.save("smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_one_shot.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_one_shot.pth".format(name))
+
+
+def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=True):
+    trainloader, valloader, testloader = get_datasets(cfg)
+    target_sparsity = cfg.amount
+    use_cuda = torch.cuda.is_available()
+    exclude_layers_string = "_exclude_layers" if print_exclude_layers else ""
+    # if cfg.use_wandb:
+    #     os.environ["wandb_start_method"] = "thread"
+    #     # now = date.datetime.now().strftime("%m:%s")
+    #     wandb.init(
+    #         entity="luis_alfredo",
+    #         config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+    #         project="stochastic_pruning",
+    #         name=f"one_shot_stochastic_pruning_static_sigma_{cfg.pruner}_pr_{cfg.amount}{exclude_layers_string}",
+    #         notes="This experiment is to test if iterative global stochastic pruning, compares to one-shot stochastic pruning",
+    #         reinit=True,
+    #     )
+
+    pruned_model = get_model(cfg)
+    pruned_model.cuda()
+    det_pruning_model = copy.deepcopy(pruned_model)
+    names, weights = zip(*get_layer_dict(det_pruning_model))
+    number_of_layers = len(names)
+
+    # if cfg.pruner == "global":
+    #     prune_with_rate(det_pruning_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    # else:
+    #     prune_with_rate(det_pruning_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+    #                     pruner=cfg.pruner)
+    #
+    # remove_reparametrization(det_pruning_model, exclude_layer_list=cfg.exclude_layers)
+    # record_predictions(pruned_original, evaluation_set,
+    #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+    print("pruned_performance of pruned original")
+    deterministic_pruned_performance = test(det_pruning_model, use_cuda, testloader, verbose=1)
+
+    best_model = None
+    best_accuracy = 0
+    initial_flops = 0
+    data_loader_iterator = cycle(iter(valloader))
+    data, y = next(data_loader_iterator)
+    first_iter = 1
+    unit_sparse_flops = 0
+    # evaluation_set = None
+    # if cfg.one_batch:
+    #     evaluation_set = [data]
+    # else:
+    #     if eval_set == "test":
+    #         evaluation_set = testloader
+    #     if eval_set == "val":
+    #         evaluation_set = valloader
+
+    for n in range(cfg.population):
+
+        noisy_sample = get_noisy_sample(pruned_model, cfg)
+
+        # det_mask_transfer_model = copy.deepcopy(current_model)
+        # copy_buffers(from_net=pruned_original, to_net=det_mask_transfer_model)
+        # det_mask_transfer_model_performance = test(det_mask_transfer_model, use_cuda, evaluation_set, verbose=1)
+
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        # Dense stochastic performance
+        # if cfg.pruner == "global":
+        #     prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(noisy_sample, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+        # # Here is where I transfer the mask from the pruned stochastic model to the
+        # # original weights and put it in the ranking
+        # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        # remove_reparametrization(noisy_sample, exclude_layer_list=cfg.exclude_layers)
+        # if first_iter:
         #     _, unit_sparse_flops = flops(noisy_sample, data)
         #     first_iter = 0
 
@@ -272,14 +398,16 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="test", print_exclude_layers=
     metric_testloader = metrics.sl_metrics.BatchedLoss(little_test, testloader)
     print("Calculating train loss")
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
+    print("Done!")
     print("Calculating test loss")
     loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, steps)
+    print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
-    np.save("smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_one_shot.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_one_shot.pth".format(name))
+    np.save("smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
+    np.save("smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_dense.pth".format(name))
 
 
 def plot_line_(cfg):
@@ -369,4 +497,5 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
     cfg = load_cfg(args)
     linear_interpolation_oneshot_GMP(cfg)
+    linear_interpolation_dense_GMP(cfg)
     # plot_line_(cfg)

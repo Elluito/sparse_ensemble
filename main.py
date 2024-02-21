@@ -9528,8 +9528,8 @@ def LeMain(args):
     if args["dataset"] == "cifar10":
         if args["modeltype"] == "alternative":
             if args["architecture"] == "resnet18":
-                # solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-                solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+                # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
