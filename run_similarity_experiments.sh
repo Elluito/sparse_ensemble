@@ -114,18 +114,18 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -N "fine_tune_stochastic pruning_${}_${}_${}__${}_${}" run.sh
 #done
 #done
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet18_0.005_0.9" run.sh "11" "0.005" "global" "resnet18" "cifar10" "0.9" "alternative" "200"
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet50_0.003_0.95" run.sh "11" "0.003" "global" "resnet50" "cifar10" "0.95" "alternative" "200"
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_vgg19_0.003_0.95" run.sh "11" "0.003" "global" "VGG19" "cifar10" "0.95" "alternative" "200"
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_resnet18_0.003_0.9" run.sh "11" "0.003" "global" "resnet18" "cifar100" "0.9" "alternative" "200"
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_resnet50_0.001_0.85" run.sh "11" "0.001" "global" "resnet50" "cifar100" "0.85" "alternative" "200"
-#qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_vgg19_0.001_0.8" run.sh "11" "0.001" "global" "VGG19" "cifar100" "0.8" "alternative" "200"
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet18_0.005_0.9" run.sh "11" "0.005" "global" "resnet18" "cifar10" "0.9" "alternative" "200"
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet50_0.003_0.95" run.sh "11" "0.003" "global" "resnet50" "cifar10" "0.95" "alternative" "200"
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_vgg19_0.003_0.95" run.sh "11" "0.003" "global" "VGG19" "cifar10" "0.95" "alternative" "200"
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_resnet18_0.003_0.9" run.sh "11" "0.003" "global" "resnet18" "cifar100" "0.9" "alternative" "200"
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_resnet50_0.001_0.85" run.sh "11" "0.001" "global" "resnet50" "cifar100" "0.85" "alternative" "200"
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar100_vgg19_0.001_0.8" run.sh "11" "0.001" "global" "VGG19" "cifar100" "0.8" "alternative" "200"
 ##python stochastic_loss_landscape.py --sigma "0.001" --batch_size 128 -pr "0.8" -dt "cifar100" -ar "vgg19" -mt "alternative"
 #python stochastic_loss_landscape.py --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test"
 #python stochastic_loss_landscape.py --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test"
