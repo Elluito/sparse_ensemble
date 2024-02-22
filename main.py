@@ -11223,7 +11223,7 @@ if __name__ == '__main__':
     #     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
     #
-        get_statistics_on_FLOPS_until_threshold(df,92)
+        # get_statistics_on_FLOPS_until_threshold(df,92)
     #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
     #     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
