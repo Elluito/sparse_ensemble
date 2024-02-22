@@ -25,10 +25,10 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-#conda activate work2
+conda activate work2
 #which python
-#unset GOMP_CPU_AFFINITY
-#unset KMP_AFFINITY
+unset GOMP_CPU_AFFINITY
+unset KMP_AFFINITY
 #nvcc --version
 #python main.py $1 $2 $3 $4 $5 $6
 #&& python main.py && python main.py
