@@ -791,9 +791,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         weights_path.mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
                                          mask_dict=mask_dict, use_wandb=use_wandb)
-        # state_dict = pruned_model.state_dict()
-        # temp_name = weights_path / "epoch_{}.pth".format(-1)
-        # torch.save(state_dict,temp_name)
+        state_dict = pruned_model.state_dict()
+        temp_name = weights_path / "epoch_{}.pth".format(-1)
+        torch.save(state_dict,temp_name)
 
     pruned_model.cuda()
     pruned_model.train()
@@ -874,12 +874,12 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
 
-    if not os.path.isdir(save_folder):
-        os.mkdir(save_folder)
-    if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
-        os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
-    torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
-    best_acc = acc
+    # if not os.path.isdir(save_folder):
+    #     os.mkdir(save_folder)
+    # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+    #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    # torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+    # best_acc = acc
 
     if use_wandb:
         if gradient_flow_file_prefix != "":
@@ -891,6 +891,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             "sparse_flops": total_sparse_FLOPS,
             "final_accuracy": test_set_performance
         })
+
 
     return total_sparse_FLOPS
 
