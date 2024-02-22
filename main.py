@@ -9508,12 +9508,12 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: 
         ci95_hi = m + 1.96 * s / math.sqrt(c)
         ci95_lo = m - 1.96 * s / math.sqrt(c)
         print("[{:.3E},{:.3E}]".format(ci95_lo, ci95_hi))
-def statistics_on_FLOPS_until_thresclod(args):
-    stochastic_folder = "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/"
-    deterministic_folder = "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma0.0/pr{}/"
-
-    All_stochastic_df = None
-    for name in glob.glob():
+# def statistics_on_FLOPS_until_thresclod(args):
+#     stochastic_folder = "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/"
+#     deterministic_folder = "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma0.0/pr{}/"
+#
+#     All_stochastic_df = None
+#     for name in glob.glob():
 
 
 
