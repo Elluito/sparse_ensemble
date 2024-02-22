@@ -249,6 +249,7 @@ def train(epoch,net,trainloader,optimizer,criterion):
         print("Batch accuracy: {}".format(100.*correct/total, correct, total))
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
+
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()

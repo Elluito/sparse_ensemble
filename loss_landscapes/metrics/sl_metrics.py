@@ -6,7 +6,6 @@ computing the loss, the gradient of the loss (w.r.t. model parameters) and Hessi
 (w.r.t. model parameters) for some supervised learning loss is easily accomplished.
 """
 
-
 import numpy as np
 import torch
 import torch.autograd
@@ -15,8 +14,26 @@ from loss_landscapes.model_interface.model_parameters import rand_u_like
 from loss_landscapes.model_interface.model_wrapper import ModelWrapper
 
 
+class BatchedAccuracyError(Metric):
+    """ Computes a specified loss function over specified input-output pairs. """
+
+    def __init__(self, accuracy_fn, dataloader: torch.utils.data.DataLoader,):
+        super().__init__()
+        self.loss_fn = accuracy_fn
+        self.dataloader = dataloader
+
+    # def __call__(self, model_wrapper: ModelWrapper) -> float:
+    #     return self.loss_fn(model_wrapper.forward(self.inputs), self.target).item()
+
+    def __call__(self, model_wrapper: ModelWrapper) -> float:
+        model_wrapper.eval()
+        accuracy = self.loss_fn(model_wrapper, True, self.dataloader, verbose=0)
+        return 100-accuracy
+
+
 class Loss(Metric):
     """ Computes a specified loss function over specified input-output pairs. """
+
     def __init__(self, loss_fn, inputs: torch.Tensor, target: torch.Tensor):
         super().__init__()
         self.loss_fn = loss_fn
@@ -29,27 +46,35 @@ class Loss(Metric):
 
 class BatchedLoss(Metric):
     """ Computes a specified loss function over specified input-output pairs. """
+
     def __init__(self, loss_fn, dataloader: torch.utils.data.DataLoader):
         super().__init__()
         self.loss_fn = loss_fn
         self.dataloader = dataloader
 
     def __call__(self, model_wrapper: ModelWrapper) -> float:
-
         model_wrapper.eval()
         test_loss = 0
+        total = 0
         with torch.no_grad():
             for batch_idx, (inputs, targets) in enumerate(self.dataloader):
                 inputs, targets = inputs.cuda(), targets.cuda()
+                # batch_size = targets.size(0)
                 outputs = model_wrapper.forward(inputs)
-                loss =self.loss_fn(outputs, targets)
+                loss = self.loss_fn(outputs, targets)
                 test_loss += loss.data.item()
-        return test_loss
+                total += 1
+        print(test_loss)
+        print(total)
+        print(test_loss / total)
+        return test_loss / total
         # return self.loss_fn(model_wrapper.forward(self.inputs), self.target).item()
+
 
 class LossGradient(Metric):
     """ Computes the gradient of a specified loss function w.r.t. the model parameters
     over specified input-output pairs. """
+
     def __init__(self, loss_fn, inputs: torch.Tensor, target: torch.Tensor):
         super().__init__()
         self.loss_fn = loss_fn
@@ -68,6 +93,7 @@ class LossPerturbations(Metric):
     These perturbations can be used to reason probabilistically about the curvature of a
     point on the loss landscape, as demonstrated in the paper by Schuurmans et al
     (https://arxiv.org/abs/1811.11214)."""
+
     def __init__(self, loss_fn, inputs: torch.Tensor, target: torch.Tensor, n_directions, alpha):
         super().__init__()
         self.loss_fn = loss_fn
@@ -93,7 +119,6 @@ class LossPerturbations(Metric):
             start_point.sub_(direction)
 
         return np.array(results)
-
 
 # noinspection DuplicatedCode
 # class GradientPredictivenessEvaluator(Metric):

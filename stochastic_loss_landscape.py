@@ -23,6 +23,7 @@ import matplotlib.ticker as ticker
 import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sparse_ensemble_utils import test
 
 steps = 200
 low_t = -7
@@ -150,10 +151,13 @@ def W_hat(begining, end, w):
 def little_test(outputs, targets):
     total = 0
     correct = 0
-    _, predicted = outputs.max(1)
+    _, predicted = torch.max(outputs,1)
     total += targets.size(0)
     correct += predicted.eq(targets).sum().item()
-    return torch.tensor(correct / total)
+    # print(correct)
+    # print(total)
+    return torch.tensor(100 - 100*(correct / total))
+
 
 
 def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=True):
@@ -268,7 +272,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
 
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
-    metric_testloader = metrics.sl_metrics.BatchedLoss(little_test, testloader)
+    metric_testloader = metrics.sl_metrics.BatchedAccuracyError(test, testloader)
     print("Calculating train loss")
     print("Done!")
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
@@ -277,10 +281,10 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
-    np.save("smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_one_shot.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_one_shot.pth".format(name))
+    np.save("nobackup/sclaam/smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
+    np.save("nobackup/sclaam/smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "nobackup/sclaam/smoothness/{}_stochastic_one_shot.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "nobackup/sclaam/smoothness/{}_deterministic_one_shot.pth".format(name))
 
 
 def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=True):
@@ -395,7 +399,7 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
 
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
-    metric_testloader = metrics.sl_metrics.BatchedLoss(little_test, testloader)
+    metric_testloader = metrics.sl_metrics.BatchedAccuracyError(test, testloader)
     print("Calculating train loss")
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
     print("Done!")
@@ -404,20 +408,20 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
-    np.save("smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_dense.pth".format(name))
+    np.save("nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
+    np.save("nobackup/sclaam/smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "nobackup/sclaam/smoothness/{}_stochastic_dense.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "nobackup/sclaam/smoothness/{}_deterministic_dense.pth".format(name))
 
 
-def plot_line_(cfg):
+def plot_line_(cfg, type_="one_shot"):
     model = get_model(cfg)
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    train_loss = np.load("smoothness/trainloss_line_{}_one_shot.npy".format(name))
-    test_loss = np.load("smoothness/testloss_line_{}_one_shot.npy".format(name))
-    stochastic_state_dict = torch.load("smoothness/{}_stochastic_one_shot.pth".format(name))
-    deterministic_state_dict = torch.load("smoothness/{}_deterministic_one_shot.pth".format(name))
+    train_loss = np.load("smoothness/trainloss_line_{}_{}.npy".format(name, type_))
+    test_loss = np.load("smoothness/testAccuracy_line_{}_{}.npy".format(name, type_))
+    stochastic_state_dict = torch.load("smoothness/{}_stochastic_{}.pth".format(name, type_))
+    deterministic_state_dict = torch.load("smoothness/{}_deterministic_{}.pth".format(name, type_))
     sto_model = copy.deepcopy(model)
     det_model = copy.deepcopy(model)
     sto_model.load_state_dict(stochastic_state_dict)
@@ -425,7 +429,6 @@ def plot_line_(cfg):
     vector_deterministic_pruning = torch.nn.utils.parameters_to_vector(det_model.parameters())
     vector_stochastic_pruning = torch.nn.utils.parameters_to_vector(sto_model.parameters())
     # t_range = torch.arange(low_t, high_t, (high_t - low_t) / (steps))
-
     stochastic_loss_index = int((-low_t * steps) // (high_t - low_t))
     # deterministic_loss_index = int((1.5 * steps) // 2) if low
     deterministic_loss_index = int(((1 - low_t) * steps) // (high_t - low_t))
@@ -447,19 +450,31 @@ def plot_line_(cfg):
 
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     plt.plot(distance_vector, train_loss, color="cornflowerblue", label="Train Loss")
-    plt.plot(distance_vector, test_loss, color="limegreen", label="Test Loss")
+    ax2 = plt.twinx()
+    ax2.plot(distance_vector, test_loss, color="limegreen", label="Test Accuracy error")
     # plt.legend()
     # plt.show()
-    plt.scatter(distance_vector[stochastic_loss_index], train_loss[stochastic_loss_index], c="cornflowerblue",
-                marker="o", label="Stochastic pruning")
-    plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="cornflowerblue",
-                marker="s", label="Deterministic pruning")
-    plt.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="limegreen",
-                marker="o", label="Stochastic pruning")
-    plt.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen",
-                marker="s", label="Deterministic pruning")
+    if "one_shot" in type_:
+        plt.scatter(distance_vector[stochastic_loss_index], train_loss[stochastic_loss_index], c="cornflowerblue",
+                    marker="o", label="Stochastic pruning")
+        plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="cornflowerblue",
+                    marker="s", label="Deterministic pruning")
+        plt.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="limegreen",
+                    marker="o", label="Stochastic pruning")
+        plt.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen",
+                    marker="s", label="Deterministic pruning")
+    elif "dense" in type_:
+        plt.scatter(distance_vector[stochastic_loss_index], train_loss[stochastic_loss_index], c="cornflowerblue",
+                    marker="o", label="Stochastic")
+        plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="cornflowerblue",
+                    marker="s", label="Deterministic")
+        ax2.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="limegreen",
+                    marker="o", label="Stochastic" )
+        ax2.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen",
+                    marker="s", label="Deterministic")
     plt.legend()
-    plt.savefig("paper_plots/line_{}.pdf".format(name))
+    plt.savefig("paper_plots/line_{}_{}.pdf".format(name, type_))
+
 
 
 if __name__ == '__main__':
@@ -493,9 +508,10 @@ if __name__ == '__main__':
     parser.add_argument('-fnc', '--functions', type=int, default=1,
                         help='Type of functions for MOO optim of sigma and pr', required=False)
     parser.add_argument('-id', '--id', type=str, default="", help='Unique identifier', required=True)
+    parser.add_argument('-tp', '--type', type=str, default="one_shot", help='Type', required=False)
 
     args = vars(parser.parse_args())
     cfg = load_cfg(args)
     linear_interpolation_oneshot_GMP(cfg)
     linear_interpolation_dense_GMP(cfg)
-    # plot_line_(cfg)
+    # plot_line_(cfg, args["type"])
