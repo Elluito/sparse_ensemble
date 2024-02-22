@@ -117,32 +117,32 @@ unset KMP_AFFINITY
 #############################################################
 #     Fine tuning pruning results
 #############################################################
-python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 -pop 10
+#python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 -pop 10
 
 
-#type="one_shot"
-##type="de"
-#  if [ $1 -eq 0 ]
-#  then
-#    python stochastic_loss_landscape.py --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 1 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 2 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 3 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 4 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 5 ]
-#  then
-#    python stochastic_loss_landscape.py --batch_size  128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test" -nw 2
-#  fi
+type="one_shot"
+#type="de"
+  if [ $1 -eq 0 ]
+  then
+    python stochastic_loss_landscape.py --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 1 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 2 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 3 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 4 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 5 ]
+  then
+    python stochastic_loss_landscape.py --sigma "0.001" --batch_size  128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test2" -nw 4 -tp "${type}"
+  fi
