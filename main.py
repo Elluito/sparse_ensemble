@@ -9508,6 +9508,13 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: 
         ci95_hi = m + 1.96 * s / math.sqrt(c)
         ci95_lo = m - 1.96 * s / math.sqrt(c)
         print("[{:.3E},{:.3E}]".format(ci95_lo, ci95_hi))
+def statistics_on_FLOPS_until_thresclod(args):
+    stochastic_folder = "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/"
+    deterministic_folder = "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma0.0/pr{}/"
+
+    All_stochastic_df = None
+    for name in glob.glob():
+
 
 
 def LeMain(args):
@@ -11216,7 +11223,7 @@ if __name__ == '__main__':
     #     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
     #
-    #     get_statistics_on_FLOPS_until_threshold(df,92)
+        get_statistics_on_FLOPS_until_threshold(df,92)
     #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
     #     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)

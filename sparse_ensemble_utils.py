@@ -772,6 +772,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     # first_time = 1
 
     data, y = next(iter(dataLoader))
+    data = data.cuda()
     forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
 
     file_path = None

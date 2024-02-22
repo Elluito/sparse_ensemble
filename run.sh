@@ -117,7 +117,7 @@ unset KMP_AFFINITY
 #############################################################
 #     Fine tuning pruning results
 #############################################################
-python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 -pop 10
+#python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 -pop 10
 #
 #  if [ $1 -eq 0 ]
 #  then
