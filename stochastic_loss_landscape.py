@@ -281,10 +281,10 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("nobackup/sclaam/smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
-    np.save("nobackup/sclaam/smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "nobackup/sclaam/smoothness/{}_stochastic_one_shot.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "nobackup/sclaam/smoothness/{}_deterministic_one_shot.pth".format(name))
+    np.save("/nobackup/sclaam/smoothness/trainloss_line_{}_one_shot.npy".format(name), loss_data_train)
+    np.save("/nobackup/sclaam/smoothness/testAccuracy_line_{}_one_shot.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_stochastic_one_shot.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "/nobackup/sclaam/smoothness/{}_deterministic_one_shot.pth".format(name))
 
 
 def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=True):
@@ -408,10 +408,10 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
-    np.save("nobackup/sclaam/smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "nobackup/sclaam/smoothness/{}_stochastic_dense.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "nobackup/sclaam/smoothness/{}_deterministic_dense.pth".format(name))
+    np.save("/nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
+    np.save("/nobackup/sclaam/smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
+    torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_stochastic_dense.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "/nobackup/sclaam/smoothness/{}_deterministic_dense.pth".format(name))
 
 
 def plot_line_(cfg, type_="one_shot"):
