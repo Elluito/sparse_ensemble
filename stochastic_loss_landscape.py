@@ -151,13 +151,12 @@ def W_hat(begining, end, w):
 def little_test(outputs, targets):
     total = 0
     correct = 0
-    _, predicted = torch.max(outputs,1)
+    _, predicted = torch.max(outputs, 1)
     total += targets.size(0)
     correct += predicted.eq(targets).sum().item()
     # print(correct)
     # print(total)
-    return torch.tensor(100 - 100*(correct / total))
-
+    return torch.tensor(100 - 100 * (correct / total))
 
 
 def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=True):
@@ -236,7 +235,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
 
         noisy_sample_performance = test(noisy_sample, use_cuda, valloader, verbose=0,
                                         count_flops=False, batch_flops=unit_sparse_flops)
-
+        print(noisy_sample_performance)
         if cfg.use_wandb:
             test_accuracy = test(noisy_sample, use_cuda, [get_random_batch(testloader)], verbose=0)
             log_dict = {"val_set_accuracy": noisy_sample_performance, "individual": n,
@@ -269,7 +268,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     torch.nn.utils.vector_to_parameters(begining, model_begining.parameters())
     model_end = copy.deepcopy(pruned_model)
     torch.nn.utils.vector_to_parameters(end, model_end.parameters())
-
+    stochastic_loss_index = int((-low_t * steps) // (high_t - low_t))
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
     metric_testloader = metrics.sl_metrics.BatchedAccuracyError(test, testloader)
@@ -278,6 +277,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
     print("Calculating test loss")
     loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, steps)
+    print(loss_data_test)
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
@@ -396,7 +396,7 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
     torch.nn.utils.vector_to_parameters(begining, model_begining.parameters())
     model_end = copy.deepcopy(pruned_model)
     torch.nn.utils.vector_to_parameters(end, model_end.parameters())
-
+    stochastic_loss_index = int((-low_t * steps) // (high_t - low_t))
     criterion = torch.nn.CrossEntropyLoss()
     metric_trainloader = metrics.sl_metrics.BatchedLoss(criterion, trainloader)
     metric_testloader = metrics.sl_metrics.BatchedAccuracyError(test, testloader)
@@ -469,12 +469,11 @@ def plot_line_(cfg, type_="one_shot"):
         plt.scatter(distance_vector[deterministic_loss_index], train_loss[deterministic_loss_index], c="cornflowerblue",
                     marker="s", label="Deterministic")
         ax2.scatter(distance_vector[stochastic_loss_index], test_loss[stochastic_loss_index], c="limegreen",
-                    marker="o", label="Stochastic" )
+                    marker="o", label="Stochastic")
         ax2.scatter(distance_vector[deterministic_loss_index], test_loss[deterministic_loss_index], c="limegreen",
                     marker="s", label="Deterministic")
     plt.legend()
     plt.savefig("paper_plots/line_{}_{}.pdf".format(name, type_))
-
 
 
 if __name__ == '__main__':

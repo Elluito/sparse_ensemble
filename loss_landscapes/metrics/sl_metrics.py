@@ -27,7 +27,7 @@ class BatchedAccuracyError(Metric):
 
     def __call__(self, model_wrapper: ModelWrapper) -> float:
         model_wrapper.eval()
-        accuracy = self.loss_fn(model_wrapper, True, self.dataloader, verbose=0)
+        accuracy = self.loss_fn(model_wrapper.get_modules()[0], True, self.dataloader, verbose=0)
         return 100-accuracy
 
 

@@ -280,6 +280,8 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             total += targets.size(0)
             correct += predicted.eq(targets.data).cpu().sum()
 
+            # print(correct/total)
+
             if batch_idx % 100 == 0:
                 if verbose == 2:
                     print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'

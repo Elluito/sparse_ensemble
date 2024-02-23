@@ -47,7 +47,10 @@ class ModelWrapper(abc.ABC):
     @abc.abstractmethod
     def forward(self, x):
         pass
-
+    # Added by Luis Alfredo
+    def cuda(self):
+        for mod in self.modules:
+            mod.cuda()
 
 class SimpleModelWrapper(ModelWrapper):
     def __init__(self, model: torch.nn.Module):

@@ -82,7 +82,7 @@ def linear_interpolation(model_start: typing.Union[torch.nn.Module, ModelWrapper
     for i in range(steps):
         # add a step along the line to the model parameters, then evaluate
         start_point.add_(direction)
-
+        # if i == reference_model1:
         data_values.append(metric(model_start_wrapper))
 
     return np.array(data_values)
