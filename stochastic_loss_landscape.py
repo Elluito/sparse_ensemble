@@ -308,6 +308,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     print("Calculating train loss")
     print("Done!")
     loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
+    print(loss_data_train)
     print("Calculating test loss")
     # t0 = time.time()
     # loss_data_test, point_stochastic = loss_landscapes.linear_interpolation(model_begining, model_end,
