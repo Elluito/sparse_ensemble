@@ -65,9 +65,9 @@ class BatchedLoss(Metric):
                 loss = self.loss_fn(outputs, targets)
                 test_loss += loss.data.item()
                 total += 1
-        print(test_loss)
-        print(total)
-        print(test_loss / total)
+        # print(test_loss)
+        # print(total)
+        # print(test_loss / total)
         return test_loss / total
         # return self.loss_fn(model_wrapper.forward(self.inputs), self.target).item()
 

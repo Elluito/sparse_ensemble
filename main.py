@@ -114,6 +114,35 @@ plt.rcParams["mathtext.fontset"] = "cm"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
+fs = 12
+fig_size = (5, 3)
+sns.reset_orig()
+sns.reset_defaults()
+matplotlib.rc_file_defaults()
+plt.rcParams.update({
+    "axes.linewidth": 0.5,
+    'axes.edgecolor': 'black',
+    "grid.linewidth": 0.4,
+    "lines.linewidth": 1,
+    'xtick.bottom': True,
+    'xtick.color': 'black',
+    "xtick.direction": "out",
+    "xtick.major.size": 3,
+    "xtick.major.width": 0.5,
+    "xtick.minor.size": 1.5,
+    "xtick.minor.width": 0.5,
+    'ytick.left': True,
+    'ytick.color': 'black',
+    "ytick.major.size": 3,
+    "ytick.major.width": 0.5,
+    "ytick.minor.size": 1.5,
+    "ytick.minor.width": 0.5,
+    "figure.figsize": [3.3, 2.5],
+    "text.usetex": True,
+    "font.family": "serif",
+    "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",
+})
+
 # matplotlib.use('TkAgg')
 
 
@@ -7667,13 +7696,13 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     del pop
     cutoff = original_performance - 2
     ################################# plotting the comparison #########################################################
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=fig_size,layout="compressed")
 
     original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
 
     deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
-    plt.xlabel("Ranking Index", fontsize=15)
-    plt.ylabel("Accuracy", fontsize=15)
+    plt.xlabel("Ranking Index", fontsize=fs)
+    plt.ylabel("Accuracy", fontsize=fs)
     stochastic_models_points_dense = []
     stochastic_models_points_pruned = []
     transfer_mask_models_points = []
@@ -7708,6 +7737,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
                ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
                scatterpoints=1,
                numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+    plt.grid(ls='--', alpha=0.5)
     # plt.ylim(0, 100)
     #
     # ax2 = ax.twinx()
@@ -7729,7 +7759,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     # ax2.yaxis.label.set_color('red')
     # ax2.invert_yaxis()
 
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.savefig(
         f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
@@ -7737,7 +7767,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     plt.savefig(
         f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        f"_{cfg.population}_{eval_set}_{name}.png")
+        f"_{cfg.population}_{eval_set}_{name}.pgf")
 
 
 # def stochastic_pruning_global_against_LAMP_deterministic_pruning():
@@ -9537,6 +9567,7 @@ def LeMain(args):
             if args["architecture"] == "resnet18":
                 solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
                 # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+                # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
@@ -9613,7 +9644,7 @@ def LeMain(args):
     # # Add small noise just to get tiny variations of the deterministic case
     # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
     # print("Deterministic pruning outside function: {}".format(det_performance))
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="alternative_seed")
+    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed1")
     print(args)
     # cfg.solution = ""
     # truncated_network_unrestricted_training(cfg)
@@ -9622,7 +9653,7 @@ def LeMain(args):
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     # features_similarity_comparison_experiments(cfg.architecture)
 
-    experiment_selector(cfg, args, args["experiment"])
+    # experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # plot_histograms_predictions("normal_seed2")

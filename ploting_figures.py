@@ -42,6 +42,7 @@ plt.rcParams.update({
     "font.family": "serif",
     "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",
 })
+
 plt.grid(ls='--', alpha=0.5)
 import matplotlib.lines as mlines
 import matplotlib.patches as mpatches
