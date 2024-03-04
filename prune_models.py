@@ -613,7 +613,7 @@ def main(args):
         exclude_layers = ["conv1", "linear"]
 
     cfg = omegaconf.DictConfig(
-        {"architecture": "resnet50",
+        {"architecture": args.model,
          "model_type": "alternative",
          # "model_type": "hub",
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -631,6 +631,7 @@ def main(args):
     train, val, testloader = get_datasets(cfg)
 
     from torchvision.models import resnet18, resnet50
+
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
@@ -659,7 +660,6 @@ def main(args):
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
-
     if args.model == "resnet24":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -675,6 +675,7 @@ def main(args):
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
                                                                                      args.dataset))
+
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []

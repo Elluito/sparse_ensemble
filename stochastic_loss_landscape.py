@@ -483,10 +483,11 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
 def plot_line_(cfg, type_="one_shot"):
     model = get_model(cfg)
     identifier = cfg.id
-    name = "{}_{}_{}_{}_{}".format("test2", cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
+    # name = "{}_{}_{}_{}_{}".format("test2", cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
+    name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     train_loss = np.load("smoothness/trainloss_line_{}_{}.npy".format(name, type_))
     stochastic_state_dict = torch.load("smoothness/{}_stochastic_{}.pth".format(name, type_))
-    name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
+    # name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     test_loss = np.load("smoothness/testAccuracy_line_{}_{}.npy".format(name, type_))
     deterministic_state_dict = torch.load("smoothness/{}_deterministic_{}.pth".format(name, type_))
     sto_model = copy.deepcopy(model)
@@ -583,7 +584,7 @@ def plot_line_(cfg, type_="one_shot"):
     legend_list.legend_handles[2].set_color('black')
     # legend_list.legend_handles[2].set_facecolor('black')
     legend_list.legend_handles[3].set_color('black')
-    ax2.set_ylim(20,100)
+    ax2.set_ylim(np.min(test_loss)-5,100)
     # legend_list.legend_handles[3].set_facecolor('black')
     plt.grid(ls='--', alpha=0.5)
     plt.savefig("paper_plots/line_{}_{}.pdf".format(name, type_))
@@ -654,7 +655,8 @@ def plot_line_(cfg, type_="one_shot"):
 
     ax2.tick_params(axis="y", colors="limegreen")
     ax2.set_ylabel("Test error ", fontsize=fs)
-    ax2.set_ylim(20,100)
+    # ax2.set_ylim(20,100)
+    ax2.set_ylim(np.min(test_loss)-5,100)
     # plt.savefig("paper_plots/line_{}_{}.pdf".format(name, type_))
     plt.grid(ls='--', alpha=0.5)
     plt.savefig("paper_plots/zoom_line_{}_{}.pdf".format(name, type_))
@@ -695,6 +697,6 @@ if __name__ == '__main__':
 
     args = vars(parser.parse_args())
     cfg = load_cfg(args)
-    linear_interpolation_oneshot_GMP(cfg)
-    linear_interpolation_dense_GMP(cfg)
-    # plot_line_(cfg, args["type"])
+    # linear_interpolation_oneshot_GMP(cfg)
+    # linear_interpolation_dense_GMP(cfg)
+    plot_line_(cfg, args["type"])

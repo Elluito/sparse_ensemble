@@ -114,7 +114,8 @@ plt.rcParams["mathtext.fontset"] = "cm"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-fs = 12
+fs = 25
+
 fig_size = (5, 3)
 sns.reset_orig()
 sns.reset_defaults()
@@ -4370,6 +4371,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
+    trainloader,valloader,testloader = get_datasets(cfg)
 
     original_performance = test(net, use_cuda, testloader)
 
@@ -4386,7 +4388,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         #     fig = plt.figure(figsize=(13, 13 ))
         #     axs_p = fig.subplot()
         fig, axs_p = plt.subplots(1, num_col, figsize=(9
-                                                       , 10))
+                                                       , 10),layout="compressed")
         axs = []
         if isinstance(axs_p, SubplotBase):
             axs.append(axs_p)
@@ -4452,7 +4454,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                               # width = 1
                               )
 
-            adjust_box_widths(fig, 2)
+            # adjust_box_widths(fig, 2)
 
             if cfg.pruner == "global":
                 axj.axhline(pruned_original_performance, c="purple", linewidth=2.5, label="Deterministic GMP")
@@ -4494,7 +4496,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # ax2.invert_yaxis()
 
             handles, labels = axj.get_legend_handles_labels()
-            l = axj.legend(handles[:4], labels[:4], fontsize=15)
+            new_labels=["Stochastic GMP","Sto. Mask on Original Weights","Det. Mask on Sto. Weights","Deterministic GMP"]
+            l = axj.legend(handles[:4],new_labels, fontsize=fs*0.8)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -4502,8 +4505,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                 top=False,  # ticks along the top edge are off
                 labelbottom=False)  # labels along the bottom edge are off
             axj.set_xlabel("")
-            axj.tick_params(axis="y", labelsize=20)
-            axj.set_ylabel("Accuracy", fontsize=20)
+            axj.tick_params(axis="y", labelsize=fs)
+            axj.set_ylabel("Accuracy", fontsize=fs)
             # plt.ylim(25,55)
             # l = axj.get_ylim()
             # plt.ylim(l[0], l[1])
@@ -4552,10 +4555,10 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
 
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.png".format(current_pr,current_sigma), bbox_inches="tight")
             # plt.savefig("data/epsilon_allN_all_pr_{}_sigma={}.pdf".format(current_pr,current_sigma), bbox_inches="tight")
-        plt.tight_layout()
+        # plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         # plt.show()
-        plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.png".format(cfg.dataset, cfg.architecture, pr_string,
+        plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pgf".format(cfg.dataset, cfg.architecture, pr_string,
                                                                                current_sigma, cfg.pruner),
                     bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pdf".format(cfg.dataset, cfg.architecture, pr_string,
@@ -7979,6 +7982,7 @@ def scatter_plot_sigmas(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, dete
         else:
             all_df1 = pd.concat((all_df1, d), ignore_index=True)
     plt.figure()
+    plt.subplots(figsize=fig_size,layout="compressed")
     if not sigmas_to_show:
         g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type",
                             palette="deep", legend="full", edgecolor=None, linewidth=0)
@@ -8061,6 +8065,7 @@ def scatter_plot_sigmas(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, dete
                 label=f"Fine-Tuned {det_label2}")
 
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
+    plt.grid(ls="--",alpha=0.5)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
@@ -9565,9 +9570,9 @@ def LeMain(args):
     if args["dataset"] == "cifar10":
         if args["modeltype"] == "alternative":
             if args["architecture"] == "resnet18":
-                solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-                # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+                # solution = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
                 # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
+                solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
                 exclude_layers = ["conv1", "linear"]
             if args["architecture"] == "VGG19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
@@ -9644,7 +9649,7 @@ def LeMain(args):
     # # Add small noise just to get tiny variations of the deterministic case
     # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
     # print("Deterministic pruning outside function: {}".format(det_performance))
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed1")
+    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
     print(args)
     # cfg.solution = ""
     # truncated_network_unrestricted_training(cfg)
@@ -11065,64 +11070,83 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # fp = "data/epsilon_experiments_cifar10_VGG19_global_1680561544.77210_full.csv"
     # [0.72, 0.88, 0.94]
+    # cfg = omegaconf.DictConfig({
+    #     "architecture": "resnet18",
+    #     "dataset": "cifar10",
+    #     "exclude_layers": ["conv1", "linear"],
+    #     "model_type":"alternative",
+    #     "pruner": "global",
+    #     "amount": 0.9,
+    #     "batch_size": 512,
+    #     "lr": 0.001,
+    #     "momentum": 0.9,
+    #     "weight_decay": 1e-4,\
+    #     "cyclic_lr": True,
+    #     "lr_peak_epoch": 5,
+    #     "optim": "adam",
+    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     "num_workers": 1,
+    #     "cosine_schedule": False,
+    #     "epochs": 24
+    # })
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.94])
+    #                                           specific_pruning_rates=[0.9])
     #
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.88])
+    #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.72])
+    #                                           specific_pruning_rates=[0.5])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.72])
+    #                                           specific_pruning_rates=[0.9])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.88])
+    #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.94])
+    #                                           specific_pruning_rates=[0.5])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.72])
+    #                                           specific_pruning_rates=[0.9])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.88])
+    #                                           specific_pruning_rates=[0.8])
     # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.94])
+    #                                           specific_pruning_rates=[0.5])
     #
     # # ##############################################################################
     # #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # # ##############################################################################
 
-
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    ############# this is for pr and sigma optim ###############################
-    parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
-
-    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-                        help='Use log scale for sigma in pr,sigma optim', required=False)
-    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-                        required=False)
-    parser.add_argument('-fnc', '--functions', type=int, default=1,
-                        help='Type of functions for MOO optim of sigma and pr', required=False)
-
-    args = vars(parser.parse_args())
-
+    #
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # ############# this is for pr and sigma optim ###############################
+    # parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
+    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+    #                     required=False)
+    # parser.add_argument('-fnc', '--functions', type=int, default=1,
+    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
+    #
+    # args = vars(parser.parse_args())
+    #
     LeMain(args)
 
     #
@@ -11211,27 +11235,39 @@ if __name__ == '__main__':
     # #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # #     #
     # #
-    #     df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    #     df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    #     # df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    #     # df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    #     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    #     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    # # # #
-    #     sigmas = [0.005]
-    # #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
-    #
-    #     directory = "gradient_flow_results_test_set/"
-    # # #
-    #     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-    #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-    #                         det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_mask_transfer.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
-    #     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
-    #                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-    #                         det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_mask_transfer.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
-    # # #
-    # # #
-    # # ################################## Barplot with all results #######################################################################
+    cfg = omegaconf.DictConfig({
+        "sigma":0.001,
+        "amount":0.9,
+        "architecture":"resnet18",
+        "model_type": "alternative",
+        "dataset": "cifar10",
+        "set":"test",
+        "solution":"",
+        "batch_size": 512,
+        # "batch_size": 128,
+        "num_workers": 0,
+    })
+    # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+# # #
+#     sigmas = [0.005]
+    sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
+
+    directory = "gradient_flow_results_test_set/"
+# # #
+    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+                        det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
+    scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+                        det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
+
+
+    # ################################## Barplot with all results #######################################################################
     #
     # df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv", sep=",", header=0,
     #                  index_col=False)

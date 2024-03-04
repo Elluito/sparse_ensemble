@@ -115,13 +115,16 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #done
 #type="one_shot"
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
-qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
+
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
+#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
+
 #type="dense"
+
 #qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet18_0.005_0.9" run.sh "11" "0.005" "global" "resnet18" "cifar10" "0.9" "alternative" "200"
 #qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_resnet50_0.003_0.95" run.sh "11" "0.003" "global" "resnet50" "cifar10" "0.95" "alternative" "200"
 #qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "fine_tune_stochastic_pruning_cifar10_vgg19_0.003_0.95" run.sh "11" "0.003" "global" "VGG19" "cifar10" "0.95" "alternative" "200"
@@ -646,30 +649,34 @@ qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" ru
 
 
 
-#model="resnet50"
-#dataset="cifar10"
-#directory=/nobackup/sclaam/checkpoints
+model="resnet50"
+dataset="cifar10"
+directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
-#seeds=(0 1 2)
-#rf_levels=(1)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
-#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+seeds=(0 1 2)
+rf_levels=(1 2 3 4 5 6 7)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+pruning_rates=(0.9)
+sigmas=("0.0005" "0.0003" "0.0001")
+sigmas_max=${#sigmas[@]}                                  # Take the length of that array
 
-#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 
-#qsub -N "${model}_${dataset}pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-##echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
+for ((idxA=0; idxA<sigmas_max; idxA++)); do                # iterate idxA from 0 to length
+
+for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+
+qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_1_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels}" "normal" "${directory}" "0.9" "${sigmas[$indxA]}"
+
+#echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
 #qsub -l coproc_p100=1 -l h_rt=15:00:00 -N "${model}_${dataset}_n_shallow_summary_level_${rf_levels[$idxB]}_more_time" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
-#./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "4"
 #qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "1" "no_recording"
 
 
 
-#done
-
-##done
+done
+done
 
 
 
