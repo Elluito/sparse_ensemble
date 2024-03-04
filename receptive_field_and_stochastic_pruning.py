@@ -19,6 +19,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -102,6 +103,8 @@ def main(args):
     for i, name in enumerate(
             glob.glob(search_string)):
         print(name)
+        if "width" in name:
+            continue
         state_dict_raw = torch.load(name, map_location=device)
         dense_accuracy_list.append(state_dict_raw["acc"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
@@ -157,16 +160,16 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
-    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
+    parser.add_argument('--experiment', default=2, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,tiny_imagenet616gg]')
-    parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+    parser.add_argument('--dataset', default="tiny_imagenet", type=str, help='Dataset to use [cifar10,tiny_imagenet616gg]')
+    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--folder', default="trained_models", type=str,
                         help='Location where saved models are')
-    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
+    parser.add_argument('--name', default="seed", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')

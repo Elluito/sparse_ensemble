@@ -654,7 +654,7 @@ dataset="tiny_imagenet"
 directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
 seeds=(0 1 2)
-rf_levels=(2 3 4 5 6 7 8)
+rf_levels=(3 5 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 pruning_rates=(0.9)
 sigmas=("0.0005" "0.0003" "0.0001")
@@ -666,7 +666,7 @@ for ((idxA=0; idxA<sigmas_max; idxA++)); do                # iterate idxA from 0
 
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 
-qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$idxB]}_0.9_${sigmas[$idxA]}}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "${sigmas[$idxA]}"
+qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$idxB]}_0.9_${sigmas[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "${sigmas[$idxA]}"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
