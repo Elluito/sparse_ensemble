@@ -169,7 +169,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="trained_models", type=str,
                         help='Location where saved models are')
-    parser.add_argument('--name', default="seed", type=str, help='Name of the file', required=False)
+    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
