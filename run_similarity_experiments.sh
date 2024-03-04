@@ -666,7 +666,7 @@ for ((idxA=0; idxA<sigmas_max; idxA++)); do                # iterate idxA from 0
 
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 
-qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$indxB]}_0.9" run.sh "${model}" "${dataset}" "4" "${rf_levels[$indxB]}" "normal" "${directory}" "0.9" "${sigmas[$indxA]}"
+qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$idxB]}_0.9_${sigmas[$idxA]}}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "${sigmas[$idxA]}"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
