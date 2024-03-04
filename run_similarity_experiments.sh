@@ -649,12 +649,12 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-model="resnet50"
+model="vgg19"
 dataset="cifar10"
 directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
 seeds=(0 1 2)
-rf_levels=(1 2 3 4 5 6 7)
+rf_levels=(1 2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 pruning_rates=(0.9)
 sigmas=("0.0005" "0.0003" "0.0001")
