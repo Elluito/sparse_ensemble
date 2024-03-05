@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_seed_0_4_rf_level_4.pth,90.37,90.27000000000001
+resnet50_normal_cifar10_seed_0_5_rf_level_4.pth,90.27,89.985
+resnet50_normal_cifar10_seed_0_3_rf_level_4.pth,90.04,89.75

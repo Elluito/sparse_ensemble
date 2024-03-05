@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_seed_3_rf_level_6_no_recording_test_acc_53.97.pth,53.97,53.83
+resnet50_normal_cifar10_seed_0_rf_level_6_no_recording_test_acc_52.76.pth,52.76,52.644999999999996
+resnet50_normal_cifar10_seed_1_rf_level_6_no_recording_test_acc_53.15.pth,53.15,52.995000000000005
+resnet50_normal_cifar10_seed_2_rf_level_6_no_recording_test_acc_51.76.pth,51.76,51.730000000000004
+resnet50_normal_cifar10_seed_4_rf_level_6_no_recording_test_acc_55.19.pth,55.19,55.195
