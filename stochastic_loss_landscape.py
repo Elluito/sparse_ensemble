@@ -958,4 +958,5 @@ if __name__ == '__main__':
     cfg = load_cfg(args)
     # linear_interpolation_oneshot_GMP(cfg)
     # linear_interpolation_dense_GMP(cfg)
-    plot_line_(cfg, args["type"])
+    left_pruning_experiments(cfg)
+    # plot_line_(cfg, args["type"])
