@@ -116,12 +116,12 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #done
 #type="one_shot"
 
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
-#qsub -l h_rt=4:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_1_interpolation_experiments" run.sh 0
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_2_interpolation_experiments" run.sh 1
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_3_interpolation_experiments" run.sh 2
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_4_interpolation_experiments" run.sh 3
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_5_interpolation_experiments" run.sh 4
+qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "linear_6_interpolation_experiments" run.sh 5
 
 #type="dense"
 
@@ -649,24 +649,24 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 
 
 
-model="vgg19"
-dataset="tiny_imagenet"
-directory=/nobackup/sclaam/checkpoints
+#model="vgg19"
+#dataset="tiny_imagenet"
+#directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/PycharmProjects/sparse_ensemble/trained_models
-seeds=(0 1 2)
-rf_levels=(1 2 3 4)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-pruning_rates=(0.9)
-sigmas=("0.0005" "0.0003" "0.0001")
-sigmas_max=${#sigmas[@]}                                  # Take the length of that array
+#seeds=(0 1 2)
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#pruning_rates=(0.9)
+#sigmas=("0.0005" "0.0003" "0.0001")
+#sigmas_max=${#sigmas[@]}                                  # Take the length of that array
+#
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+#
+#for ((idxA=0; idxA<sigmas_max; idxA++)); do                # iterate idxA from 0 to length
+#
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 
-seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
-
-for ((idxA=0; idxA<sigmas_max; idxA++)); do                # iterate idxA from 0 to length
-
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-
-qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$idxB]}_0.9_${sigmas[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "${sigmas[$idxA]}"
+#qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary_level_${rf_levels[$idxB]}_0.9_${sigmas[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "0.9" "${sigmas[$idxA]}"
 
 #echo "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}"
 
@@ -674,9 +674,9 @@ qsub -l coproc_p100=1 -l h_rt=3:00:00 -N "${model}_${dataset}_SP_pruning_summary
 #qsub -l coproc_p100=1 -l h_rt=1:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxB]}" "normal" "${directory}" "1" "no_recording"
 
 
-
-done
-done
+#
+#done
+#done
 
 
 

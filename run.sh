@@ -124,32 +124,32 @@ unset KMP_AFFINITY
 #     Linear Intrepolation experiments
 #############################################################
 
-#type="one_shot"
-#  if [ $1 -eq 0 ]
-#  then
-#    python stochastic_loss_landscape.py --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 1 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 2 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 3 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 4 ]
-#  then
-#    python stochastic_loss_landscape.py  --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#  if [ $1 -eq 5 ]
-#  then
-#    python stochastic_loss_landscape.py --sigma "0.001" --batch_size  128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
-#  fi
-#
+type="one_shot"
+  if [ $1 -eq 0 ]
+  then
+    python stochastic_loss_landscape.py --sigma "0.005" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar10" -ar "resnet18" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 1 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "resnet50" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 2 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.95" -dt "cifar10" -ar "VGG19" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 3 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.003" --batch_size 128 --pruner "global" -pru "0.9" -dt "cifar100" -ar "resnet18" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 4 ]
+  then
+    python stochastic_loss_landscape.py  --sigma "0.001" --batch_size 128 --pruner "global" -pru "0.85" -dt "cifar100" -ar "resnet50" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+  if [ $1 -eq 5 ]
+  then
+    python stochastic_loss_landscape.py --sigma "0.001" --batch_size  128 --pruner "global" -pru "0.8" -dt "cifar100" -ar "VGG19" -mt "alternative" -id "test3" -nw 4 -tp "${type}"
+  fi
+
 #
 #
 #
@@ -161,4 +161,4 @@ unset KMP_AFFINITY
 #    Receptive Field and Stochastic Pruning
 #############################################################
 
-python receptive_field_and_stochastic_pruning.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --sigma $8
+#python receptive_field_and_stochastic_pruning.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --sigma $8

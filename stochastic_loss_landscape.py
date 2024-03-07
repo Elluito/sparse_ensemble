@@ -17,6 +17,7 @@ import re
 import torchessian as torchessian
 import pandas as pd
 import torch
+import torch.nn.functional as F
 import numpy as np
 import pickle
 import matplotlib.ticker as ticker
@@ -174,6 +175,65 @@ def test_linear_interpolation(model, beg_vector, end_vector, t_range, test_funct
     return np.array(output)
 
 
+def loss_cross_entropy(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0,
+                       number_batches=0):
+    if use_cuda:
+        net.cuda()
+    criterion = torch.nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
+
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if use_cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs, dim=1)
+                _, predicted = torch.max(soft_max_outputs, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            # print(correct/total)
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    # net.cpu()
+    if count_flops:
+        return test_loss / len(testloader), sparse_flops
+    else:
+        return test_loss / len(testloader)
+
+
 def test_linear_interpolation_pruned_models(model, beg_vector, end_vector, t_range, test_function, test_loder):
     output_dense = []
     output_sparse = []
@@ -186,6 +246,29 @@ def test_linear_interpolation_pruned_models(model, beg_vector, end_vector, t_ran
         prune_function(model_copy, cfg)
         remove_reparametrization(model_copy, exclude_layer_list=cfg.exclude_layers)
         sparse_accuracy = test_function(model_copy, True, test_loder, verbose=0)
+
+        print("Dense error :{}".format(100 - dense_accuracy))
+
+        print("Sparse error :{}".format(100 - sparse_accuracy))
+
+        output_dense.append(100 - dense_accuracy)
+        output_sparse.append(100 - sparse_accuracy)
+
+    return np.array(output_dense), np.array(output_sparse)
+
+
+def train_linear_interpolation_pruned_models(model, beg_vector, end_vector, t_range, loss_function, test_loder):
+    output_dense = []
+    output_sparse = []
+    model_copy = copy.deepcopy(model)
+
+    for t in t_range:
+        point = torch.lerp(beg_vector, end_vector, t.cuda()).to("cuda")
+        torch.nn.utils.vector_to_parameters(point, model_copy.parameters())
+        dense_accuracy = loss_function(model_copy, True, test_loder, verbose=0)
+        prune_function(model_copy, cfg)
+        remove_reparametrization(model_copy, exclude_layer_list=cfg.exclude_layers)
+        sparse_accuracy = loss_function(model_copy, True, test_loder, verbose=0)
 
         print("Dense error :{}".format(100 - dense_accuracy))
 
@@ -293,9 +376,11 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
                             "test_set_accuracy": test_accuracy
                             }
                 wandb.log(log_dict)
+
     #####################################################################
     #               Now the linear interpolation and the calculation of the loss
     #####################################################################
+
     det_pruning_model.cuda()
     best_model.cuda()
     test_accuracy = test(best_model, use_cuda, testloader, verbose=0)
@@ -337,6 +422,7 @@ def linear_interpolation_oneshot_GMP(cfg, eval_set="val", print_exclude_layers=T
     # loss_data_test, point_stochastic = loss_landscapes.linear_interpolation(model_begining, model_end,
     #                                                                         metric_testloader, steps,
     #                                                                         reference_model1=stochastic_loss_index - 1)
+
     # closest_to_stochastic_point_vector = torch.nn.utils.parameters_to_vector(point_stochastic.parameters())
     # print(loss_data_test)
     # print("distance between closest point in the interpolation and the actual stochastic point {}".format(
@@ -485,6 +571,14 @@ def left_pruning_experiments(cfg, eval_set="test", print_exclude_layers=True):
     metric_testloader = metrics.sl_metrics.BatchedAccuracyError(test, testloader)
     # print("Calculating train loss")
     # loss_data_train = loss_landscapes.linear_interpolation(model_begining, model_end, metric_trainloader, steps)
+    dense_loss_data_train, sparse_loss_data_train = train_linear_interpolation_pruned_models(det_pruning_model,
+                                                                                           vector_stochastic_pruning,
+                                                                                           vector_deterministic_pruning,
+                                                                                           torch.arange(low_t, high_t, (
+                                                                                                   high_t - low_t) / (
+                                                                                                            steps)),
+                                                                                           loss_cross_entropy,
+                                                                                           trainloader)
     print("Done!")
     print("Calculating test loss")
     # loss_data_test = loss_landscapes.linear_interpolation(model_begining, model_end, metric_testloader, steps)
@@ -493,20 +587,22 @@ def left_pruning_experiments(cfg, eval_set="test", print_exclude_layers=True):
                                                                                           vector_stochastic_pruning,
                                                                                           vector_deterministic_pruning,
                                                                                           torch.arange(low_t, high_t, (
-                                                                                                      high_t - low_t) / (
+                                                                                                  high_t - low_t) / (
                                                                                                            steps)),
                                                                                           test,
                                                                                           testloader)
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    # np.save("/nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
-    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_dense.npy".format(name),dense_loss_data_test)
-    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_sparse.npy".format(name),sparse_loss_data_test)
+    np.save("/nobackup/sclaam/smoothness/trainloss_left_line_{}_dense.npy".format(name),dense_loss_data_train)
+    np.save("/nobackup/sclaam/smoothness/trainloss_left_line_{}_sparse.npy".format(name),sparse_loss_data_train)
+    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_dense.npy".format(name), dense_loss_data_test)
+    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_sparse.npy".format(name), sparse_loss_data_test)
     # np.save("smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
     torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_left_stochastic_dense.pth".format(name))
     # torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "/nobackup/sclaam/smoothness/{}_left_deterministic_dense.pth".format(name))
+    torch.save(det_pruning_model.state_dict(),
+               "/nobackup/sclaam/smoothness/{}_left_deterministic_dense.pth".format(name))
 
 
 def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=True):
