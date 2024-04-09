@@ -8,6 +8,7 @@ from KFAC_Pytorch.optimizers import KFACOptimizer, EKFACOptimizer
 import argparse
 import omegaconf
 from alternate_models import *
+import pickle
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -198,17 +199,22 @@ def optuna_optimization():
             "num_workers": 0,
             "type": "normal",
             "folder": "",
-            "name":"hyper_optim",
+            "name": "hyper_optim",
 
         })
 
         acc, train_time = main(cfg)
         return acc, train_time
 
-    study = optuna.create_study(directions=["maximize", "minimize"],
-                                study_name="second_order_hyperparameter_optimization",
-                                storage="sqlite:///second_order_hyperparameter_optimization.dep",
-                                load_if_exists=True)
+    if os.path.isfile("second_order_hyperparameter_optimization.pkl"):
+
+        with open("second_order_hyperparameter_optimization.pkl", "rb") as f:
+            study = pickle.load(f)
+    else:
+        study = optuna.create_study(directions=["maximize", "minimize"],
+                                    study_name="second_order_hyperparameter_optimization",
+                                    # storage="sqlite:///second_order_hyperparameter_optimization.dep",
+                                    load_if_exists=True)
     study.optimize(objective, n_trials=100)
 
     trials = study.best_trials
@@ -226,6 +232,8 @@ def optuna_optimization():
         })
         print("Parameters:\n\t")
         print(omegaconf.OmegaConf.to_yaml(print_param))
+        with open("second_order_hyperparameter_optimization.pkl", "wb") as f:
+            pickle.dump(study, f)
 
 
 if __name__ == '__main__':
