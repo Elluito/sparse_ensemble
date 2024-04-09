@@ -493,16 +493,16 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
         print("Pruned accuracy with \"test\" function :{}".format(pruned_accuracy))
         if acc > best_acc:
             # print('Saving..')
-            # state = {
-            #     'net': pruned_model.state_dict(),
-            #     'acc': acc,
-            #     'epoch': epoch,
-            # }
-            # if not os.path.isdir(save_folder):
-            #     os.mkdir(save_folder)
-            # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
-            #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
-            # torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+            state = {
+                'net': pruned_model.state_dict(),
+                'acc': acc,
+                'epoch': epoch,
+            }
+            if not os.path.isdir(save_folder):
+                os.mkdir(save_folder)
+            if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+                os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+            torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
             best_acc = acc
         scheduler.step()
 
@@ -607,6 +607,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:

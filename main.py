@@ -5252,6 +5252,8 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
             ### method do not prune over the mask that is found
 
         print("Current best accuracy: {}".format(best_accuracy_found))
+
+
     # Test the best model found in the test set
 
     performance_best_model_found = test(best_model_found, use_cuda, testloader, verbose=1)
