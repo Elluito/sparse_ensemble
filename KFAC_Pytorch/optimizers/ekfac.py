@@ -103,9 +103,10 @@ class EKFACOptimizer(optim.Optimizer):
         """
         eps = 1e-10  # for numerical stability
         self.d_a[m], self.Q_a[m] = torch.linalg.eigh(
-            self.m_aa[m], eigenvectors=True)
+            self.m_aa[m])
         self.d_g[m], self.Q_g[m] = torch.linalg.eigh(
-            self.m_gg[m], eigenvectors=True)
+            self.m_gg[m]
+        )
 
         self.d_a[m].mul_((self.d_a[m] > eps).float())
         self.d_g[m].mul_((self.d_g[m] > eps).float())
