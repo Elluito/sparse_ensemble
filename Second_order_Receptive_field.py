@@ -3,11 +3,12 @@ import time
 import torch
 import torch.nn as nn
 import optuna
-from main import test, prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
+from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
 from KFAC_Pytorch.optimizers import KFACOptimizer, EKFACOptimizer
 import argparse
 import omegaconf
 from alternate_models import *
+from sparse_ensemble_utils import test
 import pickle
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
