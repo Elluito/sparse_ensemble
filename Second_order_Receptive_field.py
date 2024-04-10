@@ -114,7 +114,7 @@ def main(args):
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_m
          "dataset": args.dataset,
-         "batch_size": 128,
+         "batch_size": args.batch_size,
          "num_workers": args.num_workers,
          "noise": "gaussian",
 
@@ -182,8 +182,8 @@ def main(args):
 
 def optuna_optimization():
     def objective(trial):
-        lr = trial.suggest_float('lr', 0.0001, 0.1, log=True)
-        momentum = trial.suggest_float('momentum', 0.5, 0.9, log=True)
+        lr = trial.suggest_float('lr', 0.001, 0.1, log=True)
+        momentum = trial.suggest_float('momentum', 0.3, 0.9)
         optimiser_type = trial.suggest_categorical("optimiser", ["kfac", "ekfac"])
         use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
         cfg = omegaconf.DictConfig({
@@ -193,13 +193,14 @@ def optuna_optimization():
             "momentum": momentum,
             "model": "resnet50",
             "optimiser": optimiser_type,
-            "epochs": 5,
+            "epochs": 3,
             "use_scheduler": use_scheduler,
             "save": False,
             "num_workers": 0,
             "type": "normal",
             "folder": "",
             "name": "hyper_optim",
+            "batch_size": 32,
 
         })
 
@@ -212,10 +213,8 @@ def optuna_optimization():
             study = pickle.load(f)
     else:
         study = optuna.create_study(directions=["maximize", "minimize"],
-                                    study_name="second_order_hyperparameter_optimization",
-                                    # storage="sqlite:///second_order_hyperparameter_optimization.dep",
-                                    load_if_exists=True)
-    study.optimize(objective, n_trials=100)
+                                    study_name="second_order_hyperparameter_optimization")
+    study.optimize(objective, n_trials=100,gc_after_trial=True,n_jobs=1)
 
     trials = study.best_trials
     print("Size of the pareto front: {}".format(len(trials)))
@@ -255,6 +254,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
     parser.add_argument('--optimiser', default="kfac", type=str, help='Optimiser to use')
     parser.add_argument('--save', default=True, type=bool, help="Save the best model")
+    parser.add_argument('--batch_size', default=32, type=int, help="Batch size for training/testing")
 
     args = parser.parse_args()
     if args.experiment == 1:
