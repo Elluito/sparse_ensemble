@@ -287,7 +287,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
                         help='Dataset to use [cifar10,tiny_imagenet616gg]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
