@@ -167,4 +167,6 @@ unset KMP_AFFINITY
 #    Receptive Field and  Second order information
 #############################################################
 
-python Second_order_Receptive_field.py
+#python Second_order_Receptive_field.py
+
+python Second_order_Receptive_field.py --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5

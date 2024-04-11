@@ -396,6 +396,7 @@ def main(args):
     }
 
     torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+
     # lr_list = []
     # for i in range(start_epoch):
     #     for param_group in optimizer.param_groups:
