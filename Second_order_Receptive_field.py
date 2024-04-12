@@ -211,7 +211,7 @@ def main(args):
     torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
     t0 = time.time()
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
-                             save_folder=args.folder, use_scheduler=args.use_scheduler, save=args.save,
+                             save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
                              record=args.record, verbose=2)
     t1 = time.time()
     training_time = t1 - t0
