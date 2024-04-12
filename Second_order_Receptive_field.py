@@ -199,7 +199,7 @@ def main(args):
         optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "ekfac":
         optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
-    solution_name = "{}_{}_{}_rf_level_{}".format(args.model, args.type, args.dataset, args.RF_level,
+    solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                   args.name)
 
     state = {

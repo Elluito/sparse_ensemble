@@ -7,7 +7,6 @@ Reference:
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
 '''
 import typing
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

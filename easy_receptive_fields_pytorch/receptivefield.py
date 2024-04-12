@@ -137,7 +137,7 @@ def give_effective_receptive_field(net, input_shape, device='cpu'):
 
     # get receptive field bounding box, to compute its size.
     # the position of the one-hot output gradient (pos) is stored for later.
-    (x1, x2, y1, y2, pos,in_grad,in_center) = _project_rf(input, output, return_pos=True, net=net,return_grad=True)
+    (x1, x2, y1, y2, pos, in_grad, in_center) = _project_rf(input, output, return_pos=True, net=net, return_grad=True)
     # rfsize = Size(x2 - x1 + 1, y2 - y1 + 1)
     #
     # # do projection again with one-cell offsets, to calculate stride
@@ -160,7 +160,9 @@ def give_effective_receptive_field(net, input_shape, device='cpu'):
     # return results in a nicely packed structure
     # inputsize = Size(input_shape[x_dim], input_shape[y_dim])
     # return ReceptiveField(offset, stride, rfsize, outputsize, inputsize)
-    return in_grad,in_center
+    return in_grad, in_center
+
+
 def receptivefield(net, input_shape, device='cpu'):
     """Computes the receptive fields for the given network (nn.Module) and input shape, given as a tuple (images, channels, height, width).
     Returns a ReceptiveField object."""
@@ -251,20 +253,26 @@ def _project_rf(input, output, offset_x=0, offset_y=0, return_pos=False, net=Non
 
     # pos_spatial = [math.ceil(output.shape[x_dim] / 2) - 1 + offset_x, math.ceil(output.shape[y_dim] / 2) - 1 + offset_y]
 
-    out_grad = t.zeros_like(output)
-    out_grad2 = t.zeros_like(output)
-    out_grad[tuple(pos)] = 1
-    for c in range(number_of_channels):
-        out_grad2[0, c, pos2[y_dim], pos2[x_dim]] = 1
+    with t.no_grad():
+        out_grad = t.zeros_like(output)
+        out_grad2 = t.zeros_like(output)
+        out_grad[tuple(pos)] = 1
+        for c in range(number_of_channels):
+            out_grad2[0, c, pos2[y_dim], pos2[x_dim]] = 1
+        out_grad2 = out_grad2.detach()
+
     print(output.shape)
-    np_out_grad = out_grad.detach().numpy()
+    np_out_grad = out_grad2.detach().numpy()
     # clear gradient first
     if input.grad is not None:
         input.grad.zero_()
     # pdb.set_trace()
     # propagate gradient of one-hot cell to input tensor
-    output.backward(gradient=out_grad2, retain_graph=True)
-    input_grad = t.autograd.grad(output, input, grad_outputs=out_grad2, create_graph=False, retain_graph=True)
+    # with t.autograd.set_detect_anomaly(True):
+    #     output.backward(gradient=out_grad2, retain_graph=True)
+
+    input_grad = t.autograd.grad(output, input, grad_outputs=out_grad2,create_graph=True,
+                                 retain_graph=True)
 
     # keep only the spatial dimensions of the gradient at the input, and binarize
     in_grad = input_grad[0][0, 0]
@@ -281,11 +289,11 @@ def _project_rf(input, output, offset_x=0, offset_y=0, return_pos=False, net=Non
     bounds = (xs.min().item(), xs.max().item(), ys.min().item(), ys.max().item())
     if return_pos:  # optionally, also return position of one-hot output gradient
         if return_grad:
-            return (*bounds, pos, in_grad,input_pos)
+            return (*bounds, pos, in_grad, input_pos)
         else:
             return (*bounds, pos)
     if return_grad:
-        return (*bounds,in_grad,input_pos )
+        return (*bounds, in_grad, input_pos)
     return bounds
 
 
