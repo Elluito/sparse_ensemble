@@ -294,7 +294,6 @@ def main(args):
             net = ResNet18_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
 
     if args.model == "resnet50":
-
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
 
@@ -341,9 +340,39 @@ def main(args):
             net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNetRF(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNetRF(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNetRF(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19_small":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+
+            net =small_VGG_RF("small_vgg", num_classes=10, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+
+            net =small_VGG_RF("small_vgg", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+
+            net =small_VGG_RF("small_vgg", num_classes=200, rf_level=args.RF_level)
 
     # Training
-
     # # Model
     # print('==> Building model..')
     # # net = VGG('VGG19')

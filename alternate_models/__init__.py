@@ -8,6 +8,7 @@ from .vgg import *
 # from .shufflenet import *
 # from .shufflenetv2 import *
 from .resnet import *
+from .small_models import *
 # from .resnext import *
 # from .preact_resnet import *
 # from .mobilenet import *
