@@ -196,11 +196,11 @@ def main(args):
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
                                                                                      args.dataset))
     if args.optimiser == "kfac":
-        optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum)
+        optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "ekfac":
-        optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum)
+        optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     solution_name = "{}_{}_{}_rf_level_{}".format(args.model, args.type, args.dataset, args.RF_level,
-                                                      args.name)
+                                                  args.name)
 
     state = {
         'net': net.state_dict(),
