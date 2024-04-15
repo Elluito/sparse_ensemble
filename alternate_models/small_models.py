@@ -238,9 +238,9 @@ class small_ResNetRF(nn.Module):
 
 
 class small_VGG_RF(nn.Module):
-    def __init__(self, vgg_name, num_classes=10, rf_level=0):
+    def __init__(self, vgg_name, num_classes=10, RF_level=0):
         super(small_VGG_RF, self).__init__()
-        self.rf_level = rf_level
+        self.rf_level = RF_level
         self.maxpool = None
         self.config = cfg[vgg_name]
         if self.rf_level == 1:
