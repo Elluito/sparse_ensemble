@@ -169,4 +169,4 @@ python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 -
 
 #python Second_order_Receptive_field.py
 
-#python Second_order_Receptive_field.py --momentum "0.7" --experiment 1 --epochs 150 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
+#python Second_order_Receptive_field.py --momentum "0.5" --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
