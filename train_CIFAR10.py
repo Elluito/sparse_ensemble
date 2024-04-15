@@ -361,16 +361,13 @@ def main(args):
     if args.model == "vgg_small":
 
         if args.type == "normal" and args.dataset == "cifar10":
-
-            net =small_VGG_RF("small_vgg", num_classes=10, RF_level=args.RF_level)
+            net = small_VGG_RF("small_vgg", num_classes=10, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "cifar100":
-
-            net =small_VGG_RF("small_vgg", num_classes=100, RF_level=args.RF_level)
+            net = small_VGG_RF("small_vgg", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-
-            net =small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
+            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
 
     # Training
     # # Model

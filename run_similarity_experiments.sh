@@ -133,15 +133,16 @@ name_rf_level_p_s3="_seed_3_rf_level_p"
 #qsub -l h_rt=40:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_7_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "7" "normal" "kfac_optimiser"
 #
 
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 1 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_2_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 2 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 3 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_4_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 4 "normal" 200 "recording" 1 1
+#qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 1 "normal" 200 "recording" 1 1
+#qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_2_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 2 "normal" 200 "recording" 1 1
+#qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 3 "normal" 200 "recording" 1 1
+qsub -l h_rt=3:00:00 -l coproc_p100=1  -N "training_Level_4_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 4 "normal" 200 "recording" 1 1
 
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 1 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 3 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_6_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 6 "normal" 200 "recording" 1 1
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_7_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 7 "normal" 200 "recording" 1 1
+qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_1_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 1 "normal" 200 "recording" 1 1
+qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_3_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 3 "normal" 200 "recording" 1 1
+#qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_6_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 6 "normal" 200 "recording" 1 1
+qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_7_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 7 "normal" 400 "recording_400" 1 1
+qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_7_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 7 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=30:00:00 -l coproc_p100=1 -N "hyper_parameter_optim_second_order" run.sh
 
 #type="one_shot"
