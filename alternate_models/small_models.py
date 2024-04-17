@@ -404,7 +404,7 @@ def test_models():
         dummy_loss = nn.CrossEntropyLoss()
 
         if i < 5:
-            vgg_net = small_VGG_RF('small_vgg', rf_level=i)
+            vgg_net = small_VGG_RF('small_vgg', RF_level=i)
             y_vgg = vgg_net(x)
             print(y_vgg)
             get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
