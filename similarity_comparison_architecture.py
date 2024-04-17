@@ -52,13 +52,11 @@ class LogisticRegressionModel(nn.Module):
         return out
 
 class WrapperVisionModel(nn.Module):
-    def __init__(self,, output_dim):
+    def __init__(self,net,input_dim, output_dim):
         super(WrapperVisionModel, self).__init__()
         self.linear = nn.Linear(input_dim, output_dim)
 
-            def new_forward(self, x):
-
-
+        def new_forward(self, x):
                 out = self.relu(self.bn1(self.conv1(x)))
                 out1 = self.layer1(out)
                 out2 = self.layer2(out1)
@@ -68,7 +66,6 @@ class WrapperVisionModel(nn.Module):
 
         net.__setattr__("fc2", nn.Linear(256, 10))
         net.forward = new_fowrard.__get__(net)  # bind method
-
     def forward(self, x):
         out = torch.sigmoid(self.linear(x))
         return out
