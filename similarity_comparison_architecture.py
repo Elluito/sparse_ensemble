@@ -87,7 +87,6 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
          "sigma": 0.005,
          "pruner": "global",
          "exclude_layers": ["conv1", "linear"]
-
          })
     ################################# dataset cifar10 ###########################################################################
 
@@ -223,9 +222,9 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
     net.cuda()
     o = 0
     for x, y in testloader:
+
         x = x.cuda()
         save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=seed_name)
-        # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(testloader)))
         if o == maximun_samples:
