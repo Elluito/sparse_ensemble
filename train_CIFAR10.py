@@ -284,15 +284,12 @@ def main(args):
     # net = ResNet50(num_class=100)
     from torchvision.models import resnet18, resnet50
     if args.model == "resnet18":
-
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet18_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet18_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
@@ -459,6 +456,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str,
                         help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for trainig')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location to save the models')
@@ -466,7 +464,6 @@ if __name__ == '__main__':
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
-    parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for trainig')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
     main(args)

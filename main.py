@@ -2504,6 +2504,7 @@ def create_beton_database_ImageNet():
 
 
 def get_datasets(cfg: omegaconf.DictConfig):
+
     if "cifar" in cfg.dataset:
         return get_cifar_datasets(cfg)
     if "mnist" == cfg.dataset:
@@ -2627,6 +2628,72 @@ def get_datasets(cfg: omegaconf.DictConfig):
                 num_workers=cfg.num_workers, pin_memory=True)
 
         return train_loader, val_loader, test_loader
+
+    if 'small_imagenet' == cfg.dataset:
+
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data/"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets/"
+        traindir = data_path + 'small_imagenet/' + 'train'
+
+        testdir = data_path + 'small_imagenet/' + 'val'
+
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+
+        whole_train_dataset = torchvision.datasets.ImageFolder(
+            traindir,
+            transforms.Compose([
+                transforms.RandomResizedCrop(1500),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+        print(f"Length of dataset: {len(whole_train_dataset)}")
+
+        train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
+
+        full_test_dataset = torchvision.datasets.ImageFolder(testdir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+
+        big_test, small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset) - 10000, 10000])
+
+        # This code is to transform it into the "fast" format of ffcv
+
+        # my_dataset = val_dataset
+        # write_path = data_path + "imagenet/valSplit_dataset.beton"
+
+        # For the validation set that I use to recover accuracy
+
+        # # Pass a type for each data field
+        # writer = DatasetWriter(write_path, {
+        #     # Tune options to optimize dataset size, throughput at train-time
+        #     'image': RGBImageField(
+        #         max_resolution=256,
+        #         jpeg_quality=90
+        #     ),
+        #     'label': IntField()
+        # })
+        # # Write dataset
+        # writer.from_indexed_dataset(my_dataset)
+
+        # For the validation set that I use to recover accuracy
+
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.num_workers, pin_memory=True, sampler=None)
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.num_workers, pin_memory=True, sampler=None)
 
     if 'tiny_imagenet' == cfg.dataset:
         from test_imagenet import load_tiny_imagenet
