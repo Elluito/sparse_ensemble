@@ -274,6 +274,11 @@ def main(args):
         trainloader, valloader, testloader = load_tiny_imagenet(
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
              "num_workers": args.num_workers, "batch_size": batch_size})
+    if args.dataset == "small_imagenet":
+        from test_imagenet import load_small_imagenet
+        trainloader, valloader, testloader =load_small_imagenet(
+            {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+             "num_workers": args.num_workers, "batch_size": batch_size})
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')

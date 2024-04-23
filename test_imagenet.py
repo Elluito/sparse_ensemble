@@ -287,13 +287,50 @@ def test_pin_and_num_workers(args):
     return
 
 
+def load_small_imagenet(args):
+
+    normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
+                                           std=[0.2302, 0.2265, 0.2262])
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    transform_test = transforms.Compose([
+        transforms.Resize(1500),
+        transforms.CenterCrop(1496),
+        transforms.ToTensor(),
+        transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
+    ])
+
+    test_dataset = datasets.ImageFolder(args["valdir"], transform=transform_test)
+
+    test_loader = torch.utils.data.DataLoader(test_dataset,
+                                              batch_size=args["batch_size"],
+                                              num_workers=args["num_workers"],
+                                              shuffle=False)
+
+    whole_train_dataset = datasets.ImageFolder(
+        args["traindir"],
+        transforms.Compose([
+            transforms.RandomResizedCrop(1500),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize_train,
+        ]))
+
+    train_data, val_data = random_split(whole_train_dataset, [95000, 5000])
+
+    train_loader = torch.utils.data.DataLoader(train_data,
+                                               batch_size=args["batch_size"],
+                                               num_workers=args["num_workers"],
+                                               shuffle=True)
+    val_loader = torch.utils.data.DataLoader(val_data,
+                                             batch_size=args["batch_size"],
+                                             num_workers=args["num_workers"],
+                                             shuffle=True)
+
+    return train_loader, val_loader, test_loader
 def load_tiny_imagenet(args):
-
-
-
-
-
-
 
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
@@ -303,48 +340,12 @@ def load_tiny_imagenet(args):
         transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
     ])
 
-    # mean = 0.
-    # std = 0.
-    # nb_samples = 0.
-    #
-    # dataset = datasets.ImageFolder(args["traindir"], transform=transforms.Compose([
-    #     transforms.CenterCrop(64),
-    #     transforms.ToTensor(), normalize_train]))
-    #
-    #
-    #
-    # for data, targets in loader:
-    #     batch_samples = data.size(0)
-    #     data = data.view(batch_samples, data.size(1), -1)
-    #     mean += data.mean(2).sum(0)
-    #     std += data.std(2).sum(0)
-    #     nb_samples += batch_samples
-    #
-    # mean /= nb_samples
-    # std /= nb_samples
-    # print("mean of tiny imagenet train set: {}".format(mean))
-    # print("standar deviation of tiny imagenet train set: {}".format(std))
-
-    # mean = 0.
-    # std = 0.
-    # nb_samples = 0.
     test_dataset = datasets.ImageFolder(args["valdir"], transform=transform_test)
 
     test_loader = torch.utils.data.DataLoader(test_dataset,
                                               batch_size=args["batch_size"],
                                               num_workers=args["num_workers"],
                                               shuffle=False)
-    # for data, targets in loader:
-    #     batch_samples = data.size(0)
-    #     data = data.view(batch_samples, data.size(1), -1)
-    #     mean += data.mean(2).sum(0)
-    #     std += data.std(2).sum(0)
-    #     nb_samples += batch_samples
-    #
-    # mean /= nb_samples
-    # std /= nb_samples
-    # print("mean of tiny imagenet val set: {}".format(mean))
-    # print("standard deviation of tiny imagenet val set: {}".format(std))
 
     whole_train_dataset = datasets.ImageFolder(
         args["traindir"],
