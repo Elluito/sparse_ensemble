@@ -303,6 +303,8 @@ def main(args):
             net = ResNet50_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -341,6 +343,8 @@ def main(args):
         if args.type == "normal" and args.dataset == "cifar100":
             net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
