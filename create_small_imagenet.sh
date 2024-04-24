@@ -13,7 +13,8 @@ list_of_classes="/nobackup/sclaam/data/wnids.txt"
 
 while read p; do
 
-    mkdir -p "${small_imagenet_train_foder}/$p"
+#    mkdir -p "${small_imagenet_train_foder}/$p"
+    echo "${small_imagenet_train_foder}/$p"
 
     # Train images
 
@@ -36,6 +37,8 @@ while read p; do
     # Test images
 
     test_files=($(ls "${imagenet_val}/$p" | sort -R | tail -50))
+
+    mkdir -p "${small_imagenet_val_folder}/$p"
 
     max=${#test_files[@]}                                  # Take the length of that array
 
