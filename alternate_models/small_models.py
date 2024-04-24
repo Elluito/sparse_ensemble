@@ -298,12 +298,12 @@ class small_VGG_RF(nn.Module):
         return nn.Sequential(*layers)
 
 
-def small_ResNet_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
-    if rf_level == 0:
-        return ResNet(small_Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
+def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
+    if RF_level == 0:
+        return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes, fix_points)
     else:
         return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes=num_classes, fixed_points=fix_points,
-                              RF_level=rf_level,
+                              RF_level=RF_level,
                               multiplier=multiplier)
         net = small_VGG_RF('small_vgg', rf_level=i)
 

@@ -276,7 +276,7 @@ def main(args):
              "num_workers": args.num_workers, "batch_size": batch_size})
     if args.dataset == "small_imagenet":
         from test_imagenet import load_small_imagenet
-        trainloader, valloader, testloader =load_small_imagenet(
+        trainloader, valloader, testloader = load_small_imagenet(
             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
              "num_workers": args.num_workers, "batch_size": batch_size})
 
@@ -348,14 +348,14 @@ def main(args):
             net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = small_ResNetRF(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = small_ResNetRF(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = small_ResNetRF(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = small_ResNetRF(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             raise NotImplementedError
             net = resnet50()
