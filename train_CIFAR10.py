@@ -351,11 +351,11 @@ def main(args):
             net = small_ResNetRF(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = small_ResNetRF(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+            net = small_ResNetRF(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = small_ResNetRF(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+            net = small_ResNetRF(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = small_ResNetRF(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+            net = small_ResNetRF(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             raise NotImplementedError
             net = resnet50()
