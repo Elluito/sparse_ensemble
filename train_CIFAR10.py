@@ -167,7 +167,8 @@ def train(epoch):
     return 100. * correct / total, correct, total
 
 
-def test(epoch, name="ckpt", save_folder="./checkpoint"):
+def test(epoch, name="ckpt", save_folder="./checkpoint",args={}):
+
     global best_acc, testloader, device, criterion
     net.eval()
     test_loss = 0
@@ -198,6 +199,7 @@ def test(epoch, name="ckpt", save_folder="./checkpoint"):
             'net': net.state_dict(),
             'acc': acc,
             'epoch': epoch,
+            'config':args ,
         }
         if not os.path.isdir(save_folder):
             os.mkdir(save_folder)
@@ -209,6 +211,7 @@ def test(epoch, name="ckpt", save_folder="./checkpoint"):
 
 
 def main(args):
+    print(args)
     global best_acc, testloader, device, criterion, trainloader, optimizer, net
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -430,6 +433,7 @@ def main(args):
         'net': net.state_dict(),
         'acc': 0,
         'epoch': -1,
+        "config": dict(args),
     }
 
     torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
@@ -446,7 +450,7 @@ def main(args):
     for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
         train_acc = train(epoch)
-        test_acc = test(epoch, solution_name, save_folder=args.save_folder)
+        test_acc = test(epoch, solution_name, save_folder=args.save_folder,args=args)
         if args.record:
             filepath = "{}/{}.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():

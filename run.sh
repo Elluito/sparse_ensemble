@@ -25,7 +25,7 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-conda activate work2
+conda activate work
 #which python
 unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY
@@ -88,7 +88,7 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 16
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128
 
 
 
