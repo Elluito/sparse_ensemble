@@ -97,7 +97,7 @@ qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_7_cifar10_rs" run.sh "ci
 #qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_7_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "7" "normal" "kfac_optimiser_2"
 
 
-qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_vgg_small_small_imagenet" run.sh "vgg" "small_imagenet" 4 1 "normal" 200 "recording_bs_16" 1 1
+#qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_vgg_small_small_imagenet" run.sh "vgg" "small_imagenet" 4 1 "normal" 200 "recording_bs_16" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_2_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 2 "normal" 200 "recording" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "cifar10" 2 3 "normal" 200 "recording" 1 1
 #qsub -l h_rt=3:00:00 -l coproc_p100=1  -N "training_Level_4_vgg_small_cifar10_small_imagenet" run.sh "vgg" "small_imagenet" 4 4 "normal" 200 "recording_bs_16" 1 1
