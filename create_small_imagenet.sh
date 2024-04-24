@@ -5,7 +5,7 @@ small_imagenet_val_folder="/nobackup/sclaam/data/small_imagenet/val"
 
 imagenet_train="/nobackup/sclaam/data/imagenet/train"
 
-imagenet_val="/nobackup/sclaam/data/imagenet/val"
+imagenet_val="/nobackup/sclaam/data/imagenet/val/ILSVRC2012_img_val"
 
 list_of_classes="/nobackup/sclaam/data/wnids.txt"
 
@@ -29,6 +29,7 @@ while read p; do
 
     echo "${imagenet_train}/$p/${train_files[$idxA]}--->${small_imagenet_train_folder}/$p/"
 #    mv -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
+#    cp -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
 
     done
 
@@ -46,6 +47,7 @@ while read p; do
 
     echo "${imagenet_val}/$p/${test_files[$idxA]} ---> ${small_imagenet_val_folder}/$p/"
 #    mv -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
+#    cp -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
 
     done
 
