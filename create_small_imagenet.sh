@@ -28,10 +28,10 @@ while read class; do
     # off the while to just get the filenames
 
 
-    echo "${imagenet_train}/$class/${train_files[$idxA]} ---> ${small_imagenet_train_folder}/$class/"
-    idxA=$max+1
+#    echo "${imagenet_train}/$class/${train_files[$idxA]} ---> ${small_imagenet_train_folder}/$class/"
+#    idxA=$max+1
 #    mv -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
-#    cp -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
+    cp -i "${imagenet_train}/$class/${train_files[$idxA]}" "${small_imagenet_train_folder}/$class/"
 
     done
 
@@ -39,7 +39,7 @@ while read class; do
 
     test_files=($(ls "${imagenet_val}/$class" | sort -R | tail -50))
 
-    mkdir "${small_imagenet_val_folder}/$class"
+#    mkdir "${small_imagenet_val_folder}/$class"
 #    echo "${small_imagenet_val_folder}/$class"
 
     max=${#test_files[@]}                                  # Take the length of that array
@@ -50,14 +50,14 @@ while read class; do
     # off the while to just get the filenames
 
 
-    echo "${imagenet_val}/$class/${test_files[$idxA]} ---> ${small_imagenet_val_folder}/$class/"
-    idxA=$max+1
+#    echo "${imagenet_val}/$class/${test_files[$idxA]} ---> ${small_imagenet_val_folder}/$class/"
+#    idxA=$max+1
 #    mv -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
-#    cp -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
+    cp -i "${imagenet_val}/$class/${test_files[$idxA]}" "${small_imagenet_val_folder}/$class/"
 
     done
 
-
+echo "$class Done!"
 
 
 done<$list_of_classes
