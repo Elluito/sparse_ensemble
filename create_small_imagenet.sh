@@ -14,7 +14,7 @@ list_of_classes="/nobackup/sclaam/data/wnids.txt"
 while read class; do
 
 #    mkdir -p "${small_imagenet_train_foder}/$p"
-    echo "${small_imagenet_train_foder}/$class"
+    echo "${small_imagenet_train_folder}/$class"
 
     # Train images
 
