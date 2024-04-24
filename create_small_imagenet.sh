@@ -7,7 +7,7 @@ imagenet_train="nobackup/sclaam/data/imagenet/train"
 
 imagenet_val="nobackup/sclaam/data/imagenet/val"
 
-list_of_classes="nobackup/sclaam/data/windt.txt"
+list_of_classes="nobackup/sclaam/data/wnids.txt"
 
 #cd small_imagenet_foder
 
