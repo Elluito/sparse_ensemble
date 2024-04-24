@@ -3,9 +3,9 @@ small_imagenet_train_folder="nobackup/sclaam/data/small_imagenet/train"
 
 small_imagenet_val_folder="nobackup/sclaam/data/small_imagenet/val"
 
-imagenet_train="nobackup/sclaam/data/"
+imagenet_train="nobackup/sclaam/data/imagenet/train"
 
-imagenet_val="nobackup/sclaam/data/"
+imagenet_val="nobackup/sclaam/data/imagenet/val"
 
 list_of_classes="nobackup/sclaam/data/windt.txt"
 
