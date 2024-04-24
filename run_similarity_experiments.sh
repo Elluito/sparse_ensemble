@@ -81,20 +81,20 @@
 
 
 #qsub -l h_rt=40:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_5_cifar10_rs" run.sh "cifar10" "resnet50" "5" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_6_cifar10_rs" run.sh "cifar10" "resnet50" "6" "normal" "kfac_optimiser_2"
-qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_7_cifar10_rs" run.sh "cifar10" "resnet50" "7" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_5_cifar10_rs" run.sh "cifar10" "resnet50" "5" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_6_cifar10_rs" run.sh "cifar10" "resnet50" "6" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=40:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_7_cifar10_rs" run.sh "cifar10" "resnet50" "7" "normal" "kfac_optimiser_2"
 
 
-#qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_2_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "2" "normal" "kfac_optimiser_2"
-#qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_3_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "3" "normal" "kfac_optimiser_2"
-#qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_4_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "4" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_2_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "2" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_3_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "3" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_4_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "4" "normal" "kfac_optimiser_2"
 #qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_5_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "5" "normal" "kfac_optimiser_2"
 #qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_6_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "6" "normal" "kfac_optimiser_2"
-#qsub -l h_rt=44:00:00 -l coproc_p100=1 -N "Kfac_optim_rf_7_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "7" "normal" "kfac_optimiser_2"
+#qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_7_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "7" "normal" "kfac_optimiser_2"
 
 
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_1_vgg_small_small_imagenet" run.sh "vgg" "small_imagenet" 4 1 "normal" 200 "recording_bs_16" 1 1
