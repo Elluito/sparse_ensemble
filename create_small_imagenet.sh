@@ -11,14 +11,14 @@ list_of_classes="/nobackup/sclaam/data/wnids.txt"
 
 #cd small_imagenet_foder
 
-while read p; do
+while read class; do
 
 #    mkdir -p "${small_imagenet_train_foder}/$p"
-    echo "${small_imagenet_train_foder}/$p"
+    echo "${small_imagenet_train_foder}/$class"
 
     # Train images
 
-    train_files=($(ls "${imagenet_train}/$p" | sort -R | tail -500))
+    train_files=($(ls "${imagenet_train}/$class" | sort -R | tail -500))
 
     max=${#train_files[@]}                                  # Take the length of that array
 
@@ -28,7 +28,8 @@ while read p; do
     # off the while to just get the filenames
 
 
-    echo "${imagenet_train}/$p/${train_files[$idxA]}--->${small_imagenet_train_folder}/$p/"
+    echo "${imagenet_train}/$class/${train_files[$idxA]} ---> ${small_imagenet_train_folder}/$class/"
+    idxA=$max+1
 #    mv -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
 #    cp -i "${imagenet_train}/$p/${train_files[$idxA]}" "${small_imagenet_train_folder}/$p/"
 
@@ -36,9 +37,10 @@ while read p; do
 
     # Test images
 
-    test_files=($(ls "${imagenet_val}/$p" | sort -R | tail -50))
+    test_files=($(ls "${imagenet_val}/$class" | sort -R | tail -50))
 
-    mkdir -p "${small_imagenet_val_folder}/$p"
+#    mkdir -p "${small_imagenet_val_folder}/$p"
+    echo "${small_imagenet_val_folder}/$class"
 
     max=${#test_files[@]}                                  # Take the length of that array
 
@@ -48,7 +50,8 @@ while read p; do
     # off the while to just get the filenames
 
 
-    echo "${imagenet_val}/$p/${test_files[$idxA]} ---> ${small_imagenet_val_folder}/$p/"
+    echo "${imagenet_val}/$class/${test_files[$idxA]} ---> ${small_imagenet_val_folder}/$class/"
+    idxA=$max+1
 #    mv -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
 #    cp -i "${imagenet_val}/$p/${test_files[$idxA]}" "${small_imagenet_val_folder}/$p/"
 
