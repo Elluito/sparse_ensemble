@@ -296,8 +296,8 @@ def load_small_imagenet(args):
                                      std=[0.229, 0.224, 0.225])
 
     transform_test = transforms.Compose([
-        transforms.Resize(428),
-        transforms.CenterCrop(425),
+        transforms.Resize(360),
+        transforms.CenterCrop(350),
         transforms.ToTensor(),
         transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
     ])
@@ -312,7 +312,7 @@ def load_small_imagenet(args):
     whole_train_dataset = datasets.ImageFolder(
         args["traindir"],
         transforms.Compose([
-            transforms.RandomResizedCrop(425),
+            transforms.RandomResizedCrop(360),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize_train,
