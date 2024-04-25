@@ -219,7 +219,7 @@ def main(args):
         optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "sam":
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
-        optimizer = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
+        optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
 
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
