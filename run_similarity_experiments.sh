@@ -90,12 +90,12 @@
 
 
 qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_5_cifar10_rs" run.sh "cifar10" "resnet50" "5" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_6_cifar10_rs" run.sh "cifar10" "resnet50" "6" "normal" "sam_with_gradient_clipping"
-qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_7_cifar10_rs" run.sh "cifar10" "resnet50" "7" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_5_cifar10_rs" run.sh "cifar10" "resnet50" "5" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_6_cifar10_rs" run.sh "cifar10" "resnet50" "6" "normal" "sam_with_gradient_clipping"
+#qsub -l h_rt=40:00:00 -l coproc_v100=1 -N "sam_optim_rf_7_cifar10_rs" run.sh "cifar10" "resnet50" "7" "normal" "sam_with_gradient_clipping"
 
 #qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_2_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "2" "normal" "kfac_optimiser_2"
 #qsub -l h_rt=44:00:00 -l coproc_k80=1 -N "Kfac_optim_rf_3_tiny_imagenet" run.sh "tiny_imagenet" "resnet50" "3" "normal" "kfac_optimiser_2"
