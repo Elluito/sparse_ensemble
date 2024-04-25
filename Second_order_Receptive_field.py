@@ -12,12 +12,12 @@ from sparse_ensemble_utils import test
 import pickle
 import pandas as pd
 from pathlib import Path
-
+from sam import SAM
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
-             save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0):
+             save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,grad_clip=0):
     criterion = nn.CrossEntropyLoss()
     net.to(device)
 
@@ -57,6 +57,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
 
                 loss.backward()
 
+                if grad_clip:
+                    nn.utils.clip_grad_value_(net.parameters(), grad_clip)
                 optimizer.step()
 
                 t1 = time.time_ns()
@@ -86,6 +88,20 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 #     f.write(f"{item}\n")
                 if use_scheduler and use_scheduler_batch:
                     scheduler.step()
+            if isinstance(optimizer,SAM):
+                def closure():
+                    loss = criterion(labels, net(inputs))
+                    loss.backward()
+                    return loss
+
+                loss = criterion(labels, net(inputs))
+                loss.backward()
+
+                if grad_clip:
+                    nn.utils.clip_grad_value_(net.parameters(), grad_clip)
+
+                optimizer.step(closure)
+                optimizer.zero_grad()
 
         test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
         train_accuracy = test(net, use_cuda=True, testloader=trainloader, verbose=0)
@@ -199,9 +215,13 @@ def main(args):
         optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "ekfac":
         optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
-    solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
-                                                  args.name)
+    if args.optimiser == "sam":
+        base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
+        optimizer = SAM(net.parameters(), base_optimizer,lr=args.lr, momentum=args.momentum)
 
+
+    solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
+                                                     args.name)
     state = {
         'net': net.state_dict(),
         'acc': 0,

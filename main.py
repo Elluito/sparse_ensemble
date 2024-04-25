@@ -2544,6 +2544,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         testloader = torch.utils.data.DataLoader(
             testset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
         return trainloader, valloader, testloader
+
     if 'imagenet' == cfg.dataset:
         # cfg.dataset="cifar10"
         # return get_cifar_datasets(cfg)
