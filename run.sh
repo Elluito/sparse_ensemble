@@ -25,7 +25,7 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-conda activate work2
+conda activate work
 #which python
 unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY
@@ -169,5 +169,5 @@ unset KMP_AFFINITY
 
 #python Second_order_Receptive_field.py
 
-#python Second_order_Receptive_field.py --momentum "0.5" --grad_clip "0.1" --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
-python Second_order_Receptive_field.py --momentum "0.9" --lr "0.01" --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
+python Second_order_Receptive_field.py --momentum "0.5" --grad_clip "0.1" --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
+#python Second_order_Receptive_field.py --momentum "0.9" --lr "0.01" --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
