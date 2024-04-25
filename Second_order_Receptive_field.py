@@ -13,11 +13,13 @@ import pickle
 import pandas as pd
 from pathlib import Path
 from sam import SAM
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
-             save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,grad_clip=0):
+             save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
+             grad_clip=0):
     criterion = nn.CrossEntropyLoss()
     net.to(device)
 
@@ -88,7 +90,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 #     f.write(f"{item}\n")
                 if use_scheduler and use_scheduler_batch:
                     scheduler.step()
-            if isinstance(optimizer,SAM):
+            if isinstance(optimizer, SAM):
                 def closure():
                     loss = criterion(labels, net(inputs))
                     loss.backward()
@@ -217,8 +219,7 @@ def main(args):
         optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "sam":
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
-        optimizer = SAM(net.parameters(), base_optimizer,lr=args.lr, momentum=args.momentum)
-
+        optimizer = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
 
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
@@ -232,7 +233,7 @@ def main(args):
     t0 = time.time()
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
-                             record=args.record, verbose=2)
+                             record=args.record, verbose=2, grad_clip=args.grad_clip)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))
@@ -300,6 +301,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.001, type=float, help='Learning Rate')
+    parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
