@@ -40,8 +40,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
             inputs = inputs.to(device)
             labels = labels.to(device)
             # zero the parameter gradients
-            optimizer.zero_grad()
             if isinstance(optimizer, KFACOptimizer) or isinstance(optimizer, EKFACOptimizer):
+                optimizer.zero_grad()
                 t0 = time.time_ns()
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
@@ -60,7 +60,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 loss.backward()
 
                 if grad_clip:
-                    nn.utils.clip_grad_value_(net.parameters(), grad_clip)
+                    nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.step()
 
                 t1 = time.time_ns()
@@ -91,19 +91,43 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 if use_scheduler and use_scheduler_batch:
                     scheduler.step()
             if isinstance(optimizer, SAM):
-                def closure():
-                    loss = criterion(labels, net(inputs))
-                    loss.backward()
-                    return loss
 
-                loss = criterion(labels, net(inputs))
+                # first forward-backward pass
+                # print("batch:{}".format(i))
+                # print(net(inputs).shape)
+                # print(labels.shape)
+                loss = criterion(net(inputs),labels)  # use this loss for any training statistics
                 loss.backward()
-
+                optimizer.first_step(zero_grad=True)
+                # print(loss.item())
+                # second forward-backward pass
+                criterion(net(inputs),labels).backward()  # make sure to do a full forward pass
                 if grad_clip:
-                    nn.utils.clip_grad_value_(net.parameters(), grad_clip)
+                    nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
+                optimizer.second_step(zero_grad=True)
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                #
+                # def closure():
+                #     loss = criterion(labels, net(inputs))
+                #     loss.backward()
+                #     return loss
+                #
+                # loss = criterion(labels, net(inputs))
+                #
+                # loss.backward()
 
-                optimizer.step(closure)
-                optimizer.zero_grad()
+
+                # optimizer.step()
 
         test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
         train_accuracy = test(net, use_cuda=True, testloader=trainloader, verbose=0)
@@ -223,13 +247,13 @@ def main(args):
 
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
-    state = {
-        'net': net.state_dict(),
-        'acc': 0,
-        'epoch': -1,
-    }
-
-    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+    if args.save:
+        state = {
+            'net': net.state_dict(),
+            'acc': 0,
+            'epoch': -1,
+        }
+        torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
     t0 = time.time()
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
@@ -315,8 +339,8 @@ if __name__ == '__main__':
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
-    parser.add_argument('--optimiser', default="kfac", type=str, help='Optimiser to use')
-    parser.add_argument('--save', default=1, type=int, help="Save the best model")
+    parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
+    parser.add_argument('--save', default=0, type=int, help="Save the best model")
     parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
     parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
     parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
