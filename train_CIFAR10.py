@@ -1,4 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
+import wandb
+import omegaconf
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
@@ -221,6 +223,7 @@ def main(args):
     cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 
     stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+
     # Data
     print('==> Preparing data..')
     current_directory = Path().cwd()
@@ -428,6 +431,17 @@ def main(args):
 
     solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
                                                         args.name)
+    if args.use_wandb:
+        os.environ["WANDB_START_METHOD"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            project="Receptive_Field",
+            name=solution_name,
+            reinit=True,
+            save_code=True,
+        )
     state = {
         'net': net.state_dict(),
         'acc': 0,
@@ -450,6 +464,9 @@ def main(args):
         print(epoch)
         train_acc = train(epoch)
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
+        if args.use_wandb:
+            # log metrics to wandb
+            wandb.log({ "Epoch":epoch,"Train Accuracy": train_acc, "Test Accuracy": test_acc})
         if args.record:
             filepath = "{}/{}.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():
@@ -462,6 +479,9 @@ def main(args):
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         scheduler.step()
+
+    if args.use_wandb:
+        wandb.finish()
 
 
 if __name__ == '__main__':
@@ -480,6 +500,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
+    parser.add_argument('--use_wandb', default=1, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
