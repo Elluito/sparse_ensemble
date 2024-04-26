@@ -1,2 +1,0 @@
-Epoch,sparse_flops,val_set_gradient_magnitude,val_accuracy,test_set_gradient_magnitude,test_accuracy
--1,0,4.439103603363037,11.92,4.2729268074035645,11.99
