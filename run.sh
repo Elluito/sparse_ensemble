@@ -25,7 +25,7 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-conda activate work2
+conda activate work
 #which python
 unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY
