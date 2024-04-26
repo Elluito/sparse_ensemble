@@ -436,7 +436,7 @@ def main(args):
         # now = date.datetime.now().strftime("%m:%s")
         wandb.init(
             entity="luis_alfredo",
-            config=omegaconf.OmegaConf.to_container(cfg, resolve=True),
+            config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(args), resolve=True),
             project="Receptive_Field",
             name=solution_name,
             reinit=True,
