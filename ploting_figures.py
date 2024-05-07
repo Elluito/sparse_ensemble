@@ -1401,18 +1401,18 @@ def main():
     ##################################### Pruning rate per Layers ######################################################
     # Level 1 VGG
     full_dataframe_and_seed0 = pd.read_csv(
-        "vgg19_level_1_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+        "pruning_summaries/vgg19_level_1_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
-    seed1 = pd.read_csv("vgg19_level_1_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed1 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed1["Layer"] = range(len(seed1))
-    seed2 = pd.read_csv("vgg19_level_1_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed2 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed2["Layer"] = range(len(seed2))
-    seed3 = pd.read_csv("vgg19_level_1_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed3 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed3["Layer"] = range(len(seed3))
-    seed4 = pd.read_csv("vgg19_level_1_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed4 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed4["Layer"] = range(len(seed4))
     all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
@@ -1441,16 +1441,17 @@ def main():
 
     """### Level 3"""
 
-    full_dataframe_and_seed0 = pd.read_csv("vgg19_level_3_seed_0_cifar10_pruning_rates_global_pr_0.9.csv",
-                                           delimiter=",")
+    full_dataframe_and_seed0 = pd.read_csv(
+        "pruning_summaries/vgg19_level_3_seed_0_cifar10_pruning_rates_global_pr_0.9.csv",
+        delimiter=",")
     full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
-    seed1 = pd.read_csv("vgg19_level_3_seed_1_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed1 = pd.read_csv("pruning_summaries/vgg19_level_3_seed_1_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     seed1["Layer"] = range(len(seed1))
-    seed2 = pd.read_csv("vgg19_level_3_seed_2_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed2 = pd.read_csv("pruning_summaries/vgg19_level_3_seed_2_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     seed2["Layer"] = range(len(seed2))
-    seed3 = pd.read_csv("vgg19_level_3_seed_3_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed3 = pd.read_csv("pruning_summaries/vgg19_level_3_seed_3_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     seed3["Layer"] = range(len(seed3))
-    seed4 = pd.read_csv("vgg19_level_3_seed_4_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+    seed4 = pd.read_csv("pruning_summaries/vgg19_level_3_seed_4_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     seed4["Layer"] = range(len(seed4))
     all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
     # full_dataframe_and_seed0["pr2"]= seed1["pr"]
@@ -1479,18 +1480,18 @@ def main():
     """### Level 4"""
 
     full_dataframe_and_seed0 = pd.read_csv(
-        "vgg19_level_4_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
+        "pruning_summaries/vgg19_level_4_seed_0_cifar10_pruning_rates_global_pr_0.9.csv", delimiter=",")
     full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
-    seed1 = pd.read_csv("vgg19_level_4_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed1 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_1_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed1["Layer"] = range(len(seed1))
-    seed2 = pd.read_csv("vgg19_level_4_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed2 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_2_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed2["Layer"] = range(len(seed2))
-    seed3 = pd.read_csv("vgg19_level_4_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed3 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_3_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed3["Layer"] = range(len(seed3))
-    seed4 = pd.read_csv("vgg19_level_4_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
+    seed4 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_4_cifar10_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed4["Layer"] = range(len(seed4))
     all_df = pd.concat([full_dataframe_and_seed0, seed1, seed2, seed3, seed4], ignore_index=True)
@@ -1661,18 +1662,18 @@ def main():
     ### Level 1
     """
     full_dataframe_and_seed0 = pd.read_csv(
-        "vgg19_level_1_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+        "pruning_summaries/vgg19_level_1_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
     full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
-    seed1 = pd.read_csv("vgg19_level_1_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed1 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed1["Layer"] = range(len(seed1))
-    seed2 = pd.read_csv("vgg19_level_1_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed2 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed2["Layer"] = range(len(seed2))
-    seed3 = pd.read_csv("vgg19_level_1_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed3 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed3["Layer"] = range(len(seed3))
-    seed4 = pd.read_csv("vgg19_level_1_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed4 = pd.read_csv("pruning_summaries/vgg19_level_1_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
 
     seed4["Layer"] = range(len(seed4))
@@ -1703,18 +1704,18 @@ def main():
     """### Level 4"""
 
     full_dataframe_and_seed0 = pd.read_csv(
-        "vgg19_level_4_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
+        "pruning_summaries/vgg19_level_4_seed_0_tiny_imagenet_pruning_rates_global_pr_0.9.csv", delimiter=",")
     full_dataframe_and_seed0["Layer"] = range(len(full_dataframe_and_seed0))
-    seed1 = pd.read_csv("vgg19_level_4_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed1 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_1_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed1["Layer"] = range(len(seed1))
-    seed2 = pd.read_csv("vgg19_level_4_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed2 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_2_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed2["Layer"] = range(len(seed2))
-    seed3 = pd.read_csv("vgg19_level_4_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed3 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_3_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
     seed3["Layer"] = range(len(seed3))
-    seed4 = pd.read_csv("vgg19_level_4_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
+    seed4 = pd.read_csv("pruning_summaries/vgg19_level_4_seed_4_tiny_imagenet_pruning_rates_global_pr_0.9.csv",
                         delimiter=",")
 
     seed4["Layer"] = range(len(seed4))
