@@ -1,5 +1,6 @@
 import os
 import time
+import wandb
 import torch
 import torch.nn as nn
 import optuna
@@ -34,6 +35,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
 
         correct = 0
         total = 0
+
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
@@ -96,12 +98,12 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # print("batch:{}".format(i))
                 # print(net(inputs).shape)
                 # print(labels.shape)
-                loss = criterion(net(inputs),labels)  # use this loss for any training statistics
+                loss = criterion(net(inputs), labels)  # use this loss for any training statistics
                 loss.backward()
                 optimizer.first_step(zero_grad=True)
                 # print(loss.item())
                 # second forward-backward pass
-                criterion(net(inputs),labels).backward()  # make sure to do a full forward pass
+                criterion(net(inputs), labels).backward()  # make sure to do a full forward pass
                 if grad_clip:
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.second_step(zero_grad=True)
@@ -125,7 +127,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # loss = criterion(labels, net(inputs))
                 #
                 # loss.backward()
-
 
                 # optimizer.step()
 
@@ -264,33 +265,55 @@ def main(args):
     return best_accuracy, training_time
 
 
-def optuna_optimization():
+def optuna_optimization(args):
+    wandb.init(
+        entity="luis_alfredo",
+        config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
+        project="Receptive_Field",
+        name="Optuna optimisation",
+        reinit=True,
+        save_code=True,
+    )
+
     def objective(trial):
-        lr = trial.suggest_float('lr', 0.001, 0.1, log=True)
+        lr = trial.suggest_float('lr', 0.00001, 0.5)
         momentum = trial.suggest_float('momentum', 0.3, 0.9)
-        optimiser_type = trial.suggest_categorical("optimiser", ["kfac", "ekfac"])
-        use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
+        gradient_clip = trial.suggest_float('grad_cliip', 0.1, 0.9)
+
+        # optimiser_type = trial.suggest_categorical("optimiser", ["kfac", "ekfac"])
+        # use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
         cfg = omegaconf.DictConfig({
-            "dataset": "tiny_imagenet",
-            "RF_level": 2,
+            "dataset": "cifar10",
+            "RF_level": 4,
             "lr": lr,
             "momentum": momentum,
             "model": "resnet50",
-            "optimiser": optimiser_type,
-            "epochs": 1,
-            "use_scheduler": use_scheduler,
+            "optimiser": args.optimiser,
+            "epochs": 3,
+            "use_scheduler": False,
             "save": False,
             "num_workers": 0,
             "type": "normal",
             "folder": "",
             "name": "hyper_optim",
             "batch_size": 32,
-            "use_scheduler_batch": True,
+            "use_scheduler_batch": False,
+            "grad_clip": gradient_clip,
 
         })
+        try:
 
-        acc, train_time = main(cfg)
+            acc, train_time = main(cfg)
+
+        except Exception as e:
+
+            print(e)
+
+            return 0, 10000
+
         return acc, train_time
+
+    search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.5, 0.1, 0]}
 
     if os.path.isfile("second_order_hyperparameter_optimization.pkl"):
 
@@ -298,11 +321,15 @@ def optuna_optimization():
             study = pickle.load(f)
     else:
         study = optuna.create_study(directions=["maximize", "minimize"],
-                                    study_name="second_order_hyperparameter_optimization")
-    study.optimize(objective, n_trials=100, gc_after_trial=True, n_jobs=1)
+                                    study_name="second_order_hyperparameter_optimization",
+                                    sampler=optuna.samplers.GridSampler(search_space))
+
+    study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=1)
 
     trials = study.best_trials
+
     print("Size of the pareto front: {}".format(len(trials)))
+
     for trial in trials:
         f1, f2 = trial.values
         lr, momentum, optimiser, use_scheduler = trial.params["lr"], trial.params["momentum"], trial.params[
@@ -316,7 +343,9 @@ def optuna_optimization():
         })
         print("Parameters:\n\t")
         print(omegaconf.OmegaConf.to_yaml(print_param))
+
     with open("second_order_hyperparameter_optimization.pkl", "wb") as f:
+
         pickle.dump(study, f)
 
 
@@ -324,7 +353,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
-    parser.add_argument('--lr', default=0.001, type=float, help='Learning Rate')
+    parser.add_argument('--lr', default=0.1, type=float, help='Learning Rate')
     parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
