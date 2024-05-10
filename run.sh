@@ -87,8 +87,8 @@ unset KMP_AFFINITY
 #############################################################
 #     Training a model with specific RF
 #############################################################
-
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128
+#
+#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128
 
 
 
@@ -104,7 +104,9 @@ python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 -
 #############################################################
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --name $7 --solution $8 --pruning_rate "${9}" --experiment "${10}"
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --solution $7 --experiment $8
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
 #python prune_models.py  --model "vgg19" --dataset "tiny_imagenet" --num_workers "4" --RF_level 4 --type "normal" --folder "~/" --solution "vgg19_normal_tiny_imagenet_seed_3_rf_level_4_test_acc_39.03.pth" --pruning_rate 0.9 --experiment 2
 
@@ -164,7 +166,7 @@ python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 -
 #python receptive_field_and_stochastic_pruning.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --sigma $8
 
 #############################################################
-#    Receptive Field and  Second order information
+#    Receptive Field and  Second order information optimisers
 #############################################################
 
 #python Second_order_Receptive_field.py
