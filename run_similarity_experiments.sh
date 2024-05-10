@@ -994,7 +994,7 @@ replace_string="seed.${idxA}"
 thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
   echo "${thing}"
 #  echo "${directory}/${pathname} ===> ${directory}/${thing}"
-  mv -i "${directory}/)${pathname}" "${directory}/${thing}"
+  mv -i "${directory}/${pathname}" "${directory}/${thing}"
 
 done
 done
