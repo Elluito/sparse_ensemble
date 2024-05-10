@@ -464,16 +464,16 @@
 
 
 #
-directory=/nobackup/sclaam/checkpoints
-model="vgg19"
-dataset="small_imagenet"
-##seeds=(0 1 2 3 4)
-rf_levels=(5 6 7)
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-#number_of_elements_by_seed=${#[@]}
-for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
-qsub -l coproc_p100=1 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
-done
+#directory=/nobackup/sclaam/checkpoints
+#model="vgg19"
+#dataset="small_imagenet"
+###seeds=(0 1 2 3 4)
+#rf_levels=(5 6 7)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+##number_of_elements_by_seed=${#[@]}
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#qsub -l coproc_p100=1 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxA]}" "normal" "${directory}"
+#done
 
 ########################################################################################################################
 #                 Prune and fine tune summary
@@ -497,11 +497,13 @@ done
 #level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4_${solution_string}.*"))
 ##level_4_seeds=($(ls $directory | grep -i "${model}.*${dataset}.*_level_4.pth"))
 #declare -a list_to_use=("${level_1_seeds[@]}")
+
+
 #
 model="vgg19"
 dataset="small_imagenet"
 directory=/nobackup/sclaam/checkpoints
-#
+
 ##seeds=(0 1 2)
 pruning_rates=("0.5" "0.6" "0.7" "0.8 0.9")
 rf_levels=(2 3 4)
@@ -509,7 +511,7 @@ rf_levels=(2 3 4)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-#
+
 for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 #
@@ -519,7 +521,10 @@ qsub -l coproc_v100=1 -l h_rt=00:20:00   -N "${model}_${dataset}_pruning_summary
 ##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
 done
 done
-#
+
+
+
+
 #declare -a list_to_use=("${level_2_seeds[@]}")
 #
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
