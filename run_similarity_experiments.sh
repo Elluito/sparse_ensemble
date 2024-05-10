@@ -500,7 +500,7 @@
 
 
 #
-model="resnet_small"
+model="vgg19"
 dataset="small_imagenet"
 directory=/nobackup/sclaam/checkpoints
 
