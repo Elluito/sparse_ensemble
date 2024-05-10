@@ -106,17 +106,17 @@
 
 
 #qsub -l h_rt=45:00:00 -l coproc_k80=1  -N "training_Level_1_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 2 "normal" 200 "recording_100" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 2 "normal" 200 "recording_100" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "small_imagenet" 2 3 "normal" 200 "recording" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_vgg_small_small_imagenet" run.sh "vgg19" "small_imagenet" 2 4 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 4 "normal" 200 "recording_200" 1 1
 #
 #qsub -l h_rt=45:00:00 -l coproc_k80=1  -N "training_Level_1_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 2 5 "normal" 200 "recording_200" 1 1
-#qsub -l h_rt=12:00:00 -l coproc_v100=1  -N "training_Level_6_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 1 6 "normal" 200 "recording" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 2 5 "normal" 200 "recording_200" 1 1
+qsub -l h_rt=12:00:00 -l coproc_v100=1  -N "training_Level_6_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 1 6 "normal" 200 "recording" 1 1
 #qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_7_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 7 "normal" 400 "recording_400" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 2 7 "normal" 200 "recording_200" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet18_small_imagenet" run.sh "resnet_small" "small_imagenet" 2 7 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=30:00:00 -l coproc_p100=1 -N "hyper_parameter_optim_second_order" run.sh
 
 #type="one_shot"
@@ -953,7 +953,7 @@ qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet_small_imagen
 #                  This is  for changing names
 ###############################################################################
 
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 
 # all_level_1_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_1_seeds
@@ -967,7 +967,7 @@ qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet_small_imagen
 # echo $all_level_5_seeds
 # all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_6_.*no_recording.*" |cut -d_ -f4 |uniq))
 # echo $all_level_6_seeds
-# all_level_7_seeds=($(ls $directory | grep -i "resnet24_normal_tiny_imagenet_.*_level_7_.*no_recording.*" |cut -d_ -f5 |uniq))
+ all_level_3_seeds=($(ls $directory | grep -i "vgg_normal_small_imagenet_.*_level_3_.*recording_200.*" |cut -d_ -f5 |uniq))
 # echo $all_level_7_seeds
 
 #
@@ -976,26 +976,26 @@ qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet_small_imagen
 #echo "Level 5 \n"
 #echo " "
 ##
-#declare -a list_to_use=("${all_level_5_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
+declare -a list_to_use=("${all_level_3_seeds[@]}")
 #
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed_${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
-##  mv -i "${directory}/${pathname}" "${directory}/${thing}"
-#done
-#done
+max=${#list_to_use[@]}                                  # Take the length of that array
+#
+echo $max
+#
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed_${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
+#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+done
+done
 #
 #
 #echo " "

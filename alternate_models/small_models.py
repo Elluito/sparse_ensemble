@@ -417,6 +417,15 @@ def test_models():
         resnet_net = small_ResNetRF(small_Bottleneck, num_blocks=[1, 1, 1], num_classes=10, RF_level=i)
 
         y_resnet = resnet_net(x)
+        input_names = ['Image']
+
+        output_names = ['y_hat']
+
+        torch.onnx.export(resnet_net,x,
+                      f'onnx_model_small_resnet_small_imagenet.onnx',
+                      input_names=input_names,
+                      output_names=output_names)
+
         loss = dummy_loss(y_resnet, dummy_y)
         loss.backward()
         # print(y_resnet)

@@ -266,6 +266,7 @@ def main(args):
 
 
 def optuna_optimization(args):
+
     wandb.init(
         entity="luis_alfredo",
         config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
@@ -278,7 +279,7 @@ def optuna_optimization(args):
     def objective(trial):
         lr = trial.suggest_float('lr', 0.00001, 0.5)
         momentum = trial.suggest_float('momentum', 0.3, 0.9)
-        gradient_clip = trial.suggest_float('grad_cliip', 0.1, 0.9)
+        gradient_clip = trial.suggest_float('grad_clip', 0.1, 0.9)
 
         # optimiser_type = trial.suggest_categorical("optimiser", ["kfac", "ekfac"])
         # use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
