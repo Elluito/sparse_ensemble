@@ -1145,6 +1145,8 @@ if __name__ == '__main__':
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
+   parser.add_argument('--width', default=1, type=int, help='Width of the model')
+  
     args = parser.parse_args()
     if args.experiment == 1:
         print("Experiment 1")
