@@ -2644,6 +2644,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         trainloader, valloader, testloader = load_small_imagenet(
             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
              "num_workers": cfg.num_workers, "batch_size": cfg.batch_size})
+        return trainloader, valloader,testloader
 
     if 'tiny_imagenet' == cfg.dataset:
         from test_imagenet import load_tiny_imagenet
