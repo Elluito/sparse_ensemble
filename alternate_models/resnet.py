@@ -262,7 +262,8 @@ def ResNet18(num_classes=10, fix_points=None):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
 
 
-def ResNet18_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
+def ResNet18_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
+    rf_level=RF_level
     if rf_level == 0:
         return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
     else:
