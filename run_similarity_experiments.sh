@@ -506,15 +506,15 @@
 
 #                                               AA REALLLLLL    Pruning summaries one shot
 
-model="resnet_small"
-#model="vgg19"
+#model="resnet_small"
+model="vgg19"
 dataset="small_imagenet"
 directory=/nobackup/sclaam/checkpoints
 
 ##seeds=(0 1 2)
 pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-#rf_levels=(2 3 4)
-rf_levels=(3 5 7)
+rf_levels=(2 3 4)
+#rf_levels=(3 5 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
