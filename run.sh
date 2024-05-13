@@ -178,4 +178,4 @@ python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 -
 
 #python Second_order_Receptive_field.py --momentum "0.9" --grad_clip "0.9" --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 0 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
 
-#python Second_order_Receptive_field.py --momentum "0.9" --lr "1" --grad_clip 0 --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
+#python Second_order_Receptive_field.py --momentum "0.9" --lr "0.1" --grad_clip 0 --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
