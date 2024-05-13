@@ -115,11 +115,13 @@ qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_resnet18_small_imag
 qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 2 "normal" 200 "recording_200" 1 1
 qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 3 "normal" 200 "recording_200" 1 1
 qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 4 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 6 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 6 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_v100=1  -N "training_Level_6_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 1 6 "normal" 200 "recording" 1 1
 #qsub -l h_rt=6:00:00 -l coproc_p100=1  -N "training_Level_7_resnet_small_cifar10" run.sh "resnet_small" "cifar10" 2 7 "normal" 400 "recording_400" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 2 7 "normal" 200 "recording_200" 1 1
+
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 2 7 "normal" 200 "recording_200" 1 1
+# aquí estoy
 #qsub -l h_rt=30:00:00 -l coproc_p100=1 -N "hyper_parameter_optim_second_order" run.sh
 
 #type="one_shot"
@@ -507,25 +509,25 @@ qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_7_resnet18_small_imag
 #model="vgg19"
 #dataset="small_imagenet"
 #directory=/nobackup/sclaam/checkpoints
-#
-###seeds=(0 1 2)
+
+##seeds=(0 1 2)
 #pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9")
 #rf_levels=(2 3 4)
-##rf_levels=(3 5 7)
+#rf_levels=(3 5 7)
 #levels_max=${#rf_levels[@]}                                  # Take the length of that array
-##seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 #number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-#
+
 #for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
 #for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-##
-##qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 #
+#qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+
 #qsub -l coproc_v100=1 -l h_rt=01:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "2" "${rf_levels[$idxa]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-##
-###./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
-#done
-#done
+#
+##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
+done
+done
 
 
 
