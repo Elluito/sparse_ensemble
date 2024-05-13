@@ -309,6 +309,8 @@ def gradient_flow_calculation(args):
                        "Gradient Flow at init": gradient_flow_at_init_list,
                        })
     df.to_csv("GF_init_{}_{}_{}_summary.csv".format(args.model, args.RF_level, args.dataset), index=False)
+
+
 def logistic_probes_for_model(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
@@ -380,8 +382,6 @@ def logistic_probes_for_model(args):
                                                                                      args.dataset))
     state_dict_raw = torch.load(args.solution, map_location=device)
     net.load_state_dict(state_dict_raw["net"])
-
-
 
 
 def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
@@ -607,7 +607,6 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -697,8 +696,6 @@ def main(args):
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
 
-
-
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
@@ -706,8 +703,8 @@ def main(args):
                                                                          args.RF_level, args.name)
     things = list(glob.glob(search_string))
 
-   # if len(things) < 2:
-   #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+    # if len(things) < 2:
+    #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
         "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
@@ -735,17 +732,24 @@ def main(args):
 
         seed_from_file3 = re.findall(".[0-9]_", name)
         if seed_from_file3:
-            seed_from_file=seed_from_file3
+
+            seed_from_file = seed_from_file3[0].replace(".","_")
+
         elif seed_from_file2:
+
             seed_from_file = seed_from_file2[0].split("_")[2]
+
         else:
-            seed_from_file = seed_from_file1
+
+            seed_from_file = seed_from_file1[0]
 
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+
         df2.to_csv(
             "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
                                                                            args.dataset, args.pruning_rate),
             index=False)
+
         print("Done")
         file_name = os.path.basename(name)
         print(file_name)
@@ -776,7 +780,6 @@ def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, gl
 
 
 def n_shallow_layer_experiment(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -922,7 +925,7 @@ def n_shallow_layer_experiment(args):
                 best_dense_accuracy = dense_accuracy
                 best_new_pr = new_pr
                 break
-            if pruned_accuracy>best_pruned_acc:
+            if pruned_accuracy > best_pruned_acc:
                 best_layer_name = layer_name
                 best_pruned_acc = pruned_accuracy
                 best_dense_accuracy = dense_accuracy
@@ -1150,7 +1153,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
-  
+
     args = parser.parse_args()
     if args.experiment == 1:
         print("Experiment 1")
