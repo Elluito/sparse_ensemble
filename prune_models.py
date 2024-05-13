@@ -733,7 +733,10 @@ def main(args):
 
         seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
 
-        if seed_from_file2:
+        seed_from_file3 = re.findall(".[0-9]_", name)
+        if seed_from_file3:
+            seed_from_file=seed_from_file3
+        elif seed_from_file2:
             seed_from_file = seed_from_file2[0].split("_")[2]
         else:
             seed_from_file = seed_from_file1
