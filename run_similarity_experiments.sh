@@ -111,10 +111,10 @@
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "small_imagenet" 2 3 "normal" 200 "recording" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 4 "normal" 200 "recording_200" 1 1
 #
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 1 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 2 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 3 "normal" 200 "recording_200" 1 1
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 4 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 1 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 2 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 3 "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 4 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 6 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_v100=1  -N "training_Level_6_resnet_small_imagenet" run.sh "resnet_small" "small_imagenet" 1 6 "normal" 200 "recording" 1 1
@@ -513,8 +513,8 @@ directory=/nobackup/sclaam/checkpoints
 
 ##seeds=(0 1 2)
 pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9")
-rf_levels=(2 3 4)
-#rf_levels=(3 5 7)
+#rf_levels=(2 3 4)
+rf_levels=(3 5 7)
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
