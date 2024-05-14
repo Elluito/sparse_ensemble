@@ -2397,13 +2397,15 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         #
         #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
         current_directory = Path().cwd()
-        data_path = "/datasets"
+        data_path = "./datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
             data_path = "/nobackup/sclaam/data"
         elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
             data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
         # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
         #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
 
