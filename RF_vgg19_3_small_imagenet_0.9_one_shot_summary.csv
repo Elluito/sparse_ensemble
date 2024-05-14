@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_small_imagenet_seed.1_rf_level_3_recording_200_test_acc_57.65.pth,57.65,0.59
