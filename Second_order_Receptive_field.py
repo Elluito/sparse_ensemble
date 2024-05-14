@@ -197,9 +197,11 @@ def main(args):
 
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
@@ -238,6 +240,7 @@ def main(args):
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
                                                                                      args.dataset))
+
     if args.optimiser == "kfac":
         optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
     if args.optimiser == "ekfac":
@@ -266,36 +269,36 @@ def main(args):
 
 
 def optuna_optimization(args):
-
     wandb.init(
         entity="luis_alfredo",
         config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
         project="Receptive_Field",
-        name="Optuna optimisation",
+        name="{} parameter optimisation".format(args.optimiser),
         reinit=True,
         save_code=True,
     )
 
     def objective(trial):
         lr = trial.suggest_float('lr', 0.00001, 0.5)
-        momentum = trial.suggest_float('momentum', 0.3, 0.9)
-        gradient_clip = trial.suggest_float('grad_clip', 0.1, 0.9)
+        momentum = trial.suggest_float('momentum', 0.3, 1)
+        gradient_clip = trial.suggest_float('grad_clip', -0.1, 1.1)
 
         # optimiser_type = trial.suggest_categorical("optimiser", ["kfac", "ekfac"])
         # use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
         cfg = omegaconf.DictConfig({
             "dataset": "cifar10",
-            "RF_level": 4,
+            "RF_level": 3,
             "lr": lr,
             "momentum": momentum,
             "model": "resnet50",
             "optimiser": args.optimiser,
-            "epochs": 3,
+            "epochs": 5,
             "use_scheduler": False,
             "save": False,
             "num_workers": 0,
             "type": "normal",
             "folder": "",
+            "record":False,
             "name": "hyper_optim",
             "batch_size": 32,
             "use_scheduler_batch": False,
@@ -306,13 +309,16 @@ def optuna_optimization(args):
 
             acc, train_time = main(cfg)
 
+            wandb.log({"acc": acc, "train_time": train_time, "momentum": momentum, "grad_clip": gradient_clip,
+                       "initial_lr": lr})
+
+            return acc
+
         except Exception as e:
 
             print(e)
 
-            return 0, 10000
-
-        return acc, train_time
+            return 0
 
     search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.5, 0.1, 0]}
 
@@ -325,10 +331,11 @@ def optuna_optimization(args):
                                     study_name="second_order_hyperparameter_optimization",
                                     sampler=optuna.samplers.GridSampler(search_space))
 
-    study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=1)
+    study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=2)
 
     trials = study.best_trials
 
+    wandb.finish()
     print("Size of the pareto front: {}".format(len(trials)))
 
     for trial in trials:
@@ -383,4 +390,4 @@ if __name__ == '__main__':
         print(args)
         main(args)
     if args.experiment == 2:
-        optuna_optimization()
+        optuna_optimization(args)
