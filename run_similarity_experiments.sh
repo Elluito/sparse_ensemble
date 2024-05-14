@@ -951,7 +951,7 @@ qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_6_cifar10_rs_no_clip" run
 #                  This is  for changing names
 ###############################################################################
 
-#directory=/nobackup/sclaam/checkpoints
+directory=/nobackup/sclaam/checkpoints
 
 # all_level_1_seeds=($(ls $directory | grep -i "resnet50_normal_tiny_imagenet.*_level_1_.*" |cut -d_ -f5 |uniq))
 # echo $all_level_1_seeds
@@ -966,37 +966,37 @@ qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_6_cifar10_rs_no_clip" run
 # all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_6_.*no_recording.*" |cut -d_ -f4 |uniq))
 # echo $all_level_6_seeds
 
-# all_level_3_seeds=($(ls $directory | grep -i "resnet_small_normal_small_imagenet.*_level_7_.*recording_200.*" |cut -d_ -f6 |uniq))
-# echo $all_level_3_seeds
+ all_level_3_seeds=($(ls $directory | grep -i "resnet18_normal_small_imagenet.*_level_7_.*recording_200.*" |cut -d_ -f5 |uniq))
+ echo $all_level_3_seeds
+
 #
-##
-##
-##echo " "
-##echo "Level 5 \n"
-##echo " "
-###
-#declare -a list_to_use=("${all_level_3_seeds[@]}")
-##
-#max=${#list_to_use[@]}                                  # Take the length of that array
-##
-#echo $max
-##
-#for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
-#echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-#file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
-#echo $file_names
-#echo ${#file_names[@]}                                  # Take the length of that array
-#echo $idxA
 #
-#for pathname in  "${file_names[@]}"; do
-#replace_string="seed.${idxA}"
-#thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
-#  echo "${thing}"
-##  echo "${directory}/${pathname} ===> ${directory}/${thing}"
-##  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+#echo " "
+#echo "Level 5 \n"
+#echo " "
+##
+declare -a list_to_use=("${all_level_3_seeds[@]}")
 #
-#done
-#done
+max=${#list_to_use[@]}                                  # Take the length of that array
+#
+echo $max
+#
+for ((idxA=0; idxA<max; idxA++)); do # iterate idxA from 0 to length
+echo "${directory}/.*${list_to_use[$idxA]}\.\*"
+file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
+echo $file_names
+echo ${#file_names[@]}                                  # Take the length of that array
+echo $idxA
+
+for pathname in  "${file_names[@]}"; do
+replace_string="seed.${idxA}"
+thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
+  echo "${thing}"
+#  echo "${directory}/${pathname} ===> ${directory}/${thing}"
+#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+
+done
+done
 
 
 #echo " "
