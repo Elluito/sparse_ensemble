@@ -3,10 +3,13 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=5:00:00
+#SBATCH --time=50:00:00
 
 # set name of job
-#SBATCH --job-name=train_cifar
+#SBATCH --job-name=Optuna_tuning
+
+# set partition (devel, small, big)
+#SBATCH --partition=small
 
 # set number of GPUs
 #SBATCH --gres=gpu:1
