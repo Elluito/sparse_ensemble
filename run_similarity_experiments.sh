@@ -966,7 +966,7 @@ directory=/nobackup/sclaam/checkpoints
 # all_level_6_seeds=($(ls $directory | grep -i "resnet50_normal_cifar10_.*_level_6_.*no_recording.*" |cut -d_ -f4 |uniq))
 # echo $all_level_6_seeds
 
- all_level_3_seeds=($(ls $directory | grep -i "resnet18_normal_small_imagenet.*_level_2_.*recording_200.*" |cut -d_ -f5 |uniq))
+ all_level_3_seeds=($(ls $directory | grep -i "resnet18_normal_small_imagenet.*_level_3_.*recording_200.*" |cut -d_ -f5 |uniq))
  echo $all_level_3_seeds
 
 #
@@ -993,7 +993,7 @@ replace_string="seed.${idxA}"
 thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
   echo "${thing}"
 #  echo "${directory}/${pathname} ===> ${directory}/${thing}"
-  mv -i "${directory}/${pathname}" "${directory}/${thing}"
+#  mv -i "${directory}/${pathname}" "${directory}/${thing}"
 
 done
 done
