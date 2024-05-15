@@ -90,8 +90,8 @@
 
 
 
-qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "sam_hyper_parameter_Optim" run.sh "sam"
-qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "kfac_hyper_parameter_Optim" run.sh "kfac"
+#qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "sam_hyper_parameter_Optim" run.sh "sam"
+#qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "kfac_hyper_parameter_Optim" run.sh "kfac"
 
 #qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_1_cifar10_rs_no_clip" run.sh "cifar10" "resnet50" "1" "normal" "sam_no_gradient_clipping_lr=0.1"
 #qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_2_cifar10_rs_no_clip" run.sh "cifar10" "resnet50" "2" "normal" "sam_no_gradient_clipping_lr=0.1"
@@ -110,13 +110,15 @@ qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "kfac_hyper_parameter_Optim" run.sh "k
 
 
 #qsub -l h_rt=45:00:00 -l coproc_k80=1  -N "training_Level_1_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1
-#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 2 "normal" 200 "recording_100" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k6_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 10 "k6" "normal" 200 "recording_200" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k8_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 10 "k8" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=12:00:00 -l coproc_p100=1  -N "training_Level_3_vgg_small_cifar10" run.sh "vgg_small" "small_imagenet" 2 3 "normal" 200 "recording" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 4 "normal" 200 "recording_200" 1 1
 #
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 1 "normal" 200 "recording_200" 1 1
-#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_2_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 2 "normal" 200 "recording_200" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 10 "k6" "normal" 200 "recording_200" 1 1
+qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k8_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 10 "k8" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_3_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 3 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_4_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 4 "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1

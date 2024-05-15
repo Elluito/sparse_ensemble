@@ -88,7 +88,7 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 #
-#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128
 
 
 
@@ -174,7 +174,7 @@ unset KMP_AFFINITY
 #    Receptive Field and  Second order information optimisers
 #############################################################
 
- python Second_order_Receptive_field.py --experiment 2 --optimiser $1 # --save_folder "$HOME/checkpoints"
+# python Second_order_Receptive_field.py --experiment 2 --optimiser $1 # --save_folder "$HOME/checkpoints"
 
 # python Second_order_Receptive_field.py --experiment 2 --optimiser $1 --save_folder "$HOME/checkpoints"
 

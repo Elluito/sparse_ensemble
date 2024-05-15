@@ -60,6 +60,12 @@ class VGG_RF(nn.Module):
         if self.rf_level == 5:
             self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
             self.config = [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
+        if self.rf_level == "k6":
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == "k8":
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
 
         self.features = self._make_layers(self.config)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
