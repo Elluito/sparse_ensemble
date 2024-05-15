@@ -306,6 +306,7 @@ def optuna_optimization(args):
             "grad_clip": gradient_clip,
 
         })
+        acc=-1
         try:
 
             acc, train_time = main(cfg)
@@ -313,22 +314,21 @@ def optuna_optimization(args):
             wandb.log({"acc": acc, "train_time": train_time, "momentum": momentum, "grad_clip": gradient_clip,
                        "initial_lr": lr})
 
-            return acc
 
         except Exception as e:
 
             print(e)
+            acc = 0
 
-            return 0
-
+        return acc
     search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.5, 0.1, 0]}
 
-    if os.path.isfile("second_order_hyperparameter_optimization.pkl"):
+    if os.path.isfile("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser)):
 
-        with open("second_order_hyperparameter_optimization.pkl", "rb") as f:
+        with open("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser), "rb") as f:
             study = pickle.load(f)
     else:
-        study = optuna.create_study(directions=["maximize"],
+        study = optuna.create_study(directions="maximize",
                                     study_name="second_order_{}_hyperparameter_optimization".format(args.optimiser),
                                     sampler=optuna.samplers.GridSampler(search_space))
 
