@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet18_normal_small_imagenet_seed.0_rf_level_4_recording_200_test_acc_69.19.pth,69.19,2.37
