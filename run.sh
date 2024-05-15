@@ -109,7 +109,7 @@ unset KMP_AFFINITY
 #     One shot specific pruning rate results
 #############################################################
 
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
 
@@ -174,7 +174,7 @@ unset KMP_AFFINITY
 #    Receptive Field and  Second order information optimisers
 #############################################################
 
- python Second_order_Receptive_field.py --experiment 2 --optimiser "kfac" --save_folder  "$HOME/checkpoints"
+# python Second_order_Receptive_field.py --experiment 2 --optimiser "kfac" --save_folder "$HOME/checkpoints"
 
 #python Second_order_Receptive_field.py --momentum "0.9" --grad_clip "0.9" --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 0 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5
 
