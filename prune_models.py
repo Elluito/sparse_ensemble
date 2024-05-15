@@ -634,9 +634,13 @@ def main(args):
 
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)

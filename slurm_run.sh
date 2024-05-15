@@ -22,5 +22,8 @@
 
 conda active work2
 
-python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
+#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
+python Second_order_Receptive_field.py --experiment 2 --optimiser "kfac"
+
+python Second_order_Receptive_field.py --experiment 2 --optimiser "sam"
