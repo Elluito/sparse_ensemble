@@ -295,6 +295,7 @@ def optuna_optimization(args):
             "epochs": 5,
             "use_scheduler": False,
             "save": False,
+            "save_folder": args.save_folder,
             "num_workers": 0,
             "type": "normal",
             "folder": "",

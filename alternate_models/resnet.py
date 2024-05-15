@@ -324,6 +324,7 @@ def test():
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
     for rf in receptive_fields:
+
         net = ResNet24_rf(num_classes=10, rf_level=rf)
         y = net(torch.randn(3, 3, 32, 32))
         print(y)

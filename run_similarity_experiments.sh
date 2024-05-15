@@ -91,7 +91,7 @@
 
 
 qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "sam_hyper_parameter_Optim" run.sh "sam"
-qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "sam_hyper_parameter_Optim" run.sh "kfac"
+qsub -l h_rt=30:00:00 -l coproc_v100=1 -N "kfac_hyper_parameter_Optim" run.sh "kfac"
 
 #qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_1_cifar10_rs_no_clip" run.sh "cifar10" "resnet50" "1" "normal" "sam_no_gradient_clipping_lr=0.1"
 #qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_2_cifar10_rs_no_clip" run.sh "cifar10" "resnet50" "2" "normal" "sam_no_gradient_clipping_lr=0.1"
