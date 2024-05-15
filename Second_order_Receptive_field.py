@@ -328,7 +328,7 @@ def optuna_optimization(args):
             study = pickle.load(f)
     else:
         study = optuna.create_study(directions=["maximize"],
-                                    study_name="second_order_hyperparameter_optimization",
+                                    study_name="second_order_{}_hyperparameter_optimization".format(args.optimiser),
                                     sampler=optuna.samplers.GridSampler(search_space))
 
     study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=2)
