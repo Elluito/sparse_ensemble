@@ -15,7 +15,7 @@ from torchvision.models import resnet18, ResNet18_Weights, \
     resnet152, ResNet152_Weights, \
     mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
     efficientnet_b0, EfficientNet_B0_Weights
-import vits
+# import vits
 import timm
 
 
@@ -191,13 +191,13 @@ if __name__ == '__main__':
     s_model.eval()
 
     # mocov3 vit
-    print("MoCoV3 ViT")
-    s_model = vits.vit_base()
-    s_model = torch.nn.DataParallel(s_model)
-    checkpoint = torch.load("linear-vit-b-300ep.pth.tar", map_location="cpu")
-    s_model.load_state_dict(checkpoint['state_dict'])
-    s_model.cuda()
-    s_model.eval()
+    # print("MoCoV3 ViT")
+    # s_model = vits.vit_base()
+    # s_model = torch.nn.DataParallel(s_model)
+    # checkpoint = torch.load("linear-vit-b-300ep.pth.tar", map_location="cpu")
+    # s_model.load_state_dict(checkpoint['state_dict'])
+    # s_model.cuda()
+    # s_model.eval()
 
 
     # deit tiny
