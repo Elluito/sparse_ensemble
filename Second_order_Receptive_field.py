@@ -274,8 +274,7 @@ def optuna_optimization(args):
         config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
         project="Receptive_Field",
         name="{} parameter optimisation".format(args.optimiser),
-        reinit=True,
-        save_code=True,
+        save_code=False,
     )
 
     def objective(trial):
@@ -321,6 +320,7 @@ def optuna_optimization(args):
             acc = 0
 
         return acc
+
     search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.5, 0.1, 0]}
 
     if os.path.isfile("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser)):
@@ -332,7 +332,7 @@ def optuna_optimization(args):
                                     study_name="second_order_{}_hyperparameter_optimization".format(args.optimiser),
                                     sampler=optuna.samplers.GridSampler(search_space))
 
-    study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=2)
+    study.optimize(objective, n_trials=4 * 4 * 3, gc_after_trial=True, n_jobs=1)
 
     trials = study.best_trials
 
