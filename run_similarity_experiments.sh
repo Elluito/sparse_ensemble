@@ -507,28 +507,28 @@
 #                                               AA REALLLLLL    Pruning summaries one shot
 
 #model="resnet_small"
-#model="resnet18"
-#dataset="small_imagenet"
-#directory=/nobackup/sclaam/checkpoints
+model="resnet18"
+dataset="small_imagenet"
+directory=/nobackup/sclaam/checkpoints
+
+##seeds=(0 1 2)
+pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+rf_levels=(2 3 4)
+#rf_levels=(3 5 7)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+
+for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 #
-###seeds=(0 1 2)
-#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-#rf_levels=(2 3 4)
-##rf_levels=(3 5 7)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-##seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
-#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+#qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+
+qsub -l coproc_v100=1 -l h_rt=00:20:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 #
-#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-##
-##qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
-#
-#qsub -l coproc_v100=1 -l h_rt=00:20:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-##
-###./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
-#done
-#done
+##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
+done
+done
 
 
 
