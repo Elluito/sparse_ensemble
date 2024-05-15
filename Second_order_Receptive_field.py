@@ -327,7 +327,7 @@ def optuna_optimization(args):
         with open("second_order_hyperparameter_optimization.pkl", "rb") as f:
             study = pickle.load(f)
     else:
-        study = optuna.create_study(directions=["maximize", "minimize"],
+        study = optuna.create_study(directions=["maximize"],
                                     study_name="second_order_hyperparameter_optimization",
                                     sampler=optuna.samplers.GridSampler(search_space))
 
@@ -352,7 +352,7 @@ def optuna_optimization(args):
         print("Parameters:\n\t")
         print(omegaconf.OmegaConf.to_yaml(print_param))
 
-    with open("second_order_hyperparameter_optimization.pkl", "wb") as f:
+    with open("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser), "wb") as f:
 
         pickle.dump(study, f)
 
