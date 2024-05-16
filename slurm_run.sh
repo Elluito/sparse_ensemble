@@ -20,7 +20,7 @@
 # send mail to this address
 ##S BATCH --mail-user=sclaam@leeds.ac.uk
 
-conda active work2
+source activate work2
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
