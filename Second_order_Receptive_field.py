@@ -286,7 +286,7 @@ def optuna_optimization(args):
         # use_scheduler = trial.suggest_categorical("use_scheduler", [False, True])
         cfg = omegaconf.DictConfig({
             "dataset": "cifar10",
-            "RF_level": 3,
+            "RF_level": 2,
             "lr": lr,
             "momentum": momentum,
             "model": "resnet50",
@@ -337,25 +337,24 @@ def optuna_optimization(args):
     trials = study.best_trials
 
     wandb.finish()
+    with open("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser), "wb") as f:
+
+        pickle.dump(study, f)
     print("Size of the pareto front: {}".format(len(trials)))
 
     for trial in trials:
-        f1, f2 = trial.values
-        lr, momentum, optimiser, use_scheduler = trial.params["lr"], trial.params["momentum"], trial.params[
-            "optimiser"], trial.params["use_scheduler"]
-        print("  Values: {},{}".format(f1, f2))
+        f1 = trial.value
+        lr, momentum, grad_clip = trial.params["lr"], trial.params["momentum"], trial.params["grad_clip"]
+        print("  Value: {}".format(f1))
         print_param = omegaconf.DictConfig({
             "lr": lr,
             "momentum": momentum,
-            "optimiser": optimiser,
-            "use_scheduler": use_scheduler,
+            "grad_clip":grad_clip,
+            "optimiser": args.optimiser,
         })
         print("Parameters:\n\t")
         print(omegaconf.OmegaConf.to_yaml(print_param))
 
-    with open("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser), "wb") as f:
-
-        pickle.dump(study, f)
 
 
 if __name__ == '__main__':
