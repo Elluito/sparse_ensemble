@@ -63,8 +63,14 @@ class VGG_RF(nn.Module):
         if self.rf_level == "k6":
             self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
             self.config = cfg[vgg_name]
+        if self.rf_level == "k7":
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
         if self.rf_level == "k8":
             self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == "k9":
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
             self.config = cfg[vgg_name]
 
         self.features = self._make_layers(self.config)
