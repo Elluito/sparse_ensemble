@@ -3,22 +3,23 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-##S BATCH --time=12:00:00
+#SBATCH --time=00:05:00
 
 # set name of job
-##S BATCH --job-name=Optuna_tuning
-
+#SBATCH --job-name=Import Test
+#SBATCH --error=import_test.err
+#SBATCH --output=import_test.output
 # set partition (devel, small, big)
-##S BATCH --partition=small
+#SBATCH --partition=small
 
 # set number of GPUs
 #SBATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
-##S BATCH --mail-type=ALL
+#SBATCH --mail-type=NONE
 
 # send mail to this address
-##S BATCH --mail-user=sclaam@leeds.ac.uk
+#SBATCH --mail-user=sclaam@leeds.ac.uk
 
 conda activate work2
 which python
