@@ -1,28 +1,28 @@
 #!/bin/bash
 # set the number of nodes
-#SBATCH --nodes=1
+#S BATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=00:05:00
+#S BATCH --time=00:05:00
 
 # set name of job
-#SBATCH --job-name=Import_Test
+#S BATCH --job-name=Import_Test
 
-#SBATCH --error=import_test.err
+#S BATCH --error=import_test.err
 
-#SBATCH --output=import_test.output
+#S BATCH --output=import_test.output
 
 # set partition (devel, small, big)
-#SBATCH --partition=small
+#S BATCH --partition=small
 
 # set number of GPUs
-#SBATCH --gres=gpu:1
+#S BATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
-#SBATCH --mail-type=NONE
+#S BATCH --mail-type=NONE
 
 # send mail to this address
-#SBATCH --mail-user=sclaam@leeds.ac.uk
+#S BATCH --mail-user=sclaam@leeds.ac.uk
 #module load pytorch
 
 #source activate work2
