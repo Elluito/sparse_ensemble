@@ -17,6 +17,7 @@ from sam import SAM
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+print("Device:{}".format(device))
 
 def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
