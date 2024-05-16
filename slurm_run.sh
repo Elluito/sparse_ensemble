@@ -7,8 +7,11 @@
 
 # set name of job
 #SBATCH --job-name=Import_Test
+
 #SBATCH --error=import_test.err
+
 #SBATCH --output=import_test.output
+
 # set partition (devel, small, big)
 #SBATCH --partition=small
 
@@ -20,9 +23,11 @@
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
+#module load cuda
 
-conda activate work2
+source activate work2
 which python
+
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
@@ -42,4 +47,5 @@ which python
 #  then
 #python Second_order_Receptive_field.py --lr "0.1" --momentum "0.7" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/checkpoints"
 #  fi
-python test_imports.py
+
+python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device)"
