@@ -330,7 +330,7 @@ def main(args):
             net = ResNet24_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             # # net = resnet50()
-            # # in_features = net.fc.in_features
+            # # in_features = net.fc.in_eatures
             # net.fc = nn.Linear(in_features, 10)
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
@@ -468,7 +468,7 @@ def main(args):
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
         if args.use_wandb:
             # log metrics to wandb
-            wandb.log({ "Epoch":epoch,"Train Accuracy": train_acc, "Test Accuracy": test_acc})
+            wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
         if args.record:
             filepath = "{}/{}.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():
@@ -487,11 +487,12 @@ def main(args):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--epochs', default=200, type=int, help='epochs to train')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-    parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
+    parser.add_argument('--RF_level', default="k6", type=str, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str,
                         help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
@@ -506,4 +507,9 @@ if __name__ == '__main__':
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
+    try:
+        args.RF_level = int(args.RF_level)
+    except Exception as e:
+        pass
+
     main(args)
