@@ -23,9 +23,9 @@
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
-#module load cuda
+#module load pytorch
 
-source activate work2
+#source activate work2
 which python
 
 
