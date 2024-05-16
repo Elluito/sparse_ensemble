@@ -94,3 +94,7 @@ print("safe All imports")
 t1 = time.time()
 print("time for imports = {}".format(t1-t0))
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+print("Device:{}".format(device))
+
