@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --job-name="Kfac_optim_rf_1_cifar10_rs" slurm_run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" "1"
+sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_1_cifar10_rs.err" --output="kfac_optim_rf_1_cifar10_rs.output"  --job-name="Kfac_optim_rf_1_cifar10_rs" slurm_run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" "1"
 #sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --job-name="Kfac_optim_rf_2_cifar10_rs" slurm_run.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper" "1"
 #sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --job-name="Kfac_optim_rf_3_cifar10_rs" slurm_run.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper" "1"
 #sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --job-name="Kfac_optim_rf_4_cifar10_rs" slurm_run.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper" "1"
