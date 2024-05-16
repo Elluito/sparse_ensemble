@@ -1,6 +1,6 @@
 #!/bin/bash
 # set the number of nodes
-##S BATCH --nodes=1
+#SBATCH --nodes=1
 
 # set max wallclock time
 ##S BATCH --time=12:00:00
@@ -12,7 +12,7 @@
 ##S BATCH --partition=small
 
 # set number of GPUs
-##S BATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
 ##S BATCH --mail-type=ALL
