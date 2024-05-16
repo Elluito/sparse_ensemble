@@ -6,7 +6,7 @@
 #SBATCH --time=00:05:00
 
 # set name of job
-#SBATCH --job-name=Import Test
+#SBATCH --job-name=Import_Test
 #SBATCH --error=import_test.err
 #SBATCH --output=import_test.output
 # set partition (devel, small, big)
