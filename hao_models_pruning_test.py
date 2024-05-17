@@ -3,7 +3,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
-import clip
+# import clip
 import wandb
 import typing
 import os
