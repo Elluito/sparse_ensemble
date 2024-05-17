@@ -203,7 +203,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
 if __name__ == '__main__':
     args = parse_arguments()
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
-    size = [1, 3, 5000, 5000]
+    size = [1, 3, 4000,4000]
     print(args)
     diversity_models = []
     acc_gap_models = []
@@ -228,7 +228,8 @@ if __name__ == '__main__':
 
     # resnet34
     print("ResNet34")
-    f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+    # f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+    f_model = resnet34()
     # f_model.cuda()
     f_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
@@ -250,7 +251,7 @@ if __name__ == '__main__':
 
     # legacy_seresnet34.in1k
     print("legacy_seresnet34.in1k")
-    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
+    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
     # s_model.cuda()
     s_model.eval()
 
@@ -268,7 +269,7 @@ if __name__ == '__main__':
 
     # SK-ResNet-34
     print("SK-ResNet-34")
-    s_model = timm.create_model('skresnet34', pretrained=True)
+    s_model = timm.create_model('skresnet34', pretrained=False)
     # s_model.cuda()
     s_model.eval()
 
@@ -281,7 +282,7 @@ if __name__ == '__main__':
     #
     # mobilenet-v2
     print("mobilenet-v2")
-    s_model = timm.create_model('mobilenetv2_120d', pretrained=True)
+    s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
     # s_model.cuda()
     s_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
@@ -292,7 +293,8 @@ if __name__ == '__main__':
 
     # mobilenet-v3
     print("mobilenet-v3")
-    s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
+    # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
+    s_model = mobilenet_v3_large().to("cpu")
     # s_model.cuda()
     s_model.eval()
 
