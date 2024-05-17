@@ -270,18 +270,18 @@ if __name__ == '__main__':
 
     # SK-ResNet-34
 
-    print("SK-ResNet-34\n")
-
-    s_model = timm.create_model('skresnet34', pretrained=False)
-    # s_model.cuda()
-    s_model.eval()
-
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    extractor = create_feature_extractor(s_model)
-    extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
+    # print("SK-ResNet-34\n")
     #
+    # s_model = timm.create_model('skresnet34', pretrained=False)
+    # # s_model.cuda()
+    # s_model.eval()
+    #
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor = create_feature_extractor(s_model)
+    # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+
     # mobilenet-v2
     print("mobilenet-v2")
     s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
