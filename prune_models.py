@@ -1,8 +1,6 @@
 import os
-
 import torch
 import re
-
 import argparse
 import glob
 import torchvision.transforms as transforms
@@ -1141,6 +1139,7 @@ def fine_tune_summary(args):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')

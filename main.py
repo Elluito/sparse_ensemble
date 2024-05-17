@@ -1,40 +1,31 @@
 print("First line")
 import os
-
 print("After os")
 # import accelerate
 print("After accelerate")
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
-
 print("After Pickle")
 # import paretoset
 print("After pareto set")
 import glob
-
 print("After glob")
 # import pygmo
 import typing
-
 print("After typing")
 import pandas as pd
-
 print("Until: 16")
 import datetime as date
-
 print("after datetime")
 # import umap
 print("after umap")
 import wandb
 import optuna
-
 print("After optuna")
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
 from csgmcmc.models import *
-
 print("Until 20")
 import omegaconf
 import copy
@@ -56,7 +47,6 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 from functools import partial
-
 print("Unitl line 40")
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
@@ -64,7 +54,6 @@ import ignite.metrics as igm
 from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
-
 # - interactive backends:
 #           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
 #           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
