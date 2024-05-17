@@ -203,8 +203,10 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
 if __name__ == '__main__':
     args = parse_arguments()
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+    from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     size = [1, 3, 6000, 6000]
+    H, W = 6000, 6000
     print(args)
     diversity_models = []
     acc_gap_models = []
@@ -236,7 +238,9 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
     extractor = create_feature_extractor(f_model)
     extractor.cpu()
-    le_rf = receptivefield(extractor, size)
+    # le_rf = receptivefield(extractor, size)
+    le_rf = receptive_field(extractor, size)
+    receptive_field_for_unit(le_rf, "2", (1, 1))
     print("Receptive field:\n{}".format(le_rf))
 
     # # # resnet152
@@ -290,9 +294,13 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     extractor = create_feature_extractor(s_model)
     extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
+    # le_rf = receptivefield(extractor, size)
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
 
+    le_rf = receptive_field(extractor, size)
+    print("Receptive field:\n{}".format(le_rf))
+    receptive_field_for_unit(le_rf, "2", (1, 1))
     # mobilenet-v3
     print("mobilenet-v3")
     # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
@@ -303,8 +311,12 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     extractor = create_feature_extractor(s_model)
     extractor.cpu()
-    le_rf = receptivefield(extractor, size)
+    # le_rf = receptivefield(extractor, size)
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    le_rf = receptive_field(extractor, size)
     print("Receptive field:\n{}".format(le_rf))
+    receptive_field_for_unit(le_rf, "2", (1, 1))
 
     # densenet
     # print("densenet")
