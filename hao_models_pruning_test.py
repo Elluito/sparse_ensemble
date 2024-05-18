@@ -9,12 +9,13 @@ import typing
 import os
 from torchvision import transforms
 # from dataset import ImageNet
-from torchvision.models import resnet18, ResNet18_Weights, \
-    resnet34, ResNet34_Weights, \
-    resnet50, ResNet50_Weights, \
-    resnet152, ResNet152_Weights, \
-    mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
-    efficientnet_b0, EfficientNet_B0_Weights
+# from torchvision.models import resnet18, ResNet18_Weights, \
+#     resnet34, ResNet34_Weights, \
+#     resnet50, ResNet50_Weights, \
+#     resnet152, ResNet152_Weights, \
+#     mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
+#     efficientnet_b0, EfficientNet_B0_Weights
+from torchvision.models import resnet34,mobilenet_v3_large,efficientnet_b0
 # import vits
 import timm
 
