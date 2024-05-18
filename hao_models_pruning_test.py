@@ -313,6 +313,7 @@ if __name__ == '__main__':
     print("##############################")
     print("mobilenet-v3")
     print("##############################")
+    size = (1 ,3, 2000, 2000)
     # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
     s_model = mobilenet_v3_large().to("cpu")
     # s_model.cuda()
