@@ -209,7 +209,7 @@ if __name__ == '__main__':
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     # size = [1, 3, 6000, 6000]
-    H, W = 4000, 4000
+    H, W = 1000,1000
     size = (1 ,3, H, W)
     print(args)
     diversity_models = []
