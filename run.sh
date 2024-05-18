@@ -3,17 +3,17 @@
 # Luis Alfredo Avendano  2021-10-22
 
 # Run from the current directory and with current environment
-#$ -cwd -V
+#$ -V -cwd
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-# -l h_rt=1:00:00
+#$ -l h_rt=01:00:00
 
 
 # ASk for some GPU
 # -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
-#$ -l h_vmem=16G
+#$ -l h_vmem=120G
 # -t 2-5
 # -pe smp 3
 # Send emails when job starts and ends
