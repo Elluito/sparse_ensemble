@@ -415,8 +415,8 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     if args.resume:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
         assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
@@ -429,7 +429,7 @@ def main(args):
         start_epoch = checkpoint['epoch']
         for i in range(start_epoch):
             scheduler.step()
-        assert start_epoch == 137, "The start epochs is not 137"
+        # assert start_epoch == 137, "The start epochs is not 137"
         path = Path(args.solution_resume)
         solution_name = path.stem
     else:

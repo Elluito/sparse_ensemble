@@ -15,10 +15,12 @@ from torchvision import transforms
 #     resnet152, ResNet152_Weights, \
 #     mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
 #     efficientnet_b0, EfficientNet_B0_Weights
-from torchvision.models import resnet34,mobilenet_v3_large,efficientnet_b0
+from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
 # import vits
 import timm
+
 print("Imported everything")
+
 
 def is_prunable_module(m: torch.nn.Module):
     return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
@@ -206,8 +208,9 @@ if __name__ == '__main__':
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
-    size = [1, 3, 6000, 6000]
+    # size = [1, 3, 6000, 6000]
     H, W = 6000, 6000
+    size = (3, H, W)
     print(args)
     diversity_models = []
     acc_gap_models = []
@@ -240,7 +243,7 @@ if __name__ == '__main__':
     extractor = create_feature_extractor(f_model)
     extractor.cpu()
     # le_rf = receptivefield(extractor, size)
-    le_rf = receptive_field(extractor, size)
+    le_rf = receptive_field(extractor, (3, H, W))
     receptive_field_for_unit(le_rf, "2", (1, 1))
     print("Receptive field:\n{}".format(le_rf))
 
