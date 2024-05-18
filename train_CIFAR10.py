@@ -412,27 +412,32 @@ def main(args):
     #     net = torch.nn.DataParallel(net)
     #     cudnn.benchmark = True
     solution_name = ""
-    if args.resume:
-        # Load checkpoint.
-        print('==> Resuming from checkpoint..')
-        assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
-        checkpoint = torch.load(
-            '{}/resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp_test_acc_51.04.pth'.format(
-                args.save_folder))
-        net.load_state_dict(checkpoint['net'])
-        best_acc = checkpoint['acc']
-        start_epoch = checkpoint['epoch']
-        assert start_epoch == 137, "The start epochs is not 137"
-        # solution_name = "resnet50_normal_tiny_imagenet_1703188352.3370118_rf_level_3_no_recording_width_3_second_attemp"
-
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    if args.resume:
+        # Load checkpoint.
+        print('==> Resuming from checkpoint..')
+        assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
+        # checkpoint = torch.load(
+        #     '{}/'.format(
+        #         args.save_folder))
+        checkpoint = torch.load(args.solution_resume)
+        net.load_state_dict(checkpoint['net'])
+        best_acc = checkpoint['acc']
+        start_epoch = checkpoint['epoch']
+        for i in range(start_epoch):
+            scheduler.step()
+        assert start_epoch == 137, "The start epochs is not 137"
+        path = Path(args.solution_resume)
+        solution_name = path.stem
+    else:
+        solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
+                                                            args.name)
+
     seed = time.time()
 
-    solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
-                                                        args.name)
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")

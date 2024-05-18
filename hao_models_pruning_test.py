@@ -18,7 +18,7 @@ from torchvision import transforms
 from torchvision.models import resnet34,mobilenet_v3_large,efficientnet_b0
 # import vits
 import timm
-
+print("Imported everything")
 
 def is_prunable_module(m: torch.nn.Module):
     return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
