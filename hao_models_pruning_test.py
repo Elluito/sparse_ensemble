@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
     # size = [1, 3, 6000, 6000]
     H, W = 6000, 6000
-    size = (3, H, W)
+    size = (1 ,3, H, W)
     print(args)
     diversity_models = []
     acc_gap_models = []
