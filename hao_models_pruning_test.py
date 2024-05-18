@@ -303,7 +303,7 @@ if __name__ == '__main__':
     extractor = create_feature_extractor(s_model)
     extractor.cpu()
     le_rf = receptivefield(extractor, size)
-    le_rf = receptive_field(extractor, size)
+    # le_rf = receptive_field(extractor, size)
     print("Receptive field:\n{}".format(le_rf))
 
     # le_rf = receptive_field(extractor, size)
