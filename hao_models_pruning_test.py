@@ -234,7 +234,9 @@ if __name__ == '__main__':
     # f_model.eval()
 
     # resnet34
+    print("##############################")
     print("ResNet34")
+    print("##############################")
     # f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
     f_model = resnet34()
     # f_model.cuda()
@@ -242,9 +244,9 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
     extractor = create_feature_extractor(f_model)
     extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
-    le_rf = receptive_field(extractor, (3, H, W))
-    receptive_field_for_unit(le_rf, "2", (1, 1))
+    le_rf = receptivefield(extractor, size)
+    # le_rf = receptive_field(extractor, (3, H, W))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
     print("Receptive field:\n{}".format(le_rf))
 
     # # # resnet152
@@ -291,22 +293,26 @@ if __name__ == '__main__':
     # print("Receptive field:\n{}".format(le_rf))
 
     # mobilenet-v2
+    print("##############################")
     print("mobilenet-v2")
+    print("##############################")
     s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
     # s_model.cuda()
     s_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     extractor = create_feature_extractor(s_model)
     extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
-    # le_rf = receptive_field(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
-
+    le_rf = receptivefield(extractor, size)
     le_rf = receptive_field(extractor, size)
     print("Receptive field:\n{}".format(le_rf))
-    receptive_field_for_unit(le_rf, "2", (1, 1))
+
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
     # mobilenet-v3
+    print("##############################")
     print("mobilenet-v3")
+    print("##############################")
     # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
     s_model = mobilenet_v3_large().to("cpu")
     # s_model.cuda()
@@ -315,12 +321,12 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     extractor = create_feature_extractor(s_model)
     extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
+    le_rf = receptivefield(extractor, size)
     # le_rf = receptive_field(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
-    le_rf = receptive_field(extractor, size)
+    # le_rf = receptive_field(extractor, size)
     print("Receptive field:\n{}".format(le_rf))
-    receptive_field_for_unit(le_rf, "2", (1, 1))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
 
     # densenet
     # print("densenet")
@@ -341,11 +347,17 @@ if __name__ == '__main__':
     # s_model.eval()
 
     # efficientnet-b0
+    print("##############################")
     print("efficientnet-b0")
+    print("##############################")
     # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     s_model = efficientnet_b0()
     s_model.cuda()
     s_model.eval()
+    extractor = create_feature_extractor(s_model)
+    extractor.cpu()
+    le_rf = receptivefield(extractor, size)
+    print("Receptive field:\n{}".format(le_rf))
 
     # # vit-b/32
     # print("vit-b/32")
