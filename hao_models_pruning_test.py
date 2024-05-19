@@ -351,6 +351,7 @@ if __name__ == '__main__':
     print("##############################")
     print("efficientnet-b0")
     print("##############################")
+    size = (1,3, 6000, 6000)
     # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     s_model = efficientnet_b0()
     # s_model.cuda()
