@@ -300,7 +300,7 @@ if __name__ == '__main__':
     print("##############################")
     print("mobilenet-v2")
     print("##############################")
-    size = (1, 3, 10000, 10000)
+    size = (1, 3, 1000, 1000)
     s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
     # s_model.cuda()
     s_model.eval()
