@@ -353,7 +353,7 @@ if __name__ == '__main__':
     print("##############################")
     # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     s_model = efficientnet_b0()
-    s_model.cuda()
+    # s_model.cuda()
     s_model.eval()
     extractor = create_feature_extractor(s_model)
     extractor.cpu()

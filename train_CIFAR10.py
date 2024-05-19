@@ -433,10 +433,18 @@ def main(args):
         path = Path(args.solution_resume)
         solution_name = path.stem
     else:
+        seed = time.time()
         solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
                                                             args.name)
+        state = {
+            'net': net.state_dict(),
+            'acc': 0,
+            'epoch': -1,
+            "config": args,
+        }
 
-    seed = time.time()
+        torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+
 
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
@@ -449,14 +457,6 @@ def main(args):
             reinit=True,
             save_code=True,
         )
-    state = {
-        'net': net.state_dict(),
-        'acc': 0,
-        'epoch': -1,
-        "config": args,
-    }
-
-    torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
 
     # lr_list = []
     # for i in range(start_epoch):
@@ -505,6 +505,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location to save the models')
+    parser.add_argument('--solution_resume', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
