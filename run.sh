@@ -6,7 +6,7 @@
 #$ -V -cwd
 
 # Ask for some time (hh:mm:ss max of 00:10:00)
-#$ -l h_rt=00:20:00
+#$ -l h_rt=00:40:00
 
 
 # ASk for some GPU
@@ -14,7 +14,7 @@
 
 # Ask for some memory (by default, 1G, without a request)
 #$ -l node_type=40core-768G
-#$ -l h_vmem=500G
+#$ -l h_vmem=600G
 # -t 2-5
 # -pe smp 3
 # Send emails when job starts and ends

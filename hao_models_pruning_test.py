@@ -209,8 +209,8 @@ if __name__ == '__main__':
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     # size = [1, 3, 6000, 6000]
-    H, W = 1000,1000
-    size = (1 ,3, H, W)
+    H, W = 1000, 1000
+    size = (1, 3, H, W)
     print(args)
     diversity_models = []
     acc_gap_models = []
@@ -261,16 +261,18 @@ if __name__ == '__main__':
     # s_model.eval()
 
     # legacy_seresnet34.in1k
-    # print("legacy_seresnet34.in1k")
-    # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
+    print("##############################")
+    print("legacy_seresnet34.in1k")
+    print("##############################")
+    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
     # # s_model.cuda()
     # s_model.eval()
     #
-    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    # extractor = create_feature_extractor(s_model)
-    # extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    extractor = create_feature_extractor(s_model)
+    extractor.cpu()
+    le_rf = receptivefield(extractor, size)
+    print("Receptive field:\n{}".format(le_rf))
 
     # # resnet50
     # print("ResNet50")
@@ -280,22 +282,25 @@ if __name__ == '__main__':
 
     # SK-ResNet-34
 
-    # print("SK-ResNet-34\n")
-    #
-    # s_model = timm.create_model('skresnet34', pretrained=False)
+    print("##############################")
+    print("SK-ResNet-34\n")
+    print("##############################")
+    size = (1, 3, 10000, 10000)
+    s_model = timm.create_model('skresnet34', pretrained=False)
     # # s_model.cuda()
-    # s_model.eval()
+    s_model.eval()
     #
-    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
     # extractor = create_feature_extractor(s_model)
     # extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
+    le_rf = receptivefield(extractor, size)
+    print("Receptive field:\n{}".format(le_rf))
 
     # mobilenet-v2
     print("##############################")
     print("mobilenet-v2")
     print("##############################")
+    size = (1, 3, 10000, 10000)
     s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
     # s_model.cuda()
     s_model.eval()
@@ -309,24 +314,25 @@ if __name__ == '__main__':
     # le_rf = receptive_field(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
+
     # mobilenet-v3
-    # print("##############################")
-    # print("mobilenet-v3")
-    # print("##############################")
-    # size = (1,3, 10000, 10000)
+    print("##############################")
+    print("mobilenet-v3")
+    print("##############################")
+    size = (1, 3, 10000, 10000)
     # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
-    # s_model = mobilenet_v3_large().to("cpu")
+    s_model = mobilenet_v3_large().to("cpu")
     # s_model.cuda()
     # s_model.eval()
 
-    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    # extractor = create_feature_extractor(s_model)
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    extractor = create_feature_extractor(s_model)
     # extractor.cpu()
-    # le_rf = receptivefield(extractor, size)
+    le_rf = receptivefield(extractor, size)
     # le_rf = receptive_field(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
     # le_rf = receptive_field(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
+    print("Receptive field:\n{}".format(le_rf))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
 
     # densenet
@@ -351,15 +357,16 @@ if __name__ == '__main__':
     print("##############################")
     print("efficientnet-b0")
     print("##############################")
-    size = (1,3, 6000, 6000)
+    size = (1, 3, 10000, 10000)
     # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     s_model = efficientnet_b0()
     # s_model.cuda()
     s_model.eval()
     extractor = create_feature_extractor(s_model)
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
     extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
 
     # # vit-b/32
     # print("vit-b/32")
