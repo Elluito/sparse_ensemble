@@ -581,7 +581,7 @@ if __name__ == '__main__':
 
     f_model = resnet34(weights="IMAGENET1K_V1")
     # f_model = resnet34()
-    f_model.cuda()
+    # f_model.cuda()
     f_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
 
@@ -622,7 +622,7 @@ if __name__ == '__main__':
     print("##############################")
     s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
     # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
-    s_model.cuda()
+    # s_model.cuda()
     # s_model.eval()
     #
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
