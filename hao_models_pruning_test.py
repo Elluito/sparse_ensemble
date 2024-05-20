@@ -122,7 +122,7 @@ def prepare_val_imagenet(args):
          trnfs.ToTensor(),
         imagenet_normalize,
     ])
-    val_dataset = CustomValImageNetDataset(transforms=test_transform)
+    val_dataset = CustomValImageNetDataset(transform=test_transform)
 
     test_loader = torch.utils.data.DataLoader(val_dataset,
                                               batch_size=args.batch_size, shuffle=False,
