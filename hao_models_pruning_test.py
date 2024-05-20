@@ -75,10 +75,11 @@ class CustomValImageNetDataset(Dataset):
 
         # Populate the samples list with tuples of image file paths and their corresponding class indices for all classes.
         # for class_index, class_dir in self.class_map.items():
-        #     class_dir = os.path.join(self.root_dir, class_dir)
+        #     class= os.path.join(self.root_dir, class_dir)
 
         for i, img_file in enumerate(os.listdir(self.root_dir)):
-            self.samples.append((img_file, val_classes_ground_truth[i]))
+            image_path = os.path.join(self.root_dir,img_file)
+            self.samples.append((image_path, val_classes_ground_truth[i]))
 
     def __len__(self):
         """
