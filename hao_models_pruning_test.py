@@ -78,7 +78,7 @@ class CustomValImageNetDataset(Dataset):
         #     class= os.path.join(self.root_dir, class_dir)
 
         for i, img_file in enumerate(os.listdir(self.root_dir)):
-            image_path = os.path.join(self.root_dir,img_file)
+            image_path = os.path.join(self.root_dir, img_file)
             self.samples.append((image_path, val_classes_ground_truth[i]))
 
     def __len__(self):
@@ -111,15 +111,15 @@ class CustomValImageNetDataset(Dataset):
 
 def prepare_val_imagenet(args):
     train_transform = trnfs.Compose([
-         trnfs.RandomResizedCrop(224),
-         trnfs.RandomHorizontalFlip(),
-         trnfs.ToTensor(),
+        trnfs.RandomResizedCrop(224),
+        trnfs.RandomHorizontalFlip(),
+        trnfs.ToTensor(),
         imagenet_normalize,
     ])
     test_transform = trnfs.Compose([
-         trnfs.Resize(256),
-         trnfs.CenterCrop(224),
-         trnfs.ToTensor(),
+        trnfs.Resize(256),
+        trnfs.CenterCrop(224),
+        trnfs.ToTensor(),
         imagenet_normalize,
     ])
     val_dataset = CustomValImageNetDataset(transform=test_transform)
@@ -382,11 +382,13 @@ if __name__ == '__main__':
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-
+    print("Before dataloader")
     val_dataloader = prepare_val_imagenet(args)
-    x, y = next(iter(val_dataloader))
-    y=y.cuda()
-    print("Y tensor:{}\n{}".format(len(y),y))
+    print("After dataloader")
+    for x, y in val_dataloader:
+        x, y = x.cuda(), y.cuda()
+        print("Y tensor:{}\n{}".format(len(y), y))
+        print("x tensor:{}\n{}".format(len(x), x))
     # size = [1, 3, 6000, 6000]
 
     H, W = 1000, 1000

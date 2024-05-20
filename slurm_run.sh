@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=00:05:00
+#SBATCH --time=00:30:00
 
 # set name of job
 #SBATCH --job-name=Imagenet_Test
