@@ -393,7 +393,7 @@ if __name__ == '__main__':
         # print("Y tensor:{}\n{}".format(len(y), y))
         # print("x tensor:{}\n{}".format(len(x), x))
     t1 = time.time()
-    print("Time elapsed: {}".format(t0-t1))
+    print("Time elapsed: {}".format(t1-t0))
 
     # size = [1, 3, 6000, 6000]
 
