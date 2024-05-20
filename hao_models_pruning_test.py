@@ -561,7 +561,7 @@ if __name__ == '__main__':
 
     size = (1, 3, H, W)
 
-    sizes =[size,(1,3,6000,6000)]
+    sizes = [size, (1, 3, 6000, 6000)]
     diversity_models = []
 
     acc_gap_models = []
@@ -587,14 +587,14 @@ if __name__ == '__main__':
 
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model)
+        extractor = create_feature_extractor(f_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
 
             try:
-                le_rf = receptivefield(extractor,s)
-                print("Receptive field:\n{}".format(le_rf))
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
                 print(e)
@@ -628,14 +628,14 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model)
+        extractor = create_feature_extractor(f_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
 
             try:
-                le_rf = receptivefield(extractor,s)
-                print("Receptive field:\n{}".format(le_rf))
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
                 print(e)
@@ -663,8 +663,21 @@ if __name__ == '__main__':
     s_model.eval()
     #
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    for lvl in rf_levels:
+        print("RF level {}".format(lvl))
+        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor.cpu()
 
-    extractor = create_feature_extractor(s_model)
+        for s in sizes:
+
+            try:
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
+                break
+            except Exception as e:
+                print(e)
+                print("****************")
+                print("Receptive field is grater than {}".format(s))
     # extractor.cpu()
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
@@ -685,14 +698,14 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model)
+        extractor = create_feature_extractor(f_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
 
             try:
-                le_rf = receptivefield(extractor,s)
-                print("Receptive field:\n{}".format(le_rf))
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
                 print(e)
@@ -722,14 +735,14 @@ if __name__ == '__main__':
 
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model)
+        extractor = create_feature_extractor(f_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
 
             try:
-                le_rf = receptivefield(extractor,s)
-                print("Receptive field:\n{}".format(le_rf))
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
                 print(e)
@@ -765,7 +778,7 @@ if __name__ == '__main__':
     print("##############################")
     print("efficientnet-b0")
     print("##############################")
-    size = (1, 3, 10000, 10000)
+    # size = (1, 3, 10000, 10000)
     # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
     s_model = efficientnet_b0()
     # s_model.cuda()
@@ -774,20 +787,20 @@ if __name__ == '__main__':
 
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model)
+
+        extractor = create_feature_extractor(f_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
 
             try:
-                le_rf = receptivefield(extractor,s)
-                print("Receptive field:\n{}".format(le_rf))
+                le_rf = receptivefield(extractor, s)
+                print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
                 print(e)
                 print("****************")
                 print("Receptive field is grater than {}".format(s))
-
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
