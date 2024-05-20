@@ -16,7 +16,7 @@
 #SBATCH --partition=small
 
 # set number of GPUs
-##S BATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
 #SBATCH --mail-type=ALL
