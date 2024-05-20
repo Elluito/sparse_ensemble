@@ -23,7 +23,7 @@ from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
 # import vits
 import timm
 
-imagenet_normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+imagenet_normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 print("Imported everything")
 
