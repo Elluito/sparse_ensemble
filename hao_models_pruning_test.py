@@ -11,7 +11,7 @@ import wandb
 import typing
 import os
 import torch.nn.functional as F
-from torchvision import transforms
+from torchvision import transforms as trnfs
 # from dataset import ImageNet
 # from torchvision.models import resnet18, ResNet18_Weights, \
 #     resnet34, ResNet34_Weights, \
@@ -110,19 +110,19 @@ class CustomValImageNetDataset(Dataset):
 
 
 def prepare_val_imagenet(args):
-    val_dataset = CustomValImageNetDataset()
-    train_transform = transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
+    train_transform = trnfs.Compose([
+         trnfs.RandomResizedCrop(224),
+         trnfs.RandomHorizontalFlip(),
+         trnfs.ToTensor(),
         imagenet_normalize,
     ])
-    test_transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
+    test_transform = trnfs.Compose([
+         trnfs.Resize(256),
+         trnfs.CenterCrop(224),
+         trnfs.ToTensor(),
         imagenet_normalize,
     ])
+    val_dataset = CustomValImageNetDataset(transforms=test_transform)
 
     test_loader = torch.utils.data.DataLoader(val_dataset,
                                               batch_size=args.batch_size, shuffle=False,
