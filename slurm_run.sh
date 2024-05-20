@@ -1,28 +1,28 @@
 #!/bin/bash
 # set the number of nodes
-#S BATCH --nodes=1
+#SBATCH --nodes=1
 
 # set max wallclock time
-#S BATCH --time=00:05:00
+#SBATCH --time=00:05:00
 
 # set name of job
-#S BATCH --job-name=Import_Test
+#SBATCH --job-name=Imagenet_Test
 
-#S BATCH --error=import_test.err
+#SBATCH --error=imagenet_test.err
 
-#S BATCH --output=import_test.output
+#SBATCH --output=imagenet_test.output
 
 # set partition (devel, small, big)
-#S BATCH --partition=small
+#SBATCH --partition=small
 
 # set number of GPUs
-#S BATCH --gres=gpu:1
+#SBATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
-#S BATCH --mail-type=NONE
+#SBATCH --mail-type=ALL
 
 # send mail to this address
-#S BATCH --mail-user=sclaam@leeds.ac.uk
+#SBATCH --mail-user=sclaam@leeds.ac.uk
 #module load pytorch
 
 #source activate work2
@@ -49,3 +49,4 @@ which python
 #  fi
 
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device)"
+python hao_models_pruning_test.py

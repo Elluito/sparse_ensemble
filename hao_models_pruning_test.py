@@ -3,10 +3,14 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
+from PIL import Image
+from torch.utils.data import Dataset
+import numpy as np
 # import clip
 import wandb
 import typing
 import os
+import torch.nn.functional as F
 from torchvision import transforms
 # from dataset import ImageNet
 # from torchvision.models import resnet18, ResNet18_Weights, \
@@ -19,7 +23,110 @@ from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
 # import vits
 import timm
 
+imagenet_normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
 print("Imported everything")
+
+
+class CustomValImageNetDataset(Dataset):
+    """
+    Dataset class for loading training/validation images and labels from directory and applying transformations.
+
+        Attributes:
+        root_dir (str): dataset root directory
+        transform (Compose): transformations that are to be applied to the image.
+        samples (List[Tuple[str, int]]): list of tuples containing the path to an image and class index.
+        class_map (dict): dictionary mapping class index to its str class name.
+
+    Args:
+        root_dir (str): root directory of the dataset, without the "train_set/train_set" directory from the zip file.
+        class_dir (str): root directory of the text file containing class index to class name mappings. Defaults to "class.txt".
+        transform (Compose, optional): transformations that are to be applied to the images. Defaults to None.
+    """
+
+    def __init__(self, root_dir="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet ",
+                 ground_truth_file="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt",
+                 transform=None):
+
+        """
+        Initialises dataset object: sets up directory paths, loads class mappings.
+
+        Parameters:
+            root_dir (str): root directory of the dataset, without the "train_set/train_set" directory from the zip file.
+            class_dir (str): root directory of the text file containing class index to class name mappings. Defaults to "class.txt".
+            transform (Compose, optional): transformations that are to be applied to the images. Defaults to None.
+        """
+
+        self.root_dir = root_dir
+        self.transform = transform
+        self.samples = []
+        self.class_map = {}
+
+        # Load class mappings within initializer
+        #        : program this so it works in JADE with val directory in /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet  and class file in  /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt
+        #
+        val_classes_ground_truth = np.loadtxt(ground_truth_file)
+        # with open(os.path.join(root_dir), "r") as f:
+        #
+        #     for line in f:
+        #         index, class_dir = line.strip().split("\t")
+        #
+        #         self.class_map[int(index)] = class_dir
+
+        # Populate the samples list with tuples of image file paths and their corresponding class indices for all classes.
+        # for class_index, class_dir in self.class_map.items():
+        #     class_dir = os.path.join(self.root_dir, class_dir)
+
+        for i, img_file in enumerate(os.listdir(self.root_dir)):
+            self.samples.append((img_file, val_classes_ground_truth[i]))
+
+    def __len__(self):
+        """
+        Returns the number of samples in the dataset.
+
+        Returns:
+            int: number of samples
+        """
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        """
+        Returns an image and its corresponding label from the dataset at the specified index. Optionally, applies a series of transformations.
+
+        Parameters:
+            idx (int): index of retrieved sample.
+
+        Returns:
+            two-element tuple:
+                1) transformed (if applicable) image tensor
+                2) Int label of image class
+        """
+        img_path, class_index = self.samples[idx]
+        image = Image.open(img_path).convert("RGB")
+        if self.transform:
+            image = self.transform(image)
+        return image, class_index
+
+
+def prepare_val_imagenet(args):
+    val_dataset = CustomValImageNetDataset()
+    train_transform = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        imagenet_normalize,
+    ])
+    test_transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        imagenet_normalize,
+    ])
+
+    test_loader = torch.utils.data.DataLoader(val_dataset,
+                                              batch_size=args.batch_size, shuffle=False,
+                                              num_workers=args.workers, pin_memory=True)
+    return test_loader
 
 
 def is_prunable_module(m: torch.nn.Module):
@@ -35,7 +142,7 @@ def parse_arguments():
         help="The root directory for the datasets.",
     )
     parser.add_argument(
-        "--batch-size",
+        "--batch_size",
         type=int,
         default=1024,
     )
@@ -203,18 +310,96 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         raise NotImplementedError("Not implemented for type {}".format(type))
 
 
+def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
+    if use_cuda:
+        net.cuda()
+    criterion = nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
+
+    sparse_flops = 0
+
+    first_time = 1
+
+    sparse_flops_batch = 0
+
+    with torch.no_grad():
+
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+
+            if use_cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs, dim=1)
+                _, predicted = torch.max(soft_max_outputs, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            # print(correct/total)
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    # net.cpu()
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
+
+
 if __name__ == '__main__':
     args = parse_arguments()
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
+    pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+    val_dataloader = prepare_val_imagenet(args)
+    x, y = next(iter(val_dataloader))
+    y=y.cuda()
+    print("Y tensor:{}\n{}".format(len(y),y))
     # size = [1, 3, 6000, 6000]
+
     H, W = 1000, 1000
+
     size = (1, 3, H, W)
+
     print(args)
+
     diversity_models = []
+
     acc_gap_models = []
+
     auroc_models = []
+
     #
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
@@ -234,186 +419,188 @@ if __name__ == '__main__':
     # f_model.eval()
 
     # resnet34
-    print("##############################")
-    print("ResNet34")
-    print("##############################")
-    # f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
-    f_model = resnet34()
-    # f_model.cuda()
-    f_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(f_model)))
-    extractor = create_feature_extractor(f_model)
-    extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    # le_rf = receptive_field(extractor, (3, H, W))
-    # receptive_field_for_unit(le_rf, "2", (1, 1))
-    print("Receptive field:\n{}".format(le_rf))
-
-    # # # resnet152
-    # weights = ResNet152_Weights.IMAGENET1K_V1
-    # model_2 = resnet152(weights=weights)
-    # model_2.eval()
-    # #
-    # # legacy_seresnet50.in1k
-    # print("legacy_seresnet50.in1k")
-    # s_model = timm.create_model('legacy_seresnet50.in1k', pretrained=True)
-    # s_model.cuda()
-    # s_model.eval()
-
-    # legacy_seresnet34.in1k
-    print("##############################")
-    print("legacy_seresnet34.in1k")
-    print("##############################")
-    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
-    # # s_model.cuda()
-    # s_model.eval()
-    #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    extractor = create_feature_extractor(s_model)
-    extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
-
-    # # resnet50
-    # print("ResNet50")
-    # s_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
-    # s_model.cuda()
-    # s_model.eval()
-
-    # SK-ResNet-34
-
-    print("##############################")
-    print("SK-ResNet-34\n")
-    print("##############################")
-    size = (1, 3, 10000, 10000)
-    s_model = timm.create_model('skresnet34', pretrained=False)
-    # # s_model.cuda()
-    s_model.eval()
-    #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    # extractor = create_feature_extractor(s_model)
+    # print("##############################")
+    # print("ResNet34")
+    # print("##############################")
+    # # f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+    # f_model = resnet34()
+    # # f_model.cuda()
+    # f_model.eval()
+    # print("Number_of_parameters:{}".format(count_parameters(f_model)))
+    # extractor = create_feature_extractor(f_model)
     # extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
-
-    # mobilenet-v2
-    print("##############################")
-    print("mobilenet-v2")
-    print("##############################")
-    size = (1, 3, 1000, 1000)
-    s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
-    # s_model.cuda()
-    s_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    extractor = create_feature_extractor(s_model)
-    extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    # le_rf = receptive_field(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
-
-    # le_rf = receptive_field(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
-    # receptive_field_for_unit(le_rf, "2", (1, 1))
-
-    # mobilenet-v3
-    print("##############################")
-    print("mobilenet-v3")
-    print("##############################")
-    size = (1, 3, 10000, 10000)
-    # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
-    s_model = mobilenet_v3_large().to("cpu")
-    # s_model.cuda()
-    # s_model.eval()
-
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    extractor = create_feature_extractor(s_model)
-    # extractor.cpu()
-    le_rf = receptivefield(extractor, size)
-    # le_rf = receptive_field(extractor, size)
-    # print("Receptive field:\n{}".format(le_rf))
-    # le_rf = receptive_field(extractor, size)
-    print("Receptive field:\n{}".format(le_rf))
-    # receptive_field_for_unit(le_rf, "2", (1, 1))
-
-    # densenet
-    # print("densenet")
-    # s_model = timm.create_model('densenet121', pretrained=True)
-    # s_model.cuda()
-    # s_model.eval()
-
-    # mnasnet_100 74.65
-    # print("mnasnet")
-    # s_model = timm.create_model('mnasnet_100.rmsp_in1k', pretrained=True)
-    # s_model.cuda()
-    # s_model.eval()
-    #
-    # # dpn-68
-    # print("dpn")
-    # s_model = timm.create_model('dpn68.mx_in1k', pretrained=True)
-    # s_model.cuda()
-    # s_model.eval()
-
-    # efficientnet-b0
-    print("##############################")
-    print("efficientnet-b0")
-    print("##############################")
-    size = (1, 3, 10000, 10000)
-    # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
-    s_model = efficientnet_b0()
-    # s_model.cuda()
-    s_model.eval()
-    extractor = create_feature_extractor(s_model)
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
-    extractor.cpu()
     # le_rf = receptivefield(extractor, size)
+    # # le_rf = receptive_field(extractor, (3, H, W))
+    # # receptive_field_for_unit(le_rf, "2", (1, 1))
     # print("Receptive field:\n{}".format(le_rf))
-
-    # # vit-b/32
-    # print("vit-b/32")
-    # s_model = vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
-    # s_model.cuda()
-    # s_model.eval()
     #
-    # # mocov3 resesnet
-    # print("MoCoV3 ResNet50")
-    # s_model = resnet50()
-    # s_model = torch.nn.DataParallel(s_model)
-    # checkpoint = torch.load("linear-1000ep.pth.tar", map_location="cpu")
-    # s_model.load_state_dict(checkpoint['state_dict'])
-    # s_model.cuda()
-    # s_model.eval()
-    #
-    # # mocov3 vit
-    # # print("MoCoV3 ViT")
-    # # s_model = vits.vit_base()
-    # # s_model = torch.nn.DataParallel(s_model)
-    # # checkpoint = torch.load("linear-vit-b-300ep.pth.tar", map_location="cpu")
-    # # s_model.load_state_dict(checkpoint['state_dict'])
+    # # # # resnet152
+    # # weights = ResNet152_Weights.IMAGENET1K_V1
+    # # model_2 = resnet152(weights=weights)
+    # # model_2.eval()
+    # # #
+    # # # legacy_seresnet50.in1k
+    # # print("legacy_seresnet50.in1k")
+    # # s_model = timm.create_model('legacy_seresnet50.in1k', pretrained=True)
     # # s_model.cuda()
     # # s_model.eval()
     #
+    # # legacy_seresnet34.in1k
+    # print("##############################")
+    # print("legacy_seresnet34.in1k")
+    # print("##############################")
+    # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
+    # # # s_model.cuda()
+    # # s_model.eval()
+    # #
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor = create_feature_extractor(s_model)
+    # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
     #
-    # # deit tiny
-    # print("deit tiny distilled")
-    # s_model = timm.create_model('deit_tiny_distilled_patch16_224.fb_in1k', pretrained=True)
-    # s_model.cuda()
+    # # # resnet50
+    # # print("ResNet50")
+    # # s_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+    # # s_model.cuda()
+    # # s_model.eval()
+    #
+    # # SK-ResNet-34
+    #
+    # print("##############################")
+    # print("SK-ResNet-34\n")
+    # print("##############################")
+    # size = (1, 3, 10000, 10000)
+    # s_model = timm.create_model('skresnet34', pretrained=False)
+    # # # s_model.cuda()
     # s_model.eval()
+    # #
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # # extractor = create_feature_extractor(s_model)
+    # # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
     #
-    # # vit models
-    # # vit_small_patch32_224.augreg_in21k_ft_in1k
-    # base_model, preprocess = clip.load('ViT-B/32', 'cpu', jit=False)
+    # # mobilenet-v2
+    # print("##############################")
+    # print("mobilenet-v2")
+    # print("##############################")
     #
-    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
+    # size = (1, 3, 1000, 1000)
     #
-    #
-    # print('vit_base_patch32_224.augreg_in21k_ft_in1k')
-    # s_model = timm.create_model('vit_base_patch32_224.augreg_in21k_ft_in1k', pretrained=True)
-    # s_model.cuda()
-    # s_model = s_model.eval()
-    #
-    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
-    # print("clip")
-    # state_dict = torch.load('/home/chengr_lab/cse12150072/models/clip/model_0.pt', map_location=torch.device('cpu'))
-    # s_model = get_model_from_sd(state_dict, base_model)
-    # s_model.cuda()
+    # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
+    # # s_model.cuda()
     # s_model.eval()
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor = create_feature_extractor(s_model)
+    # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    #
+    # # le_rf = receptive_field(extractor, size)
+    # # print("Receptive field:\n{}".format(le_rf))
+    # # receptive_field_for_unit(le_rf, "2", (1, 1))
+    #
+    # # mobilenet-v3
+    # print("##############################")
+    # print("mobilenet-v3")
+    # print("##############################")
+    # size = (1, 3, 10000, 10000)
+    # # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
+    # s_model = mobilenet_v3_large().to("cpu")
+    # # s_model.cuda()
+    # # s_model.eval()
+    #
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor = create_feature_extractor(s_model)
+    # # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # # le_rf = receptive_field(extractor, size)
+    # # print("Receptive field:\n{}".format(le_rf))
+    # # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    # # receptive_field_for_unit(le_rf, "2", (1, 1))
+    #
+    # # densenet
+    # # print("densenet")
+    # # s_model = timm.create_model('densenet121', pretrained=True)
+    # # s_model.cuda()
+    # # s_model.eval()
+    #
+    # # mnasnet_100 74.65
+    # # print("mnasnet")
+    # # s_model = timm.create_model('mnasnet_100.rmsp_in1k', pretrained=True)
+    # # s_model.cuda()
+    # # s_model.eval()
+    # #
+    # # # dpn-68
+    # # print("dpn")
+    # # s_model = timm.create_model('dpn68.mx_in1k', pretrained=True)
+    # # s_model.cuda()
+    # # s_model.eval()
+    #
+    # # efficientnet-b0
+    # print("##############################")
+    # print("efficientnet-b0")
+    # print("##############################")
+    # size = (1, 3, 10000, 10000)
+    # # s_model = efficientnet_b0(weights=EfficientNet_B0_Weights.IMAGENET1K_V1)
+    # s_model = efficientnet_b0()
+    # # s_model.cuda()
+    # s_model.eval()
+    # extractor = create_feature_extractor(s_model)
+    # print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor.cpu()
+    # # le_rf = receptivefield(extractor, size)
+    # # print("Receptive field:\n{}".format(le_rf))
+    #
+    # # # vit-b/32
+    # # print("vit-b/32")
+    # # s_model = vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
+    # # s_model.cuda()
+    # # s_model.eval()
+    # #
+    # # # mocov3 resesnet
+    # # print("MoCoV3 ResNet50")
+    # # s_model = resnet50()
+    # # s_model = torch.nn.DataParallel(s_model)
+    # # checkpoint = torch.load("linear-1000ep.pth.tar", map_location="cpu")
+    # # s_model.load_state_dict(checkpoint['state_dict'])
+    # # s_model.cuda()
+    # # s_model.eval()
+    # #
+    # # # mocov3 vit
+    # # # print("MoCoV3 ViT")
+    # # # s_model = vits.vit_base()
+    # # # s_model = torch.nn.DataParallel(s_model)
+    # # # checkpoint = torch.load("linear-vit-b-300ep.pth.tar", map_location="cpu")
+    # # # s_model.load_state_dict(checkpoint['state_dict'])
+    # # # s_model.cuda()
+    # # # s_model.eval()
+    # #
+    # #
+    # # # deit tiny
+    # # print("deit tiny distilled")
+    # # s_model = timm.create_model('deit_tiny_distilled_patch16_224.fb_in1k', pretrained=True)
+    # # s_model.cuda()
+    # # s_model.eval()
+    # #
+    # # # vit models
+    # # # vit_small_patch32_224.augreg_in21k_ft_in1k
+    # # base_model, preprocess = clip.load('ViT-B/32', 'cpu', jit=False)
+    # #
+    # # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
+    # #
+    # #
+    # # print('vit_base_patch32_224.augreg_in21k_ft_in1k')
+    # # s_model = timm.create_model('vit_base_patch32_224.augreg_in21k_ft_in1k', pretrained=True)
+    # # s_model.cuda()
+    # # s_model = s_model.eval()
+    # #
+    # # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
+    # # print("clip")
+    # # state_dict = torch.load('/home/chengr_lab/cse12150072/models/clip/model_0.pt', map_location=torch.device('cpu'))
+    # # s_model = get_model_from_sd(state_dict, base_model)
+    # # s_model.cuda()
+    # # s_model.eval()
