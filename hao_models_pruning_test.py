@@ -1,4 +1,5 @@
 import argparse
+import copy
 import math
 import torch
 import torch.nn as nn
@@ -23,6 +24,7 @@ import time
 from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
 # import vits
 import timm
+from torchsummary import summary
 
 imagenet_normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
@@ -536,6 +538,12 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         return 100. * correct.item() / total
 
 
+def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
+    temp_model = copy.deepcopy(model)
+    for pr in pruning_rates:
+        prune_with_rate(model, pr)
+
+
 if __name__ == '__main__':
     args = parse_arguments()
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
@@ -584,8 +592,6 @@ if __name__ == '__main__':
     # f_model.cuda()
     f_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
-
-
 
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
@@ -658,8 +664,9 @@ if __name__ == '__main__':
     print("##############################")
     print("SK-ResNet-34\n")
     print("##############################")
-    size = (1, 3, 10000, 10000)
+    # size = (1, 3, 10000, 10000)
     s_model = timm.create_model('skresnet34', pretrained=True)
+    print(s_model.na)
     # s_model = timm.create_model('skresnet34', pretrained=False)
     # # s_model.cuda()
     s_model.eval()

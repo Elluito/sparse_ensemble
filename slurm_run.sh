@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 
 # set name of job
 #SBATCH --job-name=Imagenet_Test
@@ -16,7 +16,7 @@
 #SBATCH --partition=small
 
 # set number of GPUs
-#SBATCH --gres=gpu:1
+##S BATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
 #SBATCH --mail-type=ALL
