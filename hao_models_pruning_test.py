@@ -12,6 +12,7 @@ import typing
 import os
 import torch.nn.functional as F
 from torchvision import transforms as trnfs
+import time
 # from dataset import ImageNet
 # from torchvision.models import resnet18, ResNet18_Weights, \
 #     resnet34, ResNet34_Weights, \
@@ -384,11 +385,14 @@ if __name__ == '__main__':
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     print("Before dataloader")
     val_dataloader = prepare_val_imagenet(args)
+    t0 = time.time()
     print("After dataloader")
     for x, y in val_dataloader:
         x, y = x.cuda(), y.cuda()
         print("Y tensor:{}\n{}".format(len(y), y))
         print("x tensor:{}\n{}".format(len(x), x))
+    t1 = time.time()
+
     # size = [1, 3, 6000, 6000]
 
     H, W = 1000, 1000

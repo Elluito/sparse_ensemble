@@ -49,4 +49,4 @@ which python
 #  fi
 
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device)"
-python hao_models_pruning_test.py
+python hao_models_pruning_test.py --workers 2
