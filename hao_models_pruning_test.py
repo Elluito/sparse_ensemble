@@ -540,8 +540,32 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
 def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
     temp_model = copy.deepcopy(model)
+
+    # resnet34
+    if isinstance(model, type(resnet34())):
+        exclude_layers=[""]
+    # legacy_seresnet34.in1k
+    if isinstance(model, type(timm.create_model('legacy_seresnet34.in1k'))):
+        exclude_layers=[""]
+
+    # SK-ResNet-34
+
+    if isinstance(model, type(timm.create_model('skresnet34'))):
+        exclude_layers=[""]
+
+    # Is mobilenetv2
+    if isinstance(model, type(timm.create_model('mobilenetv2_120d'))):
+        exclude_layers=[""]
+
+    # Is mobilenetv3
+    if isinstance(model, type(mobilenet_v3_large())):
+        exclude_layers=[""]
+    # Is efficientNet-B0
+    if isinstance(model, type(efficientnet_b0())):
+        exclude_layers=[""]
+
     for pr in pruning_rates:
-        prune_with_rate(model, pr)
+        prune_with_rate(model, pr,exclude_layers=exclude_layers)
 
 
 if __name__ == '__main__':
@@ -588,6 +612,7 @@ if __name__ == '__main__':
     print("##############################")
 
     f_model = resnet34(weights="IMAGENET1K_V1")
+
     # f_model = resnet34()
     # f_model.cuda()
     f_model.eval()
@@ -640,7 +665,6 @@ if __name__ == '__main__':
         extractor.cpu()
 
         for s in sizes:
-
             try:
                 le_rf = receptivefield(extractor, s)
                 print("Receptive field:\n{}".format(le_rf.rfsize))
@@ -666,7 +690,7 @@ if __name__ == '__main__':
     print("##############################")
     # size = (1, 3, 10000, 10000)
     s_model = timm.create_model('skresnet34', pretrained=True)
-    print(s_model.na)
+    # print(s_model.na)
     # s_model = timm.create_model('skresnet34', pretrained=False)
     # # s_model.cuda()
     s_model.eval()
