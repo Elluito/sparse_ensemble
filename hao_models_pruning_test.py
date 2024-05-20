@@ -585,6 +585,8 @@ if __name__ == '__main__':
     f_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
 
+
+
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
         extractor = create_feature_extractor(f_model, level=lvl)
@@ -628,7 +630,7 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor = create_feature_extractor(s_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
@@ -665,7 +667,7 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor = create_feature_extractor(s_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
@@ -698,7 +700,7 @@ if __name__ == '__main__':
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor = create_feature_extractor(s_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
@@ -723,7 +725,7 @@ if __name__ == '__main__':
     print("##############################")
     print("mobilenet-v3")
     print("##############################")
-    size = (1, 3, 10000, 10000)
+    # size = (1, 3, 10000, 10000)
     # s_model = mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.IMAGENET1K_V2).to("cpu")
     s_model = mobilenet_v3_large().to("cpu")
     # s_model.cuda()
@@ -735,7 +737,7 @@ if __name__ == '__main__':
 
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
-        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor = create_feature_extractor(s_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
@@ -788,7 +790,7 @@ if __name__ == '__main__':
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
 
-        extractor = create_feature_extractor(f_model, level=lvl)
+        extractor = create_feature_extractor(s_model, level=lvl)
         extractor.cpu()
 
         for s in sizes:
