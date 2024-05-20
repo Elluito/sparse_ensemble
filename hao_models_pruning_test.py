@@ -383,15 +383,17 @@ if __name__ == '__main__':
     from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    print(args)
     print("Before dataloader")
     val_dataloader = prepare_val_imagenet(args)
     t0 = time.time()
     print("After dataloader")
     for x, y in val_dataloader:
         x, y = x.cuda(), y.cuda()
-        print("Y tensor:{}\n{}".format(len(y), y))
-        print("x tensor:{}\n{}".format(len(x), x))
+        # print("Y tensor:{}\n{}".format(len(y), y))
+        # print("x tensor:{}\n{}".format(len(x), x))
     t1 = time.time()
+    print("Time elapsed: {}".format(t0-t1))
 
     # size = [1, 3, 6000, 6000]
 
@@ -399,7 +401,6 @@ if __name__ == '__main__':
 
     size = (1, 3, H, W)
 
-    print(args)
 
     diversity_models = []
 

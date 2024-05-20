@@ -49,4 +49,7 @@ which python
 #  fi
 
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device)"
+echo "============ 2 workers ============================"
 python hao_models_pruning_test.py --workers 2
+echo "============ 32 workers ============================"
+python hao_models_pruning_test.py --workers 32
