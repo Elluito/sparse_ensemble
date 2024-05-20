@@ -44,7 +44,7 @@ class CustomValImageNetDataset(Dataset):
         transform (Compose, optional): transformations that are to be applied to the images. Defaults to None.
     """
 
-    def __init__(self, root_dir="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet ",
+    def __init__(self, root_dir="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet",
                  ground_truth_file="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt",
                  transform=None):
 
