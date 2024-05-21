@@ -423,14 +423,14 @@ def main(args):
         # checkpoint = torch.load(
         #     '{}/'.format(
         #         args.save_folder))
-        checkpoint = torch.load(args.solution_resume)
+        checkpoint = torch.load(args.resume_solution)
         net.load_state_dict(checkpoint['net'])
         best_acc = checkpoint['acc']
         start_epoch = checkpoint['epoch']
         for i in range(start_epoch):
             scheduler.step()
         # assert start_epoch == 137, "The start epochs is not 137"
-        path = Path(args.solution_resume)
+        path = Path(args.resume_solution)
         solution_name = path.stem
         print("solution name: {}".format(solution_name))
     else:
