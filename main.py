@@ -51,7 +51,7 @@ print("Unitl line 40")
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 import ignite.metrics as igm
-from torchmetrics import Accuracy
+# from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
 # - interactive backends:

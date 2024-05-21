@@ -432,6 +432,7 @@ def main(args):
         # assert start_epoch == 137, "The start epochs is not 137"
         path = Path(args.solution_resume)
         solution_name = path.stem
+        print("solution name: {}".format(solution_name))
     else:
         seed = time.time()
         solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
