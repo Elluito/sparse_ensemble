@@ -547,7 +547,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
 def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
     temp_model = copy.deepcopy(model)
-
+    exclude_layers=None
     # resnet34
     if isinstance(model, type(resnet34())):
         exclude_layers = ["conv1", "fc"]
@@ -573,7 +573,7 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
         exclude_layers = ["features.0", "classifier.1"]
 
     for pr in pruning_rates:
-        prune_with_rate(model, pr, exclude_layers=exclude_layers)
+        prune_with_rate(model, pr, exclude_layers=exclude_layers )
 
 
 def run_big_mem_RF_calculation(args):
@@ -1010,7 +1010,7 @@ if __name__ == '__main__':
     print(dict(s_model.named_modules()).keys())
     # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
     # s_model.cuda()
-    summary(s_model)
+    # summary(s_model)
     s_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
