@@ -3,16 +3,17 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=03:00:00
+#SBATCH --time=20:00:00
 
 # set name of job
-#SBATCH --job-name=Imagenet_Test
+#SBATCH --job-name=Imagenet_pruning_results
 
-#SBATCH --error=imagenet_test.err
+#SBATCH --error=imagenet_pruning_results.err
 
-#SBATCH --output=imagenet_test.output
+#SBATCH --output=imagenet_pruning_results.output
 
 # set partition (devel, small, big)
+
 #SBATCH --partition=small
 
 # set number of GPUs
@@ -54,7 +55,7 @@ which python
 #echo "============ 4 workers ============================"
 #python hao_models_pruning_test.py --workers 4
 echo "============ 8 workers ============================"
-python hao_models_pruning_test.py --workers 8
+python hao_models_pruning_test.py --workers 8 --experiment 2
 #echo "============ 16 workers ============================"
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"

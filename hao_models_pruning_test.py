@@ -26,6 +26,7 @@ from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
 # import vits
 import timm
 from torchsummary import summary
+import pandas as pd
 
 imagenet_normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
@@ -113,6 +114,34 @@ class CustomValImageNetDataset(Dataset):
         return image, class_index
 
 
+def remove_reparametrization(model, name_module="", exclude_layer_list: list = []):
+    for name, m in model.named_modules():
+        if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
+                m, nn.BatchNorm3d) and name not in exclude_layer_list:
+            if name_module == "":
+                prune.remove(m, "weight")
+            if name == name_module:
+                prune.remove(m, "weight")
+                break
+
+
+def get_layer_dict(model: torch.nn.Module):
+    """
+    :param model:
+    :return: The name of the modules that are not batch norm and their correspondent weight with original shape.
+    """
+    iter_1 = model.named_modules()
+    layer_dict = []
+
+    for name, m in iter_1:
+        with torch.no_grad():
+            if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not \
+                    isinstance(m, nn.BatchNorm3d):
+                layer_dict.append((name, m.weight.data.cpu().detach()))
+    #
+    return layer_dict
+
+
 def prepare_val_imagenet(args):
     train_transform = trnfs.Compose([
         trnfs.RandomResizedCrop(224),
@@ -155,6 +184,11 @@ def parse_arguments():
         "--workers",
         type=int,
         default=8,
+    )
+    parser.add_argument(
+        "--experiment",
+        type=int,
+        default=1,
     )
     return parser.parse_args()
 
@@ -545,9 +579,8 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         return 100. * correct.item() / total
 
 
-def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
-    temp_model = copy.deepcopy(model)
-    exclude_layers=None
+def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
+    exclude_layers = None
     # resnet34
     if isinstance(model, type(resnet34())):
         exclude_layers = ["conv1", "fc"]
@@ -571,9 +604,36 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
     # Is efficientNet-B0
     if isinstance(model, type(efficientnet_b0())):
         exclude_layers = ["features.0", "classifier.1"]
+    pruning_rates_list = []
+    pruned_accuracy_list = []
+    test_accuracy = test(model, use_cuda=True, testloader=dataloader, verbose=0)
+    dense_accuracy_list = [test_accuracy] * len(pruning_rates)
+    model_name_list = [save_name] * len(pruning_rates)
 
     for pr in pruning_rates:
-        prune_with_rate(model, pr, exclude_layers=exclude_layers )
+        temp_model = copy.deepcopy(model)
+        prune_with_rate(temp_model, pr, exclude_layers=exclude_layers)
+        remove_reparametrization(temp_model, exclude_layer_list=exclude_layers)
+        pruned_test_accuracy = test(temp_model, use_cuda=True, testloader=dataloader, verbose=0)
+        pruned_accuracy_list.append(pruned_test_accuracy)
+        pruning_rates_list.append(pr)
+
+        weight_names, weights = zip(*get_layer_dict(temp_model))
+        zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+        pruning_rates_per_layer = list(map(zero_number, weights))
+
+        df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+
+        df2.to_csv("{}_layer_pruning_rates_global_pr_{}.csv".format(save_name, pr),
+                   index=False)
+
+    df = pd.DataFrame({"Name": model_name_list,
+                       "Dense Accuracy": dense_accuracy_list,
+                       "Pruned Accuracy": pruned_accuracy_list,
+                       "Pruning rate": pruning_rates_list
+                       })
+    df.to_csv("{}_one_shot_summary.csv".format(save_name),
+              index=False)
 
 
 def run_big_mem_RF_calculation(args):
@@ -891,16 +951,14 @@ def run_big_mem_RF_calculation(args):
     # s_model.eval()
 
 
-if __name__ == '__main__':
-    args = parse_arguments()
+def run_pruning_resutls(args):
     # from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     # from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-    rf_levels = [1, 2, 3, 4]
     print(args)
     # print("Before dataloader")
-    # val_dataloader = prepare_val_imagenet(args)
+    val_dataloader = prepare_val_imagenet(args)
     # t0 = time.time()
     # print("After dataloader")
     # for x, y in val_dataloader:
@@ -937,11 +995,12 @@ if __name__ == '__main__':
     f_model = resnet34(weights="IMAGENET1K_V1")
 
     # f_model = resnet34()
-    # f_model.cuda()
+    f_model.cuda()
     f_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(f_model)))
+    run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
     # summary(f_model)
-    print(dict(f_model.named_modules()).keys())
+    # print(dict(f_model.named_modules()).keys())
 
     # le_rf = receptive_field(extractor, (3, H, W))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
@@ -966,8 +1025,9 @@ if __name__ == '__main__':
 
     print(dict(s_model.named_modules()).keys())
     # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
-    # s_model.cuda()
-    # s_model.eval()
+    s_model.cuda()
+    s_model.eval()
+    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
     #
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
@@ -991,8 +1051,9 @@ if __name__ == '__main__':
     print(dict(s_model.named_modules()).keys())
     # print(s_model.na)
     # s_model = timm.create_model('skresnet34', pretrained=False)
-    # # s_model.cuda()
+    s_model.cuda()
     s_model.eval()
+    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "SK-ResNet-34")
     #
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
@@ -1007,9 +1068,11 @@ if __name__ == '__main__':
 
     s_model = timm.create_model('mobilenetv2_120d', pretrained=True)
 
-    print(dict(s_model.named_modules()).keys())
+    # print(dict(s_model.named_modules()).keys())
     # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
-    # s_model.cuda()
+    s_model.cuda()
+    s_model.eval()
+    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v2")
     # summary(s_model)
     s_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
@@ -1032,7 +1095,8 @@ if __name__ == '__main__':
     print(dict(s_model.named_modules()).keys())
     # s_model = mobilenet_v3_large().to("cpu")
     s_model.cuda()
-    # s_model.eval()
+    s_model.eval()
+    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v3")
 
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
     # extractor = create_feature_extractor(s_model)
@@ -1070,9 +1134,12 @@ if __name__ == '__main__':
     # size = (1, 3, 10000, 10000)
     s_model = efficientnet_b0(weights="IMAGENET1K_V1")
     # s_model = efficientnet_b0()
-    print(dict(s_model.named_modules()).keys())
-    # s_model.cuda()
+    # print(dict(s_model.named_modules()).keys())
+    s_model.cuda()
     s_model.eval()
+
+    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "efficientnet-b0")
+
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
@@ -1127,3 +1194,12 @@ if __name__ == '__main__':
     # s_model = get_model_from_sd(state_dict, base_model)
     # s_model.cuda()
     # s_model.eval()
+
+
+if __name__ == '__main__':
+
+    args = parse_arguments()
+    if args.experiment == 1:
+        run_big_mem_RF_calculation(args)
+    if args.experiment == 2:
+        run_pruning_resutls(args)
