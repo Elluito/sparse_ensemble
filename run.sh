@@ -13,8 +13,8 @@
 # -l coproc_p100=1
 
 # Ask for some memory (by default, 1G, without a request)
-##$ -l node_type=40core-768G
-#$ -l h_vmem=120G
+#$ -l node_type=40core-768G
+#$ -l h_vmem=600G
 # -t 2-5
 # -pe smp 3
 # Send emails when job starts and ends
