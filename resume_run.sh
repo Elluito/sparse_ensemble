@@ -21,4 +21,8 @@
 # Send emails when job starts and ends
 #$ -m be
 
+conda activate work
+#which python
+unset GOMP_CPU_AFFINITY
+unset KMP_AFFINITY
 python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128 --resume_solution "${10}" --resume
