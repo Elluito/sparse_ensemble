@@ -13,7 +13,7 @@ from torch import nn
 from shrinkbench.metrics.flops import flops
 import torch.nn.functional as F
 from sklearn.manifold import MDS
-from torchmetrics import Accuracy
+# from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
