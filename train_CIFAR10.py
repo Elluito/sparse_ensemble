@@ -506,7 +506,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location to save the models')
-    parser.add_argument('--solution_resume', default="/nobackup/sclaam/checkpoints", type=str,
+    parser.add_argument('--resume_solution', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
