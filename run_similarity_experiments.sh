@@ -78,15 +78,16 @@
 #qsub -N "fine_tune_stochastic pruning_${}_${}_${}__${}_${}" run.sh
 #done
 #done
+#                         RESUME Training of  specific seeds
+#qsub -l h_rt=45:00:00 -l coproc_k80=1  -N "training_Level_1_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1
 
-
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k6_cifar10_rs" run.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k7_cifar10_rs" run.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper" 1
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k8_cifar10_rs" run.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k6_cifar10_rs" run.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k7_cifar10_rs" run.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k8_cifar10_rs" run.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper" "1"
 qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k9_cifar10_rs" run.sh "cifar10" "resnet50" "k9" "normal" "kfac_optim_hyper" "1"
 
 
@@ -112,7 +113,6 @@ qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "sam_optim_rf_k9_cifar10_rs" run.sh "ci
 
 
 #qsub -l h_rt=45:00:00 -l coproc_k80=1  -N "training_Level_1_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1
-
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k6_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 4 "k6" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k7_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 4 "k7" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k8_vgg_small_imagenet" run.sh "vgg19" "small_imagenet" 4 "k8" "normal" 200 "recording_200" 1 1
