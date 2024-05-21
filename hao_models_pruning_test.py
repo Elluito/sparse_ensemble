@@ -178,7 +178,7 @@ def parse_arguments():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=1024,
+        default=128,
     )
     parser.add_argument(
         "--workers",
@@ -606,7 +606,9 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
         exclude_layers = ["features.0", "classifier.1"]
     pruning_rates_list = []
     pruned_accuracy_list = []
+    print("Dense accuracy")
     test_accuracy = test(model, use_cuda=True, testloader=dataloader, verbose=0)
+    print("{}".format(test_accuracy))
     dense_accuracy_list = [test_accuracy] * len(pruning_rates)
     model_name_list = [save_name] * len(pruning_rates)
 
@@ -614,7 +616,10 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
         temp_model = copy.deepcopy(model)
         prune_with_rate(temp_model, pr, exclude_layers=exclude_layers)
         remove_reparametrization(temp_model, exclude_layer_list=exclude_layers)
+        print("Pruning rate: {} ###########################".format(pr))
+        print("Pruned accuracy")
         pruned_test_accuracy = test(temp_model, use_cuda=True, testloader=dataloader, verbose=0)
+        print("{}".format(pruned_test_accuracy))
         pruned_accuracy_list.append(pruned_test_accuracy)
         pruning_rates_list.append(pr)
 

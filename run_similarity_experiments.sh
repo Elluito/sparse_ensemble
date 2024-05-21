@@ -80,13 +80,13 @@
 #done
 
 
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k6_cifar10_rs" run.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k7_cifar10_rs" run.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper" "1"
-qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k8_cifar10_rs" run.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper" "1"
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_1_cifar10_rs" run.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_2_cifar10_rs" run.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_3_cifar10_rs" run.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_4_cifar10_rs" run.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k6_cifar10_rs" run.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k7_cifar10_rs" run.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper" 1
+qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k8_cifar10_rs" run.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper" 1
 qsub -l h_rt=6:00:00 -l coproc_v100=1 -N "Kfac_optim_rf_k9_cifar10_rs" run.sh "cifar10" "resnet50" "k9" "normal" "kfac_optim_hyper" "1"
 
 
