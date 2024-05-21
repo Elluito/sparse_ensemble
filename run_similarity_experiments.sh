@@ -78,16 +78,17 @@
 #qsub -N "fine_tune_stochastic pruning_${}_${}_${}__${}_${}" run.sh
 #done
 #done
+
 #                         RESUME Training of  specific seeds
 # VGG small imagenet lvl 3
-qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_vgg_small_imagenet" resume_run.sh "vgg19" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/vgg19_normal_small_imagenet_seed.1_rf_level_3_recording_200_test_acc_57.65.pth"
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_vgg_small_imagenet" resume_run.sh "vgg19" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/vgg19_normal_small_imagenet_seed.1_rf_level_3_recording_200_test_acc_57.65.pth"
 # VGG small imagenet lvl 4
 qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_vgg_small_imagenet" resume_run.sh "vgg19" "small_imagenet" 2 4 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/vgg19_normal_small_imagenet_seed.1_rf_level_4_recording_200_test_acc_55.02.pth"
 
 # VGG small imagenet lvl 2 full training
 qsub -l h_rt=45:00:00 -l coproc_v100=1 -N "training_Level_1_vgg_small_imagenet" resume_run.sh "vgg19" "small_imagenet" 2 2 "normal" 200 "recording_200" 1 1
+
 #                       resnet18
-#
 ## resnet18 small imagenet lvl 2
 qsub -l h_rt=45:00:00 -l coproc_v100=1 -N "resume_training_Level_2_renet18_small_imagenet" resume_run.sh "resnet18" "small_imagenet" 2 1 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_seed.0_rf_level_2_recording_200_test_acc_64.99.pth"
 ## resnet18 small imagenet lvl 3
