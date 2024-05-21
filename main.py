@@ -5677,7 +5677,7 @@ def static_global_sigma_iterative_process(cfg: omegaconf.DictConfig):
             best_accuracy_found = gen_best_accuracy
             best_model_found = current_gen_models[best_index]
             ### I don't want the pruning to be iterative at this stage
-            ### so I remove the parametrization so the prune_with_rate
+            ## so I remove the parametrization so the prune_with_rate
             ### method do not prune over the mask that is found
             temp = copy.deepcopy(best_model_found)
             remove_reparametrization(temp, exclude_layer_list=cfg.exclude_layers)
