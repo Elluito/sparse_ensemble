@@ -1,4 +1,5 @@
 import argparse
+from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 import copy
 import math
 import torch
@@ -265,8 +266,13 @@ def create_feature_extractor(model, level=4):
 
         # Is mobilenetv2
         if isinstance(model, type(timm.create_model('mobilenetv2_120d'))):
-            last_index = -4
-            feature_extractor = torch.nn.Sequential(*el_children[:last_index])
+            temp = []
+            temp2 = copy.deepcopy(el_children[-5])
+            temp.extend(el_children[:2])
+            temp.append(temp2[:4])
+
+            feature_extractor = torch.nn.Sequential(*temp)
+
             return feature_extractor
 
         # Is mobilenetv3
@@ -307,10 +313,11 @@ def create_feature_extractor(model, level=4):
 
         if isinstance(model, type(timm.create_model('mobilenetv2_120d'))):
             temp = []
-            temp2 = el_children[-5]
-            temp.extend(*el_children[:-5])
-            temp2.extend(*temp2[:4])
-            feature_extractor = torch.nn.Sequential(*temp2)
+            temp2 = copy.deepcopy(el_children[-5])
+            temp.extend(el_children[:2])
+            temp.append(temp2[0])
+
+            feature_extractor = torch.nn.Sequential(*temp)
 
             return feature_extractor
 
@@ -543,37 +550,33 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_same):
 
     # resnet34
     if isinstance(model, type(resnet34())):
-        exclude_layers=[""]
+        exclude_layers = ["conv1", "fc"]
     # legacy_seresnet34.in1k
     if isinstance(model, type(timm.create_model('legacy_seresnet34.in1k'))):
-        exclude_layers=[""]
+        exclude_layers = ["layer0.conv1", "last_linear"]
+        # exclude_layers = ["conv1", ""]
 
     # SK-ResNet-34
 
     if isinstance(model, type(timm.create_model('skresnet34'))):
-        exclude_layers=[""]
+        exclude_layers = ["conv1", "fc"]
 
     # Is mobilenetv2
     if isinstance(model, type(timm.create_model('mobilenetv2_120d'))):
-        exclude_layers=[""]
+        exclude_layers = ["conv_stem", "classifier"]
 
     # Is mobilenetv3
     if isinstance(model, type(mobilenet_v3_large())):
-        exclude_layers=[""]
+        exclude_layers = ["features.0", "classifier.3"]
     # Is efficientNet-B0
     if isinstance(model, type(efficientnet_b0())):
-        exclude_layers=[""]
+        exclude_layers = ["features.0", "classifier.1"]
 
     for pr in pruning_rates:
-        prune_with_rate(model, pr,exclude_layers=exclude_layers)
+        prune_with_rate(model, pr, exclude_layers=exclude_layers)
 
 
-if __name__ == '__main__':
-    args = parse_arguments()
-    from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
-    from torch_receptive_field import receptive_field, receptive_field_for_unit
-
-    pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+def run_big_mem_RF_calculation(args):
     rf_levels = [1, 2, 3, 4]
     print(args)
     # print("Before dataloader")
@@ -593,7 +596,7 @@ if __name__ == '__main__':
 
     size = (1, 3, H, W)
 
-    sizes = [size, (1, 3, 6000, 6000)]
+    sizes = [size, (1, 3, 10000, 10000)]
     diversity_models = []
 
     acc_gap_models = []
@@ -630,10 +633,10 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
-                print("****************")
-                print("Receptive field is grater than {}".format(s))
 
+                print("****************")
+                print(e)
+                print("Receptive field is grater than {}".format(s))
     # le_rf = receptive_field(extractor, (3, H, W))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
     # print("Receptive field:\n{}".format(le_rf))
@@ -670,8 +673,8 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
                 print("****************")
+                print(e)
                 print("Receptive field is grater than {}".format(s))
 
     # le_rf = receptivefield(extractor, size)
@@ -708,8 +711,8 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
                 print("****************")
+                print(e)
                 print("Receptive field is grater than {}".format(s))
     # extractor.cpu()
     # le_rf = receptivefield(extractor, size)
@@ -728,7 +731,6 @@ if __name__ == '__main__':
     s_model.eval()
     print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
     for lvl in rf_levels:
         print("RF level {}".format(lvl))
         extractor = create_feature_extractor(s_model, level=lvl)
@@ -741,8 +743,8 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
                 print("****************")
+                print(e)
                 print("Receptive field is grater than {}".format(s))
     # le_rf = receptivefield(extractor, size)
     # le_rf = receptive_field(extractor, size)
@@ -778,8 +780,8 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
                 print("****************")
+                print(e)
                 print("Receptive field is grater than {}".format(s))
 
     # le_rf = receptivefield(extractor, size)
@@ -831,9 +833,247 @@ if __name__ == '__main__':
                 print("Receptive field:\n{}".format(le_rf.rfsize))
                 break
             except Exception as e:
-                print(e)
                 print("****************")
+                print(e)
                 print("Receptive field is grater than {}".format(s))
+
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+
+    # # vit-b/32
+    # print("vit-b/32")
+    # s_model = vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
+    # s_model.cuda()
+    # s_model.eval()
+    #
+    # # mocov3 resesnet
+    # print("MoCoV3 ResNet50")
+    # s_model = resnet50()
+    # s_model = torch.nn.DataParallel(s_model)
+    # checkpoint = torch.load("linear-1000ep.pth.tar", map_location="cpu")
+    # s_model.load_state_dict(checkpoint['state_dict'])
+    # s_model.cuda()
+    # s_model.eval()
+    #
+    # # mocov3 vit
+    # # print("MoCoV3 ViT")
+    # # s_model = vits.vit_base()
+    # # s_model = torch.nn.DataParallel(s_model)
+    # # checkpoint = torch.load("linear-vit-b-300ep.pth.tar", map_location="cpu")
+    # # s_model.load_state_dict(checkpoint['state_dict'])
+    # # s_model.cuda()
+    # # s_model.eval()
+    #
+    #
+    # # deit tiny
+    # print("deit tiny distilled")
+    # s_model = timm.create_model('deit_tiny_distilled_patch16_224.fb_in1k', pretrained=True)
+    # s_model.cuda()
+    # s_model.eval()
+    #
+    # # vit models
+    # # vit_small_patch32_224.augreg_in21k_ft_in1k
+    # base_model, preprocess = clip.load('ViT-B/32', 'cpu', jit=False)
+    #
+    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
+    #
+    #
+    # print('vit_base_patch32_224.augreg_in21k_ft_in1k')
+    # s_model = timm.create_model('vit_base_patch32_224.augreg_in21k_ft_in1k', pretrained=True)
+    # s_model.cuda()
+    # s_model = s_model.eval()
+    #
+    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
+    # print("clip")
+    # state_dict = torch.load('/home/chengr_lab/cse12150072/models/clip/model_0.pt', map_location=torch.device('cpu'))
+    # s_model = get_model_from_sd(state_dict, base_model)
+    # s_model.cuda()
+    # s_model.eval()
+
+
+if __name__ == '__main__':
+    args = parse_arguments()
+    # from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+    # from torch_receptive_field import receptive_field, receptive_field_for_unit
+
+    pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    rf_levels = [1, 2, 3, 4]
+    print(args)
+    # print("Before dataloader")
+    # val_dataloader = prepare_val_imagenet(args)
+    # t0 = time.time()
+    # print("After dataloader")
+    # for x, y in val_dataloader:
+    #     x, y = x.cuda(), y.cuda()
+    #     # print("Y tensor:{}\n{}".format(len(y), y))
+    #     # print("x tensor:{}\n{}".format(len(x), x))
+    # t1 = time.time()
+    # print("Time elapsed: {}".format(t1 - t0))
+
+    # size = [1, 3, 6000, 6000]
+
+    H, W = 1000, 1000
+
+    size = (1, 3, H, W)
+
+    sizes = [size, (1, 3, 2000, 2000)]
+    diversity_models = []
+
+    acc_gap_models = []
+
+    auroc_models = []
+
+    # resnet18
+    # print("ResNet18")
+    # f_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    # f_model.cuda()
+    # f_model.eval()
+
+    #  resnet34
+    print("##############################")
+    print("ResNet34")
+    print("##############################")
+
+    f_model = resnet34(weights="IMAGENET1K_V1")
+
+    # f_model = resnet34()
+    # f_model.cuda()
+    f_model.eval()
+    print("Number_of_parameters:{}".format(count_parameters(f_model)))
+    # summary(f_model)
+    print(dict(f_model.named_modules()).keys())
+
+    # le_rf = receptive_field(extractor, (3, H, W))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
+    # print("Receptive field:\n{}".format(le_rf))
+
+    # # # resnet152
+    # weights = ResNet152_Weights.IMAGENET1K_V1
+    # model_2 = resnet152(weights=weights)
+    # model_2.eval()
+    # #
+    # # legacy_seresnet50.in1k
+    # print("legacy_seresnet50.in1k")
+    # s_model = timm.create_model('legacy_seresnet50.in1k', pretrained=True)
+    # s_model.cuda()
+    # s_model.eval()
+
+    # legacy_seresnet34.in1k
+    print("\n##############################")
+    print("legacy_seresnet34.in1k")
+    print("##############################")
+    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
+
+    print(dict(s_model.named_modules()).keys())
+    # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
+    # s_model.cuda()
+    # s_model.eval()
+    #
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+
+    # # resnet50
+    # print("ResNet50")
+    # s_model = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
+    # s_model.cuda()
+    # s_model.eval()
+
+    # SK-ResNet-34
+
+    print("##############################")
+    print("SK-ResNet-34\n")
+    print("##############################")
+    # size = (1, 3, 10000, 10000)
+    s_model = timm.create_model('skresnet34', pretrained=True)
+
+    print(dict(s_model.named_modules()).keys())
+    # print(s_model.na)
+    # s_model = timm.create_model('skresnet34', pretrained=False)
+    # # s_model.cuda()
+    s_model.eval()
+    #
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+
+    # extractor.cpu()
+    # le_rf = receptivefield(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+
+    # mobilenet-v2
+    print("##############################")
+    print("mobilenet-v2")
+    print("##############################")
+
+    s_model = timm.create_model('mobilenetv2_120d', pretrained=True)
+
+    print(dict(s_model.named_modules()).keys())
+    # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
+    # s_model.cuda()
+    summary(s_model)
+    s_model.eval()
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+
+    # le_rf = receptivefield(extractor, size)
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
+
+    # mobilenet-v3
+    print("##############################")
+    print("mobilenet-v3")
+    print("##############################")
+    # size = (1, 3, 10000, 10000)
+    s_model = mobilenet_v3_large(weights="IMAGENET1K_V2")
+
+    print(dict(s_model.named_modules()).keys())
+    # s_model = mobilenet_v3_large().to("cpu")
+    s_model.cuda()
+    # s_model.eval()
+
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+    # extractor = create_feature_extractor(s_model)
+    # extractor.cpu()
+
+    # le_rf = receptivefield(extractor, size)
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    # le_rf = receptive_field(extractor, size)
+    # print("Receptive field:\n{}".format(le_rf))
+    # receptive_field_for_unit(le_rf, "2", (1, 1))
+
+    # densenet
+    # print("densenet")
+    # s_model = timm.create_model('densenet121', pretrained=True)
+    # s_model.cuda()
+    # s_model.eval()
+
+    # mnasnet_100 74.65
+    # print("mnasnet")
+    # s_model = timm.create_model('mnasnet_100.rmsp_in1k', pretrained=True)
+    # s_model.cuda()
+    # s_model.eval()
+    #
+    # # dpn-68
+    # print("dpn")
+    # s_model = timm.create_model('dpn68.mx_in1k', pretrained=True)
+    # s_model.cuda()
+    # s_model.eval()
+
+    # efficientnet-b0
+    print("##############################")
+    print("efficientnet-b0")
+    print("##############################")
+    # size = (1, 3, 10000, 10000)
+    s_model = efficientnet_b0(weights="IMAGENET1K_V1")
+    # s_model = efficientnet_b0()
+    print(dict(s_model.named_modules()).keys())
+    # s_model.cuda()
+    s_model.eval()
+    print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
