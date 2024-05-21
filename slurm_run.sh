@@ -55,7 +55,7 @@ which python
 #echo "============ 4 workers ============================"
 #python hao_models_pruning_test.py --workers 4
 echo "============ 8 workers ============================"
-python hao_models_pruning_test.py --workers 8 --experiment 2
+python hao_models_pruning_test.py --workers 2 --experiment 2
 #echo "============ 16 workers ============================"
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"
