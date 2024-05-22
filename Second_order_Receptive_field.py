@@ -322,7 +322,7 @@ def optuna_optimization(args):
 
         return acc
 
-    search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.5, 0.1, 0]}
+    search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.8,0.7, 0.5, 0.1, 0]}
 
     if os.path.isfile("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser)):
 
@@ -396,8 +396,13 @@ if __name__ == '__main__':
         pass
 
     print(args.resume_solution)
+
     if args.experiment == 1:
+
         print(args)
+
         main(args)
+
     if args.experiment == 2:
+
         optuna_optimization(args)

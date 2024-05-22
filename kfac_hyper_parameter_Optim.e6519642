@@ -46,24 +46,34 @@ Consider using one of the following signatures instead:
 [32m[I 2024-05-15 19:48:12,512][0m Trial 10 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 20:04:39,198][0m Trial 11 finished with value: 62.43 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 20:08:00,727][0m Trial 12 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
+
+
 [32m[I 2024-05-15 20:23:42,114][0m Trial 13 finished with value: 23.66 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 20:39:49,450][0m Trial 14 finished with value: 55.78 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
+
+
 [32m[I 2024-05-15 20:55:52,688][0m Trial 15 finished with value: 43.63 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 21:12:02,898][0m Trial 16 finished with value: 58.15 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 21:28:12,934][0m Trial 17 finished with value: 48.58 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 21:44:51,531][0m Trial 18 finished with value: 18.41 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 22:01:40,301][0m Trial 19 finished with value: 66.17 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
+
 [32m[I 2024-05-15 22:18:06,687][0m Trial 20 finished with value: 65.91 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
+
 [32m[I 2024-05-15 22:34:45,900][0m Trial 21 finished with value: 35.62 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 22:38:09,892][0m Trial 22 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
 [32m[I 2024-05-15 22:54:16,641][0m Trial 23 finished with value: 72.32 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-15 22:58:36,094][0m Trial 24 finished with value: 0.0 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-15 23:14:43,429][0m Trial 25 finished with value: 18.22 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+
 [32m[I 2024-05-15 23:18:31,865][0m Trial 26 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+
 [32m[I 2024-05-15 23:35:09,142][0m Trial 27 finished with value: 50.09 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-15 23:51:48,490][0m Trial 28 finished with value: 19.56 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 00:08:31,327][0m Trial 29 finished with value: 38.28 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+######################
 [32m[I 2024-05-16 00:24:40,327][0m Trial 30 finished with value: 72.06 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+
 [32m[I 2024-05-16 00:41:08,294][0m Trial 31 finished with value: 60.86 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 00:57:46,522][0m Trial 32 finished with value: 70.05 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 01:14:28,924][0m Trial 33 finished with value: 46.89 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
@@ -74,14 +84,21 @@ Consider using one of the following signatures instead:
 [32m[I 2024-05-16 02:34:26,945][0m Trial 38 finished with value: 65.5 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 02:50:37,857][0m Trial 39 finished with value: 60.75 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 03:06:57,137][0m Trial 40 finished with value: 51.83 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+###############
 [32m[I 2024-05-16 03:23:33,963][0m Trial 41 finished with value: 70.01 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+
 [32m[I 2024-05-16 03:39:12,145][0m Trial 42 finished with value: 56.2 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 03:55:33,254][0m Trial 43 finished with value: 64.66 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 04:11:38,480][0m Trial 44 finished with value: 25.93 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 04:26:49,677][0m Trial 45 finished with value: 44.25 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 04:43:01,247][0m Trial 46 finished with value: 10.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
 [32m[I 2024-05-16 04:59:32,377][0m Trial 47 finished with value: 73.66 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 47 with value: 73.66.[0m
-wandb: - 0.005 MB of 0.005 MB uploadedwandb: \ 0.005 MB of 0.005 MB uploadedwandb: | 0.005 MB of 0.731 MB uploadedwandb: / 0.005 MB of 0.731 MB uploadedwandb: - 0.731 MB of 0.731 MB uploadedwandb:                                                                                
+wandb: - 0.005 MB of 0.005 MB uploaded
+wandb: \ 0.005 MB of 0.005 MB uploaded
+wandb: | 0.005 MB of 0.731 MB uploaded
+wandb: / 0.005 MB of 0.731 MB uploaded
+wandb: - 0.731 MB of 0.731 MB uploaded
+wandb:                                                                                
 wandb: 
 wandb: Run history:
 wandb:        acc ▆▄▇▆▇▃▅▆▇▇▂▆▄▆▅▁▇▇▃█▅▁▄█▆█▅▃▅▄▆▇▆▅█▆▇▂▄█
