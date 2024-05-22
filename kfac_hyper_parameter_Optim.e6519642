@@ -1,0 +1,109 @@
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The animation.avconv_args rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The animation.avconv_path rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The animation.html_args rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The keymap.all_axes rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The savefig.jpeg_quality rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/_collections_abc.py:941: MatplotlibDeprecationWarning: 
+The text.latex.preview rcparam was deprecated in Matplotlib 3.3 and will be removed two minor releases later.
+  self[key] = other[key]
+wandb: Currently logged in as: luis_alfredo. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.17.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.6
+wandb: Run data is saved locally in /home/home01/sclaam/sparse_ensemble/wandb/run-20240515_171430-ds53uzo4
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run kfac parameter optimisation
+wandb: ⭐️ View project at https://wandb.ai/luis_alfredo/Receptive_Field
+wandb: 🚀 View run at https://wandb.ai/luis_alfredo/Receptive_Field/runs/ds53uzo4
+[32m[I 2024-05-15 17:14:34,559][0m A new study created in memory with name: second_order_kfac_hyperparameter_optimization[0m
+/home/home01/sclaam/.conda/envs/work/lib/python3.9/site-packages/torch/nn/modules/module.py:1025: UserWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  warnings.warn("Using a non-full backward hook when the forward contains multiple autograd Nodes "
+/home/home01/sclaam/sparse_ensemble/KFAC_Pytorch/optimizers/kfac.py:178: UserWarning: This overload of add_ is deprecated:
+	add_(Number alpha, Tensor other)
+Consider using one of the following signatures instead:
+	add_(Tensor other, *, Number alpha) (Triggered internally at  /opt/conda/conda-bld/pytorch_1634272068185/work/torch/csrc/utils/python_arg_parser.cpp:1050.)
+  p.data.add_(-group['lr'], d_p)
+[32m[I 2024-05-15 17:30:59,662][0m Trial 0 finished with value: 61.41 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 0}. Best is trial 0 with value: 61.41.[0m
+[32m[I 2024-05-15 17:47:01,360][0m Trial 1 finished with value: 42.03 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 0.1}. Best is trial 0 with value: 61.41.[0m
+[32m[I 2024-05-15 18:02:48,462][0m Trial 2 finished with value: 65.48 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 0}. Best is trial 2 with value: 65.48.[0m
+[32m[I 2024-05-15 18:18:55,636][0m Trial 3 finished with value: 56.01 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 1}. Best is trial 2 with value: 65.48.[0m
+[32m[I 2024-05-15 18:35:32,060][0m Trial 4 finished with value: 68.12 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 0.5}. Best is trial 4 with value: 68.12.[0m
+[32m[I 2024-05-15 18:52:15,239][0m Trial 5 finished with value: 33.01 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 0.5}. Best is trial 4 with value: 68.12.[0m
+[32m[I 2024-05-15 19:08:43,750][0m Trial 6 finished with value: 52.54 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 0.1}. Best is trial 4 with value: 68.12.[0m
+[32m[I 2024-05-15 19:24:50,584][0m Trial 7 finished with value: 56.9 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 0.5}. Best is trial 4 with value: 68.12.[0m
+[32m[I 2024-05-15 19:41:03,496][0m Trial 8 finished with value: 69.55 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 19:44:31,198][0m Trial 9 finished with value: 0.0 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 19:48:12,512][0m Trial 10 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 20:04:39,198][0m Trial 11 finished with value: 62.43 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 20:08:00,727][0m Trial 12 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 20:23:42,114][0m Trial 13 finished with value: 23.66 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 20:39:49,450][0m Trial 14 finished with value: 55.78 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 20:55:52,688][0m Trial 15 finished with value: 43.63 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 21:12:02,898][0m Trial 16 finished with value: 58.15 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 21:28:12,934][0m Trial 17 finished with value: 48.58 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 21:44:51,531][0m Trial 18 finished with value: 18.41 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 22:01:40,301][0m Trial 19 finished with value: 66.17 and parameters: {'lr': 0.01, 'momentum': 0.7, 'grad_clip': 1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 22:18:06,687][0m Trial 20 finished with value: 65.91 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 0.5}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 22:34:45,900][0m Trial 21 finished with value: 35.62 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0.1}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 22:38:09,892][0m Trial 22 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0}. Best is trial 8 with value: 69.55.[0m
+[32m[I 2024-05-15 22:54:16,641][0m Trial 23 finished with value: 72.32 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-15 22:58:36,094][0m Trial 24 finished with value: 0.0 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-15 23:14:43,429][0m Trial 25 finished with value: 18.22 and parameters: {'lr': 0.01, 'momentum': 0.99, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-15 23:18:31,865][0m Trial 26 finished with value: 0.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-15 23:35:09,142][0m Trial 27 finished with value: 50.09 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-15 23:51:48,490][0m Trial 28 finished with value: 19.56 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 00:08:31,327][0m Trial 29 finished with value: 38.28 and parameters: {'lr': 0.001, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 00:24:40,327][0m Trial 30 finished with value: 72.06 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 00:41:08,294][0m Trial 31 finished with value: 60.86 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 00:57:46,522][0m Trial 32 finished with value: 70.05 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 01:14:28,924][0m Trial 33 finished with value: 46.89 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 01:30:16,899][0m Trial 34 finished with value: 31.92 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 01:46:05,688][0m Trial 35 finished with value: 46.19 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 02:02:05,040][0m Trial 36 finished with value: 39.11 and parameters: {'lr': 0.01, 'momentum': 0.9, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 02:17:52,052][0m Trial 37 finished with value: 59.88 and parameters: {'lr': 0.1, 'momentum': 0.5, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 02:34:26,945][0m Trial 38 finished with value: 65.5 and parameters: {'lr': 0.001, 'momentum': 0.9, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 02:50:37,857][0m Trial 39 finished with value: 60.75 and parameters: {'lr': 0.001, 'momentum': 0.7, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 03:06:57,137][0m Trial 40 finished with value: 51.83 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 03:23:33,963][0m Trial 41 finished with value: 70.01 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 03:39:12,145][0m Trial 42 finished with value: 56.2 and parameters: {'lr': 0.1, 'momentum': 0.7, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 03:55:33,254][0m Trial 43 finished with value: 64.66 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 0.5}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 04:11:38,480][0m Trial 44 finished with value: 25.93 and parameters: {'lr': 0.1, 'momentum': 0.9, 'grad_clip': 1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 04:26:49,677][0m Trial 45 finished with value: 44.25 and parameters: {'lr': 0.001, 'momentum': 0.99, 'grad_clip': 0}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 04:43:01,247][0m Trial 46 finished with value: 10.0 and parameters: {'lr': 0.1, 'momentum': 0.99, 'grad_clip': 0.1}. Best is trial 23 with value: 72.32.[0m
+[32m[I 2024-05-16 04:59:32,377][0m Trial 47 finished with value: 73.66 and parameters: {'lr': 0.01, 'momentum': 0.5, 'grad_clip': 1}. Best is trial 47 with value: 73.66.[0m
+wandb: - 0.005 MB of 0.005 MB uploadedwandb: \ 0.005 MB of 0.005 MB uploadedwandb: | 0.005 MB of 0.731 MB uploadedwandb: / 0.005 MB of 0.731 MB uploadedwandb: - 0.731 MB of 0.731 MB uploadedwandb:                                                                                
+wandb: 
+wandb: Run history:
+wandb:        acc ▆▄▇▆▇▃▅▆▇▇▂▆▄▆▅▁▇▇▃█▅▁▄█▆█▅▃▅▄▆▇▆▅█▆▇▂▄█
+wandb:  grad_clip ▁▂▁█▅▅▂▅▁█▅▅▂█▂▂█▅▂▁█▂█▁██▅▅▂▂▁▅▁▂▅▁▅█▁█
+wandb: initial_lr ▁▁▂█▂▁▁█▂▂▂███▂▁▂▂▁▁▁█▁▂▁▁▁██▂█▁▁▂▂█▁█▁▂
+wandb:   momentum ▁█▇▄▄▁▇▁▄▇█▄▁▁▄▁▄▇▄▇▄▇▁▁█▇▄▇▄▇▁▇▄▁▁▄█▇█▁
+wandb: train_time ▆▅▄▅▇█▇▅▅▆▃▅▅▅▅▇█▆▇▅▇▇█▅▆▇█▄▄▄▄▇▅▆▇▃▆▅▁▇
+wandb: 
+wandb: Run summary:
+wandb:        acc 73.66
+wandb:  grad_clip 1
+wandb: initial_lr 0.01
+wandb:   momentum 0.5
+wandb: train_time 989.16991
+wandb: 
+wandb: 🚀 View run kfac parameter optimisation at: https://wandb.ai/luis_alfredo/Receptive_Field/runs/ds53uzo4
+wandb: ⭐️ View project at: https://wandb.ai/luis_alfredo/Receptive_Field
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240515_171430-ds53uzo4/logs
+Traceback (most recent call last):
+  File "/home/home01/sclaam/sparse_ensemble/Second_order_Receptive_field.py", line 394, in <module>
+    optuna_optimization(args)
+  File "/home/home01/sclaam/sparse_ensemble/Second_order_Receptive_field.py", line 343, in optuna_optimization
+    f1, f2 = trial.values
+ValueError: not enough values to unpack (expected 2, got 1)
