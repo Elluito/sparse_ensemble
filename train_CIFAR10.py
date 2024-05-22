@@ -515,10 +515,15 @@ if __name__ == '__main__':
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
+
     try:
+
         args.RF_level = int(args.RF_level)
+
     except Exception as e:
+
         pass
+
     print(args.resume_solution)
     # return 0
     main(args)
