@@ -533,15 +533,15 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
     sparse_flops_batch = 0
     with torch.no_grad():
-        print("Before the dataloader loop")
+        # print("Before the dataloader loop")
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            if batch_idx == 0:
-                print("In the data loader loop")
+            # if batch_idx == 0:
+                # print("In the data loader loop")
             if use_cuda:
                 targets = targets.type(torch.LongTensor)
                 inputs, targets = inputs.cuda(), targets.cuda()
-            if batch_idx == 0:
-                print("before forward method")
+            # if batch_idx == 0:
+                # print("before forward method")
             outputs = net(inputs)
             # if batch_idx == 0:
             # print("batch indx {}".format(batch_idx))
@@ -616,8 +616,8 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
         exclude_layers = ["features.0", "classifier.1"]
     pruning_rates_list = []
     pruned_accuracy_list = []
-    print("Dense accuracy")
     test_accuracy = test(model, use_cuda=True, testloader=dataloader, verbose=0)
+    print("Dense accuracy")
     print("{}".format(test_accuracy))
     dense_accuracy_list = [test_accuracy] * len(pruning_rates)
     model_name_list = [save_name] * len(pruning_rates)
