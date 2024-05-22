@@ -538,7 +538,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             if batch_idx ==0:
                 print("In the data loader loop")
             if use_cuda:
-                targets.type(torch.LongTensor)
+                target=targets.type(torch.LongTensor)
                 inputs, targets = inputs.cuda(), targets.cuda()
             if batch_idx ==0:
                 print("before forward method")
