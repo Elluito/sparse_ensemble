@@ -161,11 +161,11 @@ def train(epoch):
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
-        print(100. * correct / total, correct, total)
+        # print(100. * correct / total, correct, total)
         # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-        print(
-            'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+        # print(
+        #     'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return 100. * correct / total, correct, total
 
 
@@ -365,14 +365,14 @@ def main(args):
             net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             raise NotImplementedError
-            net = resnet50()
-            in_features = net.fc.in_features
-            net.fc = nn.Linear(in_features, 10)
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
         if args.type == "pytorch" and args.dataset == "cifar100":
             raise NotImplementedError
-            net = resnet50()
-            in_features = net.fc.in_features
-            net.fc = nn.Linear(in_features, 100)
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg_small":
 
         if args.type == "normal" and args.dataset == "cifar10":
