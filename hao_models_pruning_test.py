@@ -531,7 +531,6 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
     first_time = 1
 
     sparse_flops_batch = 0
-    torch.randn(10)
     with torch.no_grad():
         print("Before the dataloader loop")
         for batch_idx, (inputs, targets) in enumerate(testloader):
@@ -550,6 +549,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             loss = criterion(outputs, targets)
             if count_flops:
                 sparse_flops += batch_flops
+            print("After loss calculation!")
             test_loss += loss.data.item()
 
             if torch.all(outputs > 0):
