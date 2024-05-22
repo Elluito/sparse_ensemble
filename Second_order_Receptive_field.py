@@ -249,7 +249,7 @@ def main(args):
     if args.optimiser == "sam":
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
         optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
-
+    seed=time.time()
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
     if args.save:
