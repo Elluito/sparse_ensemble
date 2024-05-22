@@ -519,5 +519,6 @@ if __name__ == '__main__':
         args.RF_level = int(args.RF_level)
     except Exception as e:
         pass
-
+    print(args.resume_solution)
+    # return 0
     main(args)

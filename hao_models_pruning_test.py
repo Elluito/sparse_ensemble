@@ -533,12 +533,17 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
     sparse_flops_batch = 0
 
     with torch.no_grad():
-
+        print("Before the dataloader loop")
         for batch_idx, (inputs, targets) in enumerate(testloader):
-
+            if batch_idx ==0:
+                print("In the data loader loop")
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
+            if batch_idx ==0:
+                print("before forward method")
             outputs = net(inputs)
+            if batch_idx ==0:
+                print("After the forward method")
             loss = criterion(outputs, targets)
             if count_flops:
                 sparse_flops += batch_flops
