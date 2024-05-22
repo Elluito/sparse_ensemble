@@ -71,6 +71,7 @@ class CustomValImageNetDataset(Dataset):
         #        : program this so it works in JADE with val directory in /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet  and class file in  /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt
         #
         val_classes_ground_truth = np.loadtxt(ground_truth_file)
+        val_classes_ground_truth = val_classes_ground_truth - 1
         # with open(os.path.join(root_dir), "r") as f:
         #
         #     for line in f:
@@ -543,14 +544,14 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
                 print("before forward method")
             outputs = net(inputs)
             # if batch_idx == 0:
-            print("batch indx {}".format(batch_idx))
-            print("After the forward method")
-            print("outputs.size: {}".format(outputs.size()))
-            print("targets.size: {}".format(targets.size()))
+            # print("batch indx {}".format(batch_idx))
+            # print("After the forward method")
+            # print("outputs.size: {}".format(outputs.size()))
+            # print("targets.size: {}".format(targets.size()))
             loss = criterion(outputs, targets)
             if count_flops:
                 sparse_flops += batch_flops
-            print("After loss calculation!")
+            # print("After loss calculation!")
             test_loss += loss.data.item()
 
             if torch.all(outputs > 0):
