@@ -394,9 +394,6 @@ if __name__ == '__main__':
     except Exception as e:
 
         pass
-
-    print(args.resume_solution)
-
     if args.experiment == 1:
 
         print(args)
