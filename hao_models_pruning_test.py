@@ -15,7 +15,7 @@ import os
 import torch.nn.functional as F
 from torchvision import transforms as trnfs
 import time
-# from dataset import ImageNet
+from dataset import ImageNet
 # from torchvision.models import resnet18, ResNet18_Weights, \
 #     resnet34, ResNet34_Weights, \
 #     resnet50, ResNet50_Weights, \
@@ -956,7 +956,6 @@ def run_big_mem_RF_calculation(args):
     # # vit_small_patch32_224.augreg_in21k_ft_in1k
     # base_model, preprocess = clip.load('ViT-B/32', 'cpu', jit=False)
     #
-    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
     #
     #
     # print('vit_base_patch32_224.augreg_in21k_ft_in1k')
@@ -972,14 +971,16 @@ def run_big_mem_RF_calculation(args):
     # s_model.eval()
 
 
-def run_pruning_resutls(args):
+def run_pruning_results(args):
     # from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     # from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     print(args)
     # print("Before dataloader")
-    val_dataloader = prepare_val_imagenet(args)
+    # val_dataloader = prepare_val_imagenet(args)
+    #TODO: Here you can put the validation set for Imagenet that you run.
+    dataset = ImageNet(args.data_location, args.batch_size, args.workers)
     # t0 = time.time()
     # print("After dataloader")
     # for x, y in val_dataloader:
@@ -1229,4 +1230,4 @@ if __name__ == '__main__':
     if args.experiment == 1:
         run_big_mem_RF_calculation(args)
     if args.experiment == 2:
-        run_pruning_resutls(args)
+        run_pruning_results(args)
