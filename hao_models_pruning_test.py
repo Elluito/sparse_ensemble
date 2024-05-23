@@ -191,6 +191,12 @@ def parse_arguments():
         type=int,
         default=1,
     )
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="resnet34",
+    )
     return parser.parse_args()
 
 
@@ -445,7 +451,7 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
-            print(name)
+            # print(name)
 
     return modules
 
@@ -536,12 +542,12 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         # print("Before the dataloader loop")
         for batch_idx, (inputs, targets) in enumerate(testloader):
             # if batch_idx == 0:
-                # print("In the data loader loop")
+            # print("In the data loader loop")
             if use_cuda:
                 targets = targets.type(torch.LongTensor)
                 inputs, targets = inputs.cuda(), targets.cuda()
             # if batch_idx == 0:
-                # print("before forward method")
+            # print("before forward method")
             outputs = net(inputs)
             # if batch_idx == 0:
             # print("batch indx {}".format(batch_idx))
@@ -767,7 +773,7 @@ def run_big_mem_RF_calculation(args):
     print("SK-ResNet-34\n")
     print("##############################")
     # size = (1, 3, 10000, 10000)
-    s_model = timm.create_model('skresnet34', pretrained=True)
+    s_model = timm.create_model('skresnet34.in1k', pretrained=True)
     # print(s_model.na)
     # s_model = timm.create_model('skresnet34', pretrained=False)
     # # s_model.cuda()
@@ -1007,13 +1013,14 @@ def run_pruning_resutls(args):
     print("ResNet34")
     print("##############################")
 
-    f_model = resnet34(weights="IMAGENET1K_V1")
+    if args.model == "resnet34":
+        f_model = resnet34(weights="IMAGENET1K_V1")
 
-    # f_model = resnet34()
-    f_model.cuda()
-    f_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(f_model)))
-    run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
+        # f_model = resnet34()
+        f_model.cuda()
+        f_model.eval()
+        print("Number_of_parameters:{}".format(count_parameters(f_model)))
+        run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
     # summary(f_model)
     # print(dict(f_model.named_modules()).keys())
 
@@ -1036,15 +1043,16 @@ def run_pruning_resutls(args):
     print("\n##############################")
     print("legacy_seresnet34.in1k")
     print("##############################")
-    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
+    if args.model == "legacy_seresnet34":
+        s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
 
-    print(dict(s_model.named_modules()).keys())
-    # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
+        print(dict(s_model.named_modules()).keys())
+        # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
     #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
@@ -1057,40 +1065,41 @@ def run_pruning_resutls(args):
 
     # SK-ResNet-34
 
-    print("##############################")
-    print("SK-ResNet-34\n")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = timm.create_model('skresnet34', pretrained=True)
+    if args.model == "skresnet34":
+        print("##############################")
+        print("SK-ResNet-34\n")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = timm.create_model('skresnet34.ra_in1k', pretrained=True)
 
-    print(dict(s_model.named_modules()).keys())
-    # print(s_model.na)
-    # s_model = timm.create_model('skresnet34', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "SK-ResNet-34")
+        print(dict(s_model.named_modules()).keys())
+        # print(s_model.na)
+            # s_model = timm.create_model('skresnet34', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "SK-ResNet-34")
     #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # extractor.cpu()
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
 
-    # mobilenet-v2
-    print("##############################")
-    print("mobilenet-v2")
-    print("##############################")
+    if args.model == "mobilenetv2":
+        # mobilenet-v2
+        print("##############################")
+        print("mobilenet-v2")
+        print("##############################")
 
-    s_model = timm.create_model('mobilenetv2_120d', pretrained=True)
+        s_model = timm.create_model('mobilenetv2_120d.ra_in1k', pretrained=True)
 
-    # print(dict(s_model.named_modules()).keys())
-    # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v2")
+        # print(dict(s_model.named_modules()).keys())
+            # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v2")
     # summary(s_model)
-    s_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # le_rf = receptive_field(extractor, size)
@@ -1100,20 +1109,21 @@ def run_pruning_resutls(args):
     # print("Receptive field:\n{}".format(le_rf))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
 
+    if args.model == "mobilenetv3":
     # mobilenet-v3
-    print("##############################")
-    print("mobilenet-v3")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = mobilenet_v3_large(weights="IMAGENET1K_V2")
+        print("##############################")
+        print("mobilenet-v3")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = mobilenet_v3_large(weights="IMAGENET1K_V2")
 
-    print(dict(s_model.named_modules()).keys())
-    # s_model = mobilenet_v3_large().to("cpu")
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v3")
+        print(dict(s_model.named_modules()).keys())
+        # s_model = mobilenet_v3_large().to("cpu")
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v3")
 
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
     # extractor = create_feature_extractor(s_model)
     # extractor.cpu()
 
@@ -1142,20 +1152,22 @@ def run_pruning_resutls(args):
     # s_model.cuda()
     # s_model.eval()
 
-    # efficientnet-b0
-    print("##############################")
-    print("efficientnet-b0")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = efficientnet_b0(weights="IMAGENET1K_V1")
-    # s_model = efficientnet_b0()
-    # print(dict(s_model.named_modules()).keys())
-    s_model.cuda()
-    s_model.eval()
 
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "efficientnet-b0")
+    if args.model == "efficientnet":
+        # efficientnet-b0
+        print("##############################")
+        print("efficientnet-b0")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = efficientnet_b0(weights="IMAGENET1K_V1")
+        # s_model = efficientnet_b0()
+        # print(dict(s_model.named_modules()).keys())
+        s_model.cuda()
+        s_model.eval()
 
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "efficientnet-b0")
+
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
