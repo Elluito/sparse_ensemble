@@ -26,5 +26,5 @@
 #qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "sam_optim_rf_k8_cifar10_rs" arc3_run.sh "cifar10" "resnet50" "k8" "normal" "sam_optim_hyper" "2"
 #qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "sam_optim_rf_k9_cifar10_rs" arc3_run.sh "cifar10" "resnet50" "k9" "normal" "sam_optim_hyper" "2"
 
-qsub -l h_rt=6:00:00 -l coproc_p100=1 -N "test_pruning_resnet34" arc3_run.sh "resnet34"
+qsub -l h_rt=6:00:00 -l coproc_k80=1 -N "test_pruning_resnet34" arc3_run.sh "resnet34"
 
