@@ -1,5 +1,5 @@
 import argparse
-from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+# from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 import copy
 import math
 import torch
@@ -9,13 +9,14 @@ from PIL import Image
 from torch.utils.data import Dataset
 import numpy as np
 # import clip
-import wandb
+# import wandb
 import typing
 import os
 import torch.nn.functional as F
 from torchvision import transforms as trnfs
 import time
-# from dataset import ImageNet
+from dataset import ImageNet
+from pathlib import Path
 # from torchvision.models import resnet18, ResNet18_Weights, \
 #     resnet34, ResNet34_Weights, \
 #     resnet50, ResNet50_Weights, \
@@ -23,14 +24,42 @@ import time
 #     mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
 #     efficientnet_b0, EfficientNet_B0_Weights
 from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
+import torchvision
 # import vits
 import timm
-from torchsummary import summary
+# from torchsummary import summary
 import pandas as pd
 
 imagenet_normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 print("Imported everything")
+
+
+class ModelWrapper(torch.nn.Module):
+    def __init__(self, model, feature_dim, num_classes, normalize=False, initial_weights=None):
+        super(ModelWrapper, self).__init__()
+        self.model = model
+        self.classification_head = torch.nn.Linear(feature_dim, num_classes)
+        self.normalize = normalize
+        if initial_weights is None:
+            initial_weights = torch.zeros_like(self.classification_head.weight)
+            torch.nn.init.kaiming_uniform_(initial_weights, a=math.sqrt(5))
+        self.classification_head.weight = torch.nn.Parameter(initial_weights.clone())
+        self.classification_head.bias = torch.nn.Parameter(
+            torch.zeros_like(self.classification_head.bias))
+
+        # Note: modified. Get rid of the language part.
+        if hasattr(self.model, 'transformer'):
+            delattr(self.model, 'transformer')
+
+    def forward(self, images, return_features=False):
+        features = self.model.encode_image(images)
+        if self.normalize:
+            features = features / features.norm(dim=-1, keepdim=True)
+        logits = self.classification_head(features)
+        if return_features:
+            return logits, features
+        return logits
 
 
 class CustomValImageNetDataset(Dataset):
@@ -50,7 +79,7 @@ class CustomValImageNetDataset(Dataset):
     """
 
     def __init__(self, root_dir="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet",
-                 ground_truth_file="/jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt",
+                 ground_truth_file="/jmain02/home/J2AD014/mtc03/lla98-mtc03/imagenet_val/ILSVRC2015_clsloc_validation_ground_truth.txt",
                  transform=None):
 
         """
@@ -71,6 +100,7 @@ class CustomValImageNetDataset(Dataset):
         #        : program this so it works in JADE with val directory in /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/ValidationSet  and class file in  /jmain02/flash/share/datasets/ImageNet/ILSVRC2012/DevKit/data/ILSVRC2012_validation_ground_truth.txt
         #
         val_classes_ground_truth = np.loadtxt(ground_truth_file)
+        val_classes_ground_truth = val_classes_ground_truth - 1
         # with open(os.path.join(root_dir), "r") as f:
         #
         #     for line in f:
@@ -112,6 +142,94 @@ class CustomValImageNetDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         return image, class_index
+
+
+def get_arc3_dataset(cfg):
+    if 'imagenet' == cfg.dataset:
+        # cfg.dataset="cifar10"
+        # return get_cifar_datasets(cfg)
+        # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
+        # Data loading code
+
+        current_directory = Path().cwd()
+        data_path = ""
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data/"
+        elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
+            data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "datasets/"
+        traindir = data_path + 'imagenet/' + 'train'
+        testdir = data_path + 'imagenet/' + 'val'
+        normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406],
+                                    std=[0.229, 0.224, 0.225])
+
+        whole_train_dataset = trnfs.datasets.ImageFolder(
+
+            traindir,
+            trnfs.Compose([
+                trnfs.RandomResizedCrop(224),
+                trnfs.RandomHorizontalFlip(),
+
+                trnfs.ToTensor(),
+                normalize,
+            ]))
+        print(f"Length of dataset: {len(whole_train_dataset)}")
+
+        train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
+
+        full_test_dataset = torchvision.datasets.ImageFolder(testdir, trnfs.Compose([
+            trnfs.Resize(256),
+            trnfs.CenterCrop(224),
+            trnfs.ToTensor(),
+            normalize,
+        ]))
+
+        big_test, small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset) - 10000, 10000])
+
+        # This code is to transform it into the "fast" format of ffcv
+
+        # my_dataset = val_dataset
+        # write_path = data_path + "imagenet/valSplit_dataset.beton"
+
+        # For the validation set that I use to recover accuracy
+
+        # # Pass a type for each data field
+        # writer = DatasetWriter(write_path, {
+        #     # Tune options to optimize dataset size, throughput at train-time
+        #     'image': RGBImageField(
+        #         max_resolution=256,
+        #         jpeg_quality=90
+        #     ),
+        #     'label': IntField()
+        # })
+        # # Write dataset
+        # writer.from_indexed_dataset(my_dataset)
+
+        # For the validation set that I use to recover accuracy
+
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.workers, pin_memory=True, sampler=None)
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset, batch_size=cfg.batch_size, shuffle=True,
+            num_workers=cfg.workers, pin_memory=True, sampler=None)
+        # if cfg.length_test == "small":
+        #     test_loader = torch.utils.data.DataLoader(
+        #         small_test,
+        #         batch_size=cfg.batch_size, shuffle=False,
+        #         num_workers=cfg.workers, pin_memory=True)
+        # if cfg.length_test == "big":
+        #     test_loader = torch.utils.data.DataLoader(
+        #         big_test,
+        #         batch_size=cfg.batch_size, shuffle=False,
+        #         num_workers=cfg.workers, pin_memory=True)
+        test_loader = torch.utils.data.DataLoader(
+            full_test_dataset,
+            batch_size=cfg.batch_size, shuffle=False,
+            num_workers=cfg.workers, pin_memory=True)
+
+        return train_loader, val_loader, test_loader
 
 
 def remove_reparametrization(model, name_module="", exclude_layer_list: list = []):
@@ -190,6 +308,12 @@ def parse_arguments():
         type=int,
         default=1,
     )
+
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="resnet34",
+    )
     return parser.parse_args()
 
 
@@ -199,33 +323,6 @@ def count_parameters(model: torch.nn.Module):
 
 def count_zero_parameters(model):
     return sum((p == 0).sum() for p in model.parameters() if p.requires_grad)
-
-
-class ModelWrapper(torch.nn.Module):
-    def __init__(self, model, feature_dim, num_classes, normalize=False, initial_weights=None):
-        super(ModelWrapper, self).__init__()
-        self.model = model
-        self.classification_head = torch.nn.Linear(feature_dim, num_classes)
-        self.normalize = normalize
-        if initial_weights is None:
-            initial_weights = torch.zeros_like(self.classification_head.weight)
-            torch.nn.init.kaiming_uniform_(initial_weights, a=math.sqrt(5))
-        self.classification_head.weight = torch.nn.Parameter(initial_weights.clone())
-        self.classification_head.bias = torch.nn.Parameter(
-            torch.zeros_like(self.classification_head.bias))
-
-        # Note: modified. Get rid of the language part.
-        if hasattr(self.model, 'transformer'):
-            delattr(self.model, 'transformer')
-
-    def forward(self, images, return_features=False):
-        features = self.model.encode_image(images)
-        if self.normalize:
-            features = features / features.norm(dim=-1, keepdim=True)
-        logits = self.classification_head(features)
-        if return_features:
-            return logits, features
-        return logits
 
 
 def get_model_from_sd(state_dict, base_model):
@@ -444,7 +541,7 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
-            print(name)
+            # print(name)
 
     return modules
 
@@ -531,22 +628,26 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
     first_time = 1
 
     sparse_flops_batch = 0
-    torch.randn(10)
     with torch.no_grad():
-        print("Before the dataloader loop")
+        # print("Before the dataloader loop")
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            if batch_idx ==0:
-                print("In the data loader loop")
+            # if batch_idx == 0:
+            # print("In the data loader loop")
             if use_cuda:
+                targets = targets.type(torch.LongTensor)
                 inputs, targets = inputs.cuda(), targets.cuda()
-            if batch_idx ==0:
-                print("before forward method")
+            # if batch_idx == 0:
+            # print("before forward method")
             outputs = net(inputs)
-            if batch_idx ==0:
-                print("After the forward method")
+            # if batch_idx == 0:
+            # print("batch indx {}".format(batch_idx))
+            # print("After the forward method")
+            # print("outputs.size: {}".format(outputs.size()))
+            # print("targets.size: {}".format(targets.size()))
             loss = criterion(outputs, targets)
             if count_flops:
                 sparse_flops += batch_flops
+            # print("After loss calculation!")
             test_loss += loss.data.item()
 
             if torch.all(outputs > 0):
@@ -611,8 +712,8 @@ def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
         exclude_layers = ["features.0", "classifier.1"]
     pruning_rates_list = []
     pruned_accuracy_list = []
-    print("Dense accuracy")
     test_accuracy = test(model, use_cuda=True, testloader=dataloader, verbose=0)
+    print("Dense accuracy")
     print("{}".format(test_accuracy))
     dense_accuracy_list = [test_accuracy] * len(pruning_rates)
     model_name_list = [save_name] * len(pruning_rates)
@@ -762,7 +863,7 @@ def run_big_mem_RF_calculation(args):
     print("SK-ResNet-34\n")
     print("##############################")
     # size = (1, 3, 10000, 10000)
-    s_model = timm.create_model('skresnet34', pretrained=True)
+    s_model = timm.create_model('skresnet34.in1k', pretrained=True)
     # print(s_model.na)
     # s_model = timm.create_model('skresnet34', pretrained=False)
     # # s_model.cuda()
@@ -945,7 +1046,6 @@ def run_big_mem_RF_calculation(args):
     # # vit_small_patch32_224.augreg_in21k_ft_in1k
     # base_model, preprocess = clip.load('ViT-B/32', 'cpu', jit=False)
     #
-    # # dataset = ImageNet(preprocess, args.data_location, args.batch_size, args.workers)
     #
     #
     # print('vit_base_patch32_224.augreg_in21k_ft_in1k')
@@ -961,14 +1061,18 @@ def run_big_mem_RF_calculation(args):
     # s_model.eval()
 
 
-def run_pruning_resutls(args):
+def run_pruning_results(args):
     # from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     # from torch_receptive_field import receptive_field, receptive_field_for_unit
 
     pruning_rates = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     print(args)
     # print("Before dataloader")
-    val_dataloader = prepare_val_imagenet(args)
+    # val_dataloader = prepare_val_imagenet(args)
+    # TODO: Here you can put the validation set for Imagenet that you run.
+    dataset = ImageNet(args.data_location, args.batch_size, args.workers)
+    train_loader, _, val_dataloader = get_arc3_dataset(args)
+
     # t0 = time.time()
     # print("After dataloader")
     # for x, y in val_dataloader:
@@ -1002,13 +1106,14 @@ def run_pruning_resutls(args):
     print("ResNet34")
     print("##############################")
 
-    f_model = resnet34(weights="IMAGENET1K_V1")
+    if args.model == "resnet34":
+        f_model = resnet34(weights="IMAGENET1K_V1")
 
-    # f_model = resnet34()
-    f_model.cuda()
-    f_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(f_model)))
-    run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
+        # f_model = resnet34()
+        f_model.cuda()
+        f_model.eval()
+        print("Number_of_parameters:{}".format(count_parameters(f_model)))
+        run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
     # summary(f_model)
     # print(dict(f_model.named_modules()).keys())
 
@@ -1031,15 +1136,16 @@ def run_pruning_resutls(args):
     print("\n##############################")
     print("legacy_seresnet34.in1k")
     print("##############################")
-    s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
+    if args.model == "legacy_seresnet34":
+        s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
 
-    print(dict(s_model.named_modules()).keys())
-    # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
-    #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print(dict(s_model.named_modules()).keys())
+        # s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
+        #
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
@@ -1052,40 +1158,41 @@ def run_pruning_resutls(args):
 
     # SK-ResNet-34
 
-    print("##############################")
-    print("SK-ResNet-34\n")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = timm.create_model('skresnet34', pretrained=True)
+    if args.model == "skresnet34":
+        print("##############################")
+        print("SK-ResNet-34\n")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = timm.create_model('skresnet34.ra_in1k', pretrained=True)
 
-    print(dict(s_model.named_modules()).keys())
-    # print(s_model.na)
-    # s_model = timm.create_model('skresnet34', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "SK-ResNet-34")
-    #
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print(dict(s_model.named_modules()).keys())
+        # print(s_model.na)
+        # s_model = timm.create_model('skresnet34', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "SK-ResNet-34")
+        #
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # extractor.cpu()
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
 
-    # mobilenet-v2
-    print("##############################")
-    print("mobilenet-v2")
-    print("##############################")
+    if args.model == "mobilenetv2":
+        # mobilenet-v2
+        print("##############################")
+        print("mobilenet-v2")
+        print("##############################")
 
-    s_model = timm.create_model('mobilenetv2_120d', pretrained=True)
+        s_model = timm.create_model('mobilenetv2_120d.ra_in1k', pretrained=True)
 
-    # print(dict(s_model.named_modules()).keys())
-    # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v2")
-    # summary(s_model)
-    s_model.eval()
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        # print(dict(s_model.named_modules()).keys())
+        # s_model = timm.create_model('mobilenetv2_120d', pretrained=False)
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v2")
+        # summary(s_model)
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # le_rf = receptive_field(extractor, size)
@@ -1095,20 +1202,21 @@ def run_pruning_resutls(args):
     # print("Receptive field:\n{}".format(le_rf))
     # receptive_field_for_unit(le_rf, "2", (1, 1))
 
-    # mobilenet-v3
-    print("##############################")
-    print("mobilenet-v3")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = mobilenet_v3_large(weights="IMAGENET1K_V2")
+    if args.model == "mobilenetv3":
+        # mobilenet-v3
+        print("##############################")
+        print("mobilenet-v3")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = mobilenet_v3_large(weights="IMAGENET1K_V2")
 
-    print(dict(s_model.named_modules()).keys())
-    # s_model = mobilenet_v3_large().to("cpu")
-    s_model.cuda()
-    s_model.eval()
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v3")
+        print(dict(s_model.named_modules()).keys())
+        # s_model = mobilenet_v3_large().to("cpu")
+        s_model.cuda()
+        s_model.eval()
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "mobilenet-v3")
 
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
     # extractor = create_feature_extractor(s_model)
     # extractor.cpu()
 
@@ -1137,20 +1245,21 @@ def run_pruning_resutls(args):
     # s_model.cuda()
     # s_model.eval()
 
-    # efficientnet-b0
-    print("##############################")
-    print("efficientnet-b0")
-    print("##############################")
-    # size = (1, 3, 10000, 10000)
-    s_model = efficientnet_b0(weights="IMAGENET1K_V1")
-    # s_model = efficientnet_b0()
-    # print(dict(s_model.named_modules()).keys())
-    s_model.cuda()
-    s_model.eval()
+    if args.model == "efficientnet":
+        # efficientnet-b0
+        print("##############################")
+        print("efficientnet-b0")
+        print("##############################")
+        # size = (1, 3, 10000, 10000)
+        s_model = efficientnet_b0(weights="IMAGENET1K_V1")
+        # s_model = efficientnet_b0()
+        # print(dict(s_model.named_modules()).keys())
+        s_model.cuda()
+        s_model.eval()
 
-    run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "efficientnet-b0")
+        run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "efficientnet-b0")
 
-    print("Number_of_parameters:{}".format(count_parameters(s_model)))
+        print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
     # le_rf = receptivefield(extractor, size)
     # print("Receptive field:\n{}".format(le_rf))
@@ -1212,4 +1321,4 @@ if __name__ == '__main__':
     if args.experiment == 1:
         run_big_mem_RF_calculation(args)
     if args.experiment == 2:
-        run_pruning_resutls(args)
+        run_pruning_results(args)

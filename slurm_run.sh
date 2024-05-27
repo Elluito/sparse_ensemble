@@ -55,7 +55,7 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #echo "============ 4 workers ============================"
 #python hao_models_pruning_test.py --workers 4
 #echo "============ 8 workers ============================"
-python hao_models_pruning_test.py --workers 2 --experiment 2
+python hao_models_pruning_test.py --workers 2 --experiment 2 --model $1
 #echo "============ 16 workers ============================"
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"
