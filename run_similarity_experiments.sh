@@ -104,7 +104,11 @@ qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_k8_renet18_smal
 ### resnet18 small imagenet lvl K9
 qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_k9_renet18_small_imagenet" resume_run.sh "resnet18" "small_imagenet" 2 "k9" "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_1716016178.5822153_rf_level_k9_recording_200_test_acc_47.19.pth"
 #
+qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_3_recording_200_test_acc_38.37.pth"
+### resnet18 small imagenet lvl K9
+qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_5_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 5 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_5_recording_200_test_acc_44.38.pth"
 #
+qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_7_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 7 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_7_recording_200_test_acc_40.92.pth"
 
 
 

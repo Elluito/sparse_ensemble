@@ -1068,7 +1068,7 @@ def run_pruning_results(args):
     # val_dataloader = prepare_val_imagenet(args)
     # TODO: Here you can put the validation set for Imagenet that you run.
     # dataset = ImageNet(args.data_location, args.batch_size, args.workers)
-    # train_loader, _, val_dataloader = get_arc3_dataset(args)
+    train_loader, _, val_dataloader = get_arc3_dataset(args)
 
     # t0 = time.time()
     # print("After dataloader")
