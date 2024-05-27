@@ -40,9 +40,9 @@ class VGG(nn.Module):
 
 
 class VGG_RF(nn.Module):
-    def __init__(self, vgg_name, num_classes=10, rf_level=0):
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
         super(VGG_RF, self).__init__()
-        self.rf_level = rf_level
+        self.rf_level = RF_level
         self.maxpool = None
         self.config = cfg[vgg_name]
         if self.rf_level == 1:
@@ -113,16 +113,12 @@ class VGG_RF(nn.Module):
 
 
 def test():
+
     # net = VGG('VGG11')
-    # x = torch.randn(2,3,32,32)
-    # y = net(x)
-    # print(y.size())
 
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     import matplotlib.pyplot as plt
     from main import get_features_only_until_block_layer_VGG
-    from feature_maps_utils import get_activations_shape
-    from torchvision.models import resnet18, resnet50
 
     print("Receptive field normal resnet18")
     # net = ResNet18_rf(num_classes=10, rf_level=4)
@@ -137,7 +133,7 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     # blocks = [1, 2, 3, 4]
-    blocks = [5]
+    blocks = ["k6", "k7", "k8", "k9"]
     receptive_fields = []
 
     # net = VGG_RF('VGG19_rf', rf_level=4)
@@ -148,13 +144,13 @@ def test():
     for i in blocks:
         # samples = []
         # for j in range(10):
-        net = VGG_RF('VGG19_rf', rf_level=i)
-        x = torch.randn(3, 3, 32, 32)
-        y = net(x)
-        print(y)
+        print("################################")
+        print(i)
+        print("################################")
+        net = VGG_RF('VGG19_rf', RF_level=i)
         get_features_only_until_block_layer_VGG(net, block=4, net_type=1)
         le_rf = receptivefield(net, (1, 3, 1500, 1500))
-        print(le_rf)
+        print(le_rf.rfsize)
         # in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
 
         # samples.append(torch.abs(in_grad))

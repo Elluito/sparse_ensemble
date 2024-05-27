@@ -271,7 +271,7 @@ def ResNet18(num_classes=10, fix_points=None):
 
 
 def ResNet18_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
-    rf_level=RF_level
+    rf_level = RF_level
     if rf_level == 0:
         return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
     else:
@@ -293,6 +293,7 @@ def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     else:
         return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
                         multiplier=multiplier)
+
 
 def ResNet24_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     if rf_level == 0:
@@ -327,26 +328,36 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     blocks = [4]
-    receptive_fields = [3, 5, 7]
+    receptive_fields = ["k6", "k7", "k8", "k9", 5, 6, 7]
 
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
     for rf in receptive_fields:
 
-        net = ResNet24_rf(num_classes=10, rf_level=rf)
+        net = ResNet18_rf(num_classes=10, RF_level=rf)
+
         y = net(torch.randn(3, 3, 32, 32))
-        print(y)
+
+        print("######################")
+        print(rf)
+        print("######################")
+
         get_features_only_until_block_layer(net, block=4, net_type=1)
-        size = [1, 3, 200, 200]
+
+        size = [1, 3, 1000, 1000]
+
         if rf == 5:
             size = [1, 3, 1500, 1500]
+
         if rf == 6:
             size = [1, 3, 2000, 2000]
+
         if rf == 7:
             size = [1, 3, 3100, 3100]
+
         le_rf = receptivefield(net, size)
         # y = net(torch.randn(3, 3, 32, 32))
-        print(le_rf)
+        print(le_rf.rfsize)
         # samples = []
         # for j in range(10):
         #     net = ResNet50_rf(num_classes=10, rf_level=rf)
