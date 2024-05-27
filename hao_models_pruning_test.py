@@ -15,7 +15,7 @@ import os
 import torch.nn.functional as F
 from torchvision import transforms as trnfs
 import time
-from dataset import ImageNet
+# from dataset import ImageNet
 from pathlib import Path
 # from torchvision.models import resnet18, ResNet18_Weights, \
 #     resnet34, ResNet34_Weights, \
@@ -1070,7 +1070,7 @@ def run_pruning_results(args):
     # print("Before dataloader")
     # val_dataloader = prepare_val_imagenet(args)
     # TODO: Here you can put the validation set for Imagenet that you run.
-    dataset = ImageNet(args.data_location, args.batch_size, args.workers)
+    # dataset = ImageNet(args.data_location, args.batch_size, args.workers)
     train_loader, _, val_dataloader = get_arc3_dataset(args)
 
     # t0 = time.time()
