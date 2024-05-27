@@ -161,8 +161,7 @@ def get_arc3_dataset(cfg):
     normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406],
                                 std=[0.229, 0.224, 0.225])
 
-    whole_train_dataset = trnfs.datasets.ImageFolder(
-
+    whole_train_dataset = torchvision.datasets.ImageFolder(
         traindir,
         trnfs.Compose([
             trnfs.RandomResizedCrop(224),
@@ -609,6 +608,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
 
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
+
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -1068,7 +1068,7 @@ def run_pruning_results(args):
     # val_dataloader = prepare_val_imagenet(args)
     # TODO: Here you can put the validation set for Imagenet that you run.
     # dataset = ImageNet(args.data_location, args.batch_size, args.workers)
-    train_loader, _, val_dataloader = get_arc3_dataset(args)
+    # train_loader, _, val_dataloader = get_arc3_dataset(args)
 
     # t0 = time.time()
     # print("After dataloader")
@@ -1134,6 +1134,7 @@ def run_pruning_results(args):
     print("legacy_seresnet34.in1k")
     print("##############################")
     if args.model == "legacy_seresnet34":
+
         s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
 
         print(dict(s_model.named_modules()).keys())
