@@ -1146,8 +1146,8 @@ def run_pruning_results(args):
     # legacy_seresnet34.in1k
     if args.model == "legacy_seresnet34":
         print("\n##############################")
-    print("legacy_seresnet34.in1k")
-    print("##############################")
+        print("legacy_seresnet34.in1k")
+        print("##############################")
 
         s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
 
