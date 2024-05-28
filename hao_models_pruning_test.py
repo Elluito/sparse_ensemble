@@ -647,13 +647,20 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             # print("After loss calculation!")
             test_loss += loss.data.item()
 
-            if torch.all(outputs > 0):
-                _, predicted = torch.max(outputs.data, 1)
-            else:
-                soft_max_outputs = F.softmax(outputs, dim=1)
-                _, predicted = torch.max(soft_max_outputs, 1)
+            # if torch.all(outputs > 0):
+
+            _ , predicted = torch.max(outputs.data, 1)
+
+            # else:
+            #
+            #     soft_max_outputs = F.softmax(outputs, dim=1)
+            #
+            #     _, predicted = torch.max(soft_max_outputs, 1)
+
             total += targets.size(0)
+
             correct += predicted.eq(targets.data).cpu().sum()
+
 
             # print(correct/total)
 
@@ -683,6 +690,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
 
 def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
+
     exclude_layers = None
     # resnet34
     if isinstance(model, type(resnet34())):
@@ -1099,18 +1107,24 @@ def run_pruning_results(args):
     # f_model.eval()
 
     #  resnet34
-    print("##############################")
-    print("ResNet34")
-    print("##############################")
 
     if args.model == "resnet34":
+        print("##############################")
+        print("ResNet34")
+        print("##############################")
         f_model = resnet34(weights="IMAGENET1K_V1")
 
         # f_model = resnet34()
+
         f_model.cuda()
+
         f_model.eval()
+
         print("Number_of_parameters:{}".format(count_parameters(f_model)))
-        run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
+
+        test_accuracy = test(f_model, use_cuda=True, testloader=val_dataloader, verbose=2)
+        print("")
+        # run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
     # summary(f_model)
     # print(dict(f_model.named_modules()).keys())
 
@@ -1130,10 +1144,10 @@ def run_pruning_results(args):
     # s_model.eval()
 
     # legacy_seresnet34.in1k
-    print("\n##############################")
+    if args.model == "legacy_seresnet34":
+        print("\n##############################")
     print("legacy_seresnet34.in1k")
     print("##############################")
-    if args.model == "legacy_seresnet34":
 
         s_model = timm.create_model('legacy_seresnet34.in1k', pretrained=True)
 
