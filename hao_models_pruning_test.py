@@ -144,7 +144,7 @@ class CustomValImageNetDataset(Dataset):
         return image, class_index
 
 
-def get_arc3_dataset(cfg):
+def get_arc3_dataset(cfg,transforms=None):
     # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
     # Data loading code
 
@@ -160,26 +160,29 @@ def get_arc3_dataset(cfg):
     testdir = data_path + 'imagenet/' + 'val'
     normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406],
                                 std=[0.229, 0.224, 0.225])
-
-    whole_train_dataset = torchvision.datasets.ImageFolder(
-        traindir,
-        trnfs.Compose([
+    if transforms:
+        train_trasnform = transforms["train"]
+        test_trasnform = transforms["val"]
+    else:
+        train_transform=trnfs.Compose([
             trnfs.RandomResizedCrop(224),
             trnfs.RandomHorizontalFlip(),
-
             trnfs.ToTensor(),
             normalize,
-        ]))
-    print(f"Length of dataset: {len(whole_train_dataset)}")
-
-    train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
-
-    full_test_dataset = torchvision.datasets.ImageFolder(testdir, trnfs.Compose([
+        ])
+        test_transform=trnfs.Compose([
         trnfs.Resize(256),
         trnfs.CenterCrop(224),
         trnfs.ToTensor(),
         normalize,
-    ]))
+    ])
+    whole_train_dataset = torchvision.datasets.ImageFolder(
+        traindir,train_transform)
+    print(f"Length of dataset: {len(whole_train_dataset)}")
+
+    train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
+
+    full_test_dataset = torchvision.datasets.ImageFolder(testdir,test_transform )
 
     big_test, small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset) - 10000, 10000])
 
@@ -608,7 +611,6 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
 
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
-
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -649,7 +651,25 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
             # if torch.all(outputs > 0):
 
-            _ , predicted = torch.max(outputs.data, 1)
+            _, predicted = torch.max(outputs.data, 1)
+
+            top5_probabilities, top5_class_indices = torch.topk(outputs.softmax(dim=1) * 100, k=5)
+
+            top1_probabilities, top1_class_indices = torch.topk(outputs.softmax(dim=1) * 100, k=1)
+
+            if batch_idx == 0:
+                print("Top 1 class index: {}\n          Targets: {}".format(top1_class_indices.data.cpu(),
+                                                                            targets.data.cpu()))
+
+                print("\n")
+
+                print("Top 5 class index: {}\n          Targets: {}".format(top5_class_indices.data.cpu(),
+                                                                            targets.data.cpu()))
+
+                print("Predicted by my function: {}\n         Targets: {}".format(predicted.data.cpu(),
+                                                                                  targets.data.cpu()))
+
+                break
 
             # else:
             #
@@ -660,7 +680,6 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
             total += targets.size(0)
 
             correct += predicted.eq(targets.data).cpu().sum()
-
 
             # print(correct/total)
 
@@ -690,7 +709,6 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
 
 def run_and_save_pruning_results(model, pruning_rates, dataloader, save_name):
-
     exclude_layers = None
     # resnet34
     if isinstance(model, type(resnet34())):
@@ -1123,7 +1141,7 @@ def run_pruning_results(args):
         print("Number_of_parameters:{}".format(count_parameters(f_model)))
 
         test_accuracy = test(f_model, use_cuda=True, testloader=val_dataloader, verbose=2)
-        print("")
+        print("Tes")
         # run_and_save_pruning_results(f_model, pruning_rates, val_dataloader, "resnet34")
     # summary(f_model)
     # print(dict(f_model.named_modules()).keys())
@@ -1156,6 +1174,7 @@ def run_pruning_results(args):
         s_model.cuda()
         s_model.eval()
         run_and_save_pruning_results(s_model, pruning_rates, val_dataloader, "legacy_seresnet34.in1k")
+
         #
         print("Number_of_parameters:{}".format(count_parameters(s_model)))
 
