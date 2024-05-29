@@ -183,6 +183,7 @@ def get_arc3_dataset(cfg,transforms=None):
     train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
     full_test_dataset = torchvision.datasets.ImageFolder(testdir,test_transform )
+    print(full_test_dataset.imgs)
 
     big_test, small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset) - 10000, 10000])
 
@@ -1138,7 +1139,7 @@ def run_pruning_results(args):
 
         f_model.eval()
 
-        print("Number_of_parameters:{}".format(count_parameters(f_model)))
+        # print("Number_of_parameters:{}".format(count_parameters(f_model)))
 
         test_accuracy = test(f_model, use_cuda=True, testloader=val_dataloader, verbose=2)
         print("Tes")
