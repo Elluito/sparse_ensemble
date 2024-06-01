@@ -55,8 +55,9 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #echo "============ 4 workers ============================"
 #python hao_models_pruning_test.py --workers 4
 #echo "============ 8 workers ============================"
-python hao_models_pruning_test.py --workers 2 --experiment 2 --model $1
+#python hao_models_pruning_test.py --workers 2 --experiment 2 --model $1
 #echo "============ 16 workers ============================"
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"
 #python hao_models_pruning_test.py --workers 32
+python train_CIFAR10.py  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9

@@ -187,6 +187,12 @@ class small_ResNetRF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
         if self.rf_level == 7:
             self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
         # if self.fix_points is None:
         #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
         #                            stride=1, padding=1, bias=False)
@@ -256,8 +262,17 @@ class small_VGG_RF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
             self.config = cfg[vgg_name]
         if self.rf_level == 5:
-            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
-            # self.config = [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
 
         self.features = self._make_layers(self.config)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -421,10 +436,10 @@ def test_models():
 
         output_names = ['y_hat']
 
-        torch.onnx.export(resnet_net,x,
-                      f'onnx_model_small_resnet_small_imagenet.onnx',
-                      input_names=input_names,
-                      output_names=output_names)
+        torch.onnx.export(resnet_net, x,
+                          f'onnx_model_small_resnet_small_imagenet.onnx',
+                          input_names=input_names,
+                          output_names=output_names)
 
         loss = dummy_loss(y_resnet, dummy_y)
         loss.backward()

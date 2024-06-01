@@ -23,7 +23,7 @@ from pathlib import Path
 #     resnet152, ResNet152_Weights, \
 #     mobilenet_v3_large, MobileNet_V3_Large_Weights, vit_b_32, ViT_B_32_Weights, \
 #     efficientnet_b0, EfficientNet_B0_Weights
-from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0
+from torchvision.models import resnet34, mobilenet_v3_large, efficientnet_b0, ResNet34_Weights
 import torchvision
 # import vits
 import timm
@@ -31,6 +31,8 @@ import timm
 import pandas as pd
 
 imagenet_normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225])
 
 print("Imported everything")
 
@@ -144,7 +146,7 @@ class CustomValImageNetDataset(Dataset):
         return image, class_index
 
 
-def get_arc3_dataset(cfg,transforms=None):
+def get_arc3_dataset(cfg, transforms=None):
     # Excerpt take from https://github.com/pytorch/examples/blob/e0d33a69bec3eb4096c265451dbb85975eb961ea/imagenet/main.py#L113-L126
     # Data loading code
 
@@ -158,31 +160,33 @@ def get_arc3_dataset(cfg,transforms=None):
         data_path = "datasets/"
     traindir = data_path + 'imagenet/' + 'train'
     testdir = data_path + 'imagenet/' + 'val'
-    normalize = trnfs.Normalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+
     if transforms:
+
         train_trasnform = transforms["train"]
         test_trasnform = transforms["val"]
+
     else:
-        train_transform=trnfs.Compose([
+
+        train_transform = trnfs.Compose([
             trnfs.RandomResizedCrop(224),
             trnfs.RandomHorizontalFlip(),
             trnfs.ToTensor(),
             normalize,
         ])
-        test_transform=trnfs.Compose([
-        trnfs.Resize(256),
-        trnfs.CenterCrop(224),
-        trnfs.ToTensor(),
-        normalize,
-    ])
+        test_transform = trnfs.Compose([
+            trnfs.Resize(256),
+            trnfs.CenterCrop(224),
+            trnfs.ToTensor(),
+            normalize,
+        ])
     whole_train_dataset = torchvision.datasets.ImageFolder(
-        traindir,train_transform)
+        traindir, train_transform)
     print(f"Length of dataset: {len(whole_train_dataset)}")
 
     train_dataset, val_dataset = torch.utils.data.random_split(whole_train_dataset, [1231167, 50000])
 
-    full_test_dataset = torchvision.datasets.ImageFolder(testdir,test_transform )
+    full_test_dataset = torchvision.datasets.ImageFolder(testdir, test_transform)
     print(full_test_dataset.imgs)
 
     big_test, small_test = torch.utils.data.random_split(full_test_dataset, [len(full_test_dataset) - 10000, 10000])
@@ -809,7 +813,8 @@ def run_big_mem_RF_calculation(args):
     print("ResNet34")
     print("##############################")
 
-    f_model = resnet34(weights="IMAGENET1K_V1")
+    # f_model = resnet34(weights="IMAGENET1K_V1")
+    f_model = resnet34(weights=ResNet)
 
     # f_model = resnet34()
     # f_model.cuda()
@@ -1131,7 +1136,15 @@ def run_pruning_results(args):
         print("##############################")
         print("ResNet34")
         print("##############################")
-        f_model = resnet34(weights="IMAGENET1K_V1")
+        f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
+        train_transform= trnfs.Compose([
+            trnfs.RandomResizedCrop(224),
+            trnfs.RandomHorizontalFlip(),
+            trnfs.ToTensor(),
+            normalize,
+        ])
+        weigths_preprocess = ResNet34_Weights.DEFAULT.trans
+        val_dataloader = get_arc3_dataset(args, transforms={"train":train_transform,"val":ResNet34_Weights.})
 
         # f_model = resnet34()
 
