@@ -511,7 +511,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
-    parser.add_argument('--use_wandb', default=1, type=int, help='Use Weight and Biases')
+    parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     args = parser.parse_args()
