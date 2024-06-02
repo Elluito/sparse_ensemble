@@ -288,7 +288,6 @@ def test_pin_and_num_workers(args):
 
 
 def load_small_imagenet(args):
-
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
@@ -317,8 +316,15 @@ def load_small_imagenet(args):
             transforms.ToTensor(),
             normalize_train,
         ]))
+    current_directory = Path(args["traindir"])
 
-    train_data, val_data = random_split(whole_train_dataset, [95000, 5000])
+    train_size = 95000
+    val_size = 5000
+    if 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+        train_size = 94999
+        val_size = 5000
+
+    train_data, val_data = random_split(whole_train_dataset, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=args["batch_size"],
@@ -330,8 +336,9 @@ def load_small_imagenet(args):
                                              shuffle=True)
 
     return train_loader, val_loader, test_loader
-def load_tiny_imagenet(args):
 
+
+def load_tiny_imagenet(args):
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
