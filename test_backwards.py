@@ -38,7 +38,9 @@ for t in range(2000):
     # gradient of loss with respect to all Tensors with requires_grad=True.
     # After this call a.grad, b.grad. c.grad and d.grad will be Tensors holding
     # the gradient of the loss with respect to a, b, c, d respectively.
+    print("About to compute the backwards")
     loss.backward()
+    print("After computing the backwards")
 
     # Manually update weights using gradient descent. Wrap in torch.no_grad()
     # because weights have requires_grad=True, but we don't need to track this

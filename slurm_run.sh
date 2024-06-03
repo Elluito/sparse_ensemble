@@ -51,6 +51,9 @@ which python
 #
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 python -c "import os; print(os.environ)"
+
+python test_backwards.py
+
 module load pytorch
 echo "After loading the pytorch module"
 which python
