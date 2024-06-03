@@ -25,8 +25,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     start_time = time.time()
     small_imagenet_MEAN = [125.307, 122.961, 113.8575]
     CIFAR_STD = [51.5865, 50.847, 51.255]
-    small_imagenet_MEAN = [0.4802, 0.4481, 0.3975]
-    small_imagenet_STD = [0.2302, 0.2265, 0.2262]
+    small_imagenet_MEAN = np.array([0.4802, 0.4481, 0.3975])
+    small_imagenet_STD = np.array([0.2302, 0.2265, 0.2262])
     loaders = {}
 
     # for name in ['train', 'test']:
@@ -38,7 +38,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN, small_imagenet_STD, torch.float32)
+        NormalizeImage(small_imagenet_MEAN, small_imagenet_STD,np.float32)
     ]
 
     label_pipeline: List[Operation] = [
