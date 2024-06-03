@@ -15,13 +15,7 @@ import pandas as pd
 
 os.environ["LD_LIBRARY_PATH"] = ""
 
-
-
-
-
 ###########################################
-
-
 
 
 # =======================================UTILS===========================================================================
@@ -30,6 +24,7 @@ os.environ["LD_LIBRARY_PATH"] = ""
     - msr_init: net parameter initialization.
     - progress_bar: progress bar mimic xlua.progress.
 '''
+
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
@@ -60,6 +55,7 @@ def init_params(net):
             init.normal(m.weight, std=1e-3)
             if m.bias:
                 init.constant(m.bias, 0)
+
 
 # #####################################################################################
 # _, term_width = os.popen('stty size', 'r').read().split()
@@ -161,7 +157,6 @@ def train(epoch):
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if batch_idx == 0:
-
             print("I just entered the training loop!!!:{}")
 
         inputs, targets = inputs.to(device), targets.to(device)
@@ -250,6 +245,7 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
 
 def main(args):
     print(args)
+
     global best_acc, testloader, device, criterion, trainloader, optimizer, net
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -317,10 +313,15 @@ def main(args):
             {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
              "num_workers": args.num_workers, "batch_size": batch_size})
     if args.dataset == "small_imagenet":
-        from test_imagenet import load_small_imagenet
-        trainloader, valloader, testloader = load_small_imagenet(
-            {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-             "num_workers": args.num_workers, "batch_size": batch_size})
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                                      batch_size, args.num_workers)
+        else:
+            from test_imagenet import load_small_imagenet
+            trainloader, valloader, testloader = load_small_imagenet(
+                {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size})
 
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
@@ -553,6 +554,13 @@ if __name__ == '__main__':
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+    parser.add_argument('--ffcv_train',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+                        type=str, help='FFCV train dataset')
+    parser.add_argument('--ffcv_val',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+                        type=str, help='FFCV val dataset')
     args = parser.parse_args()
 
     try:
