@@ -26,9 +26,7 @@
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 #module load pytorch
 
-
 which python
-
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
@@ -51,14 +49,17 @@ which python
 #
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 python -c "import os; print(os.environ)"
-
+printf "Start Test \n"
 python test_backwards.py
-
+printf "End Test \n"
 module load pytorch
 echo "After loading the pytorch module"
 which python
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 python -c "import os; print(os.environ)"
+printf "Start Test \n"
+python test_backwards.py
+printf "End Test \n"
 ##echo "============ 2 workers ============================"
 ##python hao_models_pruning_test.py --workers 2
 #echo "============ 4 workers ============================"
