@@ -152,10 +152,21 @@ def train(epoch):
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.to(device), targets.to(device)
+
         optimizer.zero_grad()
+        if batch_idx == 0:
+            t0 = time.time()
         outputs = net(inputs)
+        if batch_idx == 0:
+            t1 = time.time()
+            print("Time for forward pass {}".format(t1 - t0))
         loss = criterion(outputs, targets)
+        if batch_idx == 0:
+            t0 = time.time()
         loss.backward()
+        if batch_idx == 0:
+            t1 = time.time()
+            print("Time for backward pass {}".format(t1 - t0))
         optimizer.step()
 
         train_loss += loss.item()
@@ -167,6 +178,14 @@ def train(epoch):
         #              % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
         # print(
         #     'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+        if batch_idx % 10 == 0:
+            print("Inputs device :{}".format(inputs.data.device))
+            print("Outputs device :{}".format(outputs.data.device))
+
+            print(
+                'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                    train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+
     return 100. * correct / total, correct, total
 
 
@@ -189,6 +208,8 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
 
             # progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             #              % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+
+        if batch_idx == 10:
             print('Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
                 test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
@@ -470,7 +491,10 @@ def main(args):
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
+        t0 = time.time()
         train_acc = train(epoch)
+        t1 = time.time()
+        print("Epoch time:{}".format(t1 - t0))
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
         if args.use_wandb:
             # log metrics to wandb
