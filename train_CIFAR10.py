@@ -13,6 +13,7 @@ from alternate_models import *
 from pathlib import Path
 import pandas as pd
 
+os.environ["LD_LIBRARY_PATH"] = ""
 # =======================================UTILS===========================================================================
 ''' Some helper functions for PyTorch, including:
     - get_mean_and_std: calculate the mean and std value of dataset.
@@ -445,7 +446,6 @@ def main(args):
         }
 
         torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
-
 
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
