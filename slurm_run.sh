@@ -3,14 +3,14 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=20:00:00
+#SBATCH --time=00:09:00
 
 # set name of job
-#SBATCH --job-name=Imagenet_pruning_results
+#SBATCH --job-name=pytorch_test
 
-#SBATCH --error=imagenet_pruning_results.err
+#SBATCH --error=pytorch_test.err
 
-#SBATCH --output=imagenet_pruning_results.output
+#SBATCH --output=pytorch_test.output
 
 # set partition (devel, small, big)
 
