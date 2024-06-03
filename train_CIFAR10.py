@@ -152,9 +152,13 @@ def train(epoch):
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if batch_idx == 0:
-            print("I just entered the training loop!!!:{}")
-        inputs, targets = inputs.to(device), targets.to(device)
 
+            print("I just entered the training loop!!!:{}")
+
+        inputs, targets = inputs.to(device), targets.to(device)
+        if batch_idx == 0:
+            print("Inputs device :{}".format(inputs.data.device))
+            print("Targets device :{}".format(targets.data.device))
         optimizer.zero_grad()
         if batch_idx == 0:
             t0 = time.time()
