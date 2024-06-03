@@ -345,14 +345,14 @@ def main(args):
     if args.model == "vgg19":
 
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
             net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
