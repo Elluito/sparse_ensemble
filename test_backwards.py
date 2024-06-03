@@ -5,7 +5,7 @@ import math
 
 dtype = torch.float
 device = "cuda" if torch.cuda.is_available() else "cpu"
-torch.set_default_device(device)
+# torch.set_default_device(device)
 
 # Create Tensors to hold input and outputs.
 # By default, requires_grad=False, which indicates that we do not need to
@@ -17,12 +17,14 @@ y = torch.sin(x)
 # 4 weights: y = a + b x + c x^2 + d x^3
 # Setting requires_grad=True indicates that we want to compute gradients with
 # respect to these Tensors during the backward pass.
-a = torch.randn((), dtype=dtype, requires_grad=True)
-b = torch.randn((), dtype=dtype, requires_grad=True)
-c = torch.randn((), dtype=dtype, requires_grad=True)
-d = torch.randn((), dtype=dtype, requires_grad=True)
+a = torch.randn((), dtype=dtype, requires_grad=True).cuda()
+b = torch.randn((), dtype=dtype, requires_grad=True).cuda()
+c = torch.randn((), dtype=dtype, requires_grad=True).cuda()
+d = torch.randn((), dtype=dtype, requires_grad=True).cuda()
 
 learning_rate = 1e-6
+x = x.cuda()
+y = y.cuda()
 for t in range(2000):
     # Forward pass: compute predicted y using operations on Tensors.
     y_pred = a + b * x + c * x ** 2 + d * x ** 3
