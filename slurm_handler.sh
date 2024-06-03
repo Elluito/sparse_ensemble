@@ -32,6 +32,6 @@
 
 #"resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
 
-sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_8_small_imagenet.err" --gres=gpu:1 --output="small_resnet_lv_8_small_imagenet.output"  --job-name="small_resnet_lv_8_small_imagenet" slurm_run.sh "resnet_small" "small_imagenet" 2 8 "normal" 200 "recording_200" 1 1
+sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_8_small_imagenet_0_workers.err" --gres=gpu:1 --output="small_resnet_lv_8_small_imagenet_0_workers.output"  --job-name="small_resnet_lv_8_small_imagenet_0_workers" slurm_run.sh "resnet_small" "small_imagenet" 0 8 "normal" 200 "recording_200" 1 1
 #sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_9_small_imagenet.err" --gres=gpu:1 --output="small_resnet_lv_9_small_imagenet.output"  --job-name="small_resnet_lv_9_small_imagenet" slurm_run.sh "resnet_small" "small_imagenet" 2 9 "normal" 200 "recording_200" 1 1
 #sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_10_small_imagenet.err" --gres=gpu:1 --output="small_resnet_lv_10_small_imagenet.output"  --job-name="small_resnet_lv_10_small_imagenet" slurm_run.sh "resnet_small" "small_imagenet" 2 10 "normal" 200 "recording_200" 1 1
