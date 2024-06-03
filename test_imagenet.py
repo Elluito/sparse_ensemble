@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import torch
 import torch.nn as nn
-import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
@@ -13,7 +12,6 @@ from main import get_model
 from sparse_ensemble_utils import sparsity, test_with_accelerator
 import omegaconf
 from torch.utils.data import random_split
-import numpy as np
 ## FFCV imports
 from typing import List
 # from ffcv.fields import IntField, RGBImageField
