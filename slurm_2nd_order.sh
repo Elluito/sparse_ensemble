@@ -33,6 +33,8 @@ which python
 #python Second_order_Receptive_field.py --experiment 2 --optimiser "kfac"
 #
 #python Second_order_Receptive_field.py --experiment 2 --optimiser "sam"
+export LD_LIBRARY_PATH=""
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/work/lib"
 
   if [ $6 -eq 1 ]
   then
