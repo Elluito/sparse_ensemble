@@ -473,6 +473,7 @@ def main(args):
         print("solution name: {}".format(solution_name))
     else:
         seed = time.time()
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
                                                             args.name)
         state = {
