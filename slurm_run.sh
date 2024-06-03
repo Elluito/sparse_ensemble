@@ -71,7 +71,7 @@ which python
 #echo "============ 32 workers ============================"
 #python hao_models_pruning_test.py --workers 32
 export LD_LIBRARY_PATH=""
+#unset GOMP_CPU_AFFINITY
+#unset KMP_AFFINITY
 python -c "import os; print(os.environ)"
-unset GOMP_CPU_AFFINITY
-unset KMP_AFFINITY
 python train_CIFAR10.py  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9

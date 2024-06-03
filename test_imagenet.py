@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import torch
 import torch.nn as nn
+import torchvision
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from pathlib import Path
@@ -12,6 +13,20 @@ from main import get_model
 from sparse_ensemble_utils import sparsity, test_with_accelerator
 import omegaconf
 from torch.utils.data import random_split
+import numpy as np
+## FFCV imports
+from typing import List
+from ffcv.fields import IntField, RGBImageField
+from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
+from ffcv.loader import Loader, OrderOption
+from ffcv.pipeline.operation import Operation
+from ffcv.transforms import RandomHorizontalFlip, Cutout, \
+    RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage, RandomResizedCrop, NormalizeImage
+from ffcv.fields.rgb_image import CenterCropRGBImageDecoder, \
+    RandomResizedCropRGBImageDecoder
+from ffcv.fields.basics import IntDecoder
+from ffcv.transforms.common import Squeeze
+from ffcv.writer import DatasetWriter
 
 
 # from ffcv.writer import DatasetWriter
@@ -338,7 +353,95 @@ def load_small_imagenet(args):
     return train_loader, val_loader, test_loader
 
 
+def make_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=None, distributed=False,
+                     in_memory=True):
+    paths = {
+        'train': train_dataset,
+        'test': val_dataset
+
+    }
+
+    start_time = time.time()
+    small_imagenet_MEAN = [125.307, 122.961, 113.8575]
+    CIFAR_STD = [51.5865, 50.847, 51.255]
+    small_imagenet_MEAN = [0.4802, 0.4481, 0.3975]
+    small_imagenet_STD = [0.2302, 0.2265, 0.2262]
+    loaders = {}
+
+    # for name in ['train', 'test']:
+    ########## train
+    decoder = RandomResizedCropRGBImageDecoder((360, 360))
+    image_pipeline: List[Operation] = [
+        decoder,
+        RandomHorizontalFlip(),
+        ToTensor(),
+        ToDevice(torch.device("cuda:0"), non_blocking=True),
+        ToTorchImage(),
+        NormalizeImage(small_imagenet_MEAN, small_imagenet_STD, torch.float32)
+    ]
+
+    label_pipeline: List[Operation] = [
+        IntDecoder(),
+        ToTensor(),
+        Squeeze(),
+        ToDevice(torch.device("cuda:0"), non_blocking=True)
+    ]
+
+    order = OrderOption.RANDOM if distributed else OrderOption.QUASI_RANDOM
+    loader = Loader(train_dataset,
+                    batch_size=batch_size,
+                    num_workers=num_workers,
+                    order=order,
+                    os_cache=in_memory,
+                    drop_last=True,
+                    pipelines={
+                        'image': image_pipeline,
+                        'label': label_pipeline
+                    },
+                    distributed=distributed)
+    ordering = OrderOption.RANDOM if name == 'train' else OrderOption.SEQUENTIAL
+
+    train_loader = Loader(paths[name], batch_size=batch_size, num_workers=num_workers,
+                          order=ordering, drop_last=(name == 'train'),
+                          pipelines={'image': image_pipeline, 'label': label_pipeline})
+    ########## test
+    val_path = Path(val_dataset)
+    assert val_path.is_file()
+    res_tuple = (360, 360)
+    DEFAULT_CROP_RATIO = 360 / 392
+    cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
+    image_pipeline = [
+        cropper,
+        ToTensor(),
+        ToDevice(torch.device("cuda:0"), non_blocking=True),
+        ToTorchImage(),
+        NormalizeImage(small_imagenet_MEAN,small_imagenet_STD, np.float32)
+    ]
+
+    label_pipeline = [
+        IntDecoder(),
+        ToTensor(),
+        Squeeze(),
+        ToDevice(torch.device("cuda:0"),
+                 non_blocking=True)
+    ]
+
+    loader = Loader(val_dataset,
+                    batch_size=batch_size,
+                    num_workers=num_workers,
+                    order=OrderOption.SEQUENTIAL,
+                    drop_last=False,
+                    pipelines={
+                        'image': image_pipeline,
+                        'label': label_pipeline
+                    },
+                    distributed=distributed)
+
+    return loaders["train"], None, loaders["val"], start_time
+
+
 def load_tiny_imagenet(args):
+
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 

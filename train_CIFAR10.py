@@ -14,13 +14,22 @@ from pathlib import Path
 import pandas as pd
 
 os.environ["LD_LIBRARY_PATH"] = ""
+
+
+
+
+
+###########################################
+
+
+
+
 # =======================================UTILS===========================================================================
 ''' Some helper functions for PyTorch, including:
     - get_mean_and_std: calculate the mean and std value of dataset.
     - msr_init: net parameter initialization.
     - progress_bar: progress bar mimic xlua.progress.
 '''
-
 
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
@@ -52,7 +61,7 @@ def init_params(net):
             if m.bias:
                 init.constant(m.bias, 0)
 
-
+# #####################################################################################
 # _, term_width = os.popen('stty size', 'r').read().split()
 term_width = 120
 term_width = int(term_width)
