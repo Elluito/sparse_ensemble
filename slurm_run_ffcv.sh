@@ -71,6 +71,7 @@ which python
 #echo "============ 32 workers ============================"
 #python hao_models_pruning_test.py --workers 32
 export LD_LIBRARY_PATH=""
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
 #unset GOMP_CPU_AFFINITY
 #unset KMP_AFFINITY
 python -c "import os; print(os.environ)"
