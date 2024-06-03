@@ -75,4 +75,4 @@ export LD_LIBRARY_PATH=""
 #unset KMP_AFFINITY
 python -c "import os; print(os.environ)"
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
-#python train_CIFAR10.py  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --ffcv --ffcv_train "${10}" --ffcv_val "${11}"
+python train_CIFAR10.py  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --ffcv --ffcv_train "${10}" --ffcv_val "${11}"
