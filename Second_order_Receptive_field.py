@@ -14,14 +14,65 @@ import pickle
 import pandas as pd
 from pathlib import Path
 from sam import SAM
+from thop import profile
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 print("Device:{}".format(device))
 
+
+# def measure_flops_cost(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40,
+#                        record_time=False,
+#                        save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False,
+#                        verbose=0,
+#                        grad_clip=0, macs_per_batch=None):
+#     net.to(device)
+#
+#     if macs_per_batch:
+#         total_training_macs = 0
+#
+#     for epoch in range(epochs):  # loop over the dataset multiple times
+#
+#         running_loss = 0.0
+#
+#         correct = 0
+#         total = 0
+#
+#         # for i, data in enumerate(trainloader, 0):
+#         for i in range(len(trainloader)):
+#             # get the inputs; data is a list of [inputs, labels]
+#             # zero the parameter gradients
+#             if isinstance(optimizer, KFACOptimizer) or isinstance(optimizer, EKFACOptimizer):
+#                 if macs_per_batch:
+#                     forward_pass = macs_per_batch
+#                     backward_pass = 8 * macs_per_batch
+#                     total_training_macs = forward_pass + backward_pass
+#
+#             if isinstance(optimizer, SAM):
+#
+#                 if macs_per_batch:
+#                     forward_pass = macs_per_batch
+#                     backward_pass = 2 * macs_per_batch
+#                     total_training_macs = 2 * (forward_pass + backward_pass)
+#
+#         if record:
+#             filepath = "{}/{}.csv".format(save_folder, file_name_sufix)
+#             if Path(filepath).is_file():
+#                 log_dict = {"Epoch": [epoch], "test accuracy": [test_accuracy], "training accuracy": [train_accuracy]}
+#                 df = pd.DataFrame(log_dict)
+#                 df.to_csv(filepath, mode="a", header=False, index=False)
+#             else:
+#                 # Try to read the file to see if it is
+#                 log_dict = {"Epoch": [epoch], "test accuracy": [test_accuracy], "training accuracy": [train_accuracy]}
+#                 df = pd.DataFrame(log_dict)
+#                 df.to_csv(filepath, sep=",", index=False)
+#
+#     return best_acc
+
+
 def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
-             grad_clip=0):
+             grad_clip=0, macs_per_batch=None):
     criterion = nn.CrossEntropyLoss()
     net.to(device)
 
@@ -29,6 +80,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     best_acc = 0
+    # if macs_per_batch:
+    #     total_training_macs = 0
 
     for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -61,6 +114,10 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     optimizer.zero_grad()  # clear the gradient for computing true-fisher.
 
                 loss.backward()
+                # if macs_per_batch:
+                #     forward_pass = macs_per_batch
+                #     backward_pass = 4*macs_per_batch
+                #     total_training_macs = forward_pass+backward_pass
 
                 if grad_clip:
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
@@ -69,7 +126,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 t1 = time.time_ns()
 
                 if record_time:
-                    with open(file_name_sufix + "/time_" + surname + ".txt", "a") as f:
+                    with open(file_name_sufix + "training_time_kfac" + ".txt", "a") as f:
                         f.write(str(t1 - t0) + "\n")
                 #
                 # if record_function_calls:
@@ -99,6 +156,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # print("batch:{}".format(i))
                 # print(net(inputs).shape)
                 # print(labels.shape)
+                t0 = time.time()
                 loss = criterion(net(inputs), labels)  # use this loss for any training statistics
                 loss.backward()
                 optimizer.first_step(zero_grad=True)
@@ -108,6 +166,11 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 if grad_clip:
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.second_step(zero_grad=True)
+
+                t1 = time.time()
+                if record_time:
+                    with open(file_name_sufix + "training_time_SAM" + ".txt", "a") as f:
+                        f.write(str(t1 - t0) + "\n")
                 #
                 #
                 #
@@ -171,6 +234,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_accuracy], "training accuracy": [train_accuracy]}
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
+
     return best_acc
 
 
@@ -220,12 +284,12 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -249,7 +313,7 @@ def main(args):
     if args.optimiser == "sam":
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
         optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
-    seed=time.time()
+    seed = time.time()
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
     if args.save:
@@ -259,10 +323,18 @@ def main(args):
             'epoch': -1,
         }
         torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+
     t0 = time.time()
+
+    input = torch.randn(1, 3, 224, 224)
+
+    macs_one_image, params = profile(net, inputs=(input,))
+
+    macs_batch = macs_one_image * args.batch_size
+
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
-                             record=args.record, verbose=2, grad_clip=args.grad_clip)
+                             record=args.record, verbose=2, grad_clip=args.grad_clip,record_time=args.record_time)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))
@@ -299,14 +371,14 @@ def optuna_optimization(args):
             "num_workers": 0,
             "type": "normal",
             "folder": "",
-            "record":False,
+            "record": False,
             "name": "hyper_optim",
             "batch_size": 32,
             "use_scheduler_batch": False,
             "grad_clip": gradient_clip,
 
         })
-        acc=-1
+        acc = -1
         try:
 
             acc, train_time = main(cfg)
@@ -322,7 +394,8 @@ def optuna_optimization(args):
 
         return acc
 
-    search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5], "grad_clip": [1, 0.8,0.7, 0.5, 0.1, 0]}
+    search_space = {"lr": [0.1, 0.01, 0.001], "momentum": [0.99, 0.9, 0.7, 0.5],
+                    "grad_clip": [1, 0.8, 0.7, 0.5, 0.1, 0]}
 
     if os.path.isfile("second_order_{}_hyperparameter_optimization.pkl".format(args.optimiser)):
 
@@ -350,12 +423,11 @@ def optuna_optimization(args):
         print_param = omegaconf.DictConfig({
             "lr": lr,
             "momentum": momentum,
-            "grad_clip":grad_clip,
+            "grad_clip": grad_clip,
             "optimiser": args.optimiser,
         })
         print("Parameters:\n\t")
         print(omegaconf.OmegaConf.to_yaml(print_param))
-
 
 
 if __name__ == '__main__':
@@ -369,7 +441,7 @@ if __name__ == '__main__':
     parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
-                        help='Dataset to use [cifar10,tiny_imagenet616gg]')
+                        help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
@@ -380,10 +452,13 @@ if __name__ == '__main__':
     parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
     parser.add_argument('--save', default=0, type=int, help="Save the best model")
     parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
+    parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
     parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
     parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
     parser.add_argument('--use_scheduler_batch', default=1, type=int,
                         help="Use scheduler for batches instead of epochs")
+    parser.add_argument('--count_flops', '-r', action='store_true',
+                        help='Count the flops of training')
 
     args = parser.parse_args()
 
@@ -395,11 +470,9 @@ if __name__ == '__main__':
 
         pass
     if args.experiment == 1:
-
         print(args)
 
         main(args)
 
     if args.experiment == 2:
-
         optuna_optimization(args)

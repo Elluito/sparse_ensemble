@@ -12,6 +12,7 @@ import argparse
 from alternate_models import *
 from pathlib import Path
 import pandas as pd
+from shrinkbench.metrics.flops import flops
 
 os.environ["LD_LIBRARY_PATH"] = ""
 
@@ -241,6 +242,10 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
         torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
         best_acc = acc
     return acc
+def give_sparse_flops_for_a_batch(model,loader):
+    iter_val_loader = iter(loader)
+    data, y = next(iter_val_loader)
+    _, unit_sparse_flops = flops(model, data)
 
 
 def main(args):
@@ -551,6 +556,8 @@ if __name__ == '__main__':
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
+    parser.add_argument('--count_flops', '-r', action='store_true',
+                        help='Count the flops of training')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
