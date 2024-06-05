@@ -105,7 +105,7 @@
 ### resnet18 small imagenet lvl K9
 #qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_k9_renet18_small_imagenet" resume_run.sh "resnet18" "small_imagenet" 2 "k9" "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_1716016178.5822153_rf_level_k9_recording_200_test_acc_50.14.pth"
 #
-qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_3_recording_200_test_acc_42.89.pth"
+#qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_3_recording_200_test_acc_42.89.pth"
 
 ### resnet18 small imagenet lvl K9
 #qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_5_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 5 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_5_recording_200_test_acc_46.75.pth"
@@ -557,30 +557,37 @@ qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_
 
 #                                               AA REALLLLLL    Pruning summaries one shot
 
+
+
+
+
 #model="resnet_small"
-#model="resnet18"
-#dataset="small_imagenet"
+model="resnet18"
+dataset="small_imagenet"
 #directory=/nobackup/sclaam/checkpoints
-#
-###seeds=(0 1 2)
-#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-#rf_levels=(2 3 4)
-##rf_levels=(3 5 7)
-#levels_max=${#rf_levels[@]}                                  # Take the length of that array
-##seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
-#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-#
-#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-#
-##qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
-#
+directory=/home/luisaam/Documents/PhD/checkpoints
+
+
+##seeds=(0 1 2)
+pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+rf_levels=(2 3 4 'k6' 'k7')
+#rf_levels=(3 5 7)
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#seeds_per_level=${#list_to_use[@]}                            # Take the length of that array
+number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+
+for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+
+#qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
+
 #qsub -l coproc_v100=1 -l h_rt=00:20:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-#
-###./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
-#
-#done
-#done
+which python
+./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
+
+done
+done
 
 
 

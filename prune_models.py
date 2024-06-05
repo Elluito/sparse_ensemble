@@ -1145,7 +1145,7 @@ if __name__ == '__main__':
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-    parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
+    parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,tiny_imagenet616gg]')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
@@ -1158,6 +1158,13 @@ if __name__ == '__main__':
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
 
     args = parser.parse_args()
+    try:
+
+        args.RF_level = int(args.RF_level)
+
+    except Exception as e:
+
+        pass
     if args.experiment == 1:
         print("Experiment 1")
         print(args)

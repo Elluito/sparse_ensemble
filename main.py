@@ -2626,11 +2626,13 @@ def get_datasets(cfg: omegaconf.DictConfig):
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data/"
+            data_path = "/nobackup/sclaam/data"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-            data_path = "datasets/"
+            data_path = "/home/luisaam/Documents/PhD/data"
         from test_imagenet import load_small_imagenet
         trainloader, valloader, testloader = load_small_imagenet(
             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
@@ -2646,6 +2648,8 @@ def get_datasets(cfg: omegaconf.DictConfig):
             data_path = "/nobackup/sclaam/data/"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "/home/luisaam/Documents/PhD/data/"
         traindir = data_path + 'tiny_imagenet_200/' + 'train'

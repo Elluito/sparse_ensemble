@@ -336,6 +336,9 @@ def load_small_imagenet(args):
     if 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
         train_size = 94999
         val_size = 5000
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        train_size = 94999
+        val_size = 5000
 
     train_data, val_data = random_split(whole_train_dataset, [train_size, val_size])
 

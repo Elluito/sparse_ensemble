@@ -8,7 +8,6 @@
 # Ask for some time (hh:mm:ss max of 00:10:00)
 #$ -l h_rt=07:00:00
 
-
 # ASk for some GPU
 # -l coproc_p100=1
 
@@ -27,10 +26,10 @@
 #module load intel openmpi
 #module add anaconda
 #module add cuda/11.1.1
-conda activate work
+#conda activate work
 #which python
-unset GOMP_CPU_AFFINITY
-unset KMP_AFFINITY
+#unset GOMP_CPU_AFFINITY
+#unset KMP_AFFINITY
 #nvcc --version
 #python main.py $1 $2 $3 $4 $5 $6
 #&& python main.py && python main.py
@@ -113,10 +112,20 @@ unset KMP_AFFINITY
 #python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --solution $7 --experiment $8
 
 #############################################################
-#     One shot specific pruning rate results
+#     One shot with specific pruning rate results
 #############################################################
 
-#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#CONDA_BASE_DIR=~/home/luisaam/anaconda3
+#
+#cd "$1"
+#
+## Activate the conda environment.
+#source "$CONDA_BASE_DIR/etc/profile.d/conda.sh"
+#conda activate "$0"
+#eval "$(conda shell.bash hook)"
+#conda activate work
+#which python
+python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
 
@@ -186,15 +195,15 @@ unset KMP_AFFINITY
 # python Second_order_Receptive_field.py --experiment 2 --optimiser $1 --save_folder "$HOME/checkpoints"
 
 ################ KFAC #####################################
-if [ $6 -eq 1 ]
-then
-python Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 #--save_folder "$HOME/checkpoints"
-fi
-
-################ SAM #####################################
-if [ $6 -eq 2 ]
-then
-python Second_order_Receptive_field.py --lr "0.1" --momentum "0.7" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 #--save_folder "$HOME/checkpoints"
-if
+#if [ $6 -eq 1 ]
+#then
+#python Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 #--save_folder "$HOME/checkpoints"
+#fi
+#
+################# SAM #####################################
+#if [ $6 -eq 2 ]
+#then
+#python Second_order_Receptive_field.py --lr "0.1" --momentum "0.7" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 #--save_folder "$HOME/checkpoints"
+#fi
 
 #python hao_models_pruning_test.py --experiment 1
