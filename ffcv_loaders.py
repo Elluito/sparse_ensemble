@@ -13,6 +13,7 @@ from ffcv.fields.rgb_image import CenterCropRGBImageDecoder, \
 from ffcv.fields.basics import IntDecoder
 from ffcv.transforms.common import Squeeze
 
+
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
                                          in_memory=True):
@@ -21,7 +22,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         'test': val_dataset
 
     }
-
+    if num_workers == 0:
+        num_workers = 1
     start_time = time.time()
     small_imagenet_MEAN = [125.307, 122.961, 113.8575]
     CIFAR_STD = [51.5865, 50.847, 51.255]
@@ -38,7 +40,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN, small_imagenet_STD,np.float32)
+        NormalizeImage(small_imagenet_MEAN, small_imagenet_STD, np.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -94,4 +96,3 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                          distributed=distributed)
 
     return train_loader, None, test_loader
-

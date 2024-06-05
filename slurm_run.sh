@@ -24,6 +24,8 @@
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
 #module load pytorch
 
 which python

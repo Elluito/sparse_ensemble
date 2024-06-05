@@ -24,8 +24,9 @@
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
-#module load pytorch
 
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
 which python
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
