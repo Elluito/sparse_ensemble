@@ -85,6 +85,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
 
     for epoch in range(epochs):  # loop over the dataset multiple times
 
+        t0 = time.time_ns()
         running_loss = 0.0
 
         correct = 0
@@ -98,7 +99,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
             # zero the parameter gradients
             if isinstance(optimizer, KFACOptimizer) or isinstance(optimizer, EKFACOptimizer):
                 optimizer.zero_grad()
-                t0 = time.time_ns()
                 outputs = net(inputs)
                 loss = criterion(outputs, labels)
 
@@ -123,11 +123,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.step()
 
-                t1 = time.time_ns()
-
-                if record_time:
-                    with open(file_name_sufix + "training_time_kfac" + ".txt", "a") as f:
-                        f.write(str(t1 - t0) + "\n")
                 #
                 # if record_function_calls:
                 #     with open(file_name_sufix + "/function_call_" + surname + ".txt", "a") as f:
@@ -156,7 +151,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # print("batch:{}".format(i))
                 # print(net(inputs).shape)
                 # print(labels.shape)
-                t0 = time.time()
                 loss = criterion(net(inputs), labels)  # use this loss for any training statistics
                 loss.backward()
                 optimizer.first_step(zero_grad=True)
@@ -167,10 +161,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.second_step(zero_grad=True)
 
-                t1 = time.time()
-                if record_time:
-                    with open(file_name_sufix + "training_time_SAM" + ".txt", "a") as f:
-                        f.write(str(t1 - t0) + "\n")
                 #
                 #
                 #
@@ -193,6 +183,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # loss.backward()
 
                 # optimizer.step()
+
+        t1 = time.time_ns()
 
         test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
         train_accuracy = test(net, use_cuda=True, testloader=trainloader, verbose=0)
@@ -223,6 +215,17 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
             print("Best Test Accuracy at Epoch {}:{}".format(epoch, test_accuracy))
             best_acc = test_accuracy
 
+        if record_time:
+            filepath = "{}/{}_training_time.csv".format(save_folder, file_name_sufix)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
         if record:
             filepath = "{}/{}.csv".format(save_folder, file_name_sufix)
             if Path(filepath).is_file():
@@ -334,7 +337,7 @@ def main(args):
 
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
-                             record=args.record, verbose=2, grad_clip=args.grad_clip,record_time=args.record_time)
+                             record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))

@@ -242,7 +242,9 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
         torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
         best_acc = acc
     return acc
-def give_sparse_flops_for_a_batch(model,loader):
+
+
+def give_sparse_flops_for_a_batch(model, loader):
     iter_val_loader = iter(loader)
     data, y = next(iter_val_loader)
     _, unit_sparse_flops = flops(model, data)
@@ -521,6 +523,18 @@ def main(args):
         if args.use_wandb:
             # log metrics to wandb
             wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
+
+        if args.record_time:
+            filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
         if args.record:
             filepath = "{}/{}.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():
@@ -562,6 +576,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
+    parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
     parser.add_argument('--ffcv_train',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
