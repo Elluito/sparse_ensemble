@@ -1,2 +1,2 @@
 Name,Dense Accuracy,Pruned Accuracy
-resnet18_normal_small_imagenet_seed.0_rf_level_2_recording_200_test_acc_79.01.pth,79.01,0.54
+resnet18_normal_small_imagenet_seed.0_rf_level_2_recording_200_test_acc_79.01.pth,79.01,76.42
