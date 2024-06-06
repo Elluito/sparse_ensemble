@@ -777,7 +777,7 @@ def main(args):
     #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+        "{}/{}_normal_{}_*_level_{}**test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,args.name)))
     print(things)
 
     for i, name in enumerate(
