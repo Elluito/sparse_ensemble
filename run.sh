@@ -125,6 +125,7 @@
 #eval "$(conda shell.bash hook)"
 #conda activate work
 #which python
+
 python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"

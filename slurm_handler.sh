@@ -62,7 +62,7 @@ directory=$HOME/checkpoints_arc4
 pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 
 rf_levels=(2 3)
-#rf_levels=(2 3 4 'k6' 'k7')
+#rf_levels=(2 3 4 'k6' 'k7' "k8")
 # rf for vgg
 #rf_levels=(3 4 5 "k6" "k7 "k8")
 
