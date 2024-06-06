@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_1_cifar10_rs.err" --output="kfac_optim_rf_1_cifar10_rs.output"  --job-name="Kfac_optim_rf_1_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_2_cifar10_rs.err" --output="kfac_optim_rf_2_cifar10_rs.output" --job-name="Kfac_optim_rf_2_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_3_cifar10_rs.err" --output="kfac_optim_rf_3_cifar10_rs.output"  --job-name="Kfac_optim_rf_3_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_4_cifar10_rs.err" --output="kfac_optim_rf_4_cifar10_rs.output" --job-name="Kfac_optim_rf_4_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k6_cifar10_rs.err" --output="kfac_optim_rf_k6_cifar10_rs.output" --job-name="Kfac_optim_rf_k6_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k7_cifar10_rs.err" --output="kfac_optim_rf_k7_cifar10_rs.output" --job-name="Kfac_optim_rf_k7_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k8_cifar10_rs.err" --output="kfac_optim_rf_k8_cifar10_rs.output" --job-name="Kfac_optim_rf_k8_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper_100" "1"
-sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k9_cifar10_rs.err" --output="kfac_optim_rf_k9_cifar10_rs.output" --job-name="Kfac_optim_rf_k9_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k9" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_1_cifar10_rs.err" --output="kfac_optim_rf_1_cifar10_rs.output"  --job-name="Kfac_optim_rf_1_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "1" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_2_cifar10_rs.err" --output="kfac_optim_rf_2_cifar10_rs.output" --job-name="Kfac_optim_rf_2_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "2" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_3_cifar10_rs.err" --output="kfac_optim_rf_3_cifar10_rs.output"  --job-name="Kfac_optim_rf_3_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "3" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_4_cifar10_rs.err" --output="kfac_optim_rf_4_cifar10_rs.output" --job-name="Kfac_optim_rf_4_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "4" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k6_cifar10_rs.err" --output="kfac_optim_rf_k6_cifar10_rs.output" --job-name="Kfac_optim_rf_k6_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k6" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k7_cifar10_rs.err" --output="kfac_optim_rf_k7_cifar10_rs.output" --job-name="Kfac_optim_rf_k7_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k7" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k8_cifar10_rs.err" --output="kfac_optim_rf_k8_cifar10_rs.output" --job-name="Kfac_optim_rf_k8_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k8" "normal" "kfac_optim_hyper_100" "1"
+#sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="kfac_optim_rf_k9_cifar10_rs.err" --output="kfac_optim_rf_k9_cifar10_rs.output" --job-name="Kfac_optim_rf_k9_cifar10_rs" slurm_2nd_order.sh "cifar10" "resnet50" "k9" "normal" "kfac_optim_hyper_100" "1"
 ##
 ##
 ##
@@ -32,6 +32,7 @@ sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 
 #"resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1
 
+#sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="vgg19_lv_2_small_imagenet_ffcv.err" --gres=gpu:1 --output="vgg_lv_2_small_imagenet_ffcv.output"  --job-name="vgg_lv_2_small_imagenet_ffcv" slurm_run_ffcv.sh "vgg19" "small_imagenet" 2 2 "normal" 200 "recording_200" 1 1
 #########################     small resnet         Small imagenet    ####################################
 
 #sbatch --nodes=1 --time=96:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_8_small_imagenet.err" --gres=gpu:1 --output="small_resnet_lv_8_small_imagenet.output"  --job-name="small_resnet_lv_8_small_imagenet" slurm_run.sh "resnet_small" "small_imagenet" 1 8 "normal" 200 "recording_200" 1 1
@@ -72,8 +73,9 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 
 #qsub -l coproc_v100=1 -l h_rt=00:20:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 sbatch --nodes=1 --time=02:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_one_shot_pruning"  slurm_run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+
 which python
-./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+#./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"
 
 done
