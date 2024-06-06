@@ -73,8 +73,8 @@
 #python hao_models_pruning_test.py --workers 32
 
 echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
-eval "$(conda shell.bash hook)"
-conda activate work
+#eval "$(conda shell.bash hook)"
+#conda activate work
 which python
 export LD_LIBRARY_PATH=""
 l=$(which python)
@@ -83,6 +83,7 @@ lib_path_of_current_enviroment="${l%%python}"
 echo "Ld library ${lib_path_of_current_enviroment}"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$lib_path_of_current_enviroment
 
+python -c "import os; print(os.environ)"
 #unset GOMP_CPU_AFFINITY
 #unset KMP_AFFINITY
 

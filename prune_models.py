@@ -816,7 +816,7 @@ def main(args):
 
         pruning_rates_per_layer = list(map(zero_number, weights))
 
-        seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
+        seed_from_file1 = re.findall("_[0-9]_", name)
 
         seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
 
@@ -830,9 +830,9 @@ def main(args):
 
             seed_from_file = seed_from_file2[0].split("_")[2]
 
-        else:
+        elif seed_from_file1:
 
-            seed_from_file = seed_from_file1[0]
+            seed_from_file = seed_from_file1[0].replace("_", "")
 
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
 
