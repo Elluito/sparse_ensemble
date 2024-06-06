@@ -1,0 +1,63 @@
+## WARNING!
+## The current directory is in your home directory. Please use the high-performance
+## cluster filesystem /nobackup. See documentation for information.
+## WARNING!
+
+## Hosts assigned to job 6619511.1:
+##
+## db04gpu5.arc4.leeds.ac.uk 10 slots
+##
+## Resources granted:
+##
+## h_vmem = 5153960755 (per slot)
+## h_rt   = 01:00:00
+## disk   = 1G (per slot)
+
+/home/home01/sclaam/.conda/envs/work/bin/python
+First line
+After os
+After accelerate
+After Pickle
+After pareto set
+After glob
+After typing
+Until: 16
+after datetime
+after umap
+After optuna
+Until 20
+Unitl line 40
+matplotlib backend agg
+Device: cuda
+safe All imports
+I'm about to begin the similarity comparison
+Experiment 1
+Namespace(experiment=1, lr=0.1, type='normal', RF_level='k6', num_workers=4, dataset='small_imagenet', model='resnet18', folder='/nobackup/sclaam/checkpoints', name='', solution='', pruning_rate=0.6, epochs=200, width=1, ffcv=False, ffcv_train='/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv', ffcv_val='/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv')
+Glob text:/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_*_level_k6**test_acc_*.pth
+['/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_1715866976.78545_rf_level_k6_recording_200_test_acc_77.0_test_acc_77.25.pth']
+/nobackup/sclaam/checkpoints/resnet18_normal_small_imagenet_1715866976.78545_rf_level_k6_recording_200_test_acc_77.0_test_acc_77.25.pth
+Device: cuda
+Dense accuracy:77.25
+Exclude layers in prun_with_rate:['conv1', 'linear']
+layer1.0.conv1
+layer1.0.conv2
+layer1.1.conv1
+layer1.1.conv2
+layer2.0.conv1
+layer2.0.conv2
+layer2.0.shortcut.0
+layer2.1.conv1
+layer2.1.conv2
+layer3.0.conv1
+layer3.0.conv2
+layer3.0.shortcut.0
+layer3.1.conv1
+layer3.1.conv2
+layer4.0.conv1
+layer4.0.conv2
+layer4.0.shortcut.0
+layer4.1.conv1
+layer4.1.conv2
+Length of weigths to prune:19
+Pruned accuracy:74.17
+Time for inference: 143.06354451179504
