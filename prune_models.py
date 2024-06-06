@@ -189,6 +189,7 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
 
 def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
     criterion = nn.CrossEntropyLoss()
+    net.cuda()
     net.eval()
     test_loss = 0
     correct = 0
@@ -202,7 +203,7 @@ def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, ba
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             # if use_cuda:
-            #     inputs, targets = inputs.cuda(), targets.cuda()
+            inputs, targets = inputs.cuda(), targets.cuda()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
             if count_flops:
