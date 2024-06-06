@@ -59,8 +59,8 @@ dataset="small_imagenet"
 directory=$HOME/checkpoints_arc4
 
 ##seeds=(0 1 2)
-#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-pruning_rates=("0.9")
+pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8")
+#pruning_rates=("0.9")
 
 rf_levels=(2 3)
 #rf_levels=(2 3 4 'k6' 'k7' "k8")
