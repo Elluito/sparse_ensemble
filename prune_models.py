@@ -725,14 +725,14 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
