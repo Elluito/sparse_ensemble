@@ -1,0 +1,5 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet18_normal_small_imagenet_1715962172.5830548_rf_level_k8_recording_200_test_acc_70.75_test_acc_75.25.pth,75.25,0.54
+resnet18_normal_small_imagenet_1715962172.5830548_rf_level_k8_recording_200_test_acc_53.64.pth,53.64,0.38
+resnet18_normal_small_imagenet_1715962172.5830548_rf_level_k8_recording_200_test_acc_67.11.pth,67.11,0.61
+resnet18_normal_small_imagenet_1715962172.5830548_rf_level_k8_recording_200_test_acc_70.75.pth,70.75,0.5
