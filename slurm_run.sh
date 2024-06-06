@@ -28,7 +28,6 @@
 #SBATCH --cpus-per-task=4
 #module load pytorch
 
-which python
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
@@ -72,8 +71,11 @@ which python
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"
 #python hao_models_pruning_test.py --workers 32
-export LD_LIBRARY_PATH=""
 
+eval "$(conda shell.bash hook)"
+conda activate work
+which python
+export LD_LIBRARY_PATH=""
 l=$(which python)
 
 lib_path_of_current_enviroment="${l%%python}"
@@ -97,4 +99,4 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$lib_path_of_current_enviroment
 #     One shot with specific pruning rate results
 #############################################################
 
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#python prune_models.py  --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8

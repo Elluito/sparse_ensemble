@@ -626,7 +626,13 @@ def main(args):
          "exclude_layers": exclude_layers
 
          })
-    train, val, testloader = get_datasets(cfg)
+
+    if args.ffcv:
+        from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+        train, _, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                    128, args.num_workers)
+    else:
+        train, val, testloader = get_datasets(cfg)
 
     from torchvision.models import resnet18, resnet50
 
@@ -701,19 +707,20 @@ def main(args):
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
-    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
-                                                                         args.RF_level, args.name)
+    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                          args.RF_level, args.name)
     things = list(glob.glob(search_string))
 
     # if len(things) < 2:
     #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+        "{}/{}_normal_{}_*_level_{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print(things)
 
     for i, name in enumerate(
             glob.glob(search_string)):
+
         print(name)
         state_dict_raw = torch.load(name, map_location=device)
         dense_accuracy_list.append(state_dict_raw["acc"])
@@ -1157,7 +1164,18 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
 
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+
+    parser.add_argument('--ffcv_train',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+                        type=str, help='FFCV train dataset')
+
+    parser.add_argument('--ffcv_val',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+                        type=str, help='FFCV val dataset')
+
     args = parser.parse_args()
+
     try:
 
         args.RF_level = int(args.RF_level)
@@ -1165,6 +1183,7 @@ if __name__ == '__main__':
     except Exception as e:
 
         pass
+
     if args.experiment == 1:
         print("Experiment 1")
         print(args)
