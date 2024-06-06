@@ -784,10 +784,15 @@ def main(args):
             glob.glob(search_string)):
 
         print(name)
+
         print("Device: {}".format(device))
+
         state_dict_raw = torch.load(name, map_location=device)
+
         dense_accuracy_list.append(state_dict_raw["acc"])
+
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+
         net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
