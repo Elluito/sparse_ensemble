@@ -1,4 +1,6 @@
 import os
+import time
+
 import torch
 import re
 import argparse
@@ -55,6 +57,10 @@ files_names = [name_rf_level1_s1, name_rf_level1_s2, name_rf_level2_s1, name_rf_
 files = [rf_level1_s1, rf_level1_s2, rf_level2_s1, rf_level2_s2, rf_level3_s1, rf_level3_s2, rf_level4_s1, rf_level4_s2]
 level = [1, 1, 2, 2, 3, 3, 4, 4]
 modelstypes = ["alternative"] * len(level)
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+use_cuda = True if device == "cuda" else False
 
 
 def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modeltype="alternative", solution="",
@@ -179,6 +185,62 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
         if o == maximun_samples:
             break
         o += 1
+
+
+def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
+    criterion = nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
+
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            # if use_cuda:
+            #     inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs, dim=1)
+                _, predicted = torch.max(soft_max_outputs, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            # print(correct/total)
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    # net.cpu()
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
 
 
 def save_pruned_representations():
@@ -722,17 +784,31 @@ def main(args):
             glob.glob(search_string)):
 
         print(name)
+        print("Device: {}".format(device))
         state_dict_raw = torch.load(name, map_location=device)
         dense_accuracy_list.append(state_dict_raw["acc"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
         net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-        pruned_accuracy = test(net, use_cuda=False, testloader=testloader, verbose=0)
+
+        t0 = time.time()
+        if args.ffcv:
+            pruned_accuracy = test_ffcv(net, testloader=testloader, verbose=0)
+        else:
+            pruned_accuracy = test(net, use_cuda=use_cuda, testloader=testloader, verbose=0)
+
+        t1 = time.time()
+
         print("Pruned accuracy:{}".format(pruned_accuracy))
+
+        print("Time for inference: {}".format(t1 - t0))
+
         pruned_accuracy_list.append(pruned_accuracy)
         weight_names, weights = zip(*get_layer_dict(net))
+
         zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+
         pruning_rates_per_layer = list(map(zero_number, weights))
 
         seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
@@ -740,6 +816,7 @@ def main(args):
         seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
 
         seed_from_file3 = re.findall("\.[0-9]_", name)
+
         if seed_from_file3:
 
             seed_from_file = seed_from_file3[0].replace(".", "_")

@@ -71,6 +71,7 @@
 #python hao_models_pruning_test.py --workers 16
 #echo "============ 32 workers ============================"
 #python hao_models_pruning_test.py --workers 32
+
 echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
 eval "$(conda shell.bash hook)"
 conda activate work
