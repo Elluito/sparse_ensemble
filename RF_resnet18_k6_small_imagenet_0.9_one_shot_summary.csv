@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet18_normal_small_imagenet_1715866976.78545_rf_level_k6_recording_200_test_acc_77.0_test_acc_77.25.pth,77.25,3.36
