@@ -819,9 +819,15 @@ def main(args):
 
         seed_from_file1 = re.findall("_[0-9]_", name)
 
+        print(seed_from_file1)
+
         seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
 
+        print(seed_from_file2)
+
         seed_from_file3 = re.findall("\.[0-9]_", name)
+
+        print(seed_from_file3)
 
         if seed_from_file3:
 
@@ -834,6 +840,8 @@ def main(args):
         elif seed_from_file1:
 
             seed_from_file = seed_from_file1[0].replace("_", "")
+        else:
+            seed_from_file = i
 
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
 
