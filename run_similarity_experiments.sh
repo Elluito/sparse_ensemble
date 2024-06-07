@@ -563,8 +563,8 @@
 
 #model="resnet_small"
 
-#model="resnet18"
-model="vgg19"
+model="resnet18"
+#model="vgg19"
 
 dataset="small_imagenet"
 directory=/nobackup/sclaam/checkpoints
@@ -573,11 +573,11 @@ directory=/nobackup/sclaam/checkpoints
 
 
 ##seeds=(0 1 2)
-pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+pruning_rates=("0.8")
 #pruning_rates=("0.9")
 # For resnet18
 #
-#rf_levels=(2 3 'k8')
+rf_levels=('k8')
 
 #rf_levels=(4 'k6' 'k7' 'k8')
 
@@ -585,7 +585,7 @@ pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 
 #rf_levels=(3 4 5)
 
-rf_levels=(3 4 5 "k6" "k7" "k8")
+#rf_levels=(3 4 5 "k6" "k7")
 #rf_levels=("k6" "k7" "k8")
 
 #rf_levels=(3 5 7)
