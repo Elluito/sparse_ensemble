@@ -52,20 +52,25 @@
 
 #####                             For one_shot pruning with specific pruning rate
 #model="resnet_small"
-model="resnet18"
+#model="resnet18"
+model="resnet50"
 #model="vgg19"
-dataset="small_imagenet"
-#directory=/nobackup/sclaam/checkpoints
+#dataset="small_imagenet"
+dataset="cifar10"
+directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/Documents/PhD/checkpoints
-directory=$HOME/checkpoints_arc4
+#directory=$HOME/checkpoints_arc4
 
 ##seeds=(0 1 2)
 pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 #pruning_rates=("0.9")
 
 #rf_levels=(2 3)
-rf_levels=("k8")
-#rf_levels=(2 3 4 'k6' 'k7' "k8")
+#rf_levels=("k8")
+
+rf_levels=(1 2 3 4)
+
+#rf_levels=(1 2 3 4 'k6' 'k7' "k8")
 # rf for vgg
 #rf_levels=(3 4 5 "k6" "k7" "k8")
 
