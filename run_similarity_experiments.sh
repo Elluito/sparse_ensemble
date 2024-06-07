@@ -577,7 +577,7 @@ pruning_rates=("0.8")
 #pruning_rates=("0.9")
 # For resnet18
 #
-rf_levels=('k8')
+rf_levels=('k7')
 
 #rf_levels=(4 'k6' 'k7' 'k8')
 
