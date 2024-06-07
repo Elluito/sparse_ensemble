@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_small_imagenet_1715856118.8274872_rf_level_k8_recording_200_test_acc_70.93.pth,70.93,70.63
