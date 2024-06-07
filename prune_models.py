@@ -778,7 +778,8 @@ def main(args):
     #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}**test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,args.name)))
+        "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                              args.name)))
     print(things)
 
     for i, name in enumerate(
@@ -1265,9 +1266,7 @@ if __name__ == '__main__':
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
 
-
     args = parser.parse_args()
-
 
     try:
 
