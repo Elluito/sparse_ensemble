@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_rf_level_3_sam_optim_hyper_test_acc_87.95.pth,87.95,67.18
