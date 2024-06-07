@@ -101,4 +101,4 @@ python -c "import os; print(os.environ)"
 #     One shot with specific pruning rate results
 #############################################################
 
-python prune_models.py  --folder"$HOME/checkpoints" --name "sam_optim_hyper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+python prune_models.py --name "sam_optim_hyper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8

@@ -57,9 +57,9 @@ model="resnet50"
 #model="vgg19"
 #dataset="small_imagenet"
 dataset="cifar10"
-directory=/nobackup/sclaam/checkpoints
+#directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/Documents/PhD/checkpoints
-#directory=$HOME/checkpoints_arc4
+directory=$HOME/checkpoints
 
 ##seeds=(0 1 2)
 pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
