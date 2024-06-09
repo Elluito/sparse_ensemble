@@ -1,31 +1,39 @@
 print("First line")
 import os
+
 print("After os")
 # import accelerate
 print("After accelerate")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 import pickle
+
 print("After Pickle")
 # import paretoset
 print("After pareto set")
 import glob
+
 print("After glob")
 # import pygmo
 import typing
+
 print("After typing")
 import pandas as pd
+
 print("Until: 16")
 import datetime as date
+
 print("after datetime")
 # import umap
 print("after umap")
 import wandb
 import optuna
+
 print("After optuna")
 # sys.path.append('csgmcmc')
 from alternate_models import ResNet, VGG
 from csgmcmc.models import *
+
 print("Until 20")
 import omegaconf
 import copy
@@ -47,6 +55,7 @@ import random
 import torch.nn.utils.prune as prune
 import platform
 from functools import partial
+
 print("Unitl line 40")
 import glob
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
@@ -54,6 +63,7 @@ import ignite.metrics as igm
 # from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
+
 # - interactive backends:
 #           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
 #           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
@@ -102,7 +112,6 @@ plt.rcParams["mathtext.fontset"] = "cm"
 # enable cuda devices
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-
 fs = 25
 
 fig_size = (5, 3)
@@ -132,6 +141,7 @@ plt.rcParams.update({
     "font.family": "serif",
     "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",
 })
+
 
 # matplotlib.use('TkAgg')
 
@@ -1418,34 +1428,40 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     difference_with_deterministic_list = []
     fitness_list = []
 
-    if functions==1:
+    if functions == 1:
         trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
-        f1,f2 = trial_with_highest_difference.values
+        f1, f2 = trial_with_highest_difference.values
         print("  Values: {},{}".format(f1, f2))
         print("  Params: ")
         for key, value in trial_with_highest_difference.params.items():
             print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-            "pruning_rate"],trial_with_highest_difference.params["sigma"])
+        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg,
+                                                                                                     trial_with_highest_difference.params[
+                                                                                                         "pruning_rate"],
+                                                                                                     trial_with_highest_difference.params[
+                                                                                                         "sigma"])
         print(
             "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
                 fitness_function_on_test_set, test_median_stochastic_performance,
-                fitness_function_on_test_set /trial_with_highest_difference.params[
+                fitness_function_on_test_set / trial_with_highest_difference.params[
                     "pruning_rate"]))
     else:
         trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
 
-        f1 , f2 = trial_with_highest_difference.values
+        f1, f2 = trial_with_highest_difference.values
         print("  Values: {},{}".format(f1, f2))
         print("  Params: ")
         for key, value in trial_with_highest_difference.params.items():
             print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg, trial_with_highest_difference.params[
-            "pruning_rate"],trial_with_highest_difference.params["sigma"])
+        fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg,
+                                                                                                     trial_with_highest_difference.params[
+                                                                                                         "pruning_rate"],
+                                                                                                     trial_with_highest_difference.params[
+                                                                                                         "sigma"])
         print(
             "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
                 fitness_function_on_test_set, test_median_stochastic_performance,
-                fitness_function_on_test_set /trial_with_highest_difference.params[
+                fitness_function_on_test_set / trial_with_highest_difference.params[
                     "pruning_rate"]))
 
     for trial in trials:
@@ -1458,8 +1474,11 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
         print("  Params: ")
         for key, value in trial.params.items():
             print("    {}: {}".format(key, value))
-        fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg, trial.params[
-            "pruning_rate"], trial.params["sigma"])
+        fitness_function_on_test_set, test_median_stochastic_performance, difference = test_pr_sigma_combination(cfg,
+                                                                                                                 trial.params[
+                                                                                                                     "pruning_rate"],
+                                                                                                                 trial.params[
+                                                                                                                     "sigma"])
 
         difference_with_deterministic_list.append(difference)
         fitness_list.append(fitness_function_on_test_set)
@@ -1478,14 +1497,12 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
 
     p["Sigma"] = sigmas_list
 
-    p = pd.DataFrame({"Pruning rate": pruning_rate_list , "Stochastic performance": f1_list,
-                      "Fitness": fitness_list,"Sigma": sigmas_list,"Difference with deterministic": difference_with_deterministic_list,"F2": f2_list})
+    p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic performance": f1_list,
+                      "Fitness": fitness_list, "Sigma": sigmas_list,
+                      "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
 
     p.to_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-                                                             one_batch_string),index=False)
-
-
-
+                                                      one_batch_string), index=False)
 
     #############################################################
     #                   plotting pareto front
@@ -2495,7 +2512,6 @@ def create_beton_database_ImageNet():
 
 
 def get_datasets(cfg: omegaconf.DictConfig):
-
     if "cifar" in cfg.dataset:
         return get_cifar_datasets(cfg)
     if "mnist" == cfg.dataset:
@@ -2637,7 +2653,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         trainloader, valloader, testloader = load_small_imagenet(
             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
              "num_workers": cfg.num_workers, "batch_size": cfg.batch_size})
-        return trainloader, valloader,testloader
+        return trainloader, valloader, testloader
 
     if 'tiny_imagenet' == cfg.dataset:
         from test_imagenet import load_tiny_imagenet
@@ -2654,9 +2670,10 @@ def get_datasets(cfg: omegaconf.DictConfig):
             data_path = "/home/luisaam/Documents/PhD/data/"
         traindir = data_path + 'tiny_imagenet_200/' + 'train'
         testdir = data_path + 'tiny_imagenet_200/' + 'val'
-        cfg.traindir=traindir
-        cfg.valdir=testdir
+        cfg.traindir = traindir
+        cfg.valdir = testdir
         return load_tiny_imagenet(dict(cfg))
+
 
 def main(cfg: omegaconf.DictConfig):
     print("torch version: {}".format(torch.__version__))
@@ -4384,7 +4401,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
-    trainloader,valloader,testloader = get_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
 
     original_performance = test(net, use_cuda, testloader)
 
@@ -4401,7 +4418,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         #     fig = plt.figure(figsize=(13, 13 ))
         #     axs_p = fig.subplot()
         fig, axs_p = plt.subplots(1, num_col, figsize=(9
-                                                       , 10),layout="compressed")
+                                                       , 10), layout="compressed")
         axs = []
         if isinstance(axs_p, SubplotBase):
             axs.append(axs_p)
@@ -4509,8 +4526,9 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             # ax2.invert_yaxis()
 
             handles, labels = axj.get_legend_handles_labels()
-            new_labels=["Stochastic GMP","Sto. Mask on Original Weights","Det. Mask on Sto. Weights","Deterministic GMP"]
-            l = axj.legend(handles[:4],new_labels, fontsize=fs*0.8)
+            new_labels = ["Stochastic GMP", "Sto. Mask on Original Weights", "Det. Mask on Sto. Weights",
+                          "Deterministic GMP"]
+            l = axj.legend(handles[:4], new_labels, fontsize=fs * 0.8)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -5265,7 +5283,6 @@ def dynamic_sigma_per_layer_one_shot_pruning(cfg: omegaconf.DictConfig):
             ### method do not prune over the mask that is found
 
         print("Current best accuracy: {}".format(best_accuracy_found))
-
 
     # Test the best model found in the test set
 
@@ -7508,7 +7525,6 @@ def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int 
     # if number_experiment == 13:
 
 
-
 def test_sigma_experiment_selector():
     test_cfg = omegaconf.DictConfig({
         "population": 2,
@@ -7714,7 +7730,7 @@ def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, 
     del pop
     cutoff = original_performance - 2
     ################################# plotting the comparison #########################################################
-    fig, ax = plt.subplots(figsize=fig_size,layout="compressed")
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
 
@@ -7997,7 +8013,7 @@ def scatter_plot_sigmas(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, dete
         else:
             all_df1 = pd.concat((all_df1, d), ignore_index=True)
     plt.figure()
-    plt.subplots(figsize=fig_size,layout="compressed")
+    plt.subplots(figsize=fig_size, layout="compressed")
     if not sigmas_to_show:
         g = sns.scatterplot(data=all_df1, x="Gradient Magnitude", y="Accuracy", hue="Sigma", style="Type",
                             palette="deep", legend="full", edgecolor=None, linewidth=0)
@@ -8080,7 +8096,7 @@ def scatter_plot_sigmas(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, dete
                 label=f"Fine-Tuned {det_label2}")
 
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
-    plt.grid(ls="--",alpha=0.5)
+    plt.grid(ls="--", alpha=0.5)
     # fig = matplotlib.pyplot.gcf()
     # fig.set_size_inches(10, 10)
     # plt.xlim(0,2.5)
@@ -9472,12 +9488,15 @@ def get_first_epoch_GF_last_epoch_accuracy(dataFrame, title, file):
     plt.title(title, fontsize=20)
     plt.savefig(f"{file}_initial_val_acc_VS_final_val_accuracy.png", bbox_inches="tight")
 
+
 def flops_until_thresh(args):
     df = pd.read_csv(args["file"])
     is_det = False
     if "deterministic" in args["file"]:
         is_det = True
-    get_statistics_on_FLOPS_until_threshold(df,args["threshold"],is_det)
+    get_statistics_on_FLOPS_until_threshold(df, args["threshold"], is_det)
+
+
 def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: float, is_det=False):
     if not is_det:
         all_df: pd.DataFrame = None
@@ -9558,13 +9577,14 @@ def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: 
         ci95_hi = m + 1.96 * s / math.sqrt(c)
         ci95_lo = m - 1.96 * s / math.sqrt(c)
         print("[{:.3E},{:.3E}]".format(ci95_lo, ci95_hi))
+
+
 # def statistics_on_FLOPS_until_thresclod(args):
 #     stochastic_folder = "gradient_flow_data/{}/stochastic_GLOBAL/{}/sigma{}/pr{}/"
 #     deterministic_folder = "gradient_flow_data/{}/deterministic_GLOBAL/{}/sigma0.0/pr{}/"
 #
 #     All_stochastic_df = None
 #     for name in glob.glob():
-
 
 
 def LeMain(args):
@@ -9680,7 +9700,7 @@ def LeMain(args):
     # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
-    stochastic_soup_of_models(cfg,name="")
+    stochastic_soup_of_models(cfg, name="")
 
 
 def curve_plot(filepath, filename, title: str):
@@ -9944,8 +9964,6 @@ def MDS_projection_plot(cfg):
                         legend="full")
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.1)
     plt.savefig("MDS_projections_resnet18_cifar10.pdf", bbox_inches="tight")
-
-
 
 
 def test_predictions_for_cfg(cfg, stochastic=False, name=""):
@@ -10278,7 +10296,7 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
     else:
         def features_only(self, x):
             x = F.relu(self.bn1(self.conv1(x)))
-            x=self.maxpool(x)
+            x = self.maxpool(x)
             if block == 0: return x
             x = self.layer1(x)
             if block == 1: return x
@@ -10310,6 +10328,7 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
             return x
 
     net.forward = features_only.__get__(net)  # bind method
+
 
 def get_features_only_until_block_layer_VGG(net, block=2, net_type=0):
     # ResNet block to compute receptive field for
@@ -10571,7 +10590,6 @@ def truncated_network_unrestricted_training(cfg):
 
 
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", use_device="cuda"):
-
     from CKA_similarity.CKA import CudaCKA, CKA
 
     if use_device == "cuda":
@@ -10584,43 +10602,43 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
     #### because the similiarity is a simetrical
     for i in range(number_layers):
         if use_device == "cuda":
-            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:1000,:])
+            layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1)[:1000, :])
         if use_device == "cpu":
             layer_i = load_layer_features(prefix1, i, name=name1)
         for j in range(i, number_layers):
             if use_device == "cuda":
-                t0= time.time()
-                print("We are in row {} and colum {}".format(i,j))
-                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:1000,:])
-                t1= time.time()
-                print("Time of loading both layers: {}".format(t1-t0))
+                t0 = time.time()
+                print("We are in row {} and colum {}".format(i, j))
+                layer_j = torch.tensor(load_layer_features(prefix2, j, name=name2)[:1000, :])
+                t1 = time.time()
+                print("Time of loading both layers: {}".format(t1 - t0))
                 layeri_cuda = layer_i.cuda()
                 layerj_cuda = layer_j.cuda()
                 layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
                 layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
 
-                t0= time.time()
+                t0 = time.time()
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
-                t1= time.time()
-                t0= time.time()
-                t0= time.time()
-                print("Time for linear kernel: {}".format(t1-t0))
+                t1 = time.time()
+                t0 = time.time()
+                t0 = time.time()
+                print("Time for linear kernel: {}".format(t1 - t0))
                 del layeri_cuda
                 del layerj_cuda
                 torch.cuda.empty_cache()
 
             if use_device == "cpu":
-                t0= time.time()
-                print("We are in row {} and colum {}".format(i,j))
+                t0 = time.time()
+                print("We are in row {} and colum {}".format(i, j))
                 # layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
-                layer_j = load_layer_features(prefix2, j, name=name2)[:100,:]
+                layer_j = load_layer_features(prefix2, j, name=name2)[:100, :]
 
                 layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
-                layerj_cuda = layer_j- np.mean(layer_j, dtype=np.float, axis=0)
+                layerj_cuda = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
 
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda, layerj_cuda)
-                t1= time.time()
-                print("Time of loading + linear kernel: {}".format(t1-t0))
+                t1 = time.time()
+                print("Time of loading + linear kernel: {}".format(t1 - t0))
                 del layeri_cuda
                 del layeri_cuda
                 del layerj_cuda
@@ -10639,7 +10657,6 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
 ##### 1 of septemeber 2023 #####################################
 
 def features_similarity_comparison_experiments(architecture="resnet18"):
-
     cfg = omegaconf.DictConfig(
         {"architecture": architecture,
          "model_type": "alternative",
@@ -10699,7 +10716,8 @@ def features_similarity_comparison_experiments(architecture="resnet18"):
 
 
 def record_features_cifar10_model(architecture="resnet18", seed=1,
-                                  modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative",solution="",seed_name="_seed_1"):
+                                  modeltype="resnet50_normal_seed_2_tst_acc_95.65.pthalternative", solution="",
+                                  seed_name="_seed_1"):
     from feature_maps_utils import save_layer_feature_maps_for_batch
     if seed == 1:
         seed_name = "_seed_1"
@@ -11047,8 +11065,8 @@ def explore_models_shapes():
     })
     rf1.to_csv("receptive_fields_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
 
-def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "",version="dense"):
 
+def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "", version="dense"):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
     evaluation_set = select_eval_set(cfg, eval_set)
@@ -11093,11 +11111,10 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     print("Time for test: {}".format(t1 - t0))
 
-
     soup1_list = []
     soup2_list = []
     new_pruning_rates_list = []
-    determinsitc_model_performance_list = [pruned_original_performance]*number_of_samples
+    determinsitc_model_performance_list = [pruned_original_performance] * number_of_samples
     original_with_new_pruning_rates_list = []
 
     del pruned_original
@@ -11108,7 +11125,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     for i in range(number_of_samples):
 
-        number_of_models=0
+        number_of_models = 0
         sum_vector = None
 
         for n in range(N):
@@ -11117,19 +11134,19 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
             if sum_vector is None:
 
-                sum_vector= parameters_to_vector(current_model.parameters())
+                sum_vector = parameters_to_vector(current_model.parameters())
 
-                number_of_models+=1
+                number_of_models += 1
 
             else:
 
-                sum_vector+=parameters_to_vector(current_model.parameters())
+                sum_vector += parameters_to_vector(current_model.parameters())
 
-                number_of_models+=1
+                number_of_models += 1
 
         soup1_model = copy.deepcopy(net)
 
-        vector_to_parameters(sum_vector/number_of_models,soup1_model)
+        vector_to_parameters(sum_vector / number_of_models, soup1_model.parameters())
 
         if cfg.pruner == "global":
 
@@ -11137,13 +11154,13 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         else:
 
-                 prune_with_rate(soup1_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                 pruner=cfg.pruner)
+            prune_with_rate(soup1_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
 
-    # # Here is where I transfer the mask from the pruned stochastic model to the
-    # # original weights and put it in the ranking
+        # # Here is where I transfer the mask from the pruned stochastic model to the
+        # # original weights and put it in the ranking
 
-    # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
         remove_reparametrization(soup_model1, exclude_layer_list=cfg.exclude_layers)
         soup_performance = test(soup_model1, use_cuda, evaluation_set, verbose=0)
 
@@ -11153,7 +11170,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     for i in range(number_of_samples):
         pruned_vector = None
-        number_of_models=0
+        number_of_models = 0
         for n in range(N):
 
             current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -11167,34 +11184,33 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                 prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                                 pruner=cfg.pruner)
 
-
             # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
 
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
             if pruned_vector is None:
 
-                pruned_vector= parameters_to_vector(current_model.parameters())
+                pruned_vector = parameters_to_vector(current_model.parameters())
 
-                number_of_models+=1
+                number_of_models += 1
 
             else:
 
-                pruned_vector+=parameters_to_vector(current_model.parameters())
+                pruned_vector += parameters_to_vector(current_model.parameters())
 
-                number_of_models+=1
+                number_of_models += 1
 
         soup2_model = copy.deepcopy(net)
 
-        vector_to_parameters(pruned_vector,soup2_model)
+        vector_to_parameters(pruned_vector, soup2_model.parameters())
 
-        soup2_performance= test(soup2_model, use_cuda, evaluation_set, verbose=0)
+        soup2_performance = test(soup2_model, use_cuda, evaluation_set, verbose=0)
 
-        total=count_parameters(soup2_model)
+        total = count_parameters(soup2_model)
 
-        zero=count_zero_parameters(soup2_model)
+        zero = count_zero_parameters(soup2_model)
 
-        new_pruning_rate = zero/total
+        new_pruning_rate = zero / total
 
         new_pruning_rates_list.append(new_pruning_rate)
 
@@ -11202,39 +11218,37 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         if cfg.pruner == "global":
 
-            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers, type="global")
+            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers,
+                            type="global")
 
         else:
 
-                 prune_with_rate(deterministic_with_new_pruning_rate,new_pruning_rate, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                 pruner=cfg.pruner)
+            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers,
+                            type="layer-wise",
+                            pruner=cfg.pruner)
 
         # # Here is where I transfer the mask from the pruned stochastic model to the
-            # # original weights and put it in the ranking
+        # # original weights and put it in the ranking
 
-            # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
 
         remove_reparametrization(deterministic_with_new_pruning_rate, exclude_layer_list=cfg.exclude_layers)
 
-
-        deterministic_performance_with_new_pruning_rate = test(deterministic_with_new_pruning_rate, use_cuda, evaluation_set, verbose=0)
+        deterministic_performance_with_new_pruning_rate = test(deterministic_with_new_pruning_rate, use_cuda,
+                                                               evaluation_set, verbose=0)
 
         original_with_new_pruning_rates_list.append(deterministic_performance_with_new_pruning_rate)
 
-
-
-
-
-    df = pd.DataFrame({"Original Pruning Rate":[cfg.amount]*number_of_samples,
-                       "Soup then Prune accuracy":soup1_list,
-                       "Prune then Soup accuracy":soup2_list,
-                       "Original with new pruning rate":original_with_new_pruning_rates_list,
-                       "New pruning rate":new_pruning_rates_list,
+    df = pd.DataFrame({"Original Pruning Rate": [cfg.amount] * number_of_samples,
+                       "Soup then Prune accuracy": soup1_list,
+                       "Prune then Soup accuracy": soup2_list,
+                       "Original with new pruning rate": original_with_new_pruning_rates_list,
+                       "New pruning rate": new_pruning_rates_list,
                        })
 
-    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.model,cfg.dataset,cfg.amount,cfg.sigma),
+    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.model, cfg.dataset, cfg.amount,
+                                                                                cfg.sigma),
               index=False)
-
 
     #
     # # torch.cuda.empty_cache()
