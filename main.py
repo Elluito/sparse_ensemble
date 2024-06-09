@@ -3646,7 +3646,7 @@ def get_model(cfg: omegaconf.DictConfig):
                     # net = resnet18(weights="IMAGENET1K_V1")
 
             return net
-    if cfg.architecture == "VGG19":
+    if cfg.architecture == "vgg19":
         if not cfg.solution:
             if "csgmcmc" == cfg.model_type:
                 net = VGG(cfg.architecture)
@@ -3654,22 +3654,22 @@ def get_model(cfg: omegaconf.DictConfig):
             if "alternative" == cfg.model_type:
                 from alternate_models.vgg import VGG
                 if cfg.dataset == "cifar100":
-                    net = VGG(cfg.architecture, num_classes=100)
+                    net = VGG("VGG19", num_classes=100)
                 if cfg.dataset == "cifar10":
-                    net = VGG(cfg.architecture)
+                    net = VGG("VGG19")
                 if cfg.dataset == "imagenet":
-                    net = VGG(cfg.architecture, num_classes=1000)
+                    net = VGG("VGG19", num_classes=1000)
                 return net
         else:
             if "csgmcmc" == cfg.model_type:
-                net = VGG(cfg.architecture)
+                net = VGG("VGG19")
                 load_model(net, cfg.solution)
             if "alternative" == cfg.model_type:
                 from alternate_models.vgg import VGG
                 if cfg.dataset == "cifar100":
-                    net = VGG(cfg.architecture, num_classes=100)
+                    net = VGG("VGG19", num_classes=100)
                 if cfg.dataset == "cifar10":
-                    net = VGG(cfg.architecture)
+                    net = VGG("VGG19")
                 load_model(net, cfg.solution)
             if "hub" == cfg.model_type:
                 if cfg.dataset == "cifar100":
