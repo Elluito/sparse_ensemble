@@ -9599,7 +9599,6 @@ def LeMain(args):
             if args["architecture"] == "resnet18":
                 solution = "trained_models/cifar10/resnet18_official_cifar10_seed_2_test_acc_88.51.pth"
                 exclude_layers = ["conv1", "fc"]
-
     if args["dataset"] == "imagenet":
 
         if args["modeltype"] == "hub":
@@ -9664,8 +9663,8 @@ def LeMain(args):
     # # Add small noise just to get tiny variations of the deterministic case
     # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
     # print("Deterministic pruning outside function: {}".format(det_performance))
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
-    print(args)
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
+    # print(args)
     # cfg.solution = ""
     # truncated_network_unrestricted_training(cfg)
     # truncated_network_fine_tune_linear_layer_only(cfg)
@@ -9680,6 +9679,8 @@ def LeMain(args):
     # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
     # CDF_weights_analysis_stochastic_deterministic(cfg,range=(0,0.05))
     # number_of_0_analysis_stochastic_deterministic(cfg)
+
+    stochastic_soup_of_models(cfg,name="")
 
 
 def curve_plot(filepath, filename, title: str):
@@ -11046,6 +11047,280 @@ def explore_models_shapes():
     })
     rf1.to_csv("receptive_fields_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
 
+def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "",version="dense"):
+
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    number_of_samples = cfg.epochs
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+
+    t0 = time.time()
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+    pruned_original = copy.deepcopy(net)
+    names, weights = zip(*get_layer_dict(net))
+
+    number_of_layers = len(names)
+
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    if cfg.pruner == "global":
+
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+
+    else:
+
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+    remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+
+    print("pruned_performance of pruned original")
+
+    t0 = time.time()
+
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+
+    print("Det. performance in function: {}".format(pruned_original_performance))
+
+    t1 = time.time()
+
+    print("Time for test: {}".format(t1 - t0))
+
+
+    soup1_list = []
+    soup2_list = []
+    new_pruning_rates_list = []
+    determinsitc_model_performance_list = [pruned_original_performance]*number_of_samples
+    original_with_new_pruning_rates_list = []
+
+    del pruned_original
+
+    labels = []
+
+    ##########  first soup and then prune ############
+
+    for i in range(number_of_samples):
+
+        number_of_models=0
+        sum_vector = None
+
+        for n in range(N):
+
+            current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+
+            if sum_vector is None:
+
+                sum_vector= parameters_to_vector(current_model.parameters())
+
+                number_of_models+=1
+
+            else:
+
+                sum_vector+=parameters_to_vector(current_model.parameters())
+
+                number_of_models+=1
+
+        soup1_model = copy.deepcopy(net)
+
+        vector_to_parameters(sum_vector/number_of_models,soup1_model)
+
+        if cfg.pruner == "global":
+
+            prune_with_rate(soup1_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+
+        else:
+
+                 prune_with_rate(soup1_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                 pruner=cfg.pruner)
+
+    # # Here is where I transfer the mask from the pruned stochastic model to the
+    # # original weights and put it in the ranking
+
+    # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(soup_model1, exclude_layer_list=cfg.exclude_layers)
+        soup_performance = test(soup_model1, use_cuda, evaluation_set, verbose=0)
+
+        soup1_list.append(soup_performance)
+
+    ##########  first prune and then soup ############
+
+    for i in range(number_of_samples):
+        pruned_vector = None
+        number_of_models=0
+        for n in range(N):
+
+            current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+
+            if cfg.pruner == "global":
+
+                prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+
+            else:
+
+                prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                pruner=cfg.pruner)
+
+
+            # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
+            if pruned_vector is None:
+
+                pruned_vector= parameters_to_vector(current_model.parameters())
+
+                number_of_models+=1
+
+            else:
+
+                pruned_vector+=parameters_to_vector(current_model.parameters())
+
+                number_of_models+=1
+
+        soup2_model = copy.deepcopy(net)
+
+        vector_to_parameters(pruned_vector,soup2_model)
+
+        soup2_performance= test(soup2_model, use_cuda, evaluation_set, verbose=0)
+
+        total=count_parameters(soup2_model)
+
+        zero=count_zero_parameters(soup2_model)
+
+        new_pruning_rate = zero/total
+
+        new_pruning_rates_list.append(new_pruning_rate)
+
+        deterministic_with_new_pruning_rate = copy.deepcopy(net)
+
+        if cfg.pruner == "global":
+
+            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers, type="global")
+
+        else:
+
+                 prune_with_rate(deterministic_with_new_pruning_rate,new_pruning_rate, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                 pruner=cfg.pruner)
+
+        # # Here is where I transfer the mask from the pruned stochastic model to the
+            # # original weights and put it in the ranking
+
+            # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+
+        remove_reparametrization(deterministic_with_new_pruning_rate, exclude_layer_list=cfg.exclude_layers)
+
+
+        deterministic_performance_with_new_pruning_rate = test(deterministic_with_new_pruning_rate, use_cuda, evaluation_set, verbose=0)
+
+        original_with_new_pruning_rates_list.append(deterministic_performance_with_new_pruning_rate)
+
+
+
+
+
+    df = pd.DataFrame({"Original Pruning Rate":[cfg.amount]*number_of_samples,
+                       "Soup then Prune accuracy":soup1_list,
+                       "Prune then Soup accuracy":soup2_list,
+                       "Original with new pruning rate":original_with_new_pruning_rates_list,
+                       "New pruning rate":new_pruning_rates_list,
+                       })
+
+    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.model,cfg.dataset,cfg.amount,cfg.sigma),
+              index=False)
+
+
+    #
+    # # torch.cuda.empty_cache()
+    #
+    # # print("Stocastic pruning performance")
+    #
+    # # stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+    #
+    # # print("Time for test: {}".format(t1 - t0))
+    #
+    #
+    # # pruned_performance.append(stochastic_pruned_performance)
+    # # stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+    # # del current_model
+    # # torch.cuda.empty_cache()
+    #
+    # # len(pruned performance)-1 because the first one is the pruned original
+    #
+    # labels.extend(["stochastic pruned"] * (len(pruned_performance)))
+    #
+    # # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # # index 0 of pruned_performance.
+    #
+    # assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+    #                                                f"{len(labels)}!={len(pruned_performance)}"
+    #
+    # ranked_index = np.flip(np.argsort(pruned_performance))
+    # index_of_pruned_original = list(ranked_index).index(0)
+    # all_index = np.ones(len(ranked_index), dtype=bool)
+    # all_index[index_of_pruned_original] = False
+    # ranked_index = ranked_index[all_index]
+    # pruned_performance = np.array(pruned_performance)
+    # stochastic_dense_performances = np.array(stochastic_dense_performances)
+    # result = time.localtime(time.time())
+    #
+    # del pop
+    #
+    # cutoff = original_performance - 2
+
+    ################################# Plotting The Comparison #########################################################
+    #
+    # fig, ax = plt.subplots(figsize=fig_size,layout="compressed")
+    #
+    # original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
+    #
+    # deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    # plt.xlabel("Ranking Index", fontsize=fs)
+    # plt.ylabel("Accuracy", fontsize=fs)
+    # stochastic_models_points_dense = []
+    # stochastic_models_points_pruned = []
+    # transfer_mask_models_points = []
+    # stochastic_with_deterministic_mask_models_points = []
+    # for i, element in enumerate(pruned_performance[ranked_index]):
+    #     if labels[ranked_index[i]] == "sto mask transfer":
+    #         sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
+    #         transfer_mask_models_points.append(sto_transfer_point)
+    #     elif labels[ranked_index[i]] == "det mask transfer":
+    #         det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
+    #         stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+    #     else:
+    #         pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
+    #         stochastic_models_points_pruned.append(pruned_point)
+    # for i, element in enumerate(stochastic_dense_performances[ranked_index]):
+    #     if i == index_of_pruned_original or element == 1:
+    #         continue
+    #         # ax.scatter(i, element, c="y", marker="o", label="original model performance")
+    #     else:
+    #         dense_point = ax.scatter(i, element, c="c", marker="1")
+    #         stochastic_models_points_dense.append(dense_point)
+    #
+    # plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
+    #             deterministic_pruning_line],
+    #            ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
+    #            scatterpoints=1,
+    #            numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+    # plt.grid(ls='--', alpha=0.5)
+    # plt.savefig(
+    #     f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+    #     f"_{cfg.population}_{eval_set}_{name}.pdf")
+    # plt.savefig(
+    #     f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+    #     f"_{cfg.population}_{eval_set}_{name}.pgf")
+
 
 if __name__ == '__main__':
     # MDS_projection_plot()
@@ -11129,39 +11404,39 @@ if __name__ == '__main__':
     # # ##############################################################################
 
     #
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-    #                     required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    #                     required=True)
-    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-    #                     required=False)
-    # ############# this is for pr and sigma optim ###############################
-    # parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
-    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-    #                     required=False)
-    #
-    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
-    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-    #                     required=False)
-    # parser.add_argument('-fnc', '--functions', type=int, default=1,
-    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
-    #
-    # args = vars(parser.parse_args())
-    #
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
+    ############# this is for pr and sigma optim ###############################
+    parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
+    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+                        required=False)
+
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+                        help='Use log scale for sigma in pr,sigma optim', required=False)
+    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+                        required=False)
+    parser.add_argument('-fnc', '--functions', type=int, default=1,
+                        help='Type of functions for MOO optim of sigma and pr', required=False)
+
+    args = vars(parser.parse_args())
+
     LeMain(args)
 
     #
@@ -11250,82 +11525,82 @@ if __name__ == '__main__':
     # #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # #     #
     # #
-    cfg = omegaconf.DictConfig({
-        "sigma":0.001,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "alternative",
-        "dataset": "cifar10",
-        "set":"test",
-        "solution":"",
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-    })
-    # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-# # #
-#     sigmas = [0.005]
-    sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
-
-    directory = "gradient_flow_results_test_set/"
-# # #
-    scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
-                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-                        det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
-    scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
-                        deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
-                        det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
-
-
-    # ################################## Barplot with all results #######################################################################
-    #
-    # df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv", sep=",", header=0,
-    #                  index_col=False)
-    # df2 = pd.read_csv(f"gradientflow_stochastic_ensemble_for_all_datasets_architectures_pruning_rates.csv", sep=",",
-    #                   header=0, index_col=False)
-    # bar_plot_every_experiment(df, df2, use_set="test", sigmas_to_show=[0, 0.001, 0.003, 0.005])
-
-    # ################################## CURVE PLOTS #######################################################################
-    #
-    # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
-    #
-    # ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
-    #     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
-    #
-    #
-    #     ##########################  Last table  Flops count for LAMP  ####################################################
-    #     print(f"FLOPS results for {cfg.architecture} on {cfg.dataset} with pruning rate {cfg.amount}")
-    #     print("Lamp stochastic")
-    #     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
-    #     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-    #
-        # get_statistics_on_FLOPS_until_threshold(df,92)
-    #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-    #     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-    #
-    #     print("Now lamp deterministic")
-    #
-    # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-    #
-    #     #########################  Last table  Flops count for GMP #######################################################
-    #
-    #     print("Global stochastic")
-    #     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
-    #     fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    #     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
-    #
-    #     get_statistics_on_FLOPS_until_threshold(df,92)
-    #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-    #     fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-    #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-    #
-    #     print("Now global deterministic")
-    #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-    #
+#     cfg = omegaconf.DictConfig({
+#         "sigma":0.001,
+#         "amount":0.9,
+#         "architecture":"resnet18",
+#         "model_type": "alternative",
+#         "dataset": "cifar10",
+#         "set":"test",
+#         "solution":"",
+#         "batch_size": 512,
+#         # "batch_size": 128,
+#         "num_workers": 0,
+#     })
+#     # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+#     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     df2 = pd.read_csv(f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_lamp_df = pd.read_csv(f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+#     deterministic_glbal_df = pd.read_csv(f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+# # # #
+# #     sigmas = [0.005]
+#     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
+#
+#     directory = "gradient_flow_results_test_set/"
+# # # #
+#     scatter_plot_sigmas(df,None, deterministic_dataframe1=deterministic_lamp_df,
+#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+#                         det_label2='Deter. GMP', file=f"{directory}lamp_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas)
+#     scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+#                         deterministic_dataframe2=deterministic_glbal_df, det_label1='Deter. LAMP',
+#                         det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas)
+#
+#
+#     # ################################## Barplot with all results #######################################################################
+#     #
+#     # df = pd.read_csv(f"gradientflow_stochastic_all_sigmas_architectures_datasets_pr.csv", sep=",", header=0,
+#     #                  index_col=False)
+#     # df2 = pd.read_csv(f"gradientflow_stochastic_ensemble_for_all_datasets_architectures_pruning_rates.csv", sep=",",
+#     #                   header=0, index_col=False)
+#     # bar_plot_every_experiment(df, df2, use_set="test", sigmas_to_show=[0, 0.001, 0.003, 0.005])
+#
+#     # ################################## CURVE PLOTS #######################################################################
+#     #
+#     # curve_plot("dnn_mode_connectivity/evaluate_curve/cifar100/resnet18/global/fine_tuned/curve.npz","deter_vs_sto_GLOBAL_resnet18_Sig_0.001_cifar100_fine_tuned","CIFAR100")
+#     #
+#     # ########### Both functions down grab a csv file with names that reflect the pruning rate, dataset, architecture, pruner and  type of
+#     #     # pruning done. They plot Gradient flow VS accuracy in the validation set of the given dataset
+#     #
+#     #
+#     #     ##########################  Last table  Flops count for LAMP  ####################################################
+#     #     print(f"FLOPS results for {cfg.architecture} on {cfg.dataset} with pruning rate {cfg.amount}")
+#     #     print("Lamp stochastic")
+#     #     # fp = "gradientflow_stochastic_lamp_all_sigmas_pr0.9.csv"
+#     #     fp = f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+#     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+#     #
+#         # get_statistics_on_FLOPS_until_threshold(df,92)
+#     #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+#     #     fp = f"gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+#     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+#     #
+#     #     print("Now lamp deterministic")
+#     #
+#     # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+#     #
+#     #     #########################  Last table  Flops count for GMP #######################################################
+#     #
+#     #     print("Global stochastic")
+#     #     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+#     #     fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+#     #     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
+#     #
+#     #     get_statistics_on_FLOPS_until_threshold(df,92)
+#     #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+#     #     fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
+#     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+#     #
+#     #     print("Now global deterministic")
+#     #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+#     #

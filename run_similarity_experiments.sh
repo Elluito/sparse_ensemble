@@ -566,7 +566,8 @@
 model="resnet18"
 #model="vgg19"
 
-dataset="small_imagenet"
+#dataset="small_imagenet"
+dataset="cifar10"
 directory=/nobackup/sclaam/checkpoints
 
 #directory=/home/luisaam/Documents/PhD/checkpoints
@@ -575,6 +576,7 @@ directory=/nobackup/sclaam/checkpoints
 ##seeds=(0 1 2)
 pruning_rates=("0.8")
 #pruning_rates=("0.9")
+sigma=("0.001" "0.003" "0.005")
 # For resnet18
 #
 rf_levels=('k7')
@@ -598,8 +600,8 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 
 #qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 
-qsub -l coproc_v100=1 -l h_rt=01:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-
+#qsub -l coproc_v100=1 -l h_rt=01:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+python main.py --pruning_rate "${pruning_rates[$idxA]}" --architecture "${model}" --pruner "global" --sigma --dataset "${dataset}" --population 5 --epochs 10
 
 #which python
 #./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
