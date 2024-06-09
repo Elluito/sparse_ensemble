@@ -11210,7 +11210,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         zero = count_zero_parameters(soup2_model)
 
-        new_pruning_rate = zero / total
+        new_pruning_rate = float(zero / total)
 
         new_pruning_rates_list.append(new_pruning_rate)
 
