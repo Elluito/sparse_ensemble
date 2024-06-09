@@ -576,13 +576,13 @@ directory=/nobackup/sclaam/checkpoints
 
 
 ##seeds=(0 1 2)
-#pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
-pruning_rates=("0.9")
+pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
+#pruning_rates=("0.9")
 #sigma=("0.001" "0.003" "0.005")
 # For resnet18
 #
-#rf_levels=("0.001" "0.003" "0.005")
-rf_levels=("0.005")
+rf_levels=("0.001" "0.003" "0.005")
+#rf_levels=("0.005")
 
 #rf_levels=(4 'k6' 'k7' 'k8')
 

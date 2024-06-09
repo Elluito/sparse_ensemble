@@ -11247,7 +11247,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                        "New pruning rate": new_pruning_rates_list,
                        })
 
-    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.model, cfg.dataset, cfg.amount,
+    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
                                                                                 cfg.sigma),
               index=False)
 
