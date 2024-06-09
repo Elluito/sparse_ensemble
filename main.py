@@ -11161,8 +11161,8 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         # # original weights and put it in the ranking
 
         # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
-        remove_reparametrization(soup_model1, exclude_layer_list=cfg.exclude_layers)
-        soup_performance = test(soup_model1, use_cuda, evaluation_set, verbose=0)
+        remove_reparametrization(soup1_model, exclude_layer_list=cfg.exclude_layers)
+        soup_performance = test(soup1_model, use_cuda, evaluation_set, verbose=0)
 
         soup1_list.append(soup_performance)
 
