@@ -668,6 +668,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:

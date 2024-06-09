@@ -603,8 +603,10 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 
 #qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 
-#qsub -l coproc_v100=1 -l h_rt=01:00:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate "${pruning_rates[$idxA]}" --architecture "${model}" --sigma "${rf_levels[$idxB]}" --dataset "${dataset}"
+#qsub -l coproc_v100=1 -l h_rt=01:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
+
+#python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate --architecture "${model}" --sigma "${rf_levels[$idxB]}" --dataset "${dataset}"
 
 #which python
 #./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
