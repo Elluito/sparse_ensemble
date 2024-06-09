@@ -11205,6 +11205,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         vector_to_parameters(pruned_vector, soup2_model.parameters())
 
         soup2_performance = test(soup2_model, use_cuda, evaluation_set, verbose=0)
+        soup2_list.append(soup2_performance)
 
         total = count_parameters(soup2_model)
 
