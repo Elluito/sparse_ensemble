@@ -563,8 +563,8 @@
 
 #model="resnet_small"
 
-#model="resnet18"
-model="resnet50"
+model="resnet18"
+#model="resnet50"
 #model="vgg19"
 
 #dataset="small_imagenet"
