@@ -59,16 +59,19 @@ model="resnet50"
 dataset="cifar10"
 #directory=/nobackup/sclaam/checkpoints
 #directory=/home/luisaam/Documents/PhD/checkpoints
-directory=$HOME/checkpoints
+directory="$HOME/checkpoints"
 
 ##seeds=(0 1 2)
-pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
 #pruning_rates=("0.9")
 
 #rf_levels=(2 3)
 #rf_levels=("k8")
 
-rf_levels=(1 2 3 4)
+#rf_levels=(1 2 3 4)
+
+rf_levels=("0.001" "0.003" "0.005")
 
 #rf_levels=(1 2 3 4 'k6' 'k7' "k8")
 # rf for vgg
@@ -87,7 +90,8 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
 #qsub -N "${model}_${dataset}pruning_fine_tuning_summary_level_1_${pruning_rates[$idxB]}" run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.9" "2"
 
 #qsub -l coproc_v100=1 -l h_rt=00:20:00 -N "${model}_${dataset}_pruning_summary_level_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
-sbatch --nodes=1 --time=02:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_one_shot_pruning"  slurm_run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
+
+sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_soup.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_soup.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_soup"  slurm_run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
 
 #./run.sh "${model}" "${dataset}" "4" "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" "1"
 ##./run.sh "${model}" "${dataset}" "2" "1" "normal" "${directory}" "pruning" "${list_to_use[$idxB]}" "0.5" "1"

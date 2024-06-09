@@ -101,4 +101,10 @@ python -c "import os; print(os.environ)"
 #     One shot with specific pruning rate results
 #############################################################
 
-python prune_models.py --name "sam_optim_hyper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#python prune_models.py --name "sam_optim_hyper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+
+#############################################################
+#   Soup Idea applied to stochastic pruning
+#############################################################
+
+python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
