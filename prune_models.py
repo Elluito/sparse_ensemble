@@ -846,7 +846,7 @@ def main(args):
             seed_from_file = i
 
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-
+        print("Seed from file {}".format(seed_from_file1))
         df2.to_csv(
             "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
                                                                            args.dataset, args.pruning_rate),
@@ -908,9 +908,9 @@ def n_shallow_layer_experiment(args):
     from torchvision.models import resnet18, resnet50
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
@@ -928,12 +928,12 @@ def n_shallow_layer_experiment(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
     if args.model == "resnet24":
 
