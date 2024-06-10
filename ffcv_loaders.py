@@ -50,7 +50,9 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToDevice(torch.device("cuda:0"), non_blocking=True)
     ]
 
+
     order = OrderOption.RANDOM if distributed else OrderOption.QUASI_RANDOM
+
     train_loader = Loader(train_dataset,
                           batch_size=batch_size,
                           num_workers=num_workers,
