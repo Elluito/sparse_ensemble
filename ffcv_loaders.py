@@ -79,7 +79,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     label_pipeline = [
         IntDecoder(),
         ToTensor(),
-        # Squeeze(),
+        Squeeze(),
         ToDevice(torch.device("cuda:0"),
                  non_blocking=True)
     ]

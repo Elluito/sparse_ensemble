@@ -186,7 +186,7 @@ class small_ResNetRF(nn.Module):
         if self.rf_level == 6:
             self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
         if self.rf_level == 7:
-            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=35, stride=34, padding=1)
         if self.rf_level == 8:
             self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
         if self.rf_level == 9:
@@ -408,7 +408,7 @@ def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
     # blocks = [1, 2, 3, 4, 5, 6, 7]
-    blocks = [8, 9, 10]
+    blocks = [7,8, 9, 10]
 
     for i in blocks:
         # samples = []
