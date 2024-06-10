@@ -320,7 +320,6 @@ def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
         return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes=num_classes, fixed_points=fix_points,
                               RF_level=RF_level,
                               multiplier=multiplier)
-        net = small_VGG_RF('small_vgg', rf_level=i)
 
 
 def get_output_until_block_small_vgg(net, block, net_type=1):
@@ -408,7 +407,8 @@ def get_output_until_block_small_resnet(net, block, net_type=1):
 def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
-    blocks = [1, 2, 3, 4, 5, 6, 7]
+    # blocks = [1, 2, 3, 4, 5, 6, 7]
+    blocks = [8, 9, 10]
 
     for i in blocks:
         # samples = []
@@ -431,24 +431,24 @@ def test_models():
 
         resnet_net = small_ResNetRF(small_Bottleneck, num_blocks=[1, 1, 1], num_classes=10, RF_level=i)
 
-        y_resnet = resnet_net(x)
-        input_names = ['Image']
-
-        output_names = ['y_hat']
-
-        torch.onnx.export(resnet_net, x,
-                          f'onnx_model_small_resnet_small_imagenet.onnx',
-                          input_names=input_names,
-                          output_names=output_names)
-
-        loss = dummy_loss(y_resnet, dummy_y)
-        loss.backward()
+        # y_resnet = resnet_net(x)
+        # input_names = ['Image']
+        #
+        # output_names = ['y_hat']
+        #
+        # torch.onnx.export(resnet_net, x,
+        #                   f'onnx_model_small_resnet_small_imagenet.onnx',
+        #                   input_names=input_names,
+        #                   output_names=output_names)
+        #
+        # loss = dummy_loss(y_resnet, dummy_y)
+        # loss.backward()
         # print(y_resnet)
 
         get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 400, 400))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 1000, 1000))
         print("Receptive field of ResNet")
-        print(resnet_rf)
+        print(resnet_rf.rfsize)
 
 
 if __name__ == '__main__':
