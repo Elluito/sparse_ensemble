@@ -126,7 +126,7 @@ unset KMP_AFFINITY
 #conda activate work
 #which python
 
-python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #echo  $1  $2  $3  $4  $5 $6  $7  $8  $9 "${10}"
 
@@ -215,4 +215,4 @@ python prune_models.py  --model $1 --dataset $2 --num_workers $3 --RF_level $4 -
 #   Soup Idea applied to stochastic pruning
 #############################################################
 
-#python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
+python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
