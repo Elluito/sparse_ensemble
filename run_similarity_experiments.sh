@@ -565,7 +565,7 @@
 
 #model="resnet18"
 #model="resnet50"
-model="vgg19"
+#model="vgg19"
 
 #dataset="small_imagenet"
 #dataset="cifar10"
