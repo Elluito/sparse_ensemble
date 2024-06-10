@@ -34,20 +34,6 @@
 #python Second_order_Receptive_field.py --experiment 2 --optimiser "kfac"
 #
 #python Second_order_Receptive_field.py --experiment 2 --optimiser "sam"
-
-#  if [ $6 -eq 1 ]
-#  then
-#    # KFac
-#python Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/checkpoints"
-#
-#  fi
-#
-#  if [ $6 -eq 2 ]
-#    # SAM
-#  then
-#python Second_order_Receptive_field.py --lr "0.1" --momentum "0.7" --grad_clip "1" --save 1 --experiment 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/checkpoints"
-#  fi
-#
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 #python -c "import os; print(os.environ)"
 #printf "Start Test \n"
@@ -96,7 +82,6 @@ python -c "import os; print(os.environ)"
 #qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_3_recording_200_test_acc_42.89.pth"
 
 
-
 #############################################################
 #     One shot with specific pruning rate results
 #############################################################
@@ -107,4 +92,4 @@ python -c "import os; print(os.environ)"
 #   Soup Idea applied to stochastic pruning
 #############################################################
 
-python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
+#python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 5 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
