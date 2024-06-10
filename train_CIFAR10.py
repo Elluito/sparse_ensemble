@@ -294,6 +294,7 @@ def main(args):
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
+
     if args.dataset == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
             root=data_path, train=True, download=True, transform=transform_train)
@@ -337,7 +338,8 @@ def main(args):
     print('==> Building model..')
     # net = VGG('VGG19')
     # net = ResNet50(num_class=100)
-    from torchvision.models import resnet18, resnet50
+    from torchvision.models import resnet50
+
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet18_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
@@ -453,6 +455,7 @@ def main(args):
     # net = net.to(device)
 
     net = net.to(device)
+
     # if device == 'cuda':
     #     net = torch.nn.DataParallel(net)
     #     cudnn.benchmark = True
@@ -570,8 +573,10 @@ if __name__ == '__main__':
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
-    parser.add_argument('--count_flops', '-r', action='store_true',
+
+    parser.add_argument('--count_flops', '-cf', action='store_true',
                         help='Count the flops of training')
+
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
