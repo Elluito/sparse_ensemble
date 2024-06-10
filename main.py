@@ -11202,7 +11202,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         soup2_model = copy.deepcopy(net)
 
-        vector_to_parameters(pruned_vector, soup2_model.parameters())
+        vector_to_parameters(pruned_vector/number_of_models, soup2_model.parameters())
 
         soup2_performance = test(soup2_model, use_cuda, evaluation_set, verbose=0)
         soup2_list.append(soup2_performance)
@@ -11241,6 +11241,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         original_with_new_pruning_rates_list.append(deterministic_performance_with_new_pruning_rate)
 
     df = pd.DataFrame({"Original Pruning Rate": [cfg.amount] * number_of_samples,
+                       "Deterministic performance": determinsitc_model_performance_list,
                        "Soup then Prune accuracy": soup1_list,
                        "Prune then Soup accuracy": soup2_list,
                        "Original with new pruning rate": original_with_new_pruning_rates_list,
