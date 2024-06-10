@@ -446,7 +446,7 @@ def test_models():
         # print(y_resnet)
 
         get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 400, 400))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 1000, 1000))
         print("Receptive field of ResNet")
         print(resnet_rf.rfsize)
 
