@@ -9596,7 +9596,7 @@ def LeMain(args):
             if args["architecture"] == "resnet18":
                 solution = "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"
                 exclude_layers = ["conv1", "linear"]
-            if args["architecture"] == "VGG19":
+            if args["architecture"] == "vgg19":
                 solution = "trained_models/cifar100/vgg19_cifar100_traditional_train.pth"
                 exclude_layers = ["features.0", "classifier"]
             if args["architecture"] == "resnet50":
@@ -9609,7 +9609,7 @@ def LeMain(args):
                 # solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
                 solution = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
                 exclude_layers = ["conv1", "linear"]
-            if args["architecture"] == "VGG19":
+            if args["architecture"] == "vgg19":
                 solution = "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth"
                 exclude_layers = ["features.0", "classifier"]
             if args["architecture"] == "resnet50":
@@ -11247,9 +11247,11 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                        "New pruning rate": new_pruning_rates_list,
                        })
 
-    df.to_csv("soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
-                                                                                cfg.sigma),
-              index=False)
+    df.to_csv(
+        "soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
+                                                                          name,
+                                                                          cfg.sigma),
+        index=False)
 
     #
     # # torch.cuda.empty_cache()
