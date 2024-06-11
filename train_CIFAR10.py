@@ -162,10 +162,10 @@ def train(epoch):
         if not use_ffcv:
             inputs, targets = inputs.to(device), targets.to(device)
 
-        shape_inputs = inputs.shape[0]
-        print("shape_inputs {}".format(shape_inputs))
-        assert shape_inputs[-1] == 360, "Shape inputs: {} expected shape inputs to be {}".format(shape_inputs, 360)
-        break
+        # shape_inputs = inputs.shape[0]
+        # print("shape_inputs {}".format(shape_inputs))
+        # assert shape_inputs[-1] == 360, "Shape inputs: {} expected shape inputs to be {}".format(shape_inputs, 360)
+        # break
         if batch_idx == 0:
             print("Inputs device :{}".format(inputs.data.device))
             print("Targets device :{}".format(targets.data.device))
@@ -517,6 +517,10 @@ def main(args):
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
                  "num_workers": args.num_workers, "batch_size": batch_size})
 
+    inputs, y = next(iter(trainloader))
+
+    print("inputs shape: {}".format(inputs.shape))
+    return 0
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
 
