@@ -42,7 +42,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$lib_path_of_current_enviroment
   if [ $6 -eq 1 ]
   then
     # KFac
-python Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip "0.5" --save 1 --experiment 1 --record_time 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 2 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/checkpoints"
+python Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip "0.3" --save 1 --experiment 1 --record_time 1 --epochs 100 --batch_size 32 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "kfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/checkpoints"
 
   fi
 
