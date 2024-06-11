@@ -517,10 +517,10 @@ def main(args):
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
                  "num_workers": args.num_workers, "batch_size": batch_size})
 
-    inputs, y = next(iter(trainloader))
-
-    print("inputs shape: {}".format(inputs.shape))
-    return 0
+    # inputs, y = next(iter(trainloader))
+    #
+    # print("inputs shape: {}".format(inputs.shape))
+    # return 0
     classes = ('plane', 'car', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck')
 
