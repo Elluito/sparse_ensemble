@@ -163,7 +163,7 @@ def train(epoch):
             inputs, targets = inputs.to(device), targets.to(device)
 
         shape_inputs = inputs.shape[0]
-        print("shape_inputs")
+        print("shape_inputs {}".format(shape_inputs))
         assert shape_inputs[-1] == 360, "Shape inputs: {} expected shape inputs to be {}".format(shape_inputs, 360)
         break
         if batch_idx == 0:
