@@ -42,7 +42,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     ########## train
 
-    decoder = RandomResizedCropRGBImageDecoder((220, 220))
+    decoder = RandomResizedCropRGBImageDecoder((224, 224))
 
     image_pipeline: List[Operation] = [
         decoder,
