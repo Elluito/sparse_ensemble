@@ -581,7 +581,7 @@ pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
 # Pruning rates for Receptive field
 #pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 #pruning_rates=("0.9")
-sigma=("0.001" "0.003" "0.005")
+#sigma=("0.001" "0.003" "0.005")
 # For resnet18
 #
 rf_levels=("0.001" "0.003" "0.005")
