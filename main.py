@@ -11113,10 +11113,12 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     soup1_list = []
     soup2_list = []
+    dense_soup1_list = []
     new_pruning_rates_list = []
     determinsitc_model_performance_list = [pruned_original_performance] * number_of_samples
     original_with_new_pruning_rates_list = []
-
+    dense_soup_then_prune_delta = []
+    dense_original_list =[original_performance]*number_of_samples
     del pruned_original
 
     labels = []
@@ -11131,7 +11133,6 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         for n in range(N):
 
             current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
-
             if sum_vector is None:
 
                 sum_vector = parameters_to_vector(current_model.parameters())
@@ -11147,6 +11148,10 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         soup1_model = copy.deepcopy(net)
 
         vector_to_parameters(sum_vector / number_of_models, soup1_model.parameters())
+
+        soup_dense_performance = test(soup1_model, use_cuda, evaluation_set, verbose=0)
+
+        dense_soup1_list.append(soup_dense_performance)
 
         if cfg.pruner == "global":
 
@@ -11165,6 +11170,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         soup_performance = test(soup1_model, use_cuda, evaluation_set, verbose=0)
 
         soup1_list.append(soup_performance)
+
 
     ##########  first prune and then soup ############
 
@@ -11246,6 +11252,8 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                        "Prune then Soup accuracy": soup2_list,
                        "Original with new pruning rate": original_with_new_pruning_rates_list,
                        "New pruning rate": new_pruning_rates_list,
+                       "Dense soup then prune":dense_soup1_list,
+                       "Dense original":dense_original_list
                        })
 
     df.to_csv(

@@ -89,7 +89,7 @@ unset KMP_AFFINITY
 #     Training a model with specific RF
 #############################################################
 #
-#python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128 --save_folder "${10}"
+python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --batch_size 128 --save_folder "${10}"
 
 #############################################################
 #     Resume Training of a model with specific RF from solution
