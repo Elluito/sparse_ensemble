@@ -62,7 +62,7 @@ echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
 #eval "$(conda shell.bash hook)"
 #conda activate work
 which python
-#export LD_LIBRARY_PATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
+export LD_LIBRARY_PATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
 #l=$(which python)
 #
 #lib_path_of_current_enviroment="${l%%"bin/python"}"

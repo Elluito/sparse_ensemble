@@ -1,4 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
+import copy
+
 import wandb
 import omegaconf
 import torch.optim as optim
@@ -435,8 +437,107 @@ def get_flops_for_config(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
 
-def iterative_RF_experiments(args):
 
+def get_model_RF(args, RF=None):
+    from torchvision.models import resnet50
+    assert RF is not None, "RF is None, you need a non null RF level"
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=RF)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=RF, multiplier=args.width)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=RF, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=RF, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "resnet24":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=RF, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_eatures
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+    if args.model == "vgg19":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=RF)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=RF)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=RF)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=RF)
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNet_rf(num_classes=10, RF_level=RF, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNet_rf(num_classes=100, RF_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=RF, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=RF, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg_small":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_VGG_RF("small_vgg", num_classes=10, RF_level=RF)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_VGG_RF("small_vgg", num_classes=100, RF_level=RF)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=RF)
+
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=RF)
+    return net
+
+
+def iterative_RF_experiments(args):
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv
@@ -463,7 +564,7 @@ def iterative_RF_experiments(args):
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
-    batch_size = 128
+    batch_size = args.batch_size
     if "32" in args.name:
         batch_size = 32
     if "64" in args.name:
@@ -528,102 +629,8 @@ def iterative_RF_experiments(args):
     print('==> Building model..')
     # net = VGG('VGG19')
     # net = ResNet50(num_class=100)
-    from torchvision.models import resnet50
 
-    if args.model == "resnet18":
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "small_imagenet":
-            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-    if args.model == "resnet50":
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "small_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "pytorch" and args.dataset == "cifar10":
-            net = resnet50()
-            in_features = net.fc.in_features
-            net.fc = nn.Linear(in_features, 10)
-        if args.type == "pytorch" and args.dataset == "cifar100":
-            net = resnet50()
-            in_features = net.fc.in_features
-            net.fc = nn.Linear(in_features, 100)
-    if args.model == "resnet24":
-
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-        if args.type == "pytorch" and args.dataset == "cifar10":
-            # # net = resnet50()
-            # # in_features = net.fc.in_eatures
-            # net.fc = nn.Linear(in_features, 10)
-            raise NotImplementedError(
-                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
-                                                                                     args.dataset))
-        if args.type == "pytorch" and args.dataset == "cifar100":
-            # net = resnet50()
-            # in_features = net.fc.in_features
-            # net.fc = nn.Linear(in_features, 100)
-            raise NotImplementedError(
-                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
-                                                                                     args.dataset))
-    if args.model == "vgg19":
-
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "small_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
-    if args.model == "resnet_small":
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
-
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "small_imagenet":
-            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "pytorch" and args.dataset == "cifar10":
-            raise NotImplementedError
-            # net = resnet50()
-            # in_features = net.fc.in_features
-            # net.fc = nn.Linear(in_features, 10)
-        if args.type == "pytorch" and args.dataset == "cifar100":
-            raise NotImplementedError
-            # net = resnet50()
-            # in_features = net.fc.in_features
-            # net.fc = nn.Linear(in_features, 100)
-    if args.model == "vgg_small":
-
-        if args.type == "normal" and args.dataset == "cifar10":
-            net = small_VGG_RF("small_vgg", num_classes=10, RF_level=args.RF_level)
-
-        if args.type == "normal" and args.dataset == "cifar100":
-            net = small_VGG_RF("small_vgg", num_classes=100, RF_level=args.RF_level)
-
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
-
-        if args.type == "normal" and args.dataset == "small_imagenet":
-            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
-
+    net = get_model_RF(args, args.initial_RF)
     # Training
     # # Model
     # print('==> Building model..')
@@ -706,8 +713,20 @@ def iterative_RF_experiments(args):
     # print("First learning rate:{}".format(lr_list[0]))
     # print("Last learning rate:{}".format(lr_list[-1]))
 
+    epoch_first_change = int(args.ratio_first_change * args.epochs)
+    epoch_second_change = int(args.ratio_second_change * args.epochs)
     for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
+        if epoch == epoch_first_change:
+            new_net = get_model_RF(args, args.frist_chagne_RF)
+            copy_net = copy.deepcopy(net)
+            new_net.load_state_dict(copy_net.state_dict())
+            net = new_net
+        if epoch == epoch_second_change:
+            copy_net = copy.deepcopy(net)
+            new_net = get_model_RF(args, args.second_chagne_RF)
+            new_net.load_state_dict(copy_net.state_dict())
+            net = new_net
         t0 = time.time()
         train_acc = train(epoch)
         t1 = time.time()
@@ -1057,6 +1076,7 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--epochs', default=200, type=int, help='epochs to train')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
@@ -1088,6 +1108,12 @@ if __name__ == '__main__':
     parser.add_argument('--ffcv_val',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
+    parser.add_argument('--initial_RF', default=8, type=str, help='Receptive field level')
+    parser.add_argument('--first_change_RF', default=5, type=str, help='Second step to reduce receptive field')
+    parser.add_argument('--second_change_RF', default=3, type=str, help='Third step to reduce receptive field')
+    parser.add_argument('--ratio_first_change', default=0.75, type=float, help='')
+    parser.add_argument('--ratio_second_change', default=0.95, type=float, help='')
+
     args = parser.parse_args()
 
     try:
@@ -1100,4 +1126,7 @@ if __name__ == '__main__':
 
     print(args.resume_solution)
     # return 0
-    main(args)
+    if args.experiment == 1:
+        main(args)
+    if args.experiment == 2:
+        iterative_RF_experiments(args)
