@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet_small_normal_small_imagenet_1718141049.5986598_rf_level_8_recording_200_ffcv_test_acc_48.42.pth,48.42,40.7
