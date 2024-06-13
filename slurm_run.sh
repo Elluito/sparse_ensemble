@@ -25,7 +25,7 @@
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=4
 #module load pytorch
 
 
@@ -86,7 +86,7 @@ python -c "import os; print(os.environ)"
 #     One shot with specific pruning rate results
 #############################################################
 
-#python prune_models.py --name "sam_optim_hyper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+python prune_models.py --name "record_200_ffcv" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #############################################################
 #   Soup Idea applied to stochastic pruning

@@ -435,6 +435,315 @@ def get_flops_for_config(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
 
+def iterative_RF_experiments(args):
+
+    print(args)
+
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv
+    use_ffcv = args.ffcv
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print("Device: {}".format(device))
+    best_acc = 0  # best test accuracy
+    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
+    cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+
+    stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+
+    # Data
+    print('==> Preparing data..')
+    current_directory = Path().cwd()
+    data_path = "."
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "/home/luisaam/Documents/PhD/data/"
+    print(data_path)
+    batch_size = 128
+    if "32" in args.name:
+        batch_size = 32
+    if "64" in args.name:
+        batch_size = 64
+
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(*stats_to_use),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    if args.dataset == "cifar10":
+        trainset = torchvision.datasets.CIFAR10(
+            root=data_path, train=True, download=True, transform=transform_train)
+        trainloader = torch.utils.data.DataLoader(
+            trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR10(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "cifar100":
+        trainset = torchvision.datasets.CIFAR100(
+            root=data_path, train=True, download=True, transform=transform_train)
+        trainloader = torch.utils.data.DataLoader(
+            trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR100(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "tiny_imagenet":
+        from test_imagenet import load_tiny_imagenet
+        trainloader, valloader, testloader = load_tiny_imagenet(
+            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+             "num_workers": args.num_workers, "batch_size": batch_size})
+    if args.dataset == "small_imagenet":
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                                      batch_size, args.num_workers)
+        else:
+            from test_imagenet import load_small_imagenet
+            trainloader, valloader, testloader = load_small_imagenet(
+                {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size})
+
+    # inputs, y = next(iter(trainloader))
+    #
+    # print("inputs shape: {}".format(inputs.shape))
+    # return 0
+    classes = ('plane', 'car', 'bird', 'cat', 'deer',
+               'dog', 'frog', 'horse', 'ship', 'truck')
+
+    # Model
+    print('==> Building model..')
+    # net = VGG('VGG19')
+    # net = ResNet50(num_class=100)
+    from torchvision.models import resnet50
+
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "resnet24":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_eatures
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+    if args.model == "vgg19":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg_small":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_VGG_RF("small_vgg", num_classes=10, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_VGG_RF("small_vgg", num_classes=100, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
+
+    # Training
+    # # Model
+    # print('==> Building model..')
+    # # net = VGG('VGG19')
+    # # net = ResNet18()
+    # # net = PreActResNet18()
+    # # net = GoogLeNet()
+    # # net = DenseNet121()
+    # # net = ResNeXt29_2x64d()
+    # # net = MobileNet()
+    # # net = MobileNetV2()
+    # # net = DPN92()
+    # # net = ShuffleNetG2()
+    # # net = SENet18()
+    # # net = ShuffleNetV2(1)
+    # # net = EfficientNetB0()
+    # # net = RegNetX_200MF()
+    # net = SimpleDLA()
+    # net = net.to(device)
+
+    net = net.to(device)
+
+    # if device == 'cuda':
+    #     net = torch.nn.DataParallel(net)
+    #     cudnn.benchmark = True
+    solution_name = ""
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                          momentum=0.9, weight_decay=5e-4)
+    if args.resume:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+        # Load checkpoint.
+        print('==> Resuming from checkpoint..')
+        assert os.path.isdir('{}'.format(args.save_folder)), 'Error: no checkpoint directory found!'
+        # checkpoint = torch.load(
+        #     '{}/'.format(
+        #         args.save_folder))
+        checkpoint = torch.load(args.resume_solution)
+        net.load_state_dict(checkpoint['net'])
+        best_acc = checkpoint['acc']
+        start_epoch = checkpoint['epoch']
+        for i in range(start_epoch):
+            scheduler.step()
+        # assert start_epoch == 137, "The start epochs is not 137"
+        path = Path(args.resume_solution)
+        solution_name = path.stem
+        print("solution name: {}".format(solution_name))
+    else:
+        seed = time.time()
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+        solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
+                                                            args.name)
+        state = {
+            'net': net.state_dict(),
+            'acc': 0,
+            'epoch': -1,
+            "config": args,
+        }
+
+        torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
+
+    if args.use_wandb:
+        os.environ["WANDB_START_METHOD"] = "thread"
+        # now = date.datetime.now().strftime("%m:%s")
+        wandb.init(
+            entity="luis_alfredo",
+            config=omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
+            project="Receptive_Field",
+            name=solution_name,
+            reinit=True,
+            save_code=True,
+        )
+
+    # lr_list = []
+    # for i in range(start_epoch):
+    #     for param_group in optimizer.param_groups:
+    #         lr_list.append(param_group['lr'])
+    #         break
+    #     scheduler.step()
+    # print("First learning rate:{}".format(lr_list[0]))
+    # print("Last learning rate:{}".format(lr_list[-1]))
+
+    for epoch in range(start_epoch, start_epoch + args.epochs):
+        print(epoch)
+        t0 = time.time()
+        train_acc = train(epoch)
+        t1 = time.time()
+        print("Epoch time:{}".format(t1 - t0))
+        test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
+        if args.use_wandb:
+            # log metrics to wandb
+            wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
+
+        if args.record_time:
+            filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        if args.record:
+            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        scheduler.step()
+
+    if args.use_wandb:
+        wandb.finish()
+
 
 def main(args):
     print(args)

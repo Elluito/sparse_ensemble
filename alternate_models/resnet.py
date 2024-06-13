@@ -211,19 +211,19 @@ class ResNetRF(nn.Module):
         if self.rf_level == 4:
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
         if self.rf_level == 5:
-            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
-        if self.rf_level == 6:
-            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
-        if self.rf_level == 7:
-            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
-        if self.rf_level == "k6":
             self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
-        if self.rf_level == "k7":
+        if self.rf_level == 6:
             self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
-        if self.rf_level == "k8":
+        if self.rf_level == 7:
             self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
-        if self.rf_level == "k9":
+        if self.rf_level == 8:
             self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
         if self.fix_points is None:
             self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
                                    stride=1, padding=1, bias=False)
