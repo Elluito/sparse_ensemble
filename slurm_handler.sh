@@ -117,32 +117,37 @@ sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user
 #
 #done
 #done
-run_pruning() {
-model=$1
-dataset=$2
-directory=$3
 
-echo "model ${model} and dataset ${dataset}"
 
-pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-# For resnet18
 
-  if [ "${4}" -gt 0 ]
-  then
-      rf_levels=("3" "4" "5")
+######################## Pruning one shot results ##############################
 
-  else
-        rf_levels=("7" "8" "9" "10")
-  fi
-
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning"  slurm_run.sh  "${model}" "${dataset}" 4  "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" 1
-#echo "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning in directory ${directory}"
-done
-done
-}
-#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 1
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
+#run_pruning() {
+#model=$1
+#dataset=$2
+#directory=$3
+#
+#echo "model ${model} and dataset ${dataset}"
+#
+#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+## For resnet18
+#
+#  if [ "${4}" -gt 0 ]
+#  then
+#      rf_levels=("3" "4" "5")
+#
+#  else
+#        rf_levels=("7" "8" "9" "10")
+#  fi
+#
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+#sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning"  slurm_run.sh  "${model}" "${dataset}" 4  "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" 1
+##echo "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning in directory ${directory}"
+#done
+#done
+#}
+##run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 1
+#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
