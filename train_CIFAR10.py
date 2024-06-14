@@ -1,6 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
-
+from shrinkbench.metrics import flops
 import wandb
 import omegaconf
 import torch.optim as optim
@@ -152,7 +152,8 @@ def format_time(seconds):
 
 # Training
 def train(epoch):
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
+
     print('\nEpoch: %d' % epoch)
     net.train()
     train_loss = 0
@@ -182,6 +183,10 @@ def train(epoch):
         if batch_idx == 0:
             t0 = time.time()
         loss.backward()
+        if record_flops:
+            backwardflops = 2 * batch_flops
+            total_flops += batch_flops + backwardflops
+
         if batch_idx == 0:
             t1 = time.time()
             print("Time for backward pass {}".format(t1 - t0))
@@ -280,7 +285,9 @@ def get_flops_for_config(args):
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
-    batch_size = 128
+
+    batch_size = args.batch_size
+
     if "32" in args.name:
         batch_size = 32
     if "64" in args.name:
@@ -437,6 +444,33 @@ def get_flops_for_config(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
 
+    total_flops = 0
+
+    solution_name = "{}_{}_{}_rf_level_{}_{}_".format(args.model, args.type, args.dataset, args.RF_level,
+                                                      args.name)
+
+    x, y = next(iter(trainloader))
+
+    batch_flops, _ = flops(net, x)
+
+    for e in range(args.epochs):
+        for batch in range(len(trainloader)):
+            total_flops += batch_flops + 2 * batch_flops
+
+
+        filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
+
+        if Path(filepath).is_file():
+            log_dict = {"Epoch": [e], "flops": [total_flops]}
+
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, mode="a", header=False, index=False)
+        else:
+            # Try to read the file to see if it is
+            log_dict = {"Epoch": [e], "flops": [total_flops]}
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, sep=",", index=False)
+
 
 def get_model_RF(args, RF=None):
     from torchvision.models import resnet50
@@ -540,7 +574,10 @@ def get_model_RF(args, RF=None):
 def iterative_RF_experiments(args):
     print(args)
 
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
+
+    record_flops = args.record_flops
+
     use_ffcv = args.ffcv
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Device: {}".format(device))
@@ -681,8 +718,9 @@ def iterative_RF_experiments(args):
     else:
         seed = time.time()
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-        solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
-                                                            args.name)
+        solution_name = "{}_{}_{}_{}_rf_level_{}_{}_iterative".format(args.model, args.type, args.dataset, seed,
+                                                                      args.RF_level,
+                                                                      args.name)
         state = {
             'net': net.state_dict(),
             'acc': 0,
@@ -690,8 +728,7 @@ def iterative_RF_experiments(args):
             "config": args,
         }
 
-        torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
-
+        torch.save(state, '{}/{}_iterative_initial_weights.pth'.format(args.save_folder, solution_name))
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -703,6 +740,13 @@ def iterative_RF_experiments(args):
             reinit=True,
             save_code=True,
         )
+
+    total_flops = 0
+
+    if record_flops:
+        x, y = next(iter(trainloader))
+
+        batch_flops, _ = flops(net, x)
 
     # lr_list = []
     # for i in range(start_epoch):
@@ -732,6 +776,7 @@ def iterative_RF_experiments(args):
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
+
         if args.use_wandb:
             # log metrics to wandb
             wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
@@ -745,6 +790,18 @@ def iterative_RF_experiments(args):
             else:
                 # Try to read the file to see if it is
                 log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        if args.record_flops:
+            filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
+
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         if args.record:
@@ -765,9 +822,11 @@ def iterative_RF_experiments(args):
 
 
 def main(args):
+
     print(args)
 
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
+    record_flops = args.record_flops
     use_ffcv = args.ffcv
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Device: {}".format(device))
@@ -791,7 +850,7 @@ def main(args):
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
-    batch_size = 128
+    batch_size = args.batch_size
     if "32" in args.name:
         batch_size = 32
     if "64" in args.name:
@@ -1024,7 +1083,10 @@ def main(args):
             reinit=True,
             save_code=True,
         )
-
+    total_flops = 0
+    if record_flops:
+        x, y = next(iter(trainloader))
+        batch_flops, _ = flops(net, x)
     # lr_list = []
     # for i in range(start_epoch):
     #     for param_group in optimizer.param_groups:
@@ -1044,7 +1106,18 @@ def main(args):
         if args.use_wandb:
             # log metrics to wandb
             wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
+        if args.record_flops:
+            filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
 
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
         if args.record_time:
             filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():
@@ -1100,7 +1173,8 @@ if __name__ == '__main__':
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
-    parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
+    parser.add_argument('--record_time', action='store_true', help="Record the training time")
+    parser.add_argument('--record_flops', action='store_true', help="Record the training time")
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
     parser.add_argument('--ffcv_train',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
@@ -1129,4 +1203,8 @@ if __name__ == '__main__':
     if args.experiment == 1:
         main(args)
     if args.experiment == 2:
+
         iterative_RF_experiments(args)
+
+    if args.experiment == 3:
+        get_flops_for_config(args)

@@ -81,12 +81,17 @@ python -c "import os; print(os.environ)"
 
 #qsub -l h_rt=48:00:00 -l coproc_v100=1 -N "resume_training_Level_3_small_resnet_small_imagenet" resume_run.sh "resnet_small" "small_imagenet" 2 3 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints/resnet_small_normal_small_imagenet_seed.0_rf_level_3_recording_200_test_acc_42.89.pth"
 
+#############################################################
+#     Train model
+#############################################################
+
+python train_CIFAR10.py --ffcv --record_time --record_flops  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --ffcv_train "${10}" --ffcv_val "${11}"
 
 #############################################################
 #     One shot with specific pruning rate results
 #############################################################
 
-python prune_models.py --name "recording_200_ffcv" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#python prune_models.py --name "recording_200_ffcv" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #############################################################
 #   Soup Idea applied to stochastic pruning

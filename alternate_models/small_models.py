@@ -321,7 +321,13 @@ def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
                               RF_level=RF_level,
                               multiplier=multiplier)
 
-
+def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
+    if RF_level == 0:
+        return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
+    else:
+        return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes=num_classes, fixed_points=fix_points,
+                              RF_level=RF_level,
+                              multiplier=multiplier)
 def get_output_until_block_small_vgg(net, block, net_type=1):
     if net_type == 0:
         def features_only(self, x):
@@ -407,8 +413,8 @@ def get_output_until_block_small_resnet(net, block, net_type=1):
 def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
-    # blocks = [1, 2, 3, 4, 5, 6, 7]
-    blocks = [7,8, 9, 10]
+    blocks = [3, 4, 5, 6, 7,8,9,10]
+    # blocks = [7,8, 9, 10]
 
     for i in blocks:
         # samples = []
@@ -417,19 +423,19 @@ def test_models():
         dummy_y = torch.zeros(3, 10)
         dummy_y[:, 5] = 1
         dummy_loss = nn.CrossEntropyLoss()
+        #
+        # if i < 5:
+        #     vgg_net = small_VGG_RF('small_vgg', RF_level=i)
+        #     y_vgg = vgg_net(x)
+        #     print(y_vgg)
+        #     get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        #     vgg_rf = receptivefield(vgg_net, (1, 3, 450, 450))
+        #     print("Block {}".format(i))
+        #
+        #     print("Receptive field of VGG")
+        #     print(vgg_rf)
 
-        if i < 5:
-            vgg_net = small_VGG_RF('small_vgg', RF_level=i)
-            y_vgg = vgg_net(x)
-            print(y_vgg)
-            get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
-            vgg_rf = receptivefield(vgg_net, (1, 3, 450, 450))
-            print("Block {}".format(i))
-
-            print("Receptive field of VGG")
-            print(vgg_rf)
-
-        resnet_net = small_ResNetRF(small_Bottleneck, num_blocks=[1, 1, 1], num_classes=10, RF_level=i)
+        resnet_net = small_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
@@ -446,10 +452,18 @@ def test_models():
         # print(y_resnet)
 
         get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 1000, 1000))
-        print("Receptive field of ResNet")
+        resnet_rf = receptivefield(resnet_net, (1, 3, 1200, 1200))
+        print("Receptive field of ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
+def models_info():
+
+    from sparse_ensemble_utils import count_parameters
+    resnet_small = small_ResNet_rf(10)
+    vgg_net = small_VGG_RF('small_vgg')
+    print("Small ResNet parameter count : {}".format(count_parameters(resnet_small)))
+    print("Small Vgg parameter count : {}".format(count_parameters(vgg_net)))
 
 
 if __name__ == '__main__':
     test_models()
+    # models_info()
