@@ -263,6 +263,7 @@ def give_sparse_flops_for_a_batch(model, loader):
 
 
 def get_flops_for_config(args):
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Device: {}".format(device))
     best_acc = 0  # best test accuracy
