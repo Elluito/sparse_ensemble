@@ -1182,7 +1182,7 @@ if __name__ == '__main__':
     parser.add_argument('--ffcv_val',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
-    parser.add_argument('--initial_RF', default=8, type=str, help='Receptive field level')
+    parser.add_argument('--initial_RF', default=9, type=str, help='Receptive field level')
     parser.add_argument('--first_change_RF', default=5, type=str, help='Second step to reduce receptive field')
     parser.add_argument('--second_change_RF', default=3, type=str, help='Third step to reduce receptive field')
     parser.add_argument('--ratio_first_change', default=0.75, type=float, help='')
