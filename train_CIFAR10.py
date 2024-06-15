@@ -1166,10 +1166,6 @@ if __name__ == '__main__':
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
-
-    parser.add_argument('--count_flops', '-cf', action='store_true',
-                        help='Count the flops of training')
-
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
