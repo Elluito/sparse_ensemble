@@ -762,13 +762,13 @@ def iterative_RF_experiments(args):
     for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
         if epoch == epoch_first_change:
-            new_net = get_model_RF(args, args.frist_chagne_RF)
+            new_net = get_model_RF(args, args.frist_change_RF)
             copy_net = copy.deepcopy(net)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
         if epoch == epoch_second_change:
             copy_net = copy.deepcopy(net)
-            new_net = get_model_RF(args, args.second_chagne_RF)
+            new_net = get_model_RF(args, args.second_change_RF)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
         t0 = time.time()
