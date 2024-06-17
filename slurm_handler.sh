@@ -150,5 +150,5 @@ sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 done
 done
 }
-##run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 1
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
+#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 1
+#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
