@@ -263,7 +263,6 @@ def give_sparse_flops_for_a_batch(model, loader):
 
 
 def get_flops_for_config(args):
-
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("Device: {}".format(device))
     best_acc = 0  # best test accuracy
@@ -457,7 +456,6 @@ def get_flops_for_config(args):
     for e in range(args.epochs):
         for batch in range(len(trainloader)):
             total_flops += batch_flops + 2 * batch_flops
-
 
         filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
 
@@ -743,7 +741,8 @@ def iterative_RF_experiments(args):
         )
 
     total_flops = 0
-
+    x = None
+    y = None
     if record_flops:
         x, y = next(iter(trainloader))
 
@@ -763,15 +762,17 @@ def iterative_RF_experiments(args):
     for epoch in range(start_epoch, start_epoch + args.epochs):
         print(epoch)
         if epoch == epoch_first_change:
-            new_net = get_model_RF(args, args.frist_change_RF)
+            new_net = get_model_RF(args, args.first_change_RF)
             copy_net = copy.deepcopy(net)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
+            batch_flops, _ = flops(net, x)
         if epoch == epoch_second_change:
             copy_net = copy.deepcopy(net)
             new_net = get_model_RF(args, args.second_change_RF)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
+            batch_flops, _ = flops(net, x)
         t0 = time.time()
         train_acc = train(epoch)
         t1 = time.time()
@@ -823,7 +824,6 @@ def iterative_RF_experiments(args):
 
 
 def main(args):
-
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
@@ -1179,7 +1179,7 @@ if __name__ == '__main__':
     parser.add_argument('--ffcv_val',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
-    parser.add_argument('--initial_RF', default=9, type=str, help='Receptive field level')
+    parser.add_argument('--initial_RF', default=8, type=str, help='Receptive field level')
     parser.add_argument('--first_change_RF', default=5, type=str, help='Second step to reduce receptive field')
     parser.add_argument('--second_change_RF', default=3, type=str, help='Third step to reduce receptive field')
     parser.add_argument('--ratio_first_change', default=0.75, type=float, help='')
@@ -1200,7 +1200,6 @@ if __name__ == '__main__':
     if args.experiment == 1:
         main(args)
     if args.experiment == 2:
-
         iterative_RF_experiments(args)
 
     if args.experiment == 3:
