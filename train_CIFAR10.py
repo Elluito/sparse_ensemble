@@ -239,20 +239,20 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
     # Save checkpoint.
     acc = 100. * correct / total
 
-    if acc > best_acc:
-        print('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-            'config': args,
-        }
-        if not os.path.isdir(save_folder):
-            os.mkdir(save_folder)
-        if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
-            os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
-        torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
-        best_acc = acc
+    # if acc > best_acc:
+    #     print('Saving..')
+    #     state = {
+    #         'net': net.state_dict(),
+    #         'acc': acc,
+    #         'epoch': epoch,
+    #         'config': args,
+    #     }
+    #     if not os.path.isdir(save_folder):
+    #         os.mkdir(save_folder)
+    #     if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+    #         os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    #     torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+    #     best_acc = acc
     return acc
 
 
@@ -727,7 +727,7 @@ def iterative_RF_experiments(args):
             "config": args,
         }
 
-        torch.save(state, '{}/{}_iterative_initial_weights.pth'.format(args.save_folder, solution_name))
+        # torch.save(state, '{}/{}_iterative_initial_weights.pth'.format(args.save_folder, solution_name))
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -743,10 +743,11 @@ def iterative_RF_experiments(args):
     total_flops = 0
     x = None
     y = None
-    if record_flops:
-        x, y = next(iter(trainloader))
+    # if record_flops:
+    x, y = next(iter(trainloader))
+    x=x.cuda()
 
-        batch_flops, _ = flops(net, x)
+    batch_flops, _ = flops(net,x)
 
     # lr_list = []
     # for i in range(start_epoch):
@@ -763,6 +764,7 @@ def iterative_RF_experiments(args):
         print(epoch)
         if epoch == epoch_first_change:
             new_net = get_model_RF(args, args.first_change_RF)
+            new_net = new_net.to(device)
             copy_net = copy.deepcopy(net)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
@@ -770,53 +772,58 @@ def iterative_RF_experiments(args):
         if epoch == epoch_second_change:
             copy_net = copy.deepcopy(net)
             new_net = get_model_RF(args, args.second_change_RF)
+            new_net = new_net.to(device)
             new_net.load_state_dict(copy_net.state_dict())
             net = new_net
             batch_flops, _ = flops(net, x)
         t0 = time.time()
-        train_acc = train(epoch)
+        # train_acc = train(epoch)
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
+
+
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
 
-        if args.use_wandb:
-            # log metrics to wandb
-            wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
+        print("test acc {}".format(test_acc))
 
-        if args.record_time:
-            filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
-            if Path(filepath).is_file():
-                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, mode="a", header=False, index=False)
-            else:
-                # Try to read the file to see if it is
-                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, sep=",", index=False)
-        if args.record_flops:
-            filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
+        # if args.use_wandb:
+        #     # log metrics to wandb
+        #     wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
 
-            if Path(filepath).is_file():
-                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, mode="a", header=False, index=False)
-            else:
-                # Try to read the file to see if it is
-                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, sep=",", index=False)
-        if args.record:
-            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
-            if Path(filepath).is_file():
-                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, mode="a", header=False, index=False)
-            else:
-                # Try to read the file to see if it is
-                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-                df = pd.DataFrame(log_dict)
-                df.to_csv(filepath, sep=",", index=False)
+        # if args.record_time:
+        #     filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
+        #     if Path(filepath).is_file():
+        #         log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, mode="a", header=False, index=False)
+        #     else:
+        #         # Try to read the file to see if it is
+        #         log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, sep=",", index=False)
+        # if args.record_flops:
+        #     filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
+        #
+        #     if Path(filepath).is_file():
+        #         log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, mode="a", header=False, index=False)
+        #     else:
+        #         # Try to read the file to see if it is
+        #         log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, sep=",", index=False)
+        # if args.record:
+        #     filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+        #     if Path(filepath).is_file():
+        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, mode="a", header=False, index=False)
+        #     else:
+        #         # Try to read the file to see if it is
+        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+        #         df = pd.DataFrame(log_dict)
+        #         df.to_csv(filepath, sep=",", index=False)
         scheduler.step()
 
     if args.use_wandb:
@@ -1154,7 +1161,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--epochs', default=200, type=int, help='epochs to train')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-    parser.add_argument('--RF_level', default="k6", type=str, help='Receptive field level')
+    parser.add_argument('--RF_level', default=7, type=str, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str,
                         help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
@@ -1182,8 +1189,10 @@ if __name__ == '__main__':
     parser.add_argument('--initial_RF', default=8, type=str, help='Receptive field level')
     parser.add_argument('--first_change_RF', default=5, type=str, help='Second step to reduce receptive field')
     parser.add_argument('--second_change_RF', default=3, type=str, help='Third step to reduce receptive field')
-    parser.add_argument('--ratio_first_change', default=0.75, type=float, help='')
-    parser.add_argument('--ratio_second_change', default=0.95, type=float, help='')
+    parser.add_argument('--ratio_first_change', default=0.75, type=float,
+                        help='Ratio of training to change RF first time')
+    parser.add_argument('--ratio_second_change', default=0.95, type=float,
+                        help='Ratio of training to change RF second time')
 
     args = parser.parse_args()
 
