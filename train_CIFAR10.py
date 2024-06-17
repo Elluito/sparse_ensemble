@@ -212,7 +212,7 @@ def train(epoch):
     return 100. * correct / total, correct, total
 
 
-def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
+def test(epoch, name="ckpt", save_folder="./checkpoint", args=None):
     global best_acc, testloader, device, criterion
     net.eval()
     test_loss = 0
@@ -239,20 +239,20 @@ def test(epoch, name="ckpt", save_folder="./checkpoint", args={}):
     # Save checkpoint.
     acc = 100. * correct / total
 
-    # if acc > best_acc:
-    #     print('Saving..')
-    #     state = {
-    #         'net': net.state_dict(),
-    #         'acc': acc,
-    #         'epoch': epoch,
-    #         'config': args,
-    #     }
-    #     if not os.path.isdir(save_folder):
-    #         os.mkdir(save_folder)
-    #     if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
-    #         os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
-    #     torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
-    #     best_acc = acc
+    if acc > best_acc and args.save:
+        print('Saving..')
+        state = {
+            'net': net.state_dict(),
+            'acc': acc,
+            'epoch': epoch,
+            'config': args,
+        }
+        if not os.path.isdir(save_folder):
+            os.mkdir(save_folder)
+        if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+            os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+        torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+        best_acc = acc
     return acc
 
 
@@ -727,7 +727,7 @@ def iterative_RF_experiments(args):
             "config": args,
         }
 
-        # torch.save(state, '{}/{}_iterative_initial_weights.pth'.format(args.save_folder, solution_name))
+        torch.save(state, '{}/{}_iterative_initial_weights.pth'.format(args.save_folder, solution_name))
     if args.use_wandb:
         os.environ["WANDB_START_METHOD"] = "thread"
         # now = date.datetime.now().strftime("%m:%s")
@@ -743,11 +743,11 @@ def iterative_RF_experiments(args):
     total_flops = 0
     x = None
     y = None
-    # if record_flops:
-    x, y = next(iter(trainloader))
-    x=x.cuda()
+    if record_flops:
+        x, y = next(iter(trainloader))
+        x = x.to(device)
 
-    batch_flops, _ = flops(net,x)
+    batch_flops, _ = flops(net, x)
 
     # lr_list = []
     # for i in range(start_epoch):
@@ -777,53 +777,52 @@ def iterative_RF_experiments(args):
             net = new_net
             batch_flops, _ = flops(net, x)
         t0 = time.time()
-        # train_acc = train(epoch)
+        train_acc = train(epoch)
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
-
 
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
 
         print("test acc {}".format(test_acc))
 
-        # if args.use_wandb:
-        #     # log metrics to wandb
-        #     wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
+        if args.use_wandb:
+            # log metrics to wandb
+            wandb.log({"Epoch": epoch, "Train Accuracy": train_acc, "Test Accuracy": test_acc})
 
-        # if args.record_time:
-        #     filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
-        #     if Path(filepath).is_file():
-        #         log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, mode="a", header=False, index=False)
-        #     else:
-        #         # Try to read the file to see if it is
-        #         log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, sep=",", index=False)
-        # if args.record_flops:
-        #     filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
-        #
-        #     if Path(filepath).is_file():
-        #         log_dict = {"Epoch": [epoch], "flops": [total_flops]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, mode="a", header=False, index=False)
-        #     else:
-        #         # Try to read the file to see if it is
-        #         log_dict = {"Epoch": [epoch], "flops": [total_flops]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, sep=",", index=False)
-        # if args.record:
-        #     filepath = "{}/{}.csv".format(args.save_folder, solution_name)
-        #     if Path(filepath).is_file():
-        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, mode="a", header=False, index=False)
-        #     else:
-        #         # Try to read the file to see if it is
-        #         log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
-        #         df = pd.DataFrame(log_dict)
-        #         df.to_csv(filepath, sep=",", index=False)
+        if args.record_time:
+            filepath = "{}/{}_training_time.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "training_time": [t1 - t0]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        if args.record_flops:
+            filepath = "{}/{}_flops.csv".format(args.save_folder, solution_name)
+
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "flops": [total_flops]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+        if args.record:
+            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
         scheduler.step()
 
     if args.use_wandb:
@@ -1173,6 +1172,8 @@ if __name__ == '__main__':
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
+    parser.add_argument('--save', default=1, type=int,
+                        help='Save best model from trainig')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
