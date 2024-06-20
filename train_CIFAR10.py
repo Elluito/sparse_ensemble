@@ -1040,6 +1040,11 @@ def main(args):
 
     net = net.to(device)
 
+    total_flops = 0
+    if record_flops:
+        x, y = next(iter(trainloader))
+        x = x.to(device)
+        batch_flops, _ = flops(net, x)
     # if device == 'cuda':
     #     net = torch.nn.DataParallel(net)
     #     cudnn.benchmark = True
@@ -1090,10 +1095,6 @@ def main(args):
             reinit=True,
             save_code=True,
         )
-    total_flops = 0
-    if record_flops:
-        x, y = next(iter(trainloader))
-        batch_flops, _ = flops(net, x)
     # lr_list = []
     # for i in range(start_epoch):
     #     for param_group in optimizer.param_groups:
