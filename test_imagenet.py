@@ -301,6 +301,7 @@ def test_pin_and_num_workers(args):
 
 
 def load_small_imagenet(args):
+    ratio = 256/224
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
@@ -308,8 +309,8 @@ def load_small_imagenet(args):
                                      std=[0.229, 0.224, 0.225])
 
     transform_test = transforms.Compose([
-        transforms.Resize(392),
-        transforms.CenterCrop(360),
+        transforms.Resize(int(args.resolution*ratio)),
+        transforms.CenterCrop(args.resolution),
         transforms.ToTensor(),
         transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
     ])

@@ -159,7 +159,7 @@
 #
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_1_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 1 "normal" 200 "recording_200" 1 1
 
-#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 "k6" "normal" 200 "recording_200" 1 1
+#qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k6_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 "k6" "normal" 200 "recording_200" 0 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k7_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 "k7" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k8_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 "k8" "normal" 200 "recording_200" 1 1
 #qsub -l h_rt=45:00:00 -l coproc_v100=1  -N "training_Level_k9_resnet18_small_imagenet" run.sh "resnet18" "small_imagenet" 4 "k9" "normal" 200 "recording_200" 1 1
@@ -623,33 +623,36 @@
 #done
 #done
 
+#################################### soup stochastic idea ########################################################################
+
+#run_soup_stochastic() {
+#model=$1
+#dataset=$2
+#
+#echo "model ${model} and dataset ${dataset}"
+#
+#pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
+## For resnet18
+#rf_levels=("0.001" "0.003" "0.005")
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+#qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
+#done
+#done
+#
+#}
+#
+#run_soup_stochastic resnet18 cifar10
+#run_soup_stochastic resnet18 cifar100
+#run_soup_stochastic resnet50 cifar10
+#run_soup_stochastic resnet50 cifar100
+#run_soup_stochastic vgg19 cifar10
+#run_soup_stochastic vgg19 cifar100
 
 
-run_soup_stochastic() {
-model=$1
-dataset=$2
-
-echo "model ${model} and dataset ${dataset}"
-
-pruning_rates=("0.6" "0.7" "0.8" "0.9" "0.95")
-# For resnet18
-rf_levels=("0.001" "0.003" "0.005")
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
-done
-done
-
-}
-
-run_soup_stochastic resnet18 cifar10
-run_soup_stochastic resnet18 cifar100
-run_soup_stochastic resnet50 cifar10
-run_soup_stochastic resnet50 cifar100
-run_soup_stochastic vgg19 cifar10
-run_soup_stochastic vgg19 cifar100
+##################################################################################################################################################################
 #declare -a list_to_use=("${level_2_seeds[@]}")
 #
 #seeds_per_level=${#list_to_use[@]}                            # Take the length of that array

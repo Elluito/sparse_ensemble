@@ -85,13 +85,17 @@ python -c "import os; print(os.environ)"
 #     Train model
 #############################################################
 
+# With FFCV
 #python train_CIFAR10.py --ffcv --record_time --record_flops  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --ffcv_train "${10}" --ffcv_val "${11}"
+
+# Without FFCV
+python train_CIFAR10.py --record_time --record_flops  --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9
 
 #############################################################
 #     One shot with specific pruning rate results
 #############################################################
 
-python prune_models.py --name "recording_200_ffcv" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
+#python prune_models.py --name "recording_200_ffcv" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
 #############################################################
 #   Soup Idea applied to stochastic pruning
