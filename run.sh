@@ -217,4 +217,4 @@ python train_CIFAR10.py --record_time --record_flops  --batch_size 128  --model 
 #   Soup Idea applied to stochastic pruning
 #############################################################
 
-python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 10 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
+#python main.py --experiment 1 --batch_size 518 --modeltype "alternative" --pruner "global" --population 10 --epochs 10 --pruning_rate  $1 --architecture $2 --sigma $3 --dataset $4
