@@ -909,7 +909,7 @@ def main(args):
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size,"resolution":args.resolution})
+                 "num_workers": args.num_workers, "batch_size": batch_size,"resolution":args.input_resolution})
 
     # inputs, y = next(iter(trainloader))
     #
