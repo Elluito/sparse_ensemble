@@ -303,6 +303,7 @@ def test_pin_and_num_workers(args):
 
 
 def load_small_imagenet(args: dict):
+
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
     ratio = 256 / 224
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
@@ -328,7 +329,7 @@ def load_small_imagenet(args: dict):
     whole_train_dataset = datasets.ImageFolder(
         args["traindir"],
         transforms.Compose([
-            transforms.RandomResizedCrop(360),
+            transforms.RandomResizedCrop(args["resolution"]),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize_train,
