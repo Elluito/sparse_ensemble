@@ -14,6 +14,8 @@ import omegaconf
 from torch.utils.data import random_split
 ## FFCV imports
 from typing import List
+
+
 # from ffcv.fields import IntField, RGBImageField
 # from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
 # from ffcv.loader import Loader, OrderOption
@@ -300,9 +302,9 @@ def test_pin_and_num_workers(args):
     return
 
 
-def load_small_imagenet(args:dict):
-    assert isinstance(args,dict), "args for load_small_imagenet mustbe a dictionary"
-    ratio = 256/224
+def load_small_imagenet(args: dict):
+    assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
+    ratio = 256 / 224
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
@@ -354,7 +356,6 @@ def load_small_imagenet(args:dict):
                                              shuffle=True)
 
     return train_loader, val_loader, test_loader
-
 
 
 def load_tiny_imagenet(args):
