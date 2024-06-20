@@ -32,8 +32,9 @@ unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY
 
 
-qsub -t 1-4 -l h_rt=24:00:00 -l coproc_v100=1  -N "training_Level_5_resnet18_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
-qsub -t 1-4 -l h_rt=24:00:00 -l coproc_v100=1  -N "training_Level_7_resnet18_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 7 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
-qsub -t 1-4 -l h_rt=24:00:00 -l coproc_v100=1  -N "training_Level_8_resnet18_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 8  "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
-qsub -t 1-4 -l h_rt=24:00:00 -l coproc_v100=1  -N "training_Level_9_resnet18_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 9  "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
+qsub -t 1-4 -l h_rt=44:00:00 -l coproc_v100=1  -N "training_Level_5_resnet_small_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 5 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
+qsub -t 1-4 -l h_rt=44:00:00 -l coproc_v100=1  -N "training_Level_7_resnet_small_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 7 "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
+qsub -t 1-4 -l h_rt=44:00:00 -l coproc_v100=1  -N "training_Level_8_resnet_small_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 8  "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
+qsub -t 1-4 -l h_rt=44:00:00 -l coproc_v100=1  -N "training_Level_9_resnet_small_small_imagenet" run.sh "resnet_small" "small_imagenet" 4 9  "normal" 200 "recording_200" 1 1 "/nobackup/sclaam/checkpoints"
+
 #"resnet_small" "small_imagenet" 4 10 "normal" 200 "recording_200_no_ffcv" 1 1
