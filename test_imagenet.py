@@ -305,7 +305,9 @@ def test_pin_and_num_workers(args):
 def load_small_imagenet(args: dict):
 
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
+
     ratio = 256 / 224
+
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
