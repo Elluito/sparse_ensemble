@@ -6,11 +6,32 @@ run_change_of_name() {
   dataset=$3
   level=$4
   name=$5
+
+  if [[ $model == *"_"* ]];
+  then
+  if [[ $dataset == *"_"* ]];
+   then
+
+  all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f6 | uniq))
+else
+
   all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f4 | uniq))
+ fi
+ else
+
+  if [[ $dataset == *"_"* ]];
+   then
+
+  all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f5 | uniq))
+
+ fi
+fi
+
+
   echo $all_level_6_seeds
 
   echo " "
-  echo "Level ${level} \n"
+  echo "Level ${level}"
   echo " "
 
   declare -a list_to_use=("${all_level_7_seeds[@]}")
