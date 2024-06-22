@@ -50,7 +50,7 @@ fi
     echo $idxA
 
     for pathname in "${file_names[@]}"; do
-      replace_string="seed_${idxA}"
+      replace_string="seed.${idxA}"
       thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
       echo "${thing}"
       #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
