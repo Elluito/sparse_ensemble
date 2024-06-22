@@ -44,7 +44,7 @@ fi
   #
   for ((idxA = 0; idxA < max; idxA++)); do # iterate idxA from 0 to length
     echo "${directory}/.*${list_to_use[$idxA]}\.\*"
-    file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.csv"))
+    file_names=($(ls $directory | grep -i ".*${list_to_use[$idxA]}.*.pth"))
     echo $file_names
     echo ${#file_names[@]} # Take the length of that array
     echo $idxA
