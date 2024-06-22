@@ -416,8 +416,8 @@ def get_output_until_block_small_resnet(net, block, net_type=1):
 def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
-    blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    # blocks = [7,8, 9, 10]
+    # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
+    blocks = [1,2]
 
     for i in blocks:
         # samples = []
@@ -428,19 +428,18 @@ def test_models():
         dummy_loss = nn.CrossEntropyLoss()
         #
         # if i < 5:
-        vgg_net = small_VGG_RF('small_vgg', RF_level=i)
-        #     y_vgg = vgg_net(x)
-        #     print(y_vgg)
-        get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
-        vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
-        print("Receptive field of Small Vgg Level {}".format(i))
-        print(vgg_rf.rfsize)
-        print("Block {}".format(i))
+        # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
+        # #     y_vgg = vgg_net(x)
+        # #     print(y_vgg)
+        # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        # vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
+        # print("Receptive field of Small Vgg Level {}".format(i))
+        # print(vgg_rf.rfsize)
         #
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
-        # resnet_net = small_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
+        resnet_net = small_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
@@ -456,10 +455,10 @@ def test_models():
         # loss.backward()
         # print(y_resnet)
 
-        # get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
-        # resnet_rf = receptivefield(resnet_net, (1, 3, 1200, 1200))
-        # print("Receptive field of ResNet Level {}".format(i))
-        # print(resnet_rf.rfsize)
+        get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
+        resnet_rf = receptivefield(resnet_net, (1, 3, 1200, 1200))
+        print("Receptive field of ResNet Level {}".format(i))
+        print(resnet_rf.rfsize)
 
 
 def models_info():
