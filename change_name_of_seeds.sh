@@ -33,7 +33,6 @@ run_change_of_name() {
       #  mv -i "${directory}/${pathname}" "${directory}/${thing}"
     done
   done
-
 }
 
 run_change_of_name $1 "resnet_small" "small_imagenet" $2 $3
