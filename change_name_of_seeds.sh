@@ -15,7 +15,7 @@ run_change_of_name() {
   all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f6 | uniq))
 else
 
-  all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f4 | uniq))
+  all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f5 | uniq))
  fi
  else
 
@@ -23,6 +23,8 @@ else
    then
 
   all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f5 | uniq))
+else
+  all_level_6_seeds=($(ls "${directory}" | grep -i "${model}_normal_${dataset}_.*_level_${level}_.*${name}.*" | cut -d_ -f4 | uniq))
 
  fi
 fi
@@ -34,7 +36,7 @@ fi
   echo "Level ${level}"
   echo " "
 
-  declare -a list_to_use=("${all_level_7_seeds[@]}")
+  declare -a list_to_use=("${all_level_6_seeds[@]}")
   #
   max=${#list_to_use[@]} # Take the length of that array
   #
