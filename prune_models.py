@@ -687,7 +687,8 @@ def main(args):
          "noise": "gaussian",
          "sigma": 0.005,
          "pruner": "global",
-         "exclude_layers": exclude_layers
+         "exclude_layers": exclude_layers,
+         "data_path": args.data_folder,
 
          })
 
