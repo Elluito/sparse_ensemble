@@ -25,7 +25,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     if num_workers == 0:
         num_workers = 1
-
+    length_small_imagenet = 99999
     start_time = time.time()
 
     small_imagenet_MEAN = [125.307, 122.961, 113.8575]
@@ -61,18 +61,31 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     ]
 
     order = OrderOption.RANDOM if distributed else OrderOption.QUASI_RANDOM
-
+    whole_dataset_indices = np.arange(length_small_imagenet)
     train_loader = Loader(train_dataset,
                           batch_size=batch_size,
                           num_workers=num_workers,
+                          indices=whole_dataset_indices[:-5000],
                           order=order,
                           os_cache=in_memory,
                           drop_last=True,
                           pipelines={
                               'image': image_pipeline,
                               'label': label_pipeline
-                          },
-                          distributed=distributed)
+                          }, distributed=distributed)
+
+    val_loader = Loader(train_dataset,
+                        batch_size=batch_size,
+                        num_workers=num_workers,
+                        order=order,
+                        indices=whole_dataset_indices[-5000:],
+                        os_cache=in_memory,
+                        drop_last=True,
+                        pipelines={
+                            'image': image_pipeline,
+                            'label': label_pipeline
+                        },
+                        distributed=distributed)
 
     val_path = Path(val_dataset)
     assert val_path.is_file()
@@ -106,4 +119,4 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                          },
                          distributed=distributed)
 
-    return train_loader, None, test_loader
+    return train_loader, val_loader, test_loader

@@ -694,7 +694,7 @@ def main(args):
 
     if args.ffcv:
         from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
-        train, _, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+        train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
                                                                     128, args.num_workers)
     else:
         train, val, testloader = get_datasets(cfg)
@@ -1252,6 +1252,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
+    parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+                        help='Location to save the models', required=True)
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')

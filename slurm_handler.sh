@@ -146,8 +146,8 @@ pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 
   if [ "${8}" -gt 0 ]
   then
-#      rf_levels=("3" "4" "5" "6")
-       rf_levels=("10")
+      rf_levels=("5" "7" "8" "9")
+#       rf_levels=("10")
 
   else
         rf_levels=( "4")
@@ -177,5 +177,5 @@ done
 done
 }
 run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_ffcv" 0 "no_set" "no_set" 1
+#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_ffcv" 0 "no_set" "no_set" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0

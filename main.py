@@ -2564,10 +2564,12 @@ def get_datasets(cfg: omegaconf.DictConfig):
             data_path = "/nobackup/sclaam/data/"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets/"
-        traindir = data_path + 'imagenet/' + 'train'
-        testdir = data_path + 'imagenet/' + 'val'
+        traindir = data_path + '/imagenet/' + 'train'
+        testdir = data_path + '/imagenet/' + 'val'
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
 
@@ -2667,9 +2669,9 @@ def get_datasets(cfg: omegaconf.DictConfig):
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
             data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-            data_path = "/home/luisaam/Documents/PhD/data/"
-        traindir = data_path + 'tiny_imagenet_200/' + 'train'
-        testdir = data_path + 'tiny_imagenet_200/' + 'val'
+            data_path = "/home/luisaam/Documents/PhD/data"
+        traindir = data_path + '/tiny_imagenet_200/' + 'train'
+        testdir = data_path + '/tiny_imagenet_200/' + 'val'
         cfg.traindir = traindir
         cfg.valdir = testdir
         return load_tiny_imagenet(dict(cfg))
