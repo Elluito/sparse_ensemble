@@ -93,4 +93,4 @@ qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${datase
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
+run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/checkpoints" "recording_200" 0 "no_set" "no_set" 1
