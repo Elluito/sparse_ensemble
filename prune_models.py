@@ -689,7 +689,7 @@ def main(args):
          "pruner": "global",
          "exclude_layers": exclude_layers,
          "data_path": args.data_folder,
-         "resolution": args.input_resolution
+         "input_resolution": args.input_resolution
 
          })
 
