@@ -689,6 +689,7 @@ def main(args):
          "pruner": "global",
          "exclude_layers": exclude_layers,
          "data_path": args.data_folder,
+         "resolution": args.input_resolution
 
          })
 
@@ -1259,7 +1260,8 @@ if __name__ == '__main__':
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
-
+    parser.add_argument('--input_resolution', default=224, type=int,
+                        help='Input Resolution for small ImageNet')
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
 
     parser.add_argument('--ffcv_train',

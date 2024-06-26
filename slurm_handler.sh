@@ -151,7 +151,7 @@ pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
        rf_levels=("10")
 
   else
-        rf_levels=( "4")
+        rf_levels=("3" "4")
   fi
 
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
@@ -160,7 +160,7 @@ for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate i
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 
 
-  if [ "${ffcv}" -gt 0 ]
+if [ "${ffcv}" -gt 0 ]
   then
   echo "Use FFCV"
 sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}"
@@ -177,6 +177,6 @@ sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "recording_200_ffcv" 0 "no_set" "no_set" 1
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/" "recording_200_ffcv" 0 "no_set" "no_set" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
