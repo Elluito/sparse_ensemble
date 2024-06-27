@@ -177,6 +177,6 @@ sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/" "recording_200_ffcv" 0 "no_set" "no_set" 1
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_no_ffcv" 0 "no_set" "no_set" 0
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 0 "no_set" "no_set" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0

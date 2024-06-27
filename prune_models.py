@@ -11,12 +11,11 @@ from pathlib import Path
 from alternate_models import *
 import pandas as pd
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
-from sparse_ensemble_utils import test
 import omegaconf
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
 from torch.nn.utils import parameters_to_vector
-from sparse_ensemble_utils import disable_bn, disable_all_except, disable_exclude_layers, mask_gradient, sparsity
+from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity,test
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -698,6 +697,7 @@ def main(args):
         train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
                                                                     128, args.num_workers)
     else:
+        print("Normal data loaders loaded!!!!")
         train, val, testloader = get_datasets(cfg)
 
     from torchvision.models import resnet18, resnet50
@@ -750,7 +750,6 @@ def main(args):
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type))
     if args.model == "resnet_small":
-
         if args.type == "normal" and args.dataset == "cifar10":
             net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "cifar100":
@@ -795,10 +794,11 @@ def main(args):
         state_dict_raw = torch.load(name, map_location=device)
 
         dense_accuracy_list.append(state_dict_raw["acc"])
+        net.load_state_dict(state_dict_raw["net"])
 
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+        print("Calculated Dense accuracy:{}".format(test(net, use_cuda=use_cuda, testloader=testloader, verbose=2)))
 
-        net.load_state_dict(state_dict_raw["net"])
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 

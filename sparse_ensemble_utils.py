@@ -267,6 +267,7 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
         for batch_idx, (inputs, targets) in enumerate(testloader):
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
+
             outputs = net(inputs)
             loss = criterion(outputs, targets)
             if count_flops:
@@ -282,10 +283,18 @@ def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=Fals
 
             # print(correct/total)
 
-            if batch_idx % 100 == 0:
+            if batch_idx % 10 == 0:
                 if verbose == 2:
                     print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
                           % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+                    print("Batch first input")
+                    print("{}".format(inputs[0].cpu().numpy()))
+                    print("Output of the model")
+                    print("{}".format(outputs[0].cpu().numpy()))
+                    print("Predicted")
+                    print("{}".format(predicted[0].cpu().numpy()))
+                    print("targets")
+                    print("{}".format(targets[0].cpu().numpy()))
             if one_batch:
                 if count_flops:
                     return 100. * correct.item() / total, sparse_flops
