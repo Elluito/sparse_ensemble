@@ -58,7 +58,7 @@ pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 
   if [ "${9}" -gt 0 ]
   then
-      rf_levels=("5" "7" "8" "9")
+      rf_levels=("3" "4" "10")
 #       rf_levels=("10")
 
   else
@@ -94,4 +94,4 @@ qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${datase
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/checkpoints" "/nobackup/sclaam/data" "recording_200" 0 "no_set" "no_set" 1
+run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/jade_trained_models" "/nobackup/sclaam/data" "recording_200_no_ffcv" 0 "no_set" "no_set" 1
