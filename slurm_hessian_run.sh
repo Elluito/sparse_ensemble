@@ -81,19 +81,77 @@ python -c "import os; print(os.environ)"
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 
 #############################################################
-#     Train  with FFCV
+#     Hessian calculation with FFCV
 #############################################################
 
 
-#python train_CIFAR10.py --ffcv --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}"
-
-#############################################################
-#      resume Train  with FFCV
-#############################################################
-python train_CIFAR10.py --resume --ffcv --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}" --resume_solution "${12}"
+python train_CIFAR10.py --ffcv --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}"
 
 #############################################################
 #     Train iterative RF with FFCV
 #############################################################
 
 #python train_CIFAR10.py  --experiment 2 --batch_size 128 --ffcv --record_time --record_flops --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}"
+#model="resnet50"
+#dataset="cifar10"
+#init=true
+#if [ $init ]; then
+#    solution_string="initial_weights"
+#
+#else
+#
+#
+#    solution_string="test_acc"
+#fi
+#
+#
+#directory=/nobackup/sclaam/checkpoints
+#resnet50_normal_cifar10_seed_0_3_rf_level_1_initial_weights.pth
+#level_1_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_1_${solution_string}.*"))
+#echo $level_1_seed0
+##level_1_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_1_test_acc.*"))
+##echo $level_1_seed1
+##
+##level1_seeds=($level_1_seed0 $level_1_seed1)
+##
+##level_2_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_2_test_acc.*"))
+#level_2_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_2_${solution_string}.*"))
+#echo $level_2_seed0
+##level_2_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_2_test_acc.*"))
+##echo $level_2_seed1
+##
+##level2_seeds=($level_2_seed0 $level_2_seed1)
+##
+#level_3_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_level_3_${solution_string}.*"))
+##level_3_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_3_test_acc.*"))
+##
+#echo $level_3_seed0
+##level_3_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_3_test_acc.*"))
+##echo $level_3_seed1
+##
+##level3_seeds=($level_3_seed0 $level_3_seed1)
+##
+#
+##level_4_seed0=($(ls $directory | grep -i "vgg19.*_seed_0_rf_level_4_test_acc.*"))
+#level_4_seed0=($(ls $directory | grep -i "${model}.*${dataset}.*_seed_0_.*_rf_level_4_${solution_string}.*"))
+#echo $level_4_seed0
+##level_4_seed1=($(ls $directory | grep -i "vgg19.*_seed_1_rf_level_4_test_acc.*"))
+##echo $level_4_seed1
+##level4_seeds=($level_4_seed0 $level_4_seed1)
+#
+#
+#seeds="0"
+#rf_levels=(1 2 3 4)
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++)); do              # iterate idxA from 0 to length
+#
+#
+##levels_by_seed=(${level1_seeds[$idxB]} ${level2_seeds[$idxB]} ${level3_seeds[$idxB]} ${level4_seeds[$idxB]})
+#
+#levels_by_seed=(${level_1_seed0} ${level_2_seed0} ${level_3_seed0} ${level_4_seed0})
+#echo "${directory}/${levels_by_seed[$idxA]}"
+##echo "${levels_by_seed}"
+#
+#qsub -N "${model}_hessian_init_${dataset}_${rf_levels[$idxA]}" run.sh  "${model}" "${dataset}" "${rf_levels[$idxA]}" "normal" "seed_0_rf_level_${rf_levels[$idxA]}_init" "${directory}/${levels_by_seed[$idxA]}"
+#
+#done

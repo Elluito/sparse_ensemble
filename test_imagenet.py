@@ -315,8 +315,8 @@ def load_small_imagenet(args: dict):
     #                                  std=[0.229, 0.224, 0.225])
 
     transform_test = transforms.Compose([
-        transforms.Resize(int(args["resolution"] * ratio)),
-        transforms.CenterCrop(args["resolution"]),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
     ])
