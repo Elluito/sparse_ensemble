@@ -15,7 +15,7 @@ import omegaconf
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
 from torch.nn.utils import parameters_to_vector
-from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity, test
+from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -444,6 +444,38 @@ def logistic_probes_for_model(args):
     net.load_state_dict(state_dict_raw["net"])
 
 
+def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
+    # global best_acc, testloader, device, criterion
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    criterion = nn.CrossEntropyLoss()
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            # progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+            #              % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+
+        if batch_idx == 10:
+            print('Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
+                test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+            print("Predicted:{}".format(predicted.cpu().numpy()))
+            print("Targets:{}".format(targets.cpu().numpy()))
+
+    # Save checkpoint.
+    acc = 100. * correct / total
+    return acc
+
+
 def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                      testLoader: torch.utils.data.DataLoader,
                                      epochs=1,
@@ -865,7 +897,7 @@ def main(args):
         net.load_state_dict(state_dict_raw["net"])
 
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-        print("Calculated Dense accuracy:{}".format(test(net, use_cuda=use_cuda, testloader=testloader, verbose=2)))
+        print("Calculated Dense accuracy:{}".format(test(net, testloader=testloader)))
 
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
