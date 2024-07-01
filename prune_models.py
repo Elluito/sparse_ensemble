@@ -907,7 +907,7 @@ def main(args):
         if args.ffcv:
             pruned_accuracy = test_ffcv(net, testloader=testloader, verbose=0)
         else:
-            pruned_accuracy = test(net, use_cuda=use_cuda, testloader=testloader, verbose=0)
+            pruned_accuracy = test(net, testloader=testloader)
 
         t1 = time.time()
 
