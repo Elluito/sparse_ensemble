@@ -15,7 +15,7 @@ import omegaconf
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
 from torch.nn.utils import parameters_to_vector
-from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity,test
+from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity, test
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -667,7 +667,6 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -695,7 +694,7 @@ def main(args):
     if args.ffcv:
         from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
         train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
-                                                                    128, args.num_workers)
+                                                                      128, args.num_workers)
     else:
         print("Normal data loaders loaded!!!!")
         cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
@@ -760,13 +759,14 @@ def main(args):
         if args.dataset == "small_imagenet":
             if args.ffcv:
                 from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
-                trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                          args.ffcv_val,
                                                                                           batch_size, args.num_workers)
             else:
                 from test_imagenet import load_small_imagenet
                 trainloader, valloader, testloader = load_small_imagenet(
                     {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                     "num_workers": args.num_workers, "batch_size": batch_size})
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
 
     from torchvision.models import resnet18, resnet50
 
@@ -919,7 +919,8 @@ def main(args):
         print("Seed from file {}".format(seed_from_file1))
         df2.to_csv(
             "{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
-                                                                           args.dataset, args.name,args.pruning_rate),
+                                                                              args.dataset, args.name,
+                                                                              args.pruning_rate),
             index=False)
 
         print("Done")
@@ -931,8 +932,10 @@ def main(args):
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv("RF_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate,args.name),
-              index=False)
+    df.to_csv(
+        "RF_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate,
+                                                        args.name),
+        index=False)
 
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
