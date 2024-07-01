@@ -130,7 +130,7 @@ echo "use FFCV!"
 
 #    python prune_models.py --name "${NAME}" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
-    python prune_models.py --ffcv --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --ffcv_train "${FFCV_TRAIN}" --ffcv_val"${FFCV_VAL}" --data_folder "${DATA_FOLDER}"
+    python prune_models.py --ffcv --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --data_folder "${DATA_FOLDER}"
 else
 
 #    echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
