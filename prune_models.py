@@ -447,6 +447,7 @@ def logistic_probes_for_model(args):
 def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
     # global best_acc, testloader, device, criterion
     net.eval()
+    net = net.to(device)
     test_loss = 0
     correct = 0
     total = 0
