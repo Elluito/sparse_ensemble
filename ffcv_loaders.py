@@ -121,7 +121,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         test_loader = Loader(val_dataset,
                              batch_size=batch_size,
                              num_workers=num_workers,
-                             indices=np.replace(whole_testset_indices, testsize, replace=False),
+                             indices=np.random.choice(whole_testset_indices, testsize, replace=False),
                              order=test_order,
                              drop_last=False,
                              pipelines={
