@@ -529,7 +529,7 @@ if __name__ == '__main__':
                         help='Location of the dataset', required=True)
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
     parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
-    parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
+    parser.add_argument('--batch_size', default=64, type=int, help='Batch Size for loading data')
     parser.add_argument('--n_eigenvalues', default=90, type=int, help='Number of largest eigenvalues')
     parser.add_argument('--n_buffer', default=90, type=int, help='Batch Size for training')
     parser.add_argument('--input_resolution', default=224, type=int,
