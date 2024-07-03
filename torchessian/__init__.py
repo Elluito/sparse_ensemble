@@ -9,7 +9,8 @@ def hessian_matmul(model, loss_function, v, batch):
 
     x, y = batch
     E = loss_function(model(x), y)
-    v.requires_grad = False
+    # v.requires_grad = False
+    v= v.detach()
 
     grad_result = torch.autograd.grad(
         E,
