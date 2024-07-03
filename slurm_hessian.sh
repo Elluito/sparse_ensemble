@@ -102,10 +102,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03
 
  if [[ $BATCH_ONLY -gt 0 ]]; then
 
-   python calculate_hessian.py --ffcv  --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}"   --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --batch_only  --eval_size "${EVAL_SIZE}" --method "${METHOD}"
+   python calculate_hessian.py --ffcv  --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}"   --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --batch_only  --eval_size "${EVAL_SIZE}" --method "${METHOD}" --data_folder "${DATA_FOLDER}"
 
 else
-   python calculate_hessian.py --ffcv  --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}"   --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"   --eval_size "${EVAL_SIZE}" --method "${METHOD}"
+   python calculate_hessian.py --ffcv  --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}"   --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"   --eval_size "${EVAL_SIZE}" --method "${METHOD}" --data_folder "${DATA_FOLDER}"
 
   fi
 else
@@ -117,9 +117,9 @@ else
 #./slurm_pruning_run.sh FFCV=0 NAME=recording_200_no_ffcv MODEL=resnet_small DATASET=small_imagenet NUMW=4 RFL=10 TYPE=normal FOLDER=$HOME/checkpoints PR=0.6 EXPERIMENT=1
 
  if [[ $BATCH_ONLY -gt 0 ]]; then
-    python calculate_hessian.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --batch_only --eval_size "${EVAL_SIZE}" --method "${METHOD}"
+    python calculate_hessian.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --batch_only --eval_size "${EVAL_SIZE}" --method "${METHOD}" --data_folder "${DATA_FOLDER}"
     else
 
-    python calculate_hessian.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --eval_size "${EVAL_SIZE}" --method "${METHOD}"
+    python calculate_hessian.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --n_eigenvalues "${N_EIGEN}" --n_buffer "${N_BUFFER}" --solution "${SOLUTION}"  --eval_size "${EVAL_SIZE}" --method "${METHOD}" --data_folder "${DATA_FOLDER}"
       fi
   fi
