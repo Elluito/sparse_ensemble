@@ -47,6 +47,7 @@ def whole_dataset_loss(model, dataloader, no_use_y):
 
 
 def main(args):
+
     cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
 
@@ -208,7 +209,7 @@ def main(args):
         criterion,
         trainloader_hessian,
         m,
-        buffer=20
+        buffer=m
     )
     f2 = open("{}/l_{}.pkl".format(prefix, args.name), "wb")
     f3 = open("{}/w_{}.pkl".format(prefix, args.name), "wb")

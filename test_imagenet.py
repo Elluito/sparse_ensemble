@@ -302,7 +302,7 @@ def test_pin_and_num_workers(args):
     return
 
 
-def load_small_imagenet(args: dict):
+def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
 
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
 
@@ -323,7 +323,9 @@ def load_small_imagenet(args: dict):
 
     test_dataset = datasets.ImageFolder(args["valdir"], transform=transform_test)
 
-    test_loader = torch.utils.data.DataLoader(test_dataset,
+    indices = torch.arange(0, test_size)
+    smaller_testset = torch.utils.data.Subset(test_dataset, indices)
+    test_loader = torch.utils.data.DataLoader(smaller_testset,
                                               batch_size=args["batch_size"],
                                               num_workers=args["num_workers"],
                                               shuffle=False)
@@ -339,13 +341,13 @@ def load_small_imagenet(args: dict):
     current_directory = Path(args["traindir"])
 
     train_size = 95000
-    val_size = 5000
+    # val_size = 5000
     if 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
         train_size = 94999
-        val_size = 5000
+        # val_size = 5000
     elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
         train_size = 94999
-        val_size = 5000
+        # val_size = 5000
 
     train_data, val_data = random_split(whole_train_dataset, [train_size, val_size])
 
