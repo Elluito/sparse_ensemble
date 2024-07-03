@@ -114,7 +114,7 @@ def gauss_quadrature(model, loss_function, dataloader, m, buffer=2):
     T, _ = lanczos(model, loss_function, dataloader, m, buffer=buffer)
     D, U = torch.linalg.eig(T)
     print(D)
-    print(D)
+    print(U)
     # L = D[:, 0]  # All eingenvalues are real
     # W = torch.Tensor(list(U[0, i] ** 2 for i in range(m)))
     return D, U
