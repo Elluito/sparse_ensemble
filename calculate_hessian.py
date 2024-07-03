@@ -377,14 +377,16 @@ def main(args):
             hessian_comp = hessian(net, criterion, data=(x, y), cuda=True)
             t0 = time.time()
             top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
-            f1 = open("{}/pyhessian_eigenvalues_top_{}_{}_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
-                                                                         args.name),
-                      "wb")
+            f1 = open(
+                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                                                                          args.name, args.RF_level),
+                "wb")
             pickle.dump(top_eigenvalues, f1)
             f1.close()
-            f1 = open("{}/pyhessian_eigenvectors_top_{}_{}_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
-                                                                          args.name),
-                      "wb")
+            f1 = open(
+                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                                                                           args.name, args.RF_level),
+                "wb")
             pickle.dump(top_eigenvectors, f1)
             f1.close()
 
@@ -393,8 +395,10 @@ def main(args):
 
             t0 = time.time()
             density_eigen, density_weight = hessian_comp.density()
-            f3 = open("{}/pyhessian_density_eigen_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
-            f4 = open("{}/pyhessian_density_weight_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
+            f3 = open("{}/pyhessian_density_eigen_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name,
+                                                                           args.RF_level), "wb")
+            f4 = open("{}/pyhessian_density_weight_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name,
+                                                                            args.RF_level), "wb")
             pickle.dump(density_eigen, f3)
             pickle.dump(density_weight, f4)
             f3.close()
@@ -406,7 +410,8 @@ def main(args):
 
             t0 = time.time()
             trace = hessian_comp.trace()
-            f5 = open("{}/pyhessian_trace_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
+            f5 = open("{}/pyhessian_trace_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name, args.RF_level),
+                      "wb")
             pickle.dump(trace, f5)
             f5.close()
             t1 = time.time()
@@ -415,14 +420,16 @@ def main(args):
             hessian_comp = hessian(net, criterion, dataloader=testloader, cuda=True)
             t0 = time.time()
             top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
-            f1 = open("{}/pyhessian_eigenvalues_top_{}_{}_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
-                                                                         args.name),
-                      "wb")
+            f1 = open(
+                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                                                                          args.name, args.RF_level),
+                "wb")
             pickle.dump(top_eigenvalues, f1)
             f1.close()
-            f1 = open("{}/pyhessian_eigenvectors_top_{}_{}_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
-                                                                          args.name),
-                      "wb")
+            f1 = open(
+                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                                                                           args.name, args.RF_level),
+                "wb")
             pickle.dump(top_eigenvectors, f1)
             f1.close()
 
@@ -431,8 +438,10 @@ def main(args):
 
             t0 = time.time()
             density_eigen, density_weight = hessian_comp.density()
-            f3 = open("{}/pyhessian_density_eigen_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
-            f4 = open("{}/pyhessian_density_weight_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
+            f3 = open("{}/pyhessian_density_eigen_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name,
+                                                                           args.RF_level), "wb")
+            f4 = open("{}/pyhessian_density_weight_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name,
+                                                                            args.RF_level), "wb")
             pickle.dump(density_eigen, f3)
             pickle.dump(density_weight, f4)
             f3.close()
@@ -444,7 +453,8 @@ def main(args):
 
             t0 = time.time()
             trace = hessian_comp.trace()
-            f5 = open("{}/pyhessian_trace_{}_{}.pkl".format(prefix, one_batch_string, args.name), "wb")
+            f5 = open("{}/pyhessian_trace_{}_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name, args.RF_level),
+                      "wb")
             pickle.dump(trace, f5)
             f5.close()
             t1 = time.time()
@@ -468,8 +478,8 @@ def main(args):
             m,
             buffer=args.n_buffer
         )
-        f2 = open("{}/l_{}.pkl".format(prefix, args.name), "wb")
-        f3 = open("{}/w_{}.pkl".format(prefix, args.name), "wb")
+        f2 = open("{}/l_{}_lvl_{}.pkl".format(prefix, args.name, args.RF_level), "wb")
+        f3 = open("{}/w_{}_lvl_{}.pkl".format(prefix, args.name, args.RF_level), "wb")
         pickle.dump(l, f2)
         pickle.dump(w, f3)
         f2.close()
