@@ -378,13 +378,13 @@ def main(args):
             t0 = time.time()
             top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
             f1 = open(
-                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
                                                                           args.name, args.RF_level),
                 "wb")
             pickle.dump(top_eigenvalues, f1)
             f1.close()
             f1 = open(
-                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
                                                                            args.name, args.RF_level),
                 "wb")
             pickle.dump(top_eigenvectors, f1)
@@ -421,13 +421,13 @@ def main(args):
             t0 = time.time()
             top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
             f1 = open(
-                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
                                                                           args.name, args.RF_level),
                 "wb")
             pickle.dump(top_eigenvalues, f1)
             f1.close()
             f1 = open(
-                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eignevalues, one_batch_string,
+                "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
                                                                            args.name, args.RF_level),
                 "wb")
             pickle.dump(top_eigenvectors, f1)
