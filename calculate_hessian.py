@@ -140,8 +140,10 @@ def main(args):
             trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
                                                                                       args.ffcv_val,
                                                                                       batch_size, args.num_workers,
+                                                                                      valsize=args.eval_size,
                                                                                       testsize=args.eval_size)
         else:
+
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
