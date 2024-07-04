@@ -340,7 +340,7 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
         ]))
     current_directory = Path(args["traindir"])
 
-    train_size = 95000
+    train_size = len(who)
     # val_size = 5000
     if 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
         train_size = 94999
@@ -349,7 +349,7 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
         train_size = 94999
         # val_size = 5000
 
-    train_data, val_data = random_split(whole_train_dataset, [train_size, val_size])
+    train_data, val_data = random_split(whole_train_dataset, [len(whole_train_dataset)-val_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=args["batch_size"],
