@@ -303,7 +303,7 @@ def test_pin_and_num_workers(args):
 
 
 def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False,
-                        random_split_generator=None):
+                        random_split_generator=None,seed_worker=None):
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
 
     ratio = 256 / 224
@@ -355,10 +355,12 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=args["batch_size"],
                                                num_workers=args["num_workers"],
+                                               worker_init_fn=seed_worker,
                                                shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=args["batch_size"],
                                              num_workers=args["num_workers"],
+                                             worker_init_fn=seed_worker,
                                              shuffle=shuffle_val)
 
     return train_loader, val_loader, test_loader

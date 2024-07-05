@@ -34,9 +34,19 @@ BATCH_SIZE = 512
 EPOCHS = 25
 # contour plot resolution
 STEPS = 40
+# Setting random seeds
 manual_seed_generator = torch.manual_seed(2809)
+np.random.seed(2809)
+import random
 
+random.seed(2809)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 
 def whole_dataset_loss(model, dataloader, no_use_y):
@@ -151,7 +161,7 @@ def main(args):
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
                  "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
                 val_size=args.eval_size, test_size=args.eval_size, shuffle_val=False, shuffle_test=False,
-                random_split_generator=manual_seed_generator)
+                random_split_generator=manual_seed_generator, seed_worker=seed_worker)
 
     from torchvision.models import resnet18, resnet50
 
@@ -341,7 +351,6 @@ def main(args):
 
             t1 = time.time()
             print("The calculation of top eigenvalues and eigenvectors lasted {}s".format(t1 - t0))
-
 
     # # ################  With torchessian
 
