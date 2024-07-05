@@ -302,8 +302,8 @@ def test_pin_and_num_workers(args):
     return
 
 
-def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
-
+def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False,
+                        random_split_generator=None):
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
 
     ratio = 256 / 224
@@ -315,8 +315,8 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
     #                                  std=[0.229, 0.224, 0.225])
 
     transform_test = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
+        transforms.Resize((args["resolution"] * ratio)),
+        transforms.CenterCrop(args["resolution"]),
         transforms.ToTensor(),
         transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
     ])
@@ -328,7 +328,7 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
     test_loader = torch.utils.data.DataLoader(smaller_testset,
                                               batch_size=args["batch_size"],
                                               num_workers=args["num_workers"],
-                                              shuffle=False)
+                                              shuffle=shuffle_test)
 
     whole_train_dataset = datasets.ImageFolder(
         args["traindir"],
@@ -340,7 +340,7 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
         ]))
     current_directory = Path(args["traindir"])
 
-    train_size = len(who)
+    train_size = len(whole_train_dataset)
     # val_size = 5000
     if 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
         train_size = 94999
@@ -349,7 +349,8 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
         train_size = 94999
         # val_size = 5000
 
-    train_data, val_data = random_split(whole_train_dataset, [len(whole_train_dataset)-val_size, val_size])
+    train_data, val_data = random_split(whole_train_dataset, [len(whole_train_dataset) - val_size, val_size],
+                                        generator=random_split_generator)
 
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=args["batch_size"],
@@ -358,7 +359,7 @@ def load_small_imagenet(args: dict, val_size=5000,test_size=10000):
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=args["batch_size"],
                                              num_workers=args["num_workers"],
-                                             shuffle=True)
+                                             shuffle=shuffle_val)
 
     return train_loader, val_loader, test_loader
 

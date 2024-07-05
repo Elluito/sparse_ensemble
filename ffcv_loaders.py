@@ -17,7 +17,7 @@ from ffcv.transforms.common import Squeeze
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
-                                         shuffle_test=False):
+                                         shuffle_test=False, shuffle_val=True):
     paths = {
         'train': train_dataset,
         'test': val_dataset
@@ -81,6 +81,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                               'label': label_pipeline
                           }, distributed=distributed)
 
+    order = OrderOption.QUASI_RANDOM if shuffle_val else OrderOption.SEQUENTIAL
     val_loader = Loader(train_dataset,
                         batch_size=batch_size,
                         num_workers=num_workers,
@@ -142,9 +143,11 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                              distributed=distributed)
 
     return train_loader, val_loader, test_loader
+
+
 if __name__ == '__main__':
-
-    trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders("/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv","/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
-                                                                              ,
-                                                                              128, 4,testsize=1000)
-
+    trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(
+        "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+        "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+        ,
+        128, 4, testsize=1000)
