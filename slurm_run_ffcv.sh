@@ -90,10 +90,10 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #############################################################
 #      resume Train  with FFCV
 #############################################################
-python train_CIFAR10.py --resume --ffcv --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}" --resume_solution "${12}"
+#python train_CIFAR10.py --resume --ffcv --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}" --resume_solution "${12}"
 
 #############################################################
 #     Train iterative RF with FFCV
 #############################################################
 
-#python train_CIFAR10.py  --experiment 2 --batch_size 128 --ffcv --record_time --record_flops --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}"
+python train_CIFAR10.py  --experiment 2 --batch_size 128 --ffcv --record_time --record_flops --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9  --ffcv_train "${10}" --ffcv_val "${11}"
