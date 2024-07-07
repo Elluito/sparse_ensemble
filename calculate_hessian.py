@@ -331,7 +331,7 @@ def main(args):
             print("The density calculation lasted {}s".format(t1 - t0))
 
             t0 = time.time()
-            trace = hessian_comp.trace(maxIter=200)
+            trace = hessian_comp.trace(maxIter=args.n_eigenvalues)
             f5 = open("{}/pyhessian_trace_{}_{}_top_{}_lvl_{}.pkl".format(prefix, one_batch_string, args.name,
                                                                           args.n_eigenvalues, args.RF_level),
                       "wb")
@@ -339,24 +339,24 @@ def main(args):
             f5.close()
             t1 = time.time()
             print("The trace calculation lasted {}s".format(t1 - t0))
-
-            t0 = time.time()
-            top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
-            f1 = open(
-                "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
-                                                                          args.name, args.RF_level),
-                "wb")
-            pickle.dump(top_eigenvalues, f1)
-            # f1.close()
+            #
+            # t0 = time.time()
+            # top_eigenvalues, top_eigenvectors = hessian_comp.eigenvalues(top_n=args.n_eigenvalues)
             # f1 = open(
-            #     "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
-            #                                                                args.name, args.RF_level),
+            #     "{}/pyhessian_eigenvalues_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
+            #                                                               args.name, args.RF_level),
             #     "wb")
-            # pickle.dump(top_eigenvectors, f1)
-            # f1.close()
-
-            t1 = time.time()
-            print("The calculation of top eigenvalues and eigenvectors lasted {}s".format(t1 - t0))
+            # pickle.dump(top_eigenvalues, f1)
+            # # f1.close()
+            # # f1 = open(
+            # #     "{}/pyhessian_eigenvectors_top_{}_{}_{}_lvl_{}.pkl".format(prefix, args.n_eigenvalues, one_batch_string,
+            # #                                                                args.name, args.RF_level),
+            # #     "wb")
+            # # pickle.dump(top_eigenvectors, f1)
+            # # f1.close()
+            #
+            # t1 = time.time()
+            # print("The calculation of top eigenvalues and eigenvectors lasted {}s".format(t1 - t0))
 
     # # ################  With torchessian
 

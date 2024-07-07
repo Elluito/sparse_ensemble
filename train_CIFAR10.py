@@ -736,7 +736,7 @@ def iterative_RF_experiments(args):
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size})
+            "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
 
     # inputs, y = next(iter(trainloader))
     #
@@ -1278,9 +1278,9 @@ if __name__ == '__main__':
     parser.add_argument('--ffcv_val',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
-    parser.add_argument('--initial_RF', default=7, type=str, help='Receptive field level')
+    parser.add_argument('--initial_RF', default=3, type=str, help='Receptive field level')
     parser.add_argument('--first_change_RF', default=5, type=str, help='Second step to reduce receptive field')
-    parser.add_argument('--second_change_RF', default=3, type=str, help='Third step to reduce receptive field')
+    parser.add_argument('--second_change_RF', default=7, type=str, help='Third step to reduce receptive field')
     parser.add_argument('--ratio_first_change', default=0.33, type=float,
                         help='Ratio of training to change RF first time')
     parser.add_argument('--ratio_second_change', default=0.66, type=float,
