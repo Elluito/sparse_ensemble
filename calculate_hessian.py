@@ -376,8 +376,10 @@ def main(args):
             m,
             buffer=args.n_buffer
         )
-        f2 = open("{}/l_{}_lvl_{}_top_{}.pkl".format(prefix, args.name, args.RF_level,args.n_values), "wb")
-        f3 = open("{}/w_{}_lvl_{}_top_{}.pkl".format(prefix, args.name, args.RF_level,args.n_values), "wb")
+        f2 = open("{}/l_{}_lvl_{}_top_{}_{}_samples.pkl".format(prefix, args.name, args.RF_level, args.n_eigenvalues,
+                                                                args.eval_size), "wb")
+        f3 = open("{}/w_{}_lvl_{}_top_{}_{}_samples.pkl".format(prefix, args.name, args.RF_level, args.n_eigenvalues,
+                                                                args.eval_size), "wb")
         pickle.dump(l, f2)
         pickle.dump(w, f3)
         f2.close()
