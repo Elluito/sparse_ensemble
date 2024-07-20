@@ -136,6 +136,7 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
 
 
     for i, elem in enumerate(feature_maps):
+
         file_name = Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
         # if not file_name.is_file():
         #     file_name.mkdir(parents=True)
