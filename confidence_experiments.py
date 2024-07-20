@@ -390,6 +390,8 @@ def main(args):
         #     index=False)
         if not saved_already:
             # Pruned max prob correct, incorrect and top 5 prob for incorrect and correct for the pruned
+            prune_prefix = Path("{}/seed_{}_data/pruned_{}".format(output_directory, i, args.pruning_rate))
+            prune_prefix.mkdir(parents=True, exist_ok=True)
             with open("{}/seed_{}_data/pruned_{}/max_prob_correct.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
                 pickle.dump(pruned_max_prob_correct.cpu().numpy(), f)
@@ -406,6 +408,10 @@ def main(args):
                     "{}/seed_{}_data/pruned_{}/topk_incorrect_index.pkl".format(output_directory, i, args.pruning_rate),
                     "wb") as f:
                 pickle.dump(pruned_topk_prob_incorrect_index.cpu().numpy(), f)
+
+            dense_prefix = Path("{}/seed_{}_data/dense")
+
+            dense_prefix.mkdir(parents=True, exist_ok=True)
 
             # Pruned max prob correct, incorrect and top 5 prob for incorrect and correct for the  Dense
             with open("{}/seed_{}_data/dense/max_prob_correct.pkl".format(output_directory, i),
