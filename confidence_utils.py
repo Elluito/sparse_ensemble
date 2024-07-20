@@ -113,7 +113,7 @@ def get_correctness_dataloader(model, dataloader, device,topk=5):
         full_topk_prob_correct = check_none_and_replace(full_topk_prob_correct, correct_topk)
         full_topk_prob_incorrect = check_none_and_replace(full_topk_prob_incorrect, incorrect_topk)
         full_topk_prob_incorrect_index = check_none_and_replace(full_topk_prob_incorrect_index, incorrect_topk_index)
-        full_topk_prob_correct = check_none_and_replace(full_topk_prob_correct_index, correct_topk_index)
+        full_topk_prob_correct_index = check_none_and_replace(full_topk_prob_correct_index, correct_topk_index)
         full_correct_labels = check_none_and_replace(full_correct_labels, y)
 
     return full_accuracies, full_confidences, full_max_prob_correct, full_max_prob_incorrect, full_topk_prob_correct, full_topk_prob_incorrect, full_topk_prob_correct_index, full_topk_prob_incorrect_index, full_correct_labels

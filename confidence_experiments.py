@@ -409,7 +409,7 @@ def main(args):
                     "wb") as f:
                 pickle.dump(pruned_topk_prob_incorrect_index.cpu().numpy(), f)
 
-            dense_prefix = Path("{}/seed_{}_data/dense")
+            dense_prefix = Path("{}/seed_{}_data/dense".format(output_directory, i))
 
             dense_prefix.mkdir(parents=True, exist_ok=True)
 
