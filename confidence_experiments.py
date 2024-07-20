@@ -18,6 +18,10 @@ from torch.nn.utils import parameters_to_vector
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 from confidence_utils import *
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+use_cuda = True if device == "cuda" else False
+
 def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
     # global best_acc, testloader, device, criterion
     net.eval()
