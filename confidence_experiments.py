@@ -265,7 +265,7 @@ def main(args):
 
         DENSE_ECE = calc_ece(dense_confidences, dense_accuracies)
 
-        dense_ece_list.append(DENSE_ECE.item())
+        dense_ece_list.append(DENSE_ECE)
 
         prune_function(net, cfg)
 
@@ -276,7 +276,7 @@ def main(args):
 
         PRUNED_ECE = calc_ece(pruned_confidences, pruned_accuracies)
 
-        pruned_ece_list.append(PRUNED_ECE.item())
+        pruned_ece_list.append(PRUNED_ECE)
 
         t0 = time.time()
         if args.ffcv:
