@@ -123,7 +123,7 @@ if __name__ == '__main__':
     from torchvision import transforms
 
     # device = "cuda" if torch.cuda.is_available() else "cpu
-    device = "cpu"
+    device = "cuda"
     model = resnet18()
     transform_test = transforms.Compose([
         transforms.ToTensor(),

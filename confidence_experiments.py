@@ -22,6 +22,62 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 use_cuda = True if device == "cuda" else False
 
+def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
+    criterion = nn.CrossEntropyLoss()
+    net.cuda()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
+
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            # if use_cuda:
+            inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs, dim=1)
+                _, predicted = torch.max(soft_max_outputs, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            # print(correct/total)
+
+            if batch_idx % 100 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    # net.cpu()
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
+
 def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
     # global best_acc, testloader, device, criterion
     net.eval()
@@ -261,9 +317,9 @@ def main(args):
         print("Calculated Dense accuracy:{}".format(test(net, testloader=testloader)))
 
         dense_accuracies, dense_confidences, dense_max_prob_correct, dense_max_prob_incorrect, dense_topk_prob_correct, dense_topk_prob_incorrect, dense_topk_prob_correct_index, dense_topk_prob_incorrect_index, correct_index = get_correctness_dataloader(
-            net, testloader, "cpu", args.topk)
+            net, testloader, "cuda", args.topk)
 
-        DENSE_ECE = calc_ece(dense_confidences, dense_accuracies)
+        DENSE_ECE = calc_ece(dense_confidences.cpu(), dense_accuracies.cpu())
 
         dense_ece_list.append(DENSE_ECE)
 
@@ -272,9 +328,9 @@ def main(args):
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 
         pruned_accuracies, pruned_confidences, pruned_max_prob_correct, pruned_max_prob_incorrect, pruned_topk_prob_correct, pruned_topk_prob_incorrect, pruned_topk_prob_correct_index, pruned_topk_prob_incorrect_index, _ = get_correctness_dataloader(
-            net, testloader, "cpu", args.topk)
+            net, testloader, "cuda", args.topk)
 
-        PRUNED_ECE = calc_ece(pruned_confidences, pruned_accuracies)
+        PRUNED_ECE = calc_ece(pruned_confidences.cpu(), pruned_accuracies.cpu())
 
         pruned_ece_list.append(PRUNED_ECE)
 
@@ -334,41 +390,41 @@ def main(args):
             # Pruned max prob correct, incorrect and top 5 prob for incorrect and correct for the pruned
             with open("{}/seed_{}_data/pruned_{}/max_prob_correct.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
-                pickle.dump(pruned_max_prob_correct, f)
+                pickle.dump(pruned_max_prob_correct.cpu().numpy(), f)
             with open("{}/seed_{}_data/pruned_{}/max_prob_incorrect.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
-                pickle.dump(pruned_max_prob_incorrect, f)
+                pickle.dump(pruned_max_prob_incorrect.cpu().numpy(), f)
             with open("{}/seed_{}_data/pruned_{}/topk_correct.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
-                pickle.dump(pruned_topk_prob_correct, f)
+                pickle.dump(pruned_topk_prob_correct.cpu().numpy(), f)
             with open("{}/seed_{}_data/pruned_{}/topk_incorrect.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
-                pickle.dump(pruned_topk_prob_incorrect, f)
+                pickle.dump(pruned_topk_prob_incorrect.cpu().numpy(), f)
             with open("{}/seed_{}_data/pruned_{}/topk_incorrect_index.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
-                pickle.dump(pruned_topk_prob_incorrect_index, f)
+                pickle.dump(pruned_topk_prob_incorrect_index.cpu().numpy(), f)
 
             # Pruned max prob correct, incorrect and top 5 prob for incorrect and correct for the  Dense
             with open("{}/seed_{}_data/dense/max_prob_correct.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(dense_max_prob_correct, f)
+                pickle.dump(dense_max_prob_correct.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/max_prob_incorrect.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(dense_max_prob_incorrect, f)
+                pickle.dump(dense_max_prob_incorrect.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/topk_correct.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(dense_topk_prob_correct, f)
+                pickle.dump(dense_topk_prob_correct.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/topk_incorrect.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(dense_topk_prob_incorrect, f)
+                pickle.dump(dense_topk_prob_incorrect.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/accuracies.pkl".format(output_directory, i), "wb") as f:
-                pickle.dump(dense_accuracies, f)
+                pickle.dump(dense_accuracies.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/topk_incorrect_index.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(dense_topk_prob_incorrect_index, f)
+                pickle.dump(dense_topk_prob_incorrect_index.cpu().numpy(), f)
             with open("{}/seed_{}_data/dense/correct_label.pkl".format(output_directory, i),
                       "wb") as f:
-                pickle.dump(correct_index, f)
+                pickle.dump(correct_index.cpu().numpy(), f)
 
             saved_already = True
 
