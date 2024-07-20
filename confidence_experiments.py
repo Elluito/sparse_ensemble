@@ -22,6 +22,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 use_cuda = True if device == "cuda" else False
 
+
 def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
     criterion = nn.CrossEntropyLoss()
     net.cuda()
@@ -77,6 +78,7 @@ def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, ba
         return 100. * correct.item() / total, sparse_flops
     else:
         return 100. * correct.item() / total
+
 
 def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
     # global best_acc, testloader, device, criterion
@@ -192,10 +194,10 @@ def main(args):
         testloader = torch.utils.data.DataLoader(
             testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
     if args.dataset == "tiny_imagenet":
-                                   from test_imagenet import load_tiny_imagenet
-                                   trainloader, valloader, testloader = load_tiny_imagenet(
-                                   {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                                   "num_workers": args.num_workers, "batch_size": batch_size})
+        from test_imagenet import load_tiny_imagenet
+        trainloader, valloader, testloader = load_tiny_imagenet(
+            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+             "num_workers": args.num_workers, "batch_size": batch_size})
     if args.dataset == "small_imagenet":
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
@@ -400,8 +402,9 @@ def main(args):
             with open("{}/seed_{}_data/pruned_{}/topk_incorrect.pkl".format(output_directory, i, args.pruning_rate),
                       "wb") as f:
                 pickle.dump(pruned_topk_prob_incorrect.cpu().numpy(), f)
-            with open("{}/seed_{}_data/pruned_{}/topk_incorrect_index.pkl".format(output_directory, i, args.pruning_rate),
-                      "wb") as f:
+            with open(
+                    "{}/seed_{}_data/pruned_{}/topk_incorrect_index.pkl".format(output_directory, i, args.pruning_rate),
+                    "wb") as f:
                 pickle.dump(pruned_topk_prob_incorrect_index.cpu().numpy(), f)
 
             # Pruned max prob correct, incorrect and top 5 prob for incorrect and correct for the  Dense
