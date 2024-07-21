@@ -97,4 +97,4 @@ qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${datase
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/jade_trained_models" "/nobackup/sclaam/data" "recording_200" 0 "no_set" "no_set" "${HOME}/sparse_ensemble/confidence_and_RF" 1
+run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/checkpoints" "/nobackup/sclaam/data" "recording_200" 0 "no_set" "no_set" "${HOME}/sparse_ensemble/confidence_and_RF" 1
