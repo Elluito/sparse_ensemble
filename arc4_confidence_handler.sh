@@ -79,7 +79,7 @@ for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to
   echo "Use FFCV"
 #sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}"
 
-qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv" run_pruning_arc.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv" arc4_confidences_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
 
 # slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}"
 
@@ -89,7 +89,7 @@ else
 
 #sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_no_ffcv.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_no_ffcv.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_pruning_no_ffcv" slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1
 
-qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_no_ffcv" run_pruning_arc.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_no_ffcv" arc4_confidences_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
 #   slurm_run.sh  "${model}" "${dataset}" 4  "${rf_levels[$idxB]}" "normal" "${directory}" "${pruning_rates[$idxA]}" 1
 #slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1
   fi
@@ -97,4 +97,4 @@ qsub -l h_rt=3:00:00 -l coproc_v100=1  -N "${model}_${rf_levels[$idxB]}_${datase
 done
 done
 }
-run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/jade_trained_models" "/nobackup/sclaam/data" "recording_200" 0 "no_set" "no_set" "${HOME}/sparse_ensemble/confidence_and_RF" 1
+run_pruning "resnet_small" "small_imagenet" "/nobackup/sclaam/checkpoints" "/nobackup/sclaam/data" "recording_200" 0 "no_set" "no_set" "${HOME}/sparse_ensemble/confidence_and_RF" 1
