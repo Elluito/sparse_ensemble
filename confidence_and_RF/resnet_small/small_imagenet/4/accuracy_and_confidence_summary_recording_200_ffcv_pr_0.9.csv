@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy,Dense ECE,Pruned ECE
+resnet_small_normal_small_imagenet_seed.0_rf_level_4_recording_200_ffcv_test_acc_60.64.pth,60.64,43.67,5.339419841766357,4.400649666786194
