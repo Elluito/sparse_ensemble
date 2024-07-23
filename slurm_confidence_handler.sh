@@ -17,9 +17,9 @@ pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 
   if [ "${10}" -gt 0 ]
   then
-      rf_levels=("5" "7" "8" "9")
+#      rf_levels=("5" "7" "8" "9")
 #      rf_levels=("3" "4" "6" "10")
-#       rf_levels=("10")
+       rf_levels=("4")
 
   else
 #        rf_levels=("3" "4" "10")
@@ -50,7 +50,7 @@ sbatch --nodes=1 --time=07:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 done
 done
 }
-run_confidence "resnet_small" "small_imagenet" "${HOME}/checkpoints_arc4_2/checkpoints" "${HOME}/datasets" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${HOME}/sparse_ensemble/confidence_and_RF" 1
+run_confidence "resnet_small" "small_imagenet" "${HOME}/checkpoints_temp" "${HOME}/datasets" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${HOME}/sparse_ensemble/confidence_and_RF" 1
 #run_confidence "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_no_ffcv" 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${HOME}/sparse_ensemble/confidence_and_RF" 0
 #run_confidence "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${HOME}/sparse_ensemble/confidence_and_RF" 1
 
