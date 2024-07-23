@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Accuracy,Dense ECE,Pruned ECE
+resnet_small_normal_small_imagenet_seed.9_rf_level_5_recording_200_test_acc_46.75_test_acc_60.19.pth,60.19,47.39,14.222648739814758,14.833705127239227
+resnet_small_normal_small_imagenet_seed.7_rf_level_5_recording_200_test_acc_62.18.pth,62.18,56.2,1.6108974814414978,1.3813376426696777
+resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth,62.13,56.11,1.7561277374625206,1.0842680931091309
+resnet_small_normal_small_imagenet_seed.6_rf_level_5_recording_200_test_acc_62.46.pth,62.46,56.46,1.9895587116479874,1.4686031267046928
+resnet_small_normal_small_imagenet_seed.5_rf_level_5_recording_200_test_acc_61.97.pth,61.97,56.03,1.2825185433030128,1.9492760300636292
