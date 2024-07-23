@@ -11115,6 +11115,9 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     soup1_list = []
     soup2_list = []
+    soup3_list = []
+    new_pruning_rates_intersection_list = []
+    original_with_new_pruning_rates_intersection_list = []
     dense_soup1_list = []
     new_pruning_rates_list = []
     determinsitc_model_performance_list = [pruned_original_performance] * number_of_samples
@@ -11174,7 +11177,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
         soup1_list.append(soup_performance)
 
 
-    ##########  first prune and then soup ############
+    ##########  first prune and then soup union ############
 
     for i in range(number_of_samples):
         pruned_vector = None
@@ -11248,20 +11251,105 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         original_with_new_pruning_rates_list.append(deterministic_performance_with_new_pruning_rate)
 
+    ##########  first prune and then soup INTERSECTION ############
+
+    for i in range(number_of_samples):
+        pruned_vector = None
+        mask_vector = None
+        number_of_models = 0
+        for n in range(N):
+
+            current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+
+            if cfg.pruner == "global":
+
+                prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+
+            else:
+
+                prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                                pruner=cfg.pruner)
+
+            # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
+            if mask_vector is None:
+
+                pruned_vector = parameters_to_vector(current_model.parameters())
+                mask_vector = pruned_vector!=0
+
+                number_of_models += 1
+
+            else:
+                current_pruned_vector =  parameters_to_vector(current_model.parameters())
+                pruned_vector += current_pruned_vector
+                current_mask_vector = current_pruned_vector!=0
+                mask_vector = troch.logical_and(mask_vector,current_mask_vector).type(torch.int)
+
+
+                number_of_models += 1
+
+        soup3_model = copy.deepcopy(net)
+        pruned_vector.data.mul_(mask_vector)
+        vector_to_parameters(pruned_vector/number_of_models, soup3_model.parameters())
+
+        soup3_performance = test(soup3_model, use_cuda, evaluation_set, verbose=0)
+        soup3_list.append(soup3_performance)
+
+        total = count_parameters(soup3_model)
+
+        zero = count_zero_parameters(soup3_model)
+
+        new_pruning_rate = float(zero / total)
+
+        new_pruning_rates_intersection_list.append(new_pruning_rate)
+
+        deterministic_with_new_pruning_rate = copy.deepcopy(net)
+
+        if cfg.pruner == "global":
+
+            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers,
+                            type="global")
+
+        else:
+
+            prune_with_rate(deterministic_with_new_pruning_rate, new_pruning_rate, exclude_layers=cfg.exclude_layers,
+                            type="layer-wise",
+                            pruner=cfg.pruner)
+
+        # # Here is where I transfer the mask from the pruned stochastic model to the
+        # # original weights and put it in the ranking
+
+        # # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+
+        remove_reparametrization(deterministic_with_new_pruning_rate, exclude_layer_list=cfg.exclude_layers)
+
+        deterministic_performance_with_new_pruning_rate = test(deterministic_with_new_pruning_rate, use_cuda,
+                                                               evaluation_set, verbose=0)
+
+        original_with_new_pruning_rates_intersection_list.append(deterministic_performance_with_new_pruning_rate)
+
+
+
+
     df = pd.DataFrame({"Original Pruning Rate": [cfg.amount] * number_of_samples,
                        "Deterministic performance": determinsitc_model_performance_list,
                        "Soup then Prune accuracy": soup1_list,
-                       "Prune then Soup accuracy": soup2_list,
-                       "Original with new pruning rate": original_with_new_pruning_rates_list,
-                       "New pruning rate": new_pruning_rates_list,
+                       "Prune then Soup union accuracy": soup2_list,
+                       "Original with new pruning rate union": original_with_new_pruning_rates_list,
+                       "New pruning rate union": new_pruning_rates_list,
                        "Dense soup then prune":dense_soup1_list,
-                       "Dense original":dense_original_list
+                       "Dense original":dense_original_list,
+                       "Prune then Soup intersection accuracy": soup3_list,
+                       "Original with new pruning rate intersection": original_with_new_pruning_rates_intersection_list,
+                       "New pruning rate intersection": new_pruning_rates_intersection_list,
                        })
 
     df.to_csv(
-        "soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
+        "soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
                                                                           name,
-                                                                          cfg.sigma),
+                                                                          cfg.sigma,cfg.pruner),
         index=False)
 
     #
