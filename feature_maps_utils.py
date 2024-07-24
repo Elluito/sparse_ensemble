@@ -97,7 +97,7 @@ def get_activations_shape(model, input):
 
     return inputs, activations, module_names
 
-
+@torch.no_grad()
 def save_layer_feature_maps_for_batch(model, input, batch_size, file_prefix="", seed_name=""):
     model.eval()
     # activations = OrderedDict()
@@ -121,7 +121,7 @@ def save_layer_feature_maps_for_batch(model, input, batch_size, file_prefix="", 
         if batch_size==1:
             feature_maps.append(torch.flatten(output).detach().cpu().numpy())
         else:
-            feature_maps.append(torch.reshape(output, (batch_size, -1)).detach().cpu().numpy())
+            feature_maps.append(output.reshape(batch_size, -1).detach().cpu().numpy())
         # module_names.append(str(module))
 
     for name, module in model.named_modules():
