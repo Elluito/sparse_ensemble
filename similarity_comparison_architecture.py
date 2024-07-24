@@ -192,67 +192,67 @@ def record_features_model_dataset(args):
     from torchvision.models import resnet18, resnet50
 
     if args.model == "resnet18":
-        if args.type == "normal" and args.dataset == "cifar10":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "cifar100":
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
             net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "small_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
             net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
-        if args.type == "normal" and args.dataset == "cifar10":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "cifar100":
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
             net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
-        if args.type == "pytorch" and args.dataset == "cifar10":
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 10)
-        if args.type == "pytorch" and args.dataset == "cifar100":
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar100":
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
-        if args.type == "normal" and args.dataset == "cifar10":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "cifar100":
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
             net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "small_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
-        if args.type == "normal" and args.dataset == "cifar10":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "cifar100":
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
             net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
-        if args.type == "pytorch" and args.dataset == "cifar10":
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             # # net = resnet50()
             # # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
             raise NotImplementedError(
-                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type))
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.modeltype1))
     if args.model == "resnet_small":
-        if args.type == "normal" and args.dataset == "cifar10":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "cifar100":
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
             net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
             net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "normal" and args.dataset == "small_imagenet":
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
             net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-        if args.type == "pytorch" and args.dataset == "cifar10":
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             raise NotImplementedError
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 10)
-        if args.type == "pytorch" and args.dataset == "cifar100":
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar100":
             raise NotImplementedError
             net = resnet50()
             in_features = net.fc.in_features
@@ -261,7 +261,7 @@ def record_features_model_dataset(args):
     ###########################################################################
     if args.solution:
         temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
-        if args.type == "normal" and args.RF_level != 0:
+        if args.modeltype1 == "normal" and args.RF_level != 0:
             net.load_state_dict(temp_dict)
             print("Loaded solution!")
         else:
