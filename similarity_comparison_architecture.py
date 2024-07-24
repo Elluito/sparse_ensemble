@@ -1179,9 +1179,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--solution', '-s',
-                        default="foreing_trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth",
-                        help='solution to use')
 
 
     parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
