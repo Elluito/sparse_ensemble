@@ -1,9 +1,7 @@
 import pandas as pd
-
 print("I'm about to begin the similarity comparison")
 import omegaconf
 from pathlib import Path
-
 import re
 import torch
 import torchvision.transforms as transforms
@@ -12,7 +10,25 @@ import torchvision
 import numpy as np
 import time
 from feature_maps_utils import load_layer_features, save_layer_feature_maps_for_batch
+from torch.utils.data import random_split
 import argparse
+from alternate_models import *
+# matplotlib.rcParams['figure.figsize'] = [18, 12]
+# training hyperparameters
+IN_DIM = 28 * 28
+OUT_DIM = 10
+LR = 10 ** -2
+BATCH_SIZE = 512
+EPOCHS = 25
+# contour plot resolution
+STEPS = 40
+# Setting random seeds
+manual_seed_generator = torch.manual_seed(2809)
+np.random.seed(2809)
+import random
+
+random.seed(2809)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # level 1
 rf_level1_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_1_95.26.pth"
@@ -41,6 +57,10 @@ rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4
 name_rf_level4_s2 = "_seed_2_rf_level_4"
 
 
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 # Same as linear regression!
 class LogisticRegressionModel(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -69,9 +89,218 @@ class WrapperVisionModel(nn.Module):
     def forward(self, x):
         out = torch.sigmoid(self.linear(x))
         return out
+def record_features_model_dataset(args)
+
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    print("Normal data loaders loaded!!!!")
+
+    cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+    # Data
+    print('==> Preparing data..')
+    current_directory = Path().cwd()
+    data_path = "."
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "/home/luisaam/Documents/PhD/data/"
+    print(data_path)
+    batch_size = args.batch_size
+    if "32" in args.name:
+        batch_size = 32
+    if "64" in args.name:
+        batch_size = 64
+
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(*stats_to_use),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    if args.dataset == "cifar10":
+        trainset = torchvision.datasets.CIFAR10(
+            root=data_path, train=True, download=True, transform=transform_train)
+
+        cifar10_train, cifar10_val = random_split(trainset, [len(trainset) - args.eval_size, args.eval_size])
+
+        trainloader = torch.utils.data.DataLoader(
+            cifar10_train, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        valloader = torch.utils.data.DataLoader(
+            cifar10_val, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR10(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "cifar100":
+        trainset = torchvision.datasets.CIFAR100(
+            root=data_path, train=True, download=True, transform=transform_train)
+
+        cifar10_train, cifar10_val = random_split(trainset, [len(trainset) - 5000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(
+            cifar10_train, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+
+        valloader = torch.utils.data.DataLoader(
+            cifar10_val, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR100(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "tiny_imagenet":
+        from test_imagenet import load_tiny_imagenet
+        trainloader, valloader, testloader = load_tiny_imagenet(
+            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+             "num_workers": args.num_workers, "batch_size": batch_size})
+    if args.dataset == "small_imagenet":
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                      args.ffcv_val,
+                                                                                      batch_size, args.num_workers,
+                                                                                      valsize=args.eval_size,
+                                                                                      testsize=args.eval_size,
+                                                                                      shuffle_val=False,
+                                                                                      shuffle_test=False, )
+        else:
+
+            from test_imagenet import load_small_imagenet
+            trainloader, valloader, testloader = load_small_imagenet(
+                {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
+                val_size=args.eval_size, test_size=args.eval_size, shuffle_val=False, shuffle_test=False,
+                random_split_generator=manual_seed_generator, seed_worker=seed_worker)
+
+
+    from torchvision.models import resnet18, resnet50
+
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet24":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type))
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+
+    ###########################################################################
+    if args.solution:
+        temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
+        if args.type == "normal" and args.RF_level != 0:
+            net.load_state_dict(temp_dict)
+            print("Loaded solution!")
+        else:
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            net.load_state_dict(real_dict)
+            print("Loaded solution!")
+
+    net = net.to(device)
+    net.eval()
+
+
+    prefix_custom_test = Path(
+        "{}/features/{}/{}/{}/{}/".format(args.folder, args.dataset, args.architecture, args.modeltype1, "test"))
+    prefix_custom_test.mkdir(parents=True, exist_ok=True)
+    ######################## now the pytorch implementation ############################################################
+    maximun_samples = args.eval_size
+    seed_name= "_samples_{}_{}".format(maximun_samples,args.name)
+    net.cuda()
+    o = 0
+    for x, y in testloader:
+
+        x = x.cuda()
+        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=args.name)
+
+        print("{} batch out of {}".format(o, len(testloader)))
+        if o == maximun_samples:
+            break
+        o += batch_size
+
+
+
 
 def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
                                   seed_name="_seed_1", rf_level=0):
+
     from feature_maps_utils import save_layer_feature_maps_for_batch
 
     cfg = omegaconf.DictConfig(
@@ -115,7 +344,7 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         if cfg.architecture == "vgg19":
 
             if cfg.model_type == "alternative":
-                net = VGG_RF("VGG19_rf", num_classes=10, rf_level=rf_level)
+                net = VGG_RF("VGG19_rf", num_classes=10, RF_level=rf_level)
 
         current_directory = Path().cwd()
         data_path = "/datasets"
@@ -187,24 +416,26 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
 
-        transform_train = transforms.compose([
-            transforms.randomcrop(32, padding=4),
-            transforms.randomhorizontalflip(),
-            transforms.totensor(),
-            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
-        ])
-        transform_test = transforms.compose([
-            transforms.totensor(),
-            transforms.normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
 
-        trainset = torchvision.datasets.cifar100(root=data_path, train=True, download=True, transform=transform_train)
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
+        ])
 
-        trainloader = torch.utils.data.dataloader(trainset, batch_size=cfg.batch_size, shuffle=False,
+
+        trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
+
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=cfg.batch_size, shuffle=False,
                                                   num_workers=cfg.num_workers)
-        testset = torchvision.datasets.cifar100(root=data_path, train=False, download=True, transform=transform_test)
+        testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
 
-        testloader = torch.utils.data.dataloader(testset, batch_size=cfg.batch_size, shuffle=False,
+        testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
 
     current_directory = Path().cwd()

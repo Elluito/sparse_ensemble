@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from npy_append_array import NpyAppendArray
 
+
 def hook_applyfn(hook, model, forward=False, backward=False):
     """
 
@@ -97,7 +98,7 @@ def get_activations_shape(model, input):
     return inputs, activations, module_names
 
 
-def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""):
+def save_layer_feature_maps_for_batch(model, input, batch_size, file_prefix="", seed_name=""):
     model.eval()
     # activations = OrderedDict()
     feature_maps = []
@@ -117,7 +118,10 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
         # print("OUTPUT")
         # print(output)
         # return
-        feature_maps.append(torch.flatten(output).detach().cpu().numpy())
+        if batch_size==1:
+            feature_maps.append(torch.flatten(output).detach().cpu().numpy())
+        else:
+            feature_maps.append(torch.reshape(output, (batch_size, -1)).detach().cpu().numpy())
         # module_names.append(str(module))
 
     for name, module in model.named_modules():
@@ -134,9 +138,7 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
 
     # Path(file_prefix).mkdir(parents=True, exist_ok=True)
 
-
     for i, elem in enumerate(feature_maps):
-
         file_name = Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
         # if not file_name.is_file():
         #     file_name.mkdir(parents=True)
@@ -145,14 +147,17 @@ def save_layer_feature_maps_for_batch(model, input, file_prefix="", seed_name=""
         # print(n)
         # print("Current layer: {}".format(i))
         # print("{} out of {} elements are 0".format(suma, n))
-
-        with NpyAppendArray(file_name) as npaa:
-            npaa.append(elem.reshape(1, -1))
+        if batch_size!=1:
+            for new_elem in elem:
+                with NpyAppendArray(file_name) as npaa:
+                    npaa.append(new_elem.reshape(1, -1))
+        else:
+            with NpyAppendArray(file_name) as npaa:
+                npaa.append(elem.reshape(1, -1))
         # with open(file_name, "a+") as f:
         #     np.savetxt(f, elem.reshape(1, -1), delimiter=",")
         print("Udated file {}".format(file_name))
     return feature_maps
-
 
 
 def load_layer_features(prefix, index, name="", type="txt"):
