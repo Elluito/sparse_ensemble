@@ -278,7 +278,7 @@ def record_features_model_dataset(args):
 
 
     prefix_custom_test = Path(
-        "{}/features/{}/{}/{}/{}/".format(args.folder, args.dataset, args.architecture, args.modeltype1, "test"))
+        "{}/features/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.modeltype1, "test"))
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = args.eval_size
