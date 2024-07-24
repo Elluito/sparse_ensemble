@@ -2448,6 +2448,8 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
             data_path = "datasets"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
 
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),

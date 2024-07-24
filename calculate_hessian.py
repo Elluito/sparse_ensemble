@@ -414,7 +414,7 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+    parser = argparse.ArgumentParser(description='Calculate Hessian')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--type', default="pytorch", type=str, help='Type of implementation [normal,pytorch]')
     parser.add_argument('--RF_level', default=0, type=int, help='Receptive field level')

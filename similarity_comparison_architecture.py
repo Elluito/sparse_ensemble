@@ -89,7 +89,7 @@ class WrapperVisionModel(nn.Module):
     def forward(self, x):
         out = torch.sigmoid(self.linear(x))
         return out
-def record_features_model_dataset(args)
+def record_features_model_dataset(args):
 
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
@@ -282,18 +282,15 @@ def record_features_model_dataset(args)
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = args.eval_size
-    seed_name= "_samples_{}_{}".format(maximun_samples,args.name)
+    # seed_name= "_samples_{}_{}".format(maximun_samples,args.seedname1)
     net.cuda()
     o = 0
     for x, y in testloader:
 
         x = x.cuda()
-        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=args.name)
+        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=args.seedname1)
 
         print("{} batch out of {}".format(o, len(testloader)))
-        if o == maximun_samples:
-            break
-        o += batch_size
 
 
 
@@ -1161,8 +1158,6 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
                         required=False)
-    parser.add_argument('-rfl', '--rf_level', type=int, default=1, help='',
-                        required=False)
     parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
                         required=False)
     parser.add_argument('-e', '--experiment', type=int, default=1, help='',
@@ -1178,6 +1173,41 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--train', type=int, default=1, help='',
                         required=False)
 
+
+
+    parser.add_argument('--RF_level', default=0, type=int, help='Receptive field level')
+    parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
+    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
+    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--solution', '-s',
+                        default="foreing_trained_models/cifar10/resnet50_official_cifar10_seed_1_test_acc_90.31.pth",
+                        help='solution to use')
+
+
+    parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
+    parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
+    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location where the output of the algorithm is going to be saved')
+    parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+                        help='Location of the dataset', required=True)
+    parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
+    parser.add_argument('--batch_size', default=64, type=int, help='Batch Size for loading data')
+    parser.add_argument('--input_resolution', default=224, type=int,
+                        help='Input Resolution for Small ImageNet')
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+
+    parser.add_argument('--ffcv_train',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+                        type=str, help='FFCV train dataset')
+
+    parser.add_argument('--ffcv_val',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+                        type=str, help='FFCV val dataset')
+
+
+
+
     #
     args = vars(parser.parse_args())
     # features_similarity_comparison_experiments(args["architecture"])
@@ -1191,8 +1221,9 @@ if __name__ == '__main__':
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
     if args["experiment"] == 1:
-        record_features_cifar10_model(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
-                                      seed_name=args["seedname1"])
+        # record_features_cifar10_model(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
+        #                               seed_name=args["seedname1"])
+        record_features_model_dataset(args)
     #
     if args["experiment"] == 2:
         features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
