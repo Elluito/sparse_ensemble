@@ -2435,7 +2435,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
                                                   num_workers=cfg.num_workers)
         val_loader = torch.utils.data.DataLoader(cifar10_val, batch_size=cfg.batch_size, shuffle=True,
                                                  num_workers=cfg.num_workers)
-        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=False, transform=transform_test)
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
@@ -2451,16 +2451,8 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
             data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
 
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
-        ])
-        transform_test = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
-        ])
+        transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
+        transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
 
         trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])

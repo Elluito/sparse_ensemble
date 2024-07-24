@@ -33,6 +33,7 @@ sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL 
 sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl8_s_1.err" --output="saving_features_lvl8_s_1.out"  --job-name="saving_features_lvl8_s_1" slurm_similarity_run.sh "small_resnet" "small_imagenet" "${CHECK_2}/resnet_small_normal_small_imagenet_seed.4_rf_level_8_recording_200_test_acc_49.1.pth" "_seed_4" 8 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 0
 sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl8_s_2.err" --output="saving_features_lvl8_s_2.out"  --job-name="saving_features_lvl8_s_2" slurm_similarity_run.sh "small_resnet" "small_imagenet" "${CHECK_2}/resnet_small_normal_small_imagenet_seed.5_rf_level_8_recording_200_test_acc_49.5.pth" "_seed_5" 8 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 0
 
+
 # Level 9  Models
 
 sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl9_s_1.err" --output="saving_features_lvl9_s_1.out"  --job-name="saving_features_lvl9_s_1" slurm_similarity_run.sh "small_resnet" "small_imagenet" "${CHECK_2}/resnet_small_normal_small_imagenet_seed.5_rf_level_9_recording_200_test_acc_45.39.pth" "_seed_5" 9 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 0
