@@ -288,7 +288,7 @@ def record_features_model_dataset(args):
     for x, y in testloader:
 
         x = x.cuda()
-        save_layer_feature_maps_for_batch(net, x, prefix_custom_test, seed_name=args.seedname1)
+        save_layer_feature_maps_for_batch(net, x, args.batch_size,prefix_custom_test, seed_name=args.seedname1)
 
         print("{} batch out of {}".format(o, len(testloader)))
 
