@@ -1217,25 +1217,25 @@ if __name__ == '__main__':
     # name_rf_level4_s1 = "_seed_1_rf_level_4"
     # rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
     # name_rf_level4_s2 = "_seed_2_rf_level_4"
-    if args["experiment"] == 1:
+    if args.experiment == 1:
         # record_features_cifar10_model(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
         #                               seed_name=args["seedname1"])
         record_features_model_dataset(args)
     #
-    if args["experiment"] == 2:
+    if args.experiment == 2:
         features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
                                                    modeltype2=args["modeltype2"], name1=args["seedname1"],
                                                    name2=args["seedname2"], filetype1=args["filetype1"],
                                                    filetype2=args["filetype2"])
-    if args["experiment"] == 3:
+    if args.experiment == 3:
         save_features_for_logistic(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
                                    seed_name=args["seedname1"], train=args["train"])
-    if args["experiment"] == 4:
+    if args.experiment == 4:
         describe_statistics_of_layer_representations(architecture=args["architecture"], modeltype1=args["modeltype1"],
                                                      modeltype2=args["modeltype2"], name1=args["seedname1"],
                                                      name2=args["seedname2"], filetype1=args["filetype1"],
                                                      filetype2=args["filetype2"])
-    if args["experiment"] == 5:
+    if args.experiment == 5:
         experiment_training_logistic_function(architecture=args["architecture"], modeltype1=args["modeltype1"],
                                               modeltype2=args["modeltype2"], name1=args["seedname1"],
                                               name2=args["seedname2"], filetype1=args["filetype1"],
