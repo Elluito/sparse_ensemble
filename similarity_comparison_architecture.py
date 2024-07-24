@@ -1206,7 +1206,7 @@ if __name__ == '__main__':
 
 
     #
-    args = vars(parser.parse_args())
+    args = parser.parse_args()
     # features_similarity_comparison_experiments(args["architecture"])
 
     # rf_level2_s1 = "trained_models/cifar10/resnet50_normal_cifar10_seed_1_rf_level_2_94.07.pth"
