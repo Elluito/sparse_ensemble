@@ -1148,8 +1148,8 @@ def describe_statistics_of_layer_representations(architecture="resnet18", modelt
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Similarity experiments')
-    parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
-                        required=True)
+    # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
+    #                     required=True)
 
     parser.add_argument('-s', '--solution', type=str, default="", help='',
                         required=False)
