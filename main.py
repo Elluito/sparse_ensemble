@@ -11285,7 +11285,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                 current_pruned_vector =  parameters_to_vector(current_model.parameters())
                 pruned_vector += current_pruned_vector
                 current_mask_vector = current_pruned_vector!=0
-                mask_vector = troch.logical_and(mask_vector,current_mask_vector).type(torch.int)
+                mask_vector = torch.logical_and(mask_vector,current_mask_vector).type(torch.int)
 
 
                 number_of_models += 1
