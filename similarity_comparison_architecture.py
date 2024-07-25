@@ -1,4 +1,5 @@
 import pandas as pd
+
 print("I'm about to begin the similarity comparison")
 import omegaconf
 from pathlib import Path
@@ -13,6 +14,7 @@ from feature_maps_utils import load_layer_features, save_layer_feature_maps_for_
 from torch.utils.data import random_split
 import argparse
 from alternate_models import *
+
 # matplotlib.rcParams['figure.figsize'] = [18, 12]
 # training hyperparameters
 IN_DIM = 28 * 28
@@ -61,6 +63,8 @@ def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2 ** 32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
+
+
 # Same as linear regression!
 class LogisticRegressionModel(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -71,26 +75,30 @@ class LogisticRegressionModel(nn.Module):
         out = torch.sigmoid(self.linear(x))
         return out
 
+
 class WrapperVisionModel(nn.Module):
-    def __init__(self,net,input_dim, output_dim):
+    def __init__(self, net, input_dim, output_dim):
         super(WrapperVisionModel, self).__init__()
         self.linear = nn.Linear(input_dim, output_dim)
 
         def new_forward(self, x):
-                out = self.relu(self.bn1(self.conv1(x)))
-                out1 = self.layer1(out)
-                out2 = self.layer2(out1)
-                out3 = self.layer3(out2)
-                out4 = self.layer4(out3)
-                return out1.view(out1.size(0), -1),out2.view(out2.size(0), -1),out3.view(out.size(0), -1),out3.view(out.size(0), -1),out4.view(out.size(0), -1)
+            out = self.relu(self.bn1(self.conv1(x)))
+            out1 = self.layer1(out)
+            out2 = self.layer2(out1)
+            out3 = self.layer3(out2)
+            out4 = self.layer4(out3)
+            return out1.view(out1.size(0), -1), out2.view(out2.size(0), -1), out3.view(out.size(0), -1), out3.view(
+                out.size(0), -1), out4.view(out.size(0), -1)
 
         net.__setattr__("fc2", nn.Linear(256, 10))
         net.forward = new_fowrard.__get__(net)  # bind method
+
     def forward(self, x):
         out = torch.sigmoid(self.linear(x))
         return out
-def record_features_model_dataset(args):
 
+
+def record_features_model_dataset(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -188,7 +196,6 @@ def record_features_model_dataset(args):
                 val_size=args.eval_size, test_size=args.eval_size, shuffle_val=False, shuffle_test=False,
                 random_split_generator=manual_seed_generator, seed_worker=seed_worker)
 
-
     from torchvision.models import resnet18, resnet50
 
     if args.model == "resnet18":
@@ -276,9 +283,8 @@ def record_features_model_dataset(args):
     net = net.to(device)
     net.eval()
 
-
     prefix_custom_test = Path(
-        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model,args.RF_level, args.modeltype1, "test"))
+        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level, args.modeltype1, "test"))
     prefix_custom_test.mkdir(parents=True, exist_ok=True)
     ######################## now the pytorch implementation ############################################################
     maximun_samples = args.eval_size
@@ -286,20 +292,16 @@ def record_features_model_dataset(args):
     net.cuda()
     o = 0
     for x, y in testloader:
-
         x = x.cuda()
-        save_layer_feature_maps_for_batch(net, x, args.batch_size,prefix_custom_test, seed_name=args.seedname1)
+        save_layer_feature_maps_for_batch(net, x, args.batch_size, prefix_custom_test, seed_name=args.seedname1)
 
         print("{} batch out of {}".format(o, len(testloader)))
 
-        o+=1
-
-
+        o += 1
 
 
 def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="alternative", solution="",
                                   seed_name="_seed_1", rf_level=0):
-
     from feature_maps_utils import save_layer_feature_maps_for_batch
 
     cfg = omegaconf.DictConfig(
@@ -426,7 +428,6 @@ def record_features_cifar10_model(architecture="resnet18", seed=1, modeltype="al
             transforms.ToTensor(),
             transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047)),
         ])
-
 
         trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
 
@@ -625,7 +626,7 @@ def save_features_for_logistic(architecture="resnet18", seed=1, modeltype="alter
     for x, y in dataloader:
         save_y.append(int(y.cpu().detach().item()))
         x = x.cuda()
-        save_layer_feature_maps_for_batch(net, x,prefix, seed_name=seed_name)
+        save_layer_feature_maps_for_batch(net, x, prefix, seed_name=seed_name)
         # Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
 
         print("{} batch out of {}".format(o, len(dataloader)))
@@ -667,7 +668,7 @@ def test_function(model, test_loader, epoch, train=False):
     accuracy = 100 * correct / total
 
     # Print Loss
-    print('Epoch {}: {} accuracy {}.'.format(epoch,print_string, accuracy))
+    print('Epoch {}: {} accuracy {}.'.format(epoch, print_string, accuracy))
     return accuracy
 
 
@@ -710,8 +711,7 @@ def train_logistic_on_specific_layer(model_name, rf_level, prefix_train, prefix_
     model = LogisticRegressionModel(n_features, 10)
     learning_rate = 0.1
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate,
-         momentum = 0.9, weight_decay = 5e-4)
-
+                                momentum=0.9, weight_decay=5e-4)
 
     train_dataset = torch.utils.data.TensorDataset(torch.tensor(train_x), torch.tensor(train_y))
     test_dataset = torch.utils.data.TensorDataset(torch.tensor(test_x), torch.tensor(test_y))
@@ -812,8 +812,58 @@ def features_similarity_comparison_experiments(architecture="resnet18", modeltyp
     np.savetxt(filename, similarity_for_networks, delimiter=",")
 
 
+def features_similarity_comparison_experiments_model_combination(args):
+    # architecture="resnet18", modeltype1="alternative",
+    #                                                              modeltype2="alternative", name1="_seed_1",
+    #                                                              name2="_seed_2",
+    #                                                              filetype1="txt", filetype2="txt"):
+    # cfg = omegaconf.DictConfig(
+    #     {"architecture": architecture,
+    #      "model_type": modeltype1,
+    #      "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+    #      "dataset": "cifar10",
+    #      "batch_size": 128,
+    #      "num_workers": 2,
+    #      "amount": 0.9,
+    #      "noise": "gaussian",
+    #      "sigma": 0.005,
+    #      "pruner": "global",
+    #      "exclude_layers": ["conv1", "linear"]
+    #
+    #      })
+
+    prefix_modeltype1_test = Path(
+        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level, args.modeltype1, "test"))
+    prefix_modeltype2_test = Path(
+        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level2, args.modeltype1, "test"))
+
+    ##### -1 beacuse I dont have the linear layer here
+    # number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
+    number_of_layers = 0
+    if args.model == "resnet50":
+        number_of_layers = 49
+    if args.model == "vgg19":
+        number_of_layers = 16
+    if args.model == "resnet_small":
+        number_of_layers = 10
+
+    similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
+                                                                 number_layers=number_of_layers, name1=args.seedname1,
+                                                                 name2=args.seedname2, type1=args.filetype1,
+                                                                 type2=args.filetype2,
+                                                                 use_device="cuda", subtract_mean=args.subtract_mean)
+
+    subtracted_mean_string = "mean_subtracted" if args.subtract_mean else "mean_not_subtracted"
+    filename = "similarity_experiments/{}_RF_{}_{}_V_RF_{}_{}_{}.txt".format(args.model, args.RF_level, args.seedname1,
+                                                                             args.RF_level2, args.seedname2,
+                                                                             subtracted_mean_string)
+
+    np.savetxt(filename, similarity_for_networks, delimiter=",")
+
+
+@torch.no_grad()
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
-                                       use_device="cuda"):
+                                       use_device="cuda", subtract_mean=1):
     from CKA_similarity.CKA import CudaCKA, CKA
 
     if use_device == "cuda":
@@ -828,7 +878,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         if use_device == "cuda":
             layer_i = torch.tensor(load_layer_features(prefix1, i, name=name1, type=type1))
         if use_device == "cpu":
-            layer_i = load_layer_features(prefix1, i, name=name1)
+            layer_i = load_layer_features(prefix1, i, name=name1, type=type1)
         for j in range(i, number_layers):
 
             if use_device == "cuda":
@@ -839,8 +889,9 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 print("Time of loading layer: {}".format(t1 - t0))
                 layeri_cuda = layer_i.cuda()
                 layerj_cuda = layer_j.cuda()
-                layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
-                layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
+                if subtract_mean:
+                    layeri_cuda = layeri_cuda - torch.mean(layeri_cuda, dtype=torch.float, dim=0)
+                    layerj_cuda = layerj_cuda - torch.mean(layerj_cuda, dtype=torch.float, dim=0)
 
                 t0 = time.time()
                 similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda.float(), layerj_cuda.float())
@@ -854,18 +905,22 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
             if use_device == "cpu":
                 t0 = time.time()
                 print("We are in row {} and colum {}".format(i, j))
-                # layer_i = load_layer_features(prefix1, i, name=name1)[:100,:]
-                layer_j = load_layer_features(prefix2, j, name=name2)
+                # layer_i = load_layer_features(prefix1, i, name=name1)
+                # print("Time loading layer i {}".format(time.time() - t0))
+                tm = time.time()
+                layer_j = load_layer_features(prefix2, j, name=name2, type=type2)
+                print("Time loading layer j {}".format(time.time() - tm))
 
-                layeri_cuda = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
-                layerj_cuda = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
+                if subtract_mean:
+                    layeri = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
+                    layerj = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
 
-                similarity_matrix[i, j] = kernel.linear_CKA(layeri_cuda, layerj_cuda)
+                similarity_matrix[i, j] = kernel.linear_CKA(layeri, layerj)
                 t1 = time.time()
                 print("Time of loading + linear kernel: {}".format(t1 - t0))
-                del layeri_cuda
-                del layeri_cuda
-                del layerj_cuda
+                del layeri
+                del layeri
+                del layerj
 
     # network1 =
     if use_device == "cuda":
@@ -1176,13 +1231,11 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--train', type=int, default=1, help='',
                         required=False)
 
-
-
-    parser.add_argument('--RF_level', default=0, type=int, help='Receptive field level')
+    parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
+    parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-
 
     parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
     parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
@@ -1204,10 +1257,8 @@ if __name__ == '__main__':
     parser.add_argument('--ffcv_val',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
-
-
-
-
+    parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
+    parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
     #
     args = parser.parse_args()
     # features_similarity_comparison_experiments(args["architecture"])
@@ -1226,10 +1277,11 @@ if __name__ == '__main__':
         record_features_model_dataset(args)
     #
     if args.experiment == 2:
-        features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
-                                                   modeltype2=args["modeltype2"], name1=args["seedname1"],
-                                                   name2=args["seedname2"], filetype1=args["filetype1"],
-                                                   filetype2=args["filetype2"])
+        # features_similarity_comparison_experiments(architecture=args["architecture"], modeltype1=args["modeltype1"],
+        #                                            modeltype2=args["modeltype2"], name1=args["seedname1"],
+        #                                            name2=args["seedname2"], filetype1=args["filetype1"],
+        #                                            filetype2=args["filetype2"])
+        features_similarity_comparison_experiments_model_combination(args)
     if args.experiment == 3:
         save_features_for_logistic(args["architecture"], modeltype=args["modeltype1"], solution=args["solution"],
                                    seed_name=args["seedname1"], train=args["train"])
