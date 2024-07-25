@@ -262,7 +262,7 @@ echo "Entered the pruning rate loop"
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 echo "Entered the level for loop"
 for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 to length
-  echo "Entered the level prunes loop"
+  echo "Entered the levxel prunes loop"
 #qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
 #echo "Entered in the loop!"
 
@@ -275,8 +275,8 @@ done
 }
 
 #run_soup_stochastic resnet18 cifar10
-run_soup_stochastic resnet18 cifar100
-#run_soup_stochastic resnet50 cifar10
+#run_soup_stochastic resnet18 cifar100
+run_soup_stochastic resnet50 cifar10
 #run_soup_stochastic resnet50 cifar100
 #run_soup_stochastic vgg19 cifar10
 #run_soup_stochastic vgg19 cifar100
