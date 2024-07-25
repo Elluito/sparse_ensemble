@@ -835,7 +835,7 @@ def features_similarity_comparison_experiments_model_combination(args):
     prefix_modeltype1_test = Path(
         "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level, args.modeltype1, "test"))
     prefix_modeltype2_test = Path(
-        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level2, args.modeltype1, "test"))
+        "{}/{}/{}/{}/{}/{}/".format(args.folder, args.dataset, args.model, args.RF_level2, args.modeltype2, "test"))
 
     ##### -1 beacuse I dont have the linear layer here
     # number_of_layers = int(re.findall(r"\d+", cfg.architecture)[0]) - 1
