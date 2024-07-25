@@ -854,6 +854,7 @@ def features_similarity_comparison_experiments_model_combination(args):
                                                                  use_device="cuda", subtract_mean=args.subtract_mean)
 
     subtracted_mean_string = "mean_subtracted" if args.subtract_mean else "mean_not_subtracted"
+
     filename = "similarity_experiments/{}_RF_{}_{}_V_RF_{}_{}_{}.txt".format(args.model, args.RF_level, args.seedname1,
                                                                              args.RF_level2, args.seedname2,
                                                                              subtracted_mean_string)
