@@ -280,7 +280,7 @@ done
 
 }
 
-run_soup_stochastic resnet18 cifar10 0
+#run_soup_stochastic resnet18 cifar10 0
 run_soup_stochastic resnet18 cifar100 0
 #run_soup_stochastic resnet50 cifar10 0
 #run_soup_stochastic resnet50 cifar100 0
