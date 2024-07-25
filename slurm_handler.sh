@@ -253,7 +253,7 @@ pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
 # For resnet18
 rf_levels=("0.001" "0.003" "0.005" "0.007" "0.008" "0.01")
 pruners=("global" "lamp")
-pruners_max=${#pruners_max[@]}                                  # Take the length of that array
+pruners_max=${#pruners[@]}                                  # Take the length of that array
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
 echo "About to enter the for loops"
@@ -262,7 +262,7 @@ echo "Entered the pruning rate loop"
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
 echo "Entered the level for loop"
 for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 to length
-  echo "Entered the levxel prunes loop"
+  echo "Entered the pruners loop"
 #qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
 #echo "Entered in the loop!"
 
