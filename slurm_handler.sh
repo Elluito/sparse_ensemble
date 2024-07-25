@@ -251,7 +251,13 @@ echo "model ${model} and dataset ${dataset}"
 
 pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
 # For resnet18
-rf_levels=("0.001" "0.003" "0.005" "0.007" "0.008" "0.01")
+
+if [ "${3}" -eq 1 ]; then
+    rf_levels=("0.001" "0.003" "0.005")
+else
+
+    rf_levels=("0.007" "0.008" "0.01")
+fi
 pruners=("global" "lamp")
 pruners_max=${#pruners[@]}                                  # Take the length of that array
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
@@ -274,13 +280,19 @@ done
 
 }
 
-#run_soup_stochastic resnet18 cifar10
-#run_soup_stochastic resnet18 cifar100
-run_soup_stochastic resnet50 cifar10
-#run_soup_stochastic resnet50 cifar100
-#run_soup_stochastic vgg19 cifar10
-#run_soup_stochastic vgg19 cifar100
+run_soup_stochastic resnet18 cifar10 0
+run_soup_stochastic resnet18 cifar100 0
+#run_soup_stochastic resnet50 cifar10 0
+#run_soup_stochastic resnet50 cifar100 0
+#run_soup_stochastic vgg19 cifar10 0
+#run_soup_stochastic vgg19 cifar100 0
 
+#run_soup_stochastic resnet18 cifar10 1
+#run_soup_stochastic resnet18 cifar100 1
+#run_soup_stochastic resnet50 cifar10 1
+#run_soup_stochastic resnet50 cifar100 1
+#run_soup_stochastic vgg19 cifar10 1
+#run_soup_stochastic vgg19 cifar100 1
 
 
 
