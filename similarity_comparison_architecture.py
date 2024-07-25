@@ -292,6 +292,8 @@ def record_features_model_dataset(args):
 
         print("{} batch out of {}".format(o, len(testloader)))
 
+        o+=1
+
 
 
 
@@ -828,6 +830,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
         if use_device == "cpu":
             layer_i = load_layer_features(prefix1, i, name=name1)
         for j in range(i, number_layers):
+
             if use_device == "cuda":
                 t0 = time.time()
                 print("We are in row {} and colum {}".format(i, j))

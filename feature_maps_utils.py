@@ -1,4 +1,5 @@
 import functools
+import time
 from collections import OrderedDict, defaultdict
 from typing import List, Any
 import numpy as np
@@ -137,7 +138,7 @@ def save_layer_feature_maps_for_batch(model, input, batch_size, file_prefix="", 
         h.remove()
 
     # Path(file_prefix).mkdir(parents=True, exist_ok=True)
-
+    previous_shape = None
     for i, elem in enumerate(feature_maps):
         file_name = Path(file_prefix / "layer{}_features{}.npy".format(i, seed_name))
         # if not file_name.is_file():
@@ -170,7 +171,10 @@ def load_layer_features(prefix, index, name="", type="txt"):
         if type == "txt":
             features = np.loadtxt(f, delimiter=",")
         if type == "npy":
+            t0 = time.time()
             features = np.load(f)
+            t1 = time.time()
+            print("Time Loading: {}".format(t1-t0))
     # while not finished:
     #     try:
     #             suma = np.sum(feature == 0)
