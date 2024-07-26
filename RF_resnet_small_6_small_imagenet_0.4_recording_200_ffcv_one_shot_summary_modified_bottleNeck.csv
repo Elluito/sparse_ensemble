@@ -1,0 +1,5 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet_small_normal_small_imagenet_seed.2_rf_level_6_recording_200_ffcv_test_acc_58.33.pth,54.87,54.9
+resnet_small_normal_small_imagenet_seed.0_rf_level_6_recording_200_ffcv_test_acc_57.79.pth,55.04,54.7
+resnet_small_normal_small_imagenet_seed.3_rf_level_6_recording_200_ffcv_test_acc_57.83.pth,54.03,54.02
+resnet_small_normal_small_imagenet_seed.1_rf_level_6_recording_200_ffcv_test_acc_58.15.pth,55.25,55.38
