@@ -187,7 +187,7 @@ done
 
 
 
-run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 1
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 0
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 0
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
