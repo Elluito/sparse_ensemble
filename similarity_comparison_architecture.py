@@ -845,7 +845,7 @@ def features_similarity_comparison_experiments_model_combination(args):
     if args.model == "vgg19":
         number_of_layers = 16
     if args.model == "resnet_small":
-        number_of_layers = 10
+        number_of_layers = 7
 
     similarity_for_networks = representation_similarity_analysis(prefix_modeltype1_test, prefix_modeltype2_test,
                                                                  number_layers=number_of_layers, name1=args.seedname1,
