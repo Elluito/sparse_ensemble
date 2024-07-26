@@ -292,8 +292,8 @@ done
 
 
 #run_soup_stochastic resnet50 cifar10 1
-run_soup_stochastic resnet50 cifar100 1
-#run_soup_stochastic vgg19 cifar10 1
+#run_soup_stochastic resnet50 cifar100 1
+run_soup_stochastic vgg19 cifar10 1
 #run_soup_stochastic vgg19 cifar100 1
 
 
