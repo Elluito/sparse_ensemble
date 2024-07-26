@@ -146,7 +146,8 @@ ffcv_train=$7
 ffcv_val=$8
 #echo "model ${model} and dataset ${dataset}"
 
-pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+#pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
+pruning_rates=("0.3")
 # For resnet18
 
   if [ "${9}" -gt 0 ]
