@@ -895,11 +895,15 @@ def main(args):
 
         state_dict_raw = torch.load(name, map_location=device)
 
-        dense_accuracy_list.append(state_dict_raw["acc"])
         net.load_state_dict(state_dict_raw["net"])
 
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-        print("Calculated Dense accuracy:{}".format(test(net, testloader=testloader)))
+
+        calculated_accuracy = test(net, testloader=testloader)
+
+        dense_accuracy_list.append(calculated_accuracy)
+
+        print("Calculated Dense accuracy:{}".format(calculated_accuracy))
 
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)

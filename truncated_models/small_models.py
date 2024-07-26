@@ -19,7 +19,7 @@ class small_truncated_BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_planes, planes, stride=1, fixed_points=None):
-        super(small_BasicBlock, self).__init__()
+        super(small_truncated_BasicBlock, self).__init__()
 
         self.relu = nn.ReLU()
         if fixed_points is None:
@@ -69,12 +69,11 @@ class small_truncated_Bottleneck(nn.Module):
         super(small_truncated_Bottleneck, self).__init__()
 
         self.relu = nn.ReLU()
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         if fixed_points is None:
             self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
             self.bn1 = nn.BatchNorm2d(planes)
-            self.fc1 = nn.Sequential([nn.AdaptiveAvgPool2d((1, 1)),
-                                      nn.Linear(planes, classes)]
-                                     )
+            self.fc1 = nn.Linear(planes, classes)
             self.conv2 = nn.Conv2d(planes, self.expansion * planes, kernel_size=3,
                                    stride=stride, padding=1, bias=False)
             self.bn2 = nn.BatchNorm2d(self.expansion * planes)
@@ -82,9 +81,8 @@ class small_truncated_Bottleneck(nn.Module):
             #                        planes, kernel_size=1, bias=False)
             # self.bn3 = nn.BatchNorm2d(self.expansion * planes)
 
-            self.fc2 = nn.Sequential([nn.AdaptiveAvgPool2d((1, 1)),
-                                      nn.Linear(self.expansion * planes, classes)]
-                                     )
+            self.fc2 = nn.Linear(self.expansion * planes, classes)
+
             self.shortcut = nn.Sequential()
             if stride != 1 or in_planes != self.expansion * planes:
                 self.shortcut = nn.Sequential(
@@ -114,17 +112,24 @@ class small_truncated_Bottleneck(nn.Module):
 
     def forward(self, x):
         out = self.relu(self.bn1(self.conv1(x)))
-        pred1 = self.fc1(out)
+        inter1 = self.avgpool(out)
+        inter1 = inter1.view(inter1.size(0), -1)
+        pred1 = self.fc1(inter1)
         out = self.bn2(self.conv2(out))
         # out = self.bn3(self.conv3(out))
         out = out + self.shortcut(x)
         out = self.relu(out)
-        pred2 = self.fc2(out)
+
+        inter2 = self.avgpool(out)
+        inter2 = inter1.view(inter2.size(0), -1)
+        pred2 = self.fc2(inter2)
+        out = out.view(out.size(0), -1)
         return out, pred1, pred2
 
 
 class ResNet(nn.Module):
-    def __init__(self, block: typing.Union[small_truncated_BasicBlock, small_truncated_Bottleneck], num_blocks, num_classes=10,
+    def __init__(self, block: typing.Union[small_truncated_BasicBlock, small_truncated_Bottleneck], num_blocks,
+                 num_classes=10,
                  fixed_points=None):
         super(ResNet, self).__init__()
         self.in_planes = 64
@@ -170,7 +175,8 @@ class ResNet(nn.Module):
 
 
 class small_truncated_ResNetRF(nn.Module):
-    def __init__(self, block: typing.Union[small_truncated_BasicBlock, small_truncated_Bottleneck], num_blocks, num_classes=10,
+    def __init__(self, block: typing.Union[small_truncated_BasicBlock, small_truncated_Bottleneck], num_blocks,
+                 num_classes=10,
                  multiplier=1,
                  fixed_points=None,
                  RF_level=1):
@@ -240,16 +246,16 @@ class small_truncated_ResNetRF(nn.Module):
         out = self.maxpool(out)
         out, pred11, pred12 = self.layer1(out)
         # print("shape layer1: {}".format(out.shape))
-        out ,pred21 ,pred22 = self.layer2(out)
+        out, pred21, pred22 = self.layer2(out)
         # print("shape layer2: {}".format(out.shape))
-        out , pred31 ,pred32 = self.layer3(out)
+        out, pred31, pred32 = self.layer3(out)
         # print("shape layer3: {}".format(out.shape))
         # out = self.layer4(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         # print("out:{}".format(out.size()))
         out = self.linear(out)
-        return out
+        return pred11, pred12, pred21, pred22, pred31, pred32, out
 
 
 class small_truncated_VGG_RF(nn.Module):
@@ -450,7 +456,8 @@ def test_models():
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
-        resnet_net = small_truncated_ResNetRF(small_truncated_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
+        resnet_net = small_truncated_ResNetRF(small_truncated_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10,
+                                              RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']

@@ -156,8 +156,8 @@ pruning_rates=("0.3")
 #       rf_levels=("10")
 
   else
-#        rf_levels=("3" "4" "10")
-         rf_levels=("6")
+        rf_levels=("3" "4" "6" "10")
+#         rf_levels=("6")
   fi
 
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
@@ -188,7 +188,7 @@ done
 
 
 run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints_temp" "${HOME}/datasets" "recording_200_ffcv" 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 0
-#run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 0
+run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints_arc4_2/checkpoints" "${HOME}/datasets" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" "${HOME}/datasets" "recording_200_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" 1
 #run_pruning "resnet_small" "small_imagenet" "${HOME}/checkpoints" 0
 
