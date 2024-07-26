@@ -952,7 +952,7 @@ def main(args):
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
         print("Seed from file {}".format(seed_from_file1))
         df2.to_csv(
-            "{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+            "{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_modified.csv".format(args.model, args.RF_level, seed_from_file,
                                                                               args.dataset, args.name,
                                                                               args.pruning_rate),
             index=False)
@@ -967,7 +967,7 @@ def main(args):
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
     df.to_csv(
-        "RF_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate,
+        "RF_{}_{}_{}_{}_{}_one_shot_summary_modified.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate,
                                                         args.name),
         index=False)
 
