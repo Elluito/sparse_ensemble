@@ -15,7 +15,7 @@ cfg = {
 }
 
 
-class small_BasicBlock(nn.Module):
+class small_truncated_BasicBlock(nn.Module):
     expansion = 1
 
     def __init__(self, in_planes, planes, stride=1, fixed_points=None):
@@ -62,16 +62,19 @@ class small_BasicBlock(nn.Module):
         return out
 
 
-class small_Bottleneck(nn.Module):
+class small_truncated_Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_planes, planes, stride=1, fixed_points=None):
-        super(small_Bottleneck, self).__init__()
+    def __init__(self, in_planes, planes, stride=1, fixed_points=None, classes=10):
+        super(small_truncated_Bottleneck, self).__init__()
 
         self.relu = nn.ReLU()
         if fixed_points is None:
             self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
             self.bn1 = nn.BatchNorm2d(planes)
+            self.fc1 = nn.Sequential([nn.AdaptiveAvgPool2d((1, 1)),
+                                      nn.Linear(planes, classes)]
+                                     )
             self.conv2 = nn.Conv2d(planes, self.expansion * planes, kernel_size=3,
                                    stride=stride, padding=1, bias=False)
             self.bn2 = nn.BatchNorm2d(self.expansion * planes)
@@ -79,6 +82,9 @@ class small_Bottleneck(nn.Module):
             #                        planes, kernel_size=1, bias=False)
             # self.bn3 = nn.BatchNorm2d(self.expansion * planes)
 
+            self.fc2 = nn.Sequential([nn.AdaptiveAvgPool2d((1, 1)),
+                                      nn.Linear(self.expansion * planes, classes)]
+                                     )
             self.shortcut = nn.Sequential()
             if stride != 1 or in_planes != self.expansion * planes:
                 self.shortcut = nn.Sequential(
@@ -161,12 +167,12 @@ class ResNet(nn.Module):
         return out
 
 
-class small_ResNetRF(nn.Module):
+class small_truncated_ResNetRF(nn.Module):
     def __init__(self, block: typing.Union[small_BasicBlock, small_Bottleneck], num_blocks, num_classes=10,
                  multiplier=1,
                  fixed_points=None,
                  RF_level=1):
-        super(small_ResNetRF, self).__init__()
+        super(small_truncated_ResNetRF, self).__init__()
         self.in_planes = 64 * multiplier
         self.fix_points = fixed_points
         self.rf_level = RF_level
@@ -243,9 +249,9 @@ class small_ResNetRF(nn.Module):
         return out
 
 
-class small_VGG_RF(nn.Module):
+class small_truncated_VGG_RF(nn.Module):
     def __init__(self, vgg_name, num_classes=10, RF_level=0):
-        super(small_VGG_RF, self).__init__()
+        super(small_truncated_VGG_RF, self).__init__()
         self.rf_level = RF_level
         self.maxpool = None
         self.config = cfg[vgg_name]
@@ -313,22 +319,24 @@ class small_VGG_RF(nn.Module):
         return nn.Sequential(*layers)
 
 
-def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
+def small_truncated_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
-        return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes, fix_points)
+        return small_truncated_ResNetRF(small_truncated_Bottleneck, [1, 1, 1, 1], num_classes, fix_points)
     else:
-        return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes=num_classes, fixed_points=fix_points,
-                              RF_level=RF_level,
-                              multiplier=multiplier)
+        return small_truncated_ResNetRF(small_truncated_Bottleneck, [1, 1, 1, 1], num_classes=num_classes,
+                                        fixed_points=fix_points,
+                                        RF_level=RF_level,
+                                        multiplier=multiplier)
 
 
 def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
-        return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
+        return small_truncated_ResNetRF(small_truncated_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
     else:
-        return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes=num_classes, fixed_points=fix_points,
-                              RF_level=RF_level,
-                              multiplier=multiplier)
+        return small_truncated_ResNetRF(small_truncated_BasicBlock, [1, 1, 1, 1], num_classes=num_classes,
+                                        fixed_points=fix_points,
+                                        RF_level=RF_level,
+                                        multiplier=multiplier)
 
 
 def get_output_until_block_small_vgg(net, block, net_type=1):
@@ -417,7 +425,7 @@ def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [1,2]
+    blocks = [1, 2]
 
     for i in blocks:
         # samples = []
@@ -439,7 +447,7 @@ def test_models():
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
-        resnet_net = small_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
+        resnet_net = small_truncated_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
@@ -463,8 +471,8 @@ def test_models():
 
 def models_info():
     from sparse_ensemble_utils import count_parameters
-    resnet_small = small_ResNet_rf(10)
-    vgg_net = small_VGG_RF('small_vgg')
+    resnet_small = small_truncated_ResNet_rf(10)
+    vgg_net = small_truncated_VGG_RF('small_vgg')
     print("Small ResNet parameter count : {}".format(count_parameters(resnet_small)))
     print("Small Vgg parameter count : {}".format(count_parameters(vgg_net)))
 
