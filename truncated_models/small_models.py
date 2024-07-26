@@ -483,6 +483,7 @@ def models_info():
     from sparse_ensemble_utils import count_parameters
     resnet_small = small_truncated_ResNet_rf(10)
     vgg_net = small_truncated_VGG_RF('small_vgg')
+
     print("Small ResNet parameter count : {}".format(count_parameters(resnet_small)))
     print("Small Vgg parameter count : {}".format(count_parameters(vgg_net)))
 
