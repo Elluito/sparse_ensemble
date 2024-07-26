@@ -975,7 +975,6 @@ def main(args):
                                                         args.name),
         index=False)
 
-
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
     count_fn = lambda w: w.nelement()
     total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
