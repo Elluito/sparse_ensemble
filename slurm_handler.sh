@@ -145,14 +145,14 @@ ffcv=$6
 ffcv_train=$7
 ffcv_val=$8
 #pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
-pruning_rates=("0.9")
+pruning_rates=("0.4" "0.8")
 
 # For resnet18
 
   if [ "${9}" -gt 0 ]
   then
-      rf_levels=("5" "7" "8" "9")
-#       rf_levels=("10")
+#      rf_levels=("5" "7" "8" "9")
+       rf_levels=("9")
 
   else
         rf_levels=("3" "4" "6" "10")
