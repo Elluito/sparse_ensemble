@@ -121,9 +121,8 @@ class small_truncated_Bottleneck(nn.Module):
         out = self.relu(out)
 
         inter2 = self.avgpool(out)
-        inter2 = inter1.view(inter2.size(0), -1)
+        inter2 = inter2.view(inter2.size(0), -1)
         pred2 = self.fc2(inter2)
-        out = out.view(out.size(0), -1)
         return out, pred1, pred2
 
 
@@ -181,6 +180,7 @@ class small_truncated_ResNetRF(nn.Module):
                  fixed_points=None,
                  RF_level=1):
         super(small_truncated_ResNetRF, self).__init__()
+        self.num_classes=num_classes
         self.in_planes = 64 * multiplier
         self.fix_points = fixed_points
         self.rf_level = RF_level
@@ -236,7 +236,7 @@ class small_truncated_ResNetRF(nn.Module):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points))
+            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points,classes=self.num_classes))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -481,13 +481,96 @@ def test_models():
 
 def models_info():
     from sparse_ensemble_utils import count_parameters
-    resnet_small = small_truncated_ResNet_rf(10)
+    resnet_small = small_truncated_ResNet_rf(200, RF_level=6)
     vgg_net = small_truncated_VGG_RF('small_vgg')
 
     print("Small ResNet parameter count : {}".format(count_parameters(resnet_small)))
     print("Small Vgg parameter count : {}".format(count_parameters(vgg_net)))
 
 
+def test_with_modified_network(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0,
+                               number_batches=0):
+    if use_cuda:
+        net.cuda()
+    criterion = nn.CrossEntropyLoss()
+    net.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    if count_flops:
+        assert batch_flops != 0, "If count_flops is True,batch_flops must be non-zero"
+
+    sparse_flops = 0
+    first_time = 1
+    sparse_flops_batch = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if use_cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+
+            all_outputs = net(inputs)
+            outputs = all_outputs[-1]
+            loss = criterion(outputs, targets)
+            if count_flops:
+                sparse_flops += batch_flops
+            test_loss += loss.data.item()
+            if torch.all(outputs > 0):
+                _, predicted = torch.max(outputs.data, 1)
+            else:
+                soft_max_outputs = F.softmax(outputs, dim=1)
+                _, predicted = torch.max(soft_max_outputs, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
+
+            # print(correct/total)
+
+            if batch_idx % 10 == 0:
+                if verbose == 2:
+                    print('Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
+                          % (test_loss / (batch_idx + 1), 100. * correct.item() / total, correct, total))
+                    print("Batch first input")
+                    print("{}".format(inputs[0].cpu().numpy()))
+                    print("Output of the model")
+                    print("{}".format(outputs[0].cpu().numpy()))
+                    print("Predicted")
+                    print("{}".format(predicted[0].cpu().numpy()))
+                    print("targets")
+                    print("{}".format(targets[0].cpu().numpy()))
+            if one_batch:
+                if count_flops:
+                    return 100. * correct.item() / total, sparse_flops
+                else:
+                    return 100. * correct.item() / total
+
+            if number_batches > 0:
+                if number_batches < batch_idx:
+                    return 100. * correct.item() / total
+
+    if verbose == 1 or verbose == 2:
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+            test_loss / len(testloader), correct, total,
+            100. * correct.item() / total))
+    # net.cpu()
+    if count_flops:
+        return 100. * correct.item() / total, sparse_flops
+    else:
+        return 100. * correct.item() / total
+
+
+def test_the_load_and_forward_works():
+    from test_imagenet import load_small_imagenet
+    trainloader, valloader, testloader = load_small_imagenet(
+        {"traindir": "/home/luisaam/Documents/PhD/data/" + "/small_imagenet/train",
+         "valdir": "/home/luisaam/Documents/PhD/data/" + "/small_imagenet/val",
+         "num_workers": 1, "batch_size": 5, "resolution": 224})
+    resnet_small = small_truncated_ResNet_rf(200, RF_level=5)
+    state_dict = torch.load(
+        "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth")
+    resnet_small.load_state_dict(state_dict["net"], strict=False)
+    accuracy = test_with_modified_network(resnet_small, True, testloader)
+    print("The accuracy is: {}".format(accuracy))
+
+
 if __name__ == '__main__':
-    test_models()
+    test_the_load_and_forward_works()
     # models_info()
