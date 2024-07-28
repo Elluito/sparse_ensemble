@@ -180,7 +180,7 @@ class small_truncated_ResNetRF(nn.Module):
                  fixed_points=None,
                  RF_level=1):
         super(small_truncated_ResNetRF, self).__init__()
-        self.num_classes=num_classes
+        self.num_classes = num_classes
         self.in_planes = 64 * multiplier
         self.fix_points = fixed_points
         self.rf_level = RF_level
@@ -223,7 +223,6 @@ class small_truncated_ResNetRF(nn.Module):
         self.bn1 = nn.BatchNorm2d(64)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-
         # conv2 = nn.Conv2d(128, 1 * 256, kernel_size=3,
         #                   stride=2, padding=1, bias=False)
         # bn2 = nn.BatchNorm2d(1 * 256)
@@ -232,11 +231,19 @@ class small_truncated_ResNetRF(nn.Module):
         # self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.linear = nn.Linear(256 * block.expansion, num_classes)
 
+    def set_fc_only_trainable(self):
+        for name, module in self.named_modules():
+            if not isinstance(module, nn.Linear):
+                for param in module.parameters():
+                    param.requires_grad = False
+        linear_params = self.linear.parameters()
+        linear_params.requires_grad = False
+
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points,classes=self.num_classes))
+            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points, classes=self.num_classes))
             self.in_planes = planes * block.expansion
         return nn.Sequential(*layers)
 

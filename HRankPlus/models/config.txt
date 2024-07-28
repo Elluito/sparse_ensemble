@@ -1,0 +1,20 @@
+2024-07-09-18:09:13
+
+data_dir: 
+arch: resnet_56
+job_dir: ./models
+batch_size: 256
+epochs: 150
+learning_rate: 0.01
+lr_decay_step: 50,100
+momentum: 0.9
+weight_decay: 0.0005
+resume: False
+use_pretrain: False
+pretrain_dir: 
+rank_conv_prefix: 
+compress_rate: None
+test_only: False
+test_model_dir: 
+gpu: 0
+
