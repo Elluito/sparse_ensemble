@@ -110,5 +110,5 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #       Calculate the similarity of two seeds
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 2 --model $1 --dataset $2--seedname1 $3 --seedname2 $4 --modeltype1 $5 --modeltype2 $6 --filetype1 $7 --filetype2 $8 --folder $9 --RF_level "${10}" --RF_level2 "${11}" --subtract_mean "${12}"
+python similarity_comparison_architecture.py --experiment 2 --model $1 --dataset $2 --seedname1 $3 --seedname2 $4 --modeltype1 $5 --modeltype2 $6 --filetype1 $7 --filetype2 $8 --folder $9 --RF_level "${10}" --RF_level2 "${11}" --subtract_mean "${12}" --data_folder "${13}"
 
