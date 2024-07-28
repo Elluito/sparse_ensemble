@@ -913,15 +913,15 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 print("Time loading layer j {}".format(time.time() - tm))
 
                 if subtract_mean:
-                    layeri = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
-                    layerj = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
+                    layer_i = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
+                    layer_j = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
 
-                similarity_matrix[i, j] = kernel.linear_CKA(layeri, layerj)
+                similarity_matrix[i, j] = kernel.linear_CKA(layer_i, layer_j)
                 t1 = time.time()
                 print("Time of loading + linear kernel: {}".format(t1 - t0))
-                del layeri
-                del layeri
-                del layerj
+                # del layer_i
+                del layer_i
+                del layer_j
 
     # network1 =
     if use_device == "cuda":
