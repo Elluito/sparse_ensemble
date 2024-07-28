@@ -48,8 +48,8 @@ CHECK_2="$HOME/checkpoints_arc4_2/checkpoints"
 
 # Level 3  Models
 
-sbatch --nodes=1 --time=30:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="comparison_lvl3_s1_V_s2_not_sub_mean.err" --output="comparison_lvl3_s1_V_s2_not_sub_mean.out"  --job-name="comparison_lvl3_s1_V_s2_not_sub_mean" slurm_similarity_comparison_run.sh "resnet_small" "small_imagenet" "_seed_1" "_seed_2" "normal" "normal" "npy" "npy" "${HOME}/features" 3 3 0 "${HOME}/dataset"
-sbatch --nodes=1 --time=30:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="comparison_lvl3_s1_V_s2_sub_mean.err" --output="comparison_lvl3_s1_V_s2_sub_mean.out"  --job-name="comparison_lvl3_s1_V_s2_sub_mean" slurm_similarity_comparison_run.sh "resnet_small" "small_imagenet" "_seed_1" "_seed_2" "normal" "normal" "npy" "npy" "${HOME}/features" 3 3 1 "${HOME}/dataset"
+sbatch --nodes=1 --time=30:00:00 --partition=small --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="comparison_lvl3_s1_V_s2_not_sub_mean.err" --output="comparison_lvl3_s1_V_s2_not_sub_mean.out"  --job-name="comparison_lvl3_s1_V_s2_not_sub_mean" slurm_similarity_comparison_run.sh "resnet_small" "small_imagenet" "_seed_1" "_seed_2" "normal" "normal" "npy" "npy" "${HOME}/features" 3 3 0 "${HOME}/dataset"
+sbatch --nodes=1 --time=30:00:00 --partition=small --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="comparison_lvl3_s1_V_s2_sub_mean.err" --output="comparison_lvl3_s1_V_s2_sub_mean.out"  --job-name="comparison_lvl3_s1_V_s2_sub_mean" slurm_similarity_comparison_run.sh "resnet_small" "small_imagenet" "_seed_1" "_seed_2" "normal" "normal" "npy" "npy" "${HOME}/features" 3 3 1 "${HOME}/dataset"
 #
 ## Level 4  Models
 #
