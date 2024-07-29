@@ -851,7 +851,8 @@ def features_similarity_comparison_experiments_model_combination(args):
                                                                  number_layers=number_of_layers, name1=args.seedname1,
                                                                  name2=args.seedname2, type1=args.filetype1,
                                                                  type2=args.filetype2,
-                                                                 use_device=args.device, subtract_mean=args.subtract_mean)
+                                                                 use_device=args.device,
+                                                                 subtract_mean=args.subtract_mean)
 
     subtracted_mean_string = "mean_subtracted" if args.subtract_mean else "mean_not_subtracted"
 
@@ -865,7 +866,6 @@ def features_similarity_comparison_experiments_model_combination(args):
 @torch.no_grad()
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
                                        use_device="cuda", subtract_mean=1):
-
     from CKA_similarity.CKA import CudaCKA, CKA
     print("Use_device: {}".format(use_device))
     if use_device == "cuda":
