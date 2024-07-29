@@ -84,17 +84,17 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #############################################################
 #        Create features for given seed name
 ##############################################################
-#
-#if [ "${10}" -eq 1 ]; then
-#
-#python similarity_comparison_architecture.py --ffcv --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --folder $8 --data_folder $9
-#
-#else
-#
-#python similarity_comparison_architecture.py --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --folder $8 --data_folder $9
-#
-#fi
-#
+
+if [ "${10}" -eq 1 ]; then
+
+python similarity_comparison_architecture.py --ffcv --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --folder $8 --data_folder $9
+
+else
+
+python similarity_comparison_architecture.py --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --folder $8 --data_folder $9
+
+fi
+
 #############################################################
 #        Create features for given seed name for logistic regression
 #############################################################
@@ -110,5 +110,5 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 #       Calculate the similarity of two seeds
 #############################################################
 
-python similarity_comparison_architecture.py --experiment 2 --model $1 --dataset $2 --seedname1 $3 --seedname2 $4 --modeltype1 $5 --modeltype2 $6 --filetype1 $7 --filetype2 $8 --folder $9 --RF_level "${10}" --RF_level2 "${11}" --data_folder "${13}"
+#python similarity_comparison_architecture.py --experiment 2 --model $1 --dataset $2 --seedname1 $3 --seedname2 $4 --modeltype1 $5 --modeltype2 $6 --filetype1 $7 --filetype2 $8 --folder $9 --RF_level "${10}" --RF_level2 "${11}" --data_folder "${13}"
 
