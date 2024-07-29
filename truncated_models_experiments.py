@@ -21,13 +21,13 @@ def get_logger(file_path):
     return logger
 
 
-def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, scheduler, logger, number_losses=6):
+def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, scheduler, logger=None, number_losses=7):
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     data_time = hrutils.AverageMeter('Data', ':6.3f')
     losses_list = []
     top1_list = []
     top5_list = []
-    for i in range(number_losses+1):
+    for i in range(number_losses + 1):
         losses = hrutils.AverageMeter('Loss prob {}'.format(i), ':.4e')
         top1 = hrutils.AverageMeter('Acc@1 prob {}'.format(i), ':6.2f')
         top5 = hrutils.AverageMeter('Acc@5 prob {}'.format(i), ':6.2f')
@@ -43,7 +43,10 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
 
     for param_group in optimizer.param_groups:
         cur_lr = param_group['lr']
-    logger.info('learning_rate: ' + str(cur_lr))
+    if logger:
+        logger.info('learning_rate: ' + str(cur_lr))
+    else:
+        print('learning_rate: ' + str(cur_lr))
 
     num_iter = len(train_loader)
     for i, (images, target) in enumerate(train_loader):
@@ -53,26 +56,32 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
 
         # compute outputy
         all_logits = model(images)
+        assert len(
+            all_logits) == number_losses + 1, " The number of losses passed {} is not equal to the number of outputs of the model, -1".format(
+            number_losses)
         all_loss = []
         for logits in all_logits[:-1]:
             loss_i = criterion(logits, target)
             all_loss.append(loss_i)
 
-
-        # measure accuracy and record loss
-        for logits in all_logits:
-            prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
         n = images.size(0)
-        #TODO: Finish the losses collection
-        for i in range(l):
-        losses.update(loss.item(), n)  # accumulated loss
-        top1.update(prec1.item(), n)
-        top5.update(prec5.item(), n)
+        # measure accuracy and record loss
+        for i, logits in enumerate(all_logits):
+            prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
+            # TODO: Finish the losses collection
+            losses_list[i].update(all_loss[i].item(), n)  # accumulated loss
+            top1_list[i].update(prec1.item(), n)
+            top5_list[i].update(prec5.item(), n)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
+        for i, loss in enumerate(all_loss):
 
-        loss.backward()
+            if i < len(all_loss) - 1:
+                loss.backward(retain_graph=True)
+            else:
+                loss.backward()
+
         optimizer.step()
 
         # measure elapsed time
@@ -80,16 +89,23 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         end = time.time()
 
         if i % print_freq == 0:
-            logger.info(
-                'Epoch[{0}]({1}/{2}): '
-                'Loss {loss.avg:.4f} '
-                'Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}'.format(
-                    epoch, i, num_iter, loss=losses,
-                    top1=top1, top5=top5))
+            if logger:
+                logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
+            else:
+                print('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
+            for i in range(len(all_loss)):
+                loss_i = all_loss[i]
+                top1_i = top1_list[i]
+                top5_i = top5_list[i]
+
+                logger.info(
+                    "(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                        index=i,
+                        loss=loss_i, top1=top1_i, top5=top5_i))
 
     scheduler.step()
 
-    return losses.avg, top1.avg, top5.avg
+    return losses_list, top1_list, top5_list
 
 
 def validate_with_logger(epoch, val_loader, model, criterion, args, logger):
@@ -98,14 +114,6 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger):
     top1 = hrutils.AverageMeter('Acc@1', ':6.2f')
     top5 = hrutils.AverageMeter('Acc@5', ':6.2f')
 
-    es.size(0)
-    losses.update(loss.item(), n)
-    top1.update(pred1[0], n)
-    top5.update(pred5[0], n)
-
-    # measure elapsed time
-    batch_time.update(time.time() - end)
-    end = time.time()
     # switch to evaluation mode
     model.eval()
     with torch.no_grad():
@@ -120,15 +128,23 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger):
 
             # measure accuracy and record loss
             pred1, pred5 = hrutils.accuracy(logits, target, topk=(1, 5))
-            n = imag
-        logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-                    .format(top1=top1, top5=top5))
+            n = images.size(0)
+
+            losses.update(loss.item(), n)
+            top1.update(pred1[0], n)
+            top5.update(pred5[0], n)
+
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
+    logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+                .format(top1=top1, top5=top5))
 
     return losses.avg, top1.avg, top5.avg
 
 
 def main(args):
-    #TODO: code the loading of the model, dataset and training of the probes
+    # TODO: code the loading of the model, dataset and training of the probes
     pass
 
 
@@ -192,5 +208,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.experiments == 1:
-
         main(args)
