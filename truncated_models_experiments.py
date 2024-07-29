@@ -3,6 +3,11 @@ import argparse
 from truncated_models import *
 import HRankPlus.utils.common as hrutils
 import time
+from pathlib import Path
+import torchvision.transforms as transforms
+import torchvision
+from torch.utils.data import random_split
+from truncated_models.small_models import test_with_modified_network
 
 
 def get_logger(file_path):
@@ -57,7 +62,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         # compute outputy
         all_logits = model(images)
         assert len(
-            all_logits) == number_losses + 1, " The number of losses passed {} is not equal to the number of outputs of the model, -1".format(
+            all_logits) == number_losses + 1, " The number of losses passed {} is not equal to the number of outputs of the model-1".format(
             number_losses)
         all_loss = []
         for logits in all_logits[:-1]:
@@ -97,9 +102,13 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
                 loss_i = all_loss[i]
                 top1_i = top1_list[i]
                 top5_i = top5_list[i]
-
-                logger.info(
-                    "(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                if logger:
+                    logger.info(
+                        "(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                            index=i,
+                            loss=loss_i, top1=top1_i, top5=top5_i))
+                else:
+                    print("(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
                         index=i,
                         loss=loss_i, top1=top1_i, top5=top5_i))
 
@@ -108,11 +117,21 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
     return losses_list, top1_list, top5_list
 
 
-def validate_with_logger(epoch, val_loader, model, criterion, args, logger):
+def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None, number_losses=7):
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
-    losses = hrutils.AverageMeter('Loss', ':.4e')
-    top1 = hrutils.AverageMeter('Acc@1', ':6.2f')
-    top5 = hrutils.AverageMeter('Acc@5', ':6.2f')
+    # losses = hrutils.AverageMeter('Loss', ':.4e')
+    # top1 = hrutils.AverageMeter('Acc@1', ':6.2f')
+    # top5 = hrutils.AverageMeter('Acc@5', ':6.2f')
+    losses_list = []
+    top1_list = []
+    top5_list = []
+    for i in range(number_losses + 1):
+        losses = hrutils.AverageMeter('Loss prob {}'.format(i), ':.4e')
+        top1 = hrutils.AverageMeter('Acc@1 prob {}'.format(i), ':6.2f')
+        top5 = hrutils.AverageMeter('Acc@5 prob {}'.format(i), ':6.2f')
+        losses_list.append(losses)
+        top1_list.append(top1)
+        top5_list.append(top5)
 
     # switch to evaluation mode
     model.eval()
@@ -122,30 +141,242 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger):
             images = images.cuda()
             target = target.cuda()
 
-            # compute output
-            logits = model(images)
-            loss = criterion(logits, target)
+            # compute outputs
+            all_logits = model(images)
 
-            # measure accuracy and record loss
-            pred1, pred5 = hrutils.accuracy(logits, target, topk=(1, 5))
+            all_loss = []
+            for logits in all_logits[:-1]:
+                loss_i = criterion(logits, target)
+                all_loss.append(loss_i)
+
             n = images.size(0)
-
-            losses.update(loss.item(), n)
-            top1.update(pred1[0], n)
-            top5.update(pred5[0], n)
+            # measure accuracy and record loss
+            for i, logits in enumerate(all_logits):
+                prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
+                losses_list[i].update(all_loss[i].item(), n)  # accumulated loss
+                top1_list[i].update(prec1.item(), n)
+                top5_list[i].update(prec5.item(), n)
 
             # measure elapsed time
             batch_time.update(time.time() - end)
             end = time.time()
-    logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-                .format(top1=top1, top5=top5))
 
-    return losses.avg, top1.avg, top5.avg
+    for i in range(len(all_loss)):
+        loss_i = all_loss[i]
+        top1_i = top1_list[i]
+        top5_i = top5_list[i]
+        if logger:
+            logger.info(
+                "(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                    index=i,
+                    loss=loss_i.avg, top1=top1_i.avg, top5=top5_i.avg))
+        else:
+            print("(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                index=i,
+                loss=loss_i.avg, top1=top1_i.avg, top5=top5_i.avg))
+    # logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+    #             .format(top1=top1, top5=top5))
+
+    return losses_list, top1_list, top5_list
 
 
 def main(args):
     # TODO: code the loading of the model, dataset and training of the probes
-    pass
+
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    print("Normal data loaders loaded!!!!")
+
+    cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+    # Data
+    print('==> Preparing data..')
+    current_directory = Path().cwd()
+    data_path = "."
+    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        data_path = "/nobackup/sclaam/data"
+    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        data_path = "/home/luisaam/Documents/PhD/data/"
+    print(data_path)
+    batch_size = args.batch_size
+    if "32" in args.name:
+        batch_size = 32
+    if "64" in args.name:
+        batch_size = 64
+
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(*stats_to_use),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    if args.dataset == "cifar10":
+        trainset = torchvision.datasets.CIFAR10(
+            root=data_path, train=True, download=True, transform=transform_train)
+
+        cifar10_train, cifar10_val = random_split(trainset, [len(trainset) - args.eval_size, args.eval_size])
+
+        trainloader = torch.utils.data.DataLoader(
+            cifar10_train, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        valloader = torch.utils.data.DataLoader(
+            cifar10_val, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR10(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "cifar100":
+        trainset = torchvision.datasets.CIFAR100(
+            root=data_path, train=True, download=True, transform=transform_train)
+
+        cifar10_train, cifar10_val = random_split(trainset, [len(trainset) - 5000, 5000])
+
+        trainloader = torch.utils.data.DataLoader(
+            cifar10_train, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+
+        valloader = torch.utils.data.DataLoader(
+            cifar10_val, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+
+        testset = torchvision.datasets.CIFAR100(
+            root=data_path, train=False, download=True, transform=transform_test)
+        testloader = torch.utils.data.DataLoader(
+            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+    if args.dataset == "tiny_imagenet":
+        from test_imagenet import load_tiny_imagenet
+        trainloader, valloader, testloader = load_tiny_imagenet(
+            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+             "num_workers": args.num_workers, "batch_size": batch_size})
+    if args.dataset == "small_imagenet":
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                      args.ffcv_val,
+                                                                                      batch_size, args.num_workers,
+                                                                                      valsize=5000,
+                                                                                      testsize=10000,
+                                                                                      shuffle_val=True,
+                                                                                      shuffle_test=False, )
+        else:
+
+            from test_imagenet import load_small_imagenet
+            trainloader, valloader, testloader = load_small_imagenet(
+                {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
+                val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False)
+
+    from torchvision.models import resnet18, resnet50
+
+    if args.model == "resnet18":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet24":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.modeltype1))
+    if args.model == "resnet_small":
+        if args.modeltype1 == "normal" and args.dataset == "cifar10":
+            net = small_truncated_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.modeltype1 == "normal" and args.dataset == "cifar100":
+            net = small_truncated_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
+            net = small_truncated_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
+            net = small_truncated_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.modeltype1 == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+
+    ###########################################################################
+    if args.solution:
+
+        temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
+        if args.modeltype1 == "normal" and args.RF_level != 0:
+            net.load_state_dict(temp_dict, strict=False)
+            print("Loaded solution!")
+        else:
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            net.load_state_dict(real_dict, strict=False)
+            print("Loaded solution!")
+
+    net = net.to(device)
+    net.set_fc_only_trainable()
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                          momentum=0.9, weight_decay=5e-4)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+
+    logger = hrutils.get_logger(args.job_dir)
+
+    for epoch in range(args.epochs):
+        train_probes_with_logger(epoch, trainloader, net, criterion, optimizer, scheduler=scheduler,logger=logger)
+        validate_with_logger(epoch, valloader, net, criterion, args, logger=logger)
 
 
 if __name__ == '__main__':
@@ -177,19 +408,22 @@ if __name__ == '__main__':
                         required=False)
 
     parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
-    parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
+    parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
+    parser.add_argument('--epoch', default=200, type=int, help='Number of epochs to train')
+    # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
 
     parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
-    parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
-    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+    # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
+    parser.add_argument('--job_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where the output of the algorithm is going to be saved')
     parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
                         help='Location of the dataset', required=True)
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
-    parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
+    # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
     parser.add_argument('--batch_size', default=64, type=int, help='Batch Size for loading data')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for Small ImageNet')
@@ -203,7 +437,7 @@ if __name__ == '__main__':
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
     parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
-    parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
+    # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
 
     args = parser.parse_args()
 
