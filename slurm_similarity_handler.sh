@@ -10,8 +10,8 @@ CHECK_2="$HOME/checkpoints_arc4_2/checkpoints"
 #
 #
 ## Level 4  Models
-sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl4_s_1.err" --output="saving_features_lvl4_s_1.out"  --job-name="saving_features_lvl4_s_1" slurm_similarity_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.2_rf_level_4_recording_200_ffcv_test_acc_60.31.pth" "_seed_1" 4 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 1
-#sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl4_s_2.err" --output="saving_features_lvl4_s_2.out"  --job-name="saving_features_lvl4_s_2" slurm_similarity_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.1_rf_level_4_recording_200_ffcv_test_acc_60.47.pth" "_seed_2" 4 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 1
+sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl4_s_1.err" --output="saving_features_lvl4_s_1.out"  --job-name="saving_features_lvl4_s_1" slurm_similarity_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.2_rf_level_4_recording_200_ffcv_test_acc_60.31.pth" "_seed_2" 4 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 1
+#sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="saving_features_lvl4_s_2.err" --output="saving_features_lvl4_s_2.out"  --job-name="saving_features_lvl4_s_2" slurm_similarity_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.1_rf_level_4_recording_200_ffcv_test_acc_60.47.pth" "_seed_1" 4 "normal" 1000 "${HOME}/features" "${HOME}/datasets" 1
 #
 ## Level 5  Models
 #
