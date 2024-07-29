@@ -865,8 +865,9 @@ def features_similarity_comparison_experiments_model_combination(args):
 @torch.no_grad()
 def representation_similarity_analysis(prefix1, prefix2, number_layers, name1="", name2="", type1="txt", type2="txt",
                                        use_device="cuda", subtract_mean=1):
-    from CKA_similarity.CKA import CudaCKA, CKA
 
+    from CKA_similarity.CKA import CudaCKA, CKA
+    print("Use_device: {}".format(use_device))
     if use_device == "cuda":
         kernel = CudaCKA("cuda")
         similarity_matrix = torch.zeros((number_layers, number_layers), device=use_device)
@@ -904,6 +905,7 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 torch.cuda.empty_cache()
 
             if use_device == "cpu":
+
                 t0 = time.time()
                 print("We are in row {} and colum {}".format(i, j))
                 # layer_i = load_layer_features(prefix1, i, name=name1)
@@ -913,14 +915,14 @@ def representation_similarity_analysis(prefix1, prefix2, number_layers, name1=""
                 print("Time loading layer j {}".format(time.time() - tm))
 
                 if subtract_mean:
-                    layer_i = layer_i - np.mean(layer_i, dtype=np.float, axis=0)
-                    layer_j = layer_j - np.mean(layer_j, dtype=np.float, axis=0)
+                    layer_i = layer_i - np.mean(layer_i, dtype=float, axis=0)
+                    layer_j = layer_j - np.mean(layer_j, dtype=float, axis=0)
 
                 similarity_matrix[i, j] = kernel.linear_CKA(layer_i, layer_j)
                 t1 = time.time()
                 print("Time of loading + linear kernel: {}".format(t1 - t0))
                 # del layer_i
-                del layer_i
+                # del layer_i
                 del layer_j
 
     # network1 =
