@@ -373,10 +373,40 @@ def main(args):
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
     logger = hrutils.get_logger(args.job_dir)
+    hrutils.record_config(args)
+
+    name = "{model}_{dataset}_RF_level_{RF_level}".format(model=args.model, dataset=args.dataset,
+                                                          RF_level=args.RF_level)
 
     for epoch in range(args.epochs):
-        train_probes_with_logger(epoch, trainloader, net, criterion, optimizer, scheduler=scheduler,logger=logger)
-        validate_with_logger(epoch, valloader, net, criterion, args, logger=logger)
+
+        loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
+                                                                                     optimizer, scheduler=scheduler,
+                                                                                     logger=logger)
+        loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, valloader, net,
+                                                                                             criterion, args,
+                                                                                             logger=logger)
+
+        # hrutils.save_checkpoint({
+        #     'epoch': epoch,
+        #     'net': compress_model.state_dict(),
+        #     'best_top1_acc': best_top1_acc,
+        #     'optimizer': optimizer.state_dict(),
+        # }, is_best, args.job_dir)
+
+        state = {
+            'net': net.state_dict(),
+            'acc': acc,
+            'epoch': epoch,
+            'config': args,
+        }
+        if not os.path.isdir(args.job_dir):
+
+            os.mkdir(args.job_dir)
+
+        torch.save(state, '{}/{}_logit_probes.pth'.format(args.job_dir, name))
+        # if os.path.isfile('{}/{}_logit_probes.pth'.format(save_folder, name, best_acc)):
+        #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
 
 
 if __name__ == '__main__':
