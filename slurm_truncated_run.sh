@@ -82,12 +82,12 @@ python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';
 
 
 
-if [ "${10}" -eq 1 ]; then
+if [ "${11}" -eq 1 ]; then
 
-python  truncated_models_experiments.py --ffcv --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --job_dir $8 --data_folder $9
+python  truncated_models_experiments.py --ffcv --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --job_dir $8 --epochs $9 --lr "${10}"
 
 else
 
-python truncated_models_experiments.py --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --eval_size $7 --job_dir $8 --data_folder $9
+python truncated_models_experiments.py --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --job_dir $8 --epochs $9 --lr "${10}"
 
 fi

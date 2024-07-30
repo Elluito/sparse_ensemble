@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 import torchvision
 from torch.utils.data import random_split
 from truncated_models.small_models import test_with_modified_network
+import datetime
 
 
 def get_logger(file_path):
@@ -32,7 +33,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
     losses_list = []
     top1_list = []
     top5_list = []
-    for i in range(number_losses + 1):
+    for i in range(number_losses):
         losses = hrutils.AverageMeter('Loss prob {}'.format(i), ':.4e')
         top1 = hrutils.AverageMeter('Acc@1 prob {}'.format(i), ':6.2f')
         top5 = hrutils.AverageMeter('Acc@5 prob {}'.format(i), ':6.2f')
@@ -60,18 +61,18 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         target = target.cuda()
 
         # compute outputy
-        all_logits = model(images)
+        intermideate_logits, finel_logits = model(images)
         assert len(
-            all_logits) == number_losses + 1, " The number of losses passed {} is not equal to the number of outputs of the model-1".format(
-            number_losses)
+            intermideate_logits) == number_losses, " The number of losses passed {} is not equal to the number of intermediate logits of the model {}".format(
+            number_losses, len(intermideate_logits))
         all_loss = []
-        for logits in all_logits[:-1]:
+        for logits in intermideate_logits[:-1]:
             loss_i = criterion(logits, target)
             all_loss.append(loss_i)
 
         n = images.size(0)
         # measure accuracy and record loss
-        for i, logits in enumerate(all_logits):
+        for i, logits in enumerate(intermideate_logits):
             prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
             # TODO: Finish the losses collection
             losses_list[i].update(all_loss[i].item(), n)  # accumulated loss
@@ -371,13 +372,18 @@ def main(args):
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+    additional_path_name = "{model}/{dataset}/{RF_level}".format(model=args.model, dataset=args.dataset,
+                                                                 RF_level=args.RF_level)
 
-    logger = hrutils.get_logger(args.job_dir)
+    # additional_path_name = "{model}/{dataset}/{RF_level}/{now}_{seed}".format(model=args.model, dataset=args.dataset,
+    #                                                                           RF_level=args.RF_level, now=now,
+    #                                                                           seed=args.seedname1)
+
+    logger = hrutils.get_logger("{}/{}/logger_{}.log".format(args.job_dir, additional_path_name, now))
     hrutils.record_config(args)
 
-    name = "{model}_{dataset}_RF_level_{RF_level}".format(model=args.model, dataset=args.dataset,
-                                                          RF_level=args.RF_level)
-
+    filepath = "{}/{}_logits_probs.csv".format(args.job_dir, name)
     for epoch in range(args.epochs):
 
         loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
@@ -386,6 +392,26 @@ def main(args):
         loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, valloader, net,
                                                                                              criterion, args,
                                                                                              logger=logger)
+
+        if Path(filepath).is_file():
+
+            log_dict = {"Epoch": [epoch]}
+            for i, top1_acc in enumerate(top1_list_epoch):
+                log_dict["Prob {} train accuracy".format(i)] = top1_acc
+            for i, top1_acc in enumerate(top1_list_epoch_val):
+                log_dict["Prob {} test accuracy".format(i)] = top1_acc
+
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, mode="a", header=False, index=False)
+        else:
+            # Try to read the file to see if it is
+            log_dict = {"Epoch": [epoch]}
+            for i, top1_acc in enumerate(top1_list_epoch):
+                log_dict["Prob {} train accuracy".format(i)] = top1_acc
+            for i, top1_acc in enumerate(top1_list_epoch_val):
+                log_dict["Prob {} test accuracy".format(i)] = top1_acc
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, sep=",", index=False)
 
         # hrutils.save_checkpoint({
         #     'epoch': epoch,
@@ -396,12 +422,11 @@ def main(args):
 
         state = {
             'net': net.state_dict(),
-            'acc': acc,
+            'acc': top1_list_epoch_val[-1],
             'epoch': epoch,
             'config': args,
         }
         if not os.path.isdir(args.job_dir):
-
             os.mkdir(args.job_dir)
 
         torch.save(state, '{}/{}_logit_probes.pth'.format(args.job_dir, name))
@@ -439,7 +464,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
     parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
-    parser.add_argument('--epoch', default=200, type=int, help='Number of epochs to train')
+    parser.add_argument('--epochs', default=200, type=int, help='Number of epochs to train')
     # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
     parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
@@ -454,7 +479,7 @@ if __name__ == '__main__':
                         help='Location of the dataset', required=True)
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
     # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
-    parser.add_argument('--batch_size', default=64, type=int, help='Batch Size for loading data')
+    # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for Small ImageNet')
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')

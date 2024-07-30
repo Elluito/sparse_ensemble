@@ -111,6 +111,7 @@ class small_truncated_Bottleneck(nn.Module):
                 )
 
     def forward(self, x):
+
         out = self.relu(self.bn1(self.conv1(x)))
         inter1 = self.avgpool(out)
         inter1 = inter1.view(inter1.size(0), -1)
@@ -123,7 +124,7 @@ class small_truncated_Bottleneck(nn.Module):
         inter2 = self.avgpool(out)
         inter2 = inter2.view(inter2.size(0), -1)
         pred2 = self.fc2(inter2)
-        return out, pred1, pred2
+        return [pred1, pred2], out
 
 
 class ResNet(nn.Module):
@@ -179,7 +180,9 @@ class small_truncated_ResNetRF(nn.Module):
                  multiplier=1,
                  fixed_points=None,
                  RF_level=1):
+
         super(small_truncated_ResNetRF, self).__init__()
+
         self.num_classes = num_classes
         self.in_planes = 64 * multiplier
         self.fix_points = fixed_points
@@ -221,6 +224,7 @@ class small_truncated_ResNetRF(nn.Module):
                                stride=1, padding=1, bias=False)
 
         self.bn1 = nn.BatchNorm2d(64)
+        self.fc1 = nn.Linear(64, num_classes)
         self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         # conv2 = nn.Conv2d(128, 1 * 256, kernel_size=3,
@@ -245,24 +249,38 @@ class small_truncated_ResNetRF(nn.Module):
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points, classes=self.num_classes))
             self.in_planes = planes * block.expansion
-        return nn.Sequential(*layers)
+        return nn.ModuleList(*layers)
 
     def forward(self, x):
+        intermediate_predictions = []
         out = self.relu(self.bn1(self.conv1(x)))
+        inter1 = self.avgpool(out)
+        inter1 = inter1.view(inter1.size(0), -1)
+        pred1 = self.fc1(inter1)
+        intermediate_predictions.append(pred1)
         # if self.rf_level != 1:
         out = self.maxpool(out)
-        out, pred11, pred12 = self.layer1(out)
+        for m in self.layer1:
+            inter_pred, out = m(out)
+            intermediate_predictions.extend(inter_pred)
+        for m in self.layer2:
+            inter_pred, out = m(out)
+            intermediate_predictions.extend(inter_pred)
+        for m in self.layer3:
+            inter_pred, out = m(out)
+            intermediate_predictions.extend(inter_pred)
+        # out, pred11, pred12 = self.layer1(out)
         # print("shape layer1: {}".format(out.shape))
-        out, pred21, pred22 = self.layer2(out)
+        # out, pred21, pred22 = self.layer2(out)
         # print("shape layer2: {}".format(out.shape))
-        out, pred31, pred32 = self.layer3(out)
+        # out, pred31, pred32 = self.layer3(out)
         # print("shape layer3: {}".format(out.shape))
         # out = self.layer4(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         # print("out:{}".format(out.size()))
         out = self.linear(out)
-        return pred11, pred12, pred21, pred22, pred31, pred32, out
+        return intermediate_predictions,out
 
 
 class small_truncated_VGG_RF(nn.Module):
@@ -569,12 +587,13 @@ def test_the_load_and_forward_works():
     trainloader, valloader, testloader = load_small_imagenet(
         {"traindir": "/home/luisaam/Documents/PhD/data/" + "/small_imagenet/train",
          "valdir": "/home/luisaam/Documents/PhD/data/" + "/small_imagenet/val",
-         "num_workers": 1, "batch_size": 5, "resolution": 224})
+         "num_workers": 0, "batch_size": 1, "resolution": 224})
     resnet_small = small_truncated_ResNet_rf(200, RF_level=5)
     state_dict = torch.load(
-        "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth")
+        "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
+        map_location="cpu")
     resnet_small.load_state_dict(state_dict["net"], strict=False)
-    accuracy = test_with_modified_network(resnet_small, True, testloader)
+    accuracy = test_with_modified_network(resnet_small, False, testloader)
     print("The accuracy is: {}".format(accuracy))
 
 
