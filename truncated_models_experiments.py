@@ -1,4 +1,5 @@
 import logging
+import os
 import argparse
 from truncated_models import *
 import HRankPlus.utils.common as hrutils
@@ -10,6 +11,8 @@ from torch.utils.data import random_split
 from truncated_models.small_models import test_with_modified_network
 import datetime
 import omegaconf
+import torch.optim as optim
+import pandas as pd
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -47,7 +50,8 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
     model.train()
     batch = next(iter(train_loader))
     batch_size = batch[0].shape[0]
-    print_freq = (256 * 50) // batch_size
+    # print_freq = ((len(train_loader) // batch_size) // 5)  # // batch_size
+    print_freq = 1
     end = time.time()
 
     for param_group in optimizer.param_groups:
@@ -58,18 +62,18 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         print('learning_rate: ' + str(cur_lr))
 
     num_iter = len(train_loader)
-    for i, (images, target) in enumerate(train_loader):
+    for batch_index, (images, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
         images = images.cuda()
         target = target.cuda()
 
         # compute outputy
-        intermideate_logits, finel_logits = model(images)
+        intermideate_logits, final_logits = model(images)
         assert len(
             intermideate_logits) == number_losses, " The number of losses passed {} is not equal to the number of intermediate logits of the model {}".format(
             number_losses, len(intermideate_logits))
         all_loss = []
-        for logits in intermideate_logits[:-1]:
+        for logits in intermideate_logits:
             loss_i = criterion(logits, target)
             all_loss.append(loss_i)
 
@@ -77,7 +81,6 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         # measure accuracy and record loss
         for i, logits in enumerate(intermideate_logits):
             prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
-            # TODO: Finish the losses collection
             losses_list[i].update(all_loss[i].item(), n)  # accumulated loss
             top1_list[i].update(prec1.item(), n)
             top5_list[i].update(prec5.item(), n)
@@ -96,14 +99,14 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
-        if i % print_freq == 0:
+        print("Have finished batch {} out of {}".format(batch_index, num_iter))
+        if batch_index % print_freq == 0:
             if logger:
                 logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
             else:
                 print('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
-            for i in range(len(all_loss)):
-                loss_i = all_loss[i]
+            for i in range(len(losses_list)):
+                loss_i = losses_list[i]
                 top1_i = top1_list[i]
                 top5_i = top5_list[i]
                 if logger:
@@ -165,8 +168,8 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
             batch_time.update(time.time() - end)
             end = time.time()
 
-    for i in range(len(all_loss)):
-        loss_i = all_loss[i]
+    for i in range(len(losses_list)):
+        loss_i = losses_list[i]
         top1_i = top1_list[i]
         top5_i = top5_list[i]
         if logger:
@@ -185,8 +188,6 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
 
 
 def main(args):
-    # TODO: code the loading of the model, dataset and training of the probes
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -331,7 +332,8 @@ def main(args):
             # # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
             raise NotImplementedError(
-                " There is no implementation for this combination {}, {} {} ".format(args.model, args.modeltype1))
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.modeltype1,
+                                                                                     args.dataset))
     if args.model == "resnet_small":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = small_truncated_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
@@ -342,12 +344,12 @@ def main(args):
         if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
             net = small_truncated_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
-            raise NotImplementedError
+            # raise NotImplementedError
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 10)
         if args.modeltype1 == "pytorch" and args.dataset == "cifar100":
-            raise NotImplementedError
+            # raise NotImplementedError
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
@@ -383,23 +385,25 @@ def main(args):
     #                                                                           RF_level=args.RF_level, now=now,
     #                                                                           seed=args.seedname1)
 
-    Path("{}/{}".format(args.job_dir, additional_path_name)).mkdir(parents=True, exist_ok=True)
+    run_file_path = "{}/{}".format(args.job_dir, additional_path_name)
+    Path(run_file_path).mkdir(parents=True, exist_ok=True)
     logger = hrutils.get_logger("{}/{}/logger_{}.log".format(args.job_dir, additional_path_name, now))
-    hrutils.record_config(args)
     filepath = "{}/{}/{}_{}_logits_probs.csv".format(args.job_dir, additional_path_name, args.seedname1, now)
-
-
+    name = "{}_{}".format(args.seedname1, now)
+    args.job_dir = run_file_path
+    hrutils.record_config(args)
     x, y = next(iter(testloader))
-
+    x = x.to(device)
     intermediate_pred, final_pred = net(x[0].view(1, 3, x[0].size(-1), x[0].size(-1)))
     num_losses = len(intermediate_pred)
+
     for epoch in range(args.epochs):
 
         loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
                                                                                      optimizer, scheduler=scheduler,
                                                                                      logger=logger,
                                                                                      number_losses=num_losses)
-        loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, valloader, net,
+        loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, testloader, net,
                                                                                              criterion, args,
                                                                                              logger=logger,
                                                                                              number_losses=num_losses)
@@ -449,25 +453,28 @@ def run_local_test():
     cfg = omegaconf.DictConfig({
         "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
         "modeltype1": "normal",
+        "seedname1": "_seed_8",
         "RF_level": 5,
         "epochs": 1,
         "ffcv": 0,
         "ffcv_val": "",
         "ffcv_train": "",
-        "batch_size": 2,
+        "batch_size": 64,
         "model": "resnet_small",
         "dataset": "small_imagenet",
         "num_workers": 0,
         "input_resolution": 224,
         "width": 1,
         "name": "no_name",
-        "job_dir": "truncated_results_local/",
+        "job_dir": "truncated_results_local",
+        "lr": 0.1,
+        "resume": False,
 
     })
     main(cfg)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # parser = argparse.ArgumentParser(description='Truncated experiments')
     # # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
     # #                     required=True)
