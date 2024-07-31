@@ -4,7 +4,7 @@ CHECK_2="$HOME/checkpoints_arc4_2/checkpoints"
 
 # Level 3  Models
 
-sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_lvl3_s_1.err" --output="logistic_probes_lvl3_s_1.out"  --job-name="logistic_probes_lvl3_s_1" slurm_truncated_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.2_rf_level_3_recording_200_no_ffcv_test_acc_58.11.pth" "_seed_2" 3 "normal""${HOME}/truncated_models_results" 100 "0.01" 1
+sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_lvl3_s_1.err" --output="logistic_probes_lvl3_s_1.out"  --job-name="logistic_probes_lvl3_s_1" slurm_truncated_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.2_rf_level_3_recording_200_no_ffcv_test_acc_58.11.pth" "_seed_2" 3 "normal" "${HOME}/truncated_models_results" 100 "0.01" 1
 
 # Level 4  Models
 #sbatch --nodes=1 --time=12:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_lvl4_s_2.err" --output="logistic_probes_lvl4_s_2.out"  --job-name="logistic_probes_lvl4_s_2" slurm_truncated_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.2_rf_level_4_recording_200_ffcv_test_acc_60.31.pth" "_seed_2" 4 "normal""${HOME}/truncated_models_results" 100 "0.01" 1
