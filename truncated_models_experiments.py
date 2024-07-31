@@ -118,6 +118,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
                     print("(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
                         index=i,
                         loss=loss_i, top1=top1_i, top5=top5_i))
+        break
 
     scheduler.step()
 
@@ -132,7 +133,10 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
     losses_list = []
     top1_list = []
     top5_list = []
-    for i in range(number_losses + 1):
+    final_loss = hrutils.AverageMeter('Loss final output', ':.4e')
+    final_top1 = hrutils.AverageMeter('Acc@1 final output ', ':6.2f')
+    final_top5 = hrutils.AverageMeter('Acc@5 final output ', ':6.2f')
+    for i in range(number_losses):
         losses = hrutils.AverageMeter('Loss prob {}'.format(i), ':.4e')
         top1 = hrutils.AverageMeter('Acc@1 prob {}'.format(i), ':6.2f')
         top5 = hrutils.AverageMeter('Acc@5 prob {}'.format(i), ':6.2f')
@@ -149,14 +153,20 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
             target = target.cuda()
 
             # compute outputs
-            all_logits = model(images)
+            all_logits, final_logits = model(images)
+            n = images.size(0)
+
+            final_loss.update(criterion(final_logits, target).item(), n)
+            final_prec1, final_prec5 = hrutils.accuracy(final_logits, target, topk=(1, 5))
+
+            final_top1.update(final_prec1.item(), n)
+            final_top5.update(final_prec5.item(), n)
 
             all_loss = []
-            for logits in all_logits[:-1]:
+            for logits in all_logits:
                 loss_i = criterion(logits, target)
                 all_loss.append(loss_i)
 
-            n = images.size(0)
             # measure accuracy and record loss
             for i, logits in enumerate(all_logits):
                 prec1, prec5 = hrutils.accuracy(logits, target, topk=(1, 5))
@@ -176,15 +186,22 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
             logger.info(
                 "(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
                     index=i,
-                    loss=loss_i.avg, top1=top1_i.avg, top5=top5_i.avg))
+                    loss=loss_i, top1=top1_i, top5=top5_i))
         else:
             print("(Prob index {index}) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
                 index=i,
-                loss=loss_i.avg, top1=top1_i.avg, top5=top5_i.avg))
+                loss=loss_i, top1=top1_i, top5=top5_i))
+    if logger:
+        logger.info(
+            "(Final output) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+                loss=final_loss, top1=final_top1, top5=final_top5))
+    else:
+        print("(Final output) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
+            loss=final_loss, top1=final_top1, top5=final_top5))
     # logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
     #             .format(top1=top1, top5=top5))
 
-    return losses_list, top1_list, top5_list
+    return losses_list, top1_list, top5_list, final_loss, final_top1, final_top5
 
 
 def main(args):
@@ -403,18 +420,19 @@ def main(args):
                                                                                      optimizer, scheduler=scheduler,
                                                                                      logger=logger,
                                                                                      number_losses=num_losses)
-        loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, testloader, net,
-                                                                                             criterion, args,
-                                                                                             logger=logger,
-                                                                                             number_losses=num_losses)
+        loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val, final_loss, final_top1, final_top5 = validate_with_logger(
+            epoch, testloader, net,
+            criterion, args,
+            logger=logger,
+            number_losses=num_losses)
 
         if Path(filepath).is_file():
 
             log_dict = {"Epoch": [epoch]}
             for i, top1_acc in enumerate(top1_list_epoch):
-                log_dict["Prob {} train accuracy".format(i)] = top1_acc
+                log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
-                log_dict["Prob {} test accuracy".format(i)] = top1_acc
+                log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
 
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, mode="a", header=False, index=False)
@@ -422,9 +440,9 @@ def main(args):
             # Try to read the file to see if it is
             log_dict = {"Epoch": [epoch]}
             for i, top1_acc in enumerate(top1_list_epoch):
-                log_dict["Prob {} train accuracy".format(i)] = top1_acc
+                log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
-                log_dict["Prob {} test accuracy".format(i)] = top1_acc
+                log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, sep=",", index=False)
 
@@ -475,68 +493,68 @@ def run_local_test():
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='Truncated experiments')
-    # # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
-    # #                     required=True)
-    #
-    # parser.add_argument('-s', '--solution', type=str, default="", help='',
-    #                     required=False)
-    #
-    # parser.add_argument('-sn1', '--seedname1', type=str, default="", help='',
+    parser = argparse.ArgumentParser(description='Truncated experiments')
+    # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
     #                     required=True)
-    # parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
-    #                     required=False)
-    # parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
-    #                     required=False)
-    # parser.add_argument('-e', '--experiment', type=int, default=1, help='',
-    #                     required=False)
-    # parser.add_argument('-mt1', '--modeltype1', type=str, default="alternative", help='',
-    #                     required=False)
-    # parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
-    #                     required=False)
-    # parser.add_argument('-ft1', '--filetype1', type=str, default="npy", help='',
-    #                     required=False)
-    # parser.add_argument('-ft2', '--filetype2', type=str, default="npy", help='',
-    #                     required=False)
-    # parser.add_argument('-t', '--train', type=int, default=1, help='',
-    #                     required=False)
-    #
-    # parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
-    # parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
-    # parser.add_argument('--epochs', default=200, type=int, help='Number of epochs to train')
-    # # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
-    # parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
-    # parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    # parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
-    # parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    #
-    # parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
-    # # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
-    # parser.add_argument('--job_dir', default="/nobackup/sclaam/checkpoints", type=str,
-    #                     help='Location where the output of the algorithm is going to be saved')
-    # # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
-    # #                     help='Location of the dataset', required=True)
-    # parser.add_argument('--width', default=1, type=int, help='Width of the model')
-    # # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
-    # # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
-    # parser.add_argument('--input_resolution', default=224, type=int,
-    #                     help='Input Resolution for Small ImageNet')
-    # parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
-    #
-    # parser.add_argument('--ffcv_train',
-    #                     default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
-    #                     type=str, help='FFCV train dataset')
-    #
-    # parser.add_argument('--ffcv_val',
-    #                     default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
-    #                     type=str, help='FFCV val dataset')
-    # parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
-    # # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
-    # # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
-    #
-    # args = parser.parse_args()
-    #
-    # if args.experiment == 1:
-    #     main(args)
-    #
-    run_local_test()
+
+    parser.add_argument('-s', '--solution', type=str, default="", help='',
+                        required=False)
+
+    parser.add_argument('-sn1', '--seedname1', type=str, default="", help='',
+                        required=True)
+    parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
+                        required=False)
+    parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
+                        required=False)
+    parser.add_argument('-e', '--experiment', type=int, default=1, help='',
+                        required=False)
+    parser.add_argument('-mt1', '--modeltype1', type=str, default="alternative", help='',
+                        required=False)
+    parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
+                        required=False)
+    parser.add_argument('-ft1', '--filetype1', type=str, default="npy", help='',
+                        required=False)
+    parser.add_argument('-ft2', '--filetype2', type=str, default="npy", help='',
+                        required=False)
+    parser.add_argument('-t', '--train', type=int, default=1, help='',
+                        required=False)
+
+    parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
+    parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
+    parser.add_argument('--epochs', default=200, type=int, help='Number of epochs to train')
+    # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
+    parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
+    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+
+    parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
+    # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
+    parser.add_argument('--job_dir', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location where the output of the algorithm is going to be saved')
+    # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+    #                     help='Location of the dataset', required=True)
+    parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
+    # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
+    parser.add_argument('--input_resolution', default=224, type=int,
+                        help='Input Resolution for Small ImageNet')
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+
+    parser.add_argument('--ffcv_train',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+                        type=str, help='FFCV train dataset')
+
+    parser.add_argument('--ffcv_val',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+                        type=str, help='FFCV val dataset')
+    parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
+    # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
+    # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
+
+    args = parser.parse_args()
+
+    if args.experiment == 1:
+        main(args)
+
+    # run_local_test()
