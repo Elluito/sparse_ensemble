@@ -122,8 +122,101 @@ class VGG_RF(nn.Module):
         return nn.Sequential(*layers)
 
 
-def test():
+class truncated_VGG_RF(nn.Module):
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(truncated_VGG_RF, self).__init__()
+        self.rf_level = RF_level
+        self.num_classes = num_classes
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            # self.config = [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
+            # if self.rf_level == "k6":
+            #     self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+            self.config = cfg[vgg_name]
 
+        self.features, self.fc_probes = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = x
+        intermediate_predictions = []
+        # for i, layer in enumerate(self.features):
+        #     x = layer(x)
+        #     try:
+        #         print("{}".format(cfg["VGG19"][i]))
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        #     except:
+        #
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        for i, m in enumerate(self.features):
+            out = m(out)
+            if isinstance(m, nn.ReLU):
+                inter = self.avgpool(out)
+                inter = inter.view(inter.size(0), -1)
+                inter_pred = self.fc_probes[i](inter)
+                intermediate_predictions.append(inter_pred)
+
+        # out = self.features(x)
+        # out = x
+        # out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return intermediate_predictions, out
+
+    def _make_layers(self, cfg):
+        layers = []
+        probe_layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                probe_layers += [nn.Linear(x, self.num_classes)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.ModuleList(layers), nn.ModuleList(probe_layers)
+
+
+def test():
     # net = VGG('VGG11')
 
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field

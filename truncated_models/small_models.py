@@ -249,7 +249,7 @@ class small_truncated_ResNetRF(nn.Module):
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points, classes=self.num_classes))
             self.in_planes = planes * block.expansion
-        return nn.ModuleList(*layers)
+        return nn.ModuleList(layers)
 
     def forward(self, x):
         intermediate_predictions = []
@@ -280,7 +280,7 @@ class small_truncated_ResNetRF(nn.Module):
         out = out.view(out.size(0), -1)
         # print("out:{}".format(out.size()))
         out = self.linear(out)
-        return intermediate_predictions,out
+        return intermediate_predictions, out
 
 
 class small_truncated_VGG_RF(nn.Module):
@@ -593,6 +593,10 @@ def test_the_load_and_forward_works():
         "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
         map_location="cpu")
     resnet_small.load_state_dict(state_dict["net"], strict=False)
+
+    x, y = next(iter(testloader))
+    intermediate_pred, final_pred = resnet_small(x[0].view(1, 3, 224, 224))
+    num_losses = len(intermediate_pred)
     accuracy = test_with_modified_network(resnet_small, False, testloader)
     print("The accuracy is: {}".format(accuracy))
 

@@ -384,14 +384,20 @@ def main(args):
     hrutils.record_config(args)
 
     filepath = "{}/{}_logits_probs.csv".format(args.job_dir, name)
+    x, y = next(iter(testloader))
+
+    intermediate_pred, final_pred = net(x[0].view(1, 3, x[0].size(-1), x[0].size(-1)))
+    num_losses = len(intermediate_pred)
     for epoch in range(args.epochs):
 
         loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
                                                                                      optimizer, scheduler=scheduler,
-                                                                                     logger=logger)
+                                                                                     logger=logger,
+                                                                                     number_losses=num_losses)
         loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val = validate_with_logger(epoch, valloader, net,
                                                                                              criterion, args,
-                                                                                             logger=logger)
+                                                                                             logger=logger,
+                                                                                             number_losses=num_losses)
 
         if Path(filepath).is_file():
 
@@ -492,6 +498,7 @@ if __name__ == '__main__':
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
     parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
+    # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
     # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
 
     args = parser.parse_args()
