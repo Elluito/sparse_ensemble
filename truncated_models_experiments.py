@@ -11,6 +11,7 @@ from truncated_models.small_models import test_with_modified_network
 import datetime
 
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def get_logger(file_path):
     logger = logging.getLogger('gal')
     log_format = '%(asctime)s | %(message)s'
