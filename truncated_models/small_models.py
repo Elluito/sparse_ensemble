@@ -241,7 +241,8 @@ class small_truncated_ResNetRF(nn.Module):
                 for param in module.parameters():
                     param.requires_grad = False
         linear_params = self.linear.parameters()
-        linear_params.requires_grad = False
+        for p in linear_params:
+            p.requires_grad = False
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
