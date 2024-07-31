@@ -496,5 +496,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.experiments == 1:
+    if args.experiment == 1:
         main(args)
