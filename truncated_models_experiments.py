@@ -475,8 +475,8 @@ if __name__ == '__main__':
     # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
     parser.add_argument('--job_dir', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where the output of the algorithm is going to be saved')
-    parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
-                        help='Location of the dataset', required=True)
+    # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+    #                     help='Location of the dataset', required=True)
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
     # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
     # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
