@@ -252,12 +252,12 @@ dataset=$2
 echo "model ${model} and dataset ${dataset}"
 
 #pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
-pruning_rates=("0.95")
+pruning_rates=("0.7")
 # For resnet18
 
 if [ "${3}" -eq 1 ]; then
 #    rf_levels=("0.001" "0.003" "0.005")
-    rf_levels=("0.003" "0.005")
+    rf_levels=("0.005")
 else
 
     rf_levels=("0.007" "0.008" "0.01")
