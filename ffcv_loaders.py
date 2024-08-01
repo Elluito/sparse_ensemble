@@ -41,9 +41,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
     small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
 
-    loaders = {}
 
-    # for name in ['train', 'test']:
 
     ########## train
 
