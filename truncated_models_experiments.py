@@ -107,6 +107,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
         batch_time.update(time.time() - end)
         end = time.time()
         print("Have finished batch {} out of {} with time processing {}".format(batch_index, num_iter, batch_time.avg))
+        torch.cuda.empty_cache()
         if batch_index % print_freq == 0:
             if logger:
                 logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
