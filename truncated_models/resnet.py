@@ -337,7 +337,8 @@ class ResNetRF(nn.Module):
 
 
 class TruncatedResNetRF(nn.Module):
-    def __init__(self, block: typing.Union[BasicBlock, Bottleneck], num_blocks, num_classes=10, multiplier=1,
+    def __init__(self, block: typing.Union[BasicBlock, TruncatedBottleneck], num_blocks, num_classes=10,
+                 multiplier=1,
                  fixed_points=None,
                  RF_level=1):
         super(TruncatedResNetRF, self).__init__()
@@ -348,6 +349,8 @@ class TruncatedResNetRF(nn.Module):
         self.relu = nn.ReLU()
         self.width_multiplier = multiplier
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        if self.rf_level == 0:
+            self.maxpool = nn.Identity()
         if self.rf_level == 1:
             self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
         if self.rf_level == 2:
@@ -398,6 +401,24 @@ class TruncatedResNetRF(nn.Module):
             self.in_planes = planes * block.expansion
         return nn.ModuleList(layers)
 
+    def set_fc_only_trainable(self):
+        modules_true = []
+        modules_false = []
+        for name, module in self.named_modules():
+            if not isinstance(module, nn.Linear):
+                modules_false.append(module)
+                for param in module.parameters():
+                    param.requires_grad = False
+            elif "linear" not in name and isinstance(module, nn.Linear):
+                modules_true.append(module)
+                for param in module.parameters():
+                    param.requires_grad = True
+        modules_false.append(self.linear)
+        linear_params = self.linear.parameters()
+        for p in linear_params:
+            p.requires_grad = False
+        return modules_true, modules_false
+
     def forward(self, x):
         intermediate_predictions = []
         out = self.relu(self.bn1(self.conv1(x)))
@@ -424,7 +445,7 @@ class TruncatedResNetRF(nn.Module):
         out = out.view(out.size(0), -1)
         # print("out:{}".format(out.size()))
         out = self.linear(out)
-        return intermediate_predictions,out
+        return intermediate_predictions, out
 
 
 def ResNet18(num_classes=10, fix_points=None):
@@ -454,6 +475,15 @@ def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     else:
         return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
                         multiplier=multiplier)
+
+
+def truncated_ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
+    if rf_level == 0:
+        return TruncatedResNetRF(TruncatedBottleneck, [3, 4, 6, 3], num_classes, fix_points)
+    else:
+        return TruncatedResNetRF(TruncatedBottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points,
+                                 RF_level=rf_level,
+                                 multiplier=multiplier)
 
 
 def ResNet24_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):

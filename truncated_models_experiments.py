@@ -318,11 +318,12 @@ def main(args):
             net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+            net = truncated_ResNet50_rf(num_classes=10, rf_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+            net = truncated_ResNet50_rf(num_classes=100, rf_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+            net = truncated_ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+
         if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -333,14 +334,14 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+            net = truncated_VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+            net =  truncated_VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net =   truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net =   truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)

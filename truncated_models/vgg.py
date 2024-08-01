@@ -196,6 +196,20 @@ class truncated_VGG_RF(nn.Module):
         out = self.classifier(out)
         return intermediate_predictions, out
 
+    def set_fc_only_trainable(self):
+        modules_false = []
+        modules_false.extend(self.features)
+        modules_false.append(self.classifier)
+        for m in self.features:
+            for p in m.parameters():
+                p.requires_grad = False
+        for probe in self.fc_probes:
+            for param in probe.parameters():
+                param.requires_grad = True
+        for param in self.classifier.parameters():
+            param.requires_grad = False
+        return self.fc_probes, modules_false
+
     def _make_layers(self, cfg):
         layers = []
         probe_layers = []
