@@ -13,6 +13,7 @@ import datetime
 import omegaconf
 import torch.optim as optim
 import pandas as pd
+from sparse_ensemble_utils import disable_bn
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
@@ -50,6 +51,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
         top5_list.append(top5)
 
     model.train()
+    disable_bn(model)
     batch = next(iter(train_loader))
     batch_size = batch[0].shape[0]
     # print_freq = ((len(train_loader) // batch_size) // 5)  # // batch_size
@@ -104,10 +106,11 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-        print("Have finished batch {} out of {}".format(batch_index, num_iter))
+        print("Have finished batch {} out of {} with time processing {}".format(batch_index, num_iter, batch_time.avg))
         if batch_index % print_freq == 0:
             if logger:
                 logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
+                logger.info("Average Time per batch {}, Average time loading:{}".format(batch_time.avg,data_time.avg))
             else:
                 print('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
             for i in range(len(losses_list)):
@@ -403,6 +406,7 @@ def main(args):
     modules_true, modules_false = net.set_fc_only_trainable()
 
     net.train()
+
     criterion = nn.CrossEntropyLoss()
     optimizers = []
     # schedulers = []
