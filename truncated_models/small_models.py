@@ -189,6 +189,7 @@ class small_truncated_ResNetRF(nn.Module):
         self.rf_level = RF_level
         self.relu = nn.ReLU()
         self.width_multiplier = multiplier
+        self.linear_probes = []
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         if self.rf_level == 1:
             self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
@@ -236,17 +237,22 @@ class small_truncated_ResNetRF(nn.Module):
         self.linear = nn.Linear(256 * block.expansion, num_classes)
 
     def set_fc_only_trainable(self):
+        modules_true = []
+        modules_false = []
         for name, module in self.named_modules():
             if not isinstance(module, nn.Linear):
+                modules_false.append(module)
                 for param in module.parameters():
                     param.requires_grad = False
             elif "linear" not in name and isinstance(module, nn.Linear):
+                modules_true.append(module)
                 for param in module.parameters():
                     param.requires_grad = True
-
+        modules_false.append(self.linear)
         linear_params = self.linear.parameters()
         for p in linear_params:
             p.requires_grad = False
+        return modules_true,modules_false
 
 
     def _make_layer(self, block, planes, num_blocks, stride):

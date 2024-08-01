@@ -33,7 +33,7 @@ def get_logger(file_path):
     return logger
 
 
-def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, scheduler, logger=None, number_losses=7):
+def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, schedulers=None, logger=None, number_losses=7):
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     data_time = hrutils.AverageMeter('Data', ':6.3f')
     losses_list = []
@@ -51,11 +51,11 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
     batch = next(iter(train_loader))
     batch_size = batch[0].shape[0]
     # print_freq = ((len(train_loader) // batch_size) // 5)  # // batch_size
-    print_freq = ((256*50) // batch_size)  # // batch_size
+    print_freq = ((256 * 50) // batch_size)  # // batch_size
     # print_freq = 1
     end = time.time()
 
-    for param_group in optimizer.param_groups:
+    for param_group in optimizers[0].param_groups:
         cur_lr = param_group['lr']
     if logger:
         logger.info('learning_rate: ' + str(cur_lr))
@@ -87,15 +87,17 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
             top5_list[i].update(prec5.item(), n)
 
         # compute gradient and do SGD step
-        optimizer.zero_grad()
+        for optimizer in optimizers:
+            optimizer.zero_grad()
         for i, loss in enumerate(all_loss):
+            #
+            # if i < len(all_loss) - 1:
+            #     loss.backward()
+            # else:
+            loss.backward()
 
-            if i < len(all_loss) - 1:
-                loss.backward(retain_graph=True)
-            else:
-                loss.backward()
-
-        optimizer.step()
+        for optimizer in optimizers:
+            optimizer.step()
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -103,9 +105,9 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
         print("Have finished batch {} out of {}".format(batch_index, num_iter))
         if batch_index % print_freq == 0:
             if logger:
-                logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
+                logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
             else:
-                print('Epoch[{0}]({1}/{2}):'.format(epoch, i, num_iter))
+                print('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
             for i in range(len(losses_list)):
                 loss_i = losses_list[i]
                 top1_i = top1_list[i]
@@ -120,7 +122,9 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizer, s
                         index=i,
                         loss=loss_i, top1=top1_i, top5=top5_i))
 
-    scheduler.step()
+    if schedulers:
+        for scheduler in schedulers:
+            scheduler.step()
 
     return losses_list, top1_list, top5_list
 
@@ -157,7 +161,7 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
             n = images.size(0)
 
             final_loss.update(criterion(final_logits, target).item(), n)
-            final_prec1, final_prec5 = hrutils.accuracy(final_logits, target, topk=(1, 5))
+            final_prec1, final_prec5 =  hrutils.accuracy(final_logits, target, topk=(1, 5))
 
             final_top1.update(final_prec1.item(), n)
             final_top5.update(final_prec5.item(), n)
@@ -388,12 +392,23 @@ def main(args):
             print("Loaded solution!")
 
     net = net.to(device)
-    net.set_fc_only_trainable()
+    x, y = next(iter(testloader))
+    x = x.to(device)
+    net.eval()
+    intermediate_pred, final_pred = net(x[0].view(1, 3, x[0].size(-1), x[0].size(-1)))
+    num_losses = len(intermediate_pred)
+    modules_true, modules_false = net.set_fc_only_trainable()
 
+    net.train()
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                          momentum=0.9, weight_decay=5e-4)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    optimizers = []
+    # schedulers = []
+    for module in modules_true:
+        optimizer = optim.Adam(module.parameters(), lr=args.lr, weight_decay=5e-3)
+        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+        optimizers.append(optimizer)
+        # schedulers.append(scheduler)
+
     now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     additional_path_name = "{model}/{dataset}/{RF_level}".format(model=args.model, dataset=args.dataset,
                                                                  RF_level=args.RF_level)
@@ -409,15 +424,11 @@ def main(args):
     name = "{}_{}".format(args.seedname1, now)
     args.job_dir = run_file_path
     hrutils.record_config(args)
-    x, y = next(iter(testloader))
-    x = x.to(device)
-    intermediate_pred, final_pred = net(x[0].view(1, 3, x[0].size(-1), x[0].size(-1)))
-    num_losses = len(intermediate_pred)
 
     for epoch in range(args.epochs):
 
         loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
-                                                                                     optimizer, scheduler=scheduler,
+                                                                                     optimizers,
                                                                                      logger=logger,
                                                                                      number_losses=num_losses)
         loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val, final_loss, final_top1, final_top5 = validate_with_logger(
@@ -493,6 +504,7 @@ def run_local_test():
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='Truncated experiments')
     # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
     #                     required=True)
@@ -521,10 +533,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
     parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
-    parser.add_argument('--epochs', default=200, type=int, help='Number of epochs to train')
+    parser.add_argument('--epochs', default=1, type=int, help='Number of epochs to train')
     # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
-    parser.add_argument('--num_workers', default=0, type=int, help='Number of workers to use')
-    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--batch_size', default=512, type=int, help='Batch size')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
 
@@ -549,7 +561,7 @@ if __name__ == '__main__':
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
     parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
-    parser.add_argument('--resume', action="store_true",help='Which device to perform the matrix multiplication')
+    parser.add_argument('--resume', action="store_true", help='Which device to perform the matrix multiplication')
     # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
     # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
 
@@ -557,5 +569,7 @@ if __name__ == '__main__':
 
     if args.experiment == 1:
         main(args)
+
+
 
     # run_local_test()
