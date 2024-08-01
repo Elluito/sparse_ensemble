@@ -15,7 +15,7 @@ CHECK_2="$HOME/checkpoints_arc4_2/checkpoints"
 #
 # Level 6  Models
 
-sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_lvl6_s_1.err" --output="logistic_probes_lvl6_s_1.out"  --job-name="logistic_probes_lvl6_s_1" slurm_truncated_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.3_rf_level_6_recording_200_ffcv_test_acc_57.83.pth" "seed_3" 6 "normal" "${HOME}/truncated_models_results" 50 "0.001" 1
+#sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_lvl6_s_1.err" --output="logistic_probes_lvl6_s_1.out"  --job-name="logistic_probes_lvl6_s_1" slurm_truncated_run.sh "resnet_small" "small_imagenet" "${CHECK_1}/resnet_small_normal_small_imagenet_seed.3_rf_level_6_recording_200_ffcv_test_acc_57.83.pth" "seed_3" 6 "normal" "${HOME}/truncated_models_results" 50 "0.001" 1
 
 # Level 7  Models
 
