@@ -564,7 +564,7 @@ if __name__ == '__main__':
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
                         type=str, help='FFCV val dataset')
     parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
-    parser.add_argument('--resume', action="store_true", help='Which device to perform the matrix multiplication')
+    parser.add_argument('--resume', action="store_true", help='Resuming training')
     # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
     # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
 
