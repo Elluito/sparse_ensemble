@@ -17,6 +17,7 @@ import pandas as pd
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
 
+
 def get_logger(file_path):
     logger = logging.getLogger('gal')
     log_format = '%(asctime)s | %(message)s'
@@ -33,7 +34,8 @@ def get_logger(file_path):
     return logger
 
 
-def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, schedulers=None, logger=None, number_losses=7):
+def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, schedulers=None, logger=None,
+                             number_losses=7):
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     data_time = hrutils.AverageMeter('Data', ':6.3f')
     losses_list = []
@@ -161,7 +163,7 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
             n = images.size(0)
 
             final_loss.update(criterion(final_logits, target).item(), n)
-            final_prec1, final_prec5 =  hrutils.accuracy(final_logits, target, topk=(1, 5))
+            final_prec1, final_prec5 = hrutils.accuracy(final_logits, target, topk=(1, 5))
 
             final_top1.update(final_prec1.item(), n)
             final_top5.update(final_prec5.item(), n)
@@ -336,12 +338,12 @@ def main(args):
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = truncated_VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net =  truncated_VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+            net = truncated_VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net =   truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net = truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
-            net =   truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net = truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
@@ -506,7 +508,6 @@ def run_local_test():
 
 if __name__ == '__main__':
 
-
     parser = argparse.ArgumentParser(description='Truncated experiments')
     # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
     #                     required=True)
@@ -571,7 +572,5 @@ if __name__ == '__main__':
 
     if args.experiment == 1:
         main(args)
-
-
 
     # run_local_test()
