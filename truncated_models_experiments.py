@@ -15,7 +15,7 @@ import torch.optim as optim
 import pandas as pd
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
+print("Device: {}".format(device))
 
 def get_logger(file_path):
     logger = logging.getLogger('gal')
@@ -504,6 +504,7 @@ def run_local_test():
 
 
 if __name__ == '__main__':
+
 
     parser = argparse.ArgumentParser(description='Truncated experiments')
     # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
