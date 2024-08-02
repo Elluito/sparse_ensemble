@@ -486,7 +486,7 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, "weight"))
-            print(name)
+            # print(name)
 
     return modules
 
@@ -2281,10 +2281,10 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
     if type == "global":
-        print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
+        # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
-        print("Length of weigths to prune:{}".format(len(weights))
-              )
+        # print("Length of weigths to prune:{}".format(len(weights))
+        #       )
         if criterion == "l1":
             prune.global_unstructured(
                 weights,
@@ -11063,6 +11063,7 @@ def explore_models_shapes():
 
 
 def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "", version="dense"):
+    print("Started stichastic function")
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
     evaluation_set = select_eval_set(cfg, eval_set)
@@ -11123,8 +11124,9 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
     labels = []
 
     ##########  first soup and then prune ############
-
+    print("soup and then prune")
     for i in range(number_of_samples):
+        print("Sample: {}".format(i+1))
 
         number_of_models = 0
         sum_vector = None
@@ -11172,8 +11174,9 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
 
     ##########  first prune and then soup union ############
-
+    print("Prune and then soup union ")
     for i in range(number_of_samples):
+        print("Sample: {}".format(i+1))
         pruned_vector = None
         number_of_models = 0
         for n in range(N):
@@ -11247,7 +11250,10 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     ##########  first prune and then soup INTERSECTION ############
 
+
+    print("Prune and then soup intersection")
     for i in range(number_of_samples):
+        print("Sample: {}".format(i+1))
         pruned_vector = None
         mask_vector = None
         number_of_models = 0
@@ -11345,92 +11351,6 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
                                                                           name,
                                                                           cfg.sigma,cfg.pruner),
         index=False)
-
-    #
-    # # torch.cuda.empty_cache()
-    #
-    # # print("Stocastic pruning performance")
-    #
-    # # stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-    #
-    # # print("Time for test: {}".format(t1 - t0))
-    #
-    #
-    # # pruned_performance.append(stochastic_pruned_performance)
-    # # stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
-    # # del current_model
-    # # torch.cuda.empty_cache()
-    #
-    # # len(pruned performance)-1 because the first one is the pruned original
-    #
-    # labels.extend(["stochastic pruned"] * (len(pruned_performance)))
-    #
-    # # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
-    # # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
-    # # index 0 of pruned_performance.
-    #
-    # assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
-    #                                                f"{len(labels)}!={len(pruned_performance)}"
-    #
-    # ranked_index = np.flip(np.argsort(pruned_performance))
-    # index_of_pruned_original = list(ranked_index).index(0)
-    # all_index = np.ones(len(ranked_index), dtype=bool)
-    # all_index[index_of_pruned_original] = False
-    # ranked_index = ranked_index[all_index]
-    # pruned_performance = np.array(pruned_performance)
-    # stochastic_dense_performances = np.array(stochastic_dense_performances)
-    # result = time.localtime(time.time())
-    #
-    # del pop
-    #
-    # cutoff = original_performance - 2
-
-    ################################# Plotting The Comparison #########################################################
-    #
-    # fig, ax = plt.subplots(figsize=fig_size,layout="compressed")
-    #
-    # original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
-    #
-    # deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
-    # plt.xlabel("Ranking Index", fontsize=fs)
-    # plt.ylabel("Accuracy", fontsize=fs)
-    # stochastic_models_points_dense = []
-    # stochastic_models_points_pruned = []
-    # transfer_mask_models_points = []
-    # stochastic_with_deterministic_mask_models_points = []
-    # for i, element in enumerate(pruned_performance[ranked_index]):
-    #     if labels[ranked_index[i]] == "sto mask transfer":
-    #         sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
-    #         transfer_mask_models_points.append(sto_transfer_point)
-    #     elif labels[ranked_index[i]] == "det mask transfer":
-    #         det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
-    #         stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
-    #     else:
-    #         pruned_point = ax.scatter(i, element, c="steelblue", marker="x")
-    #         stochastic_models_points_pruned.append(pruned_point)
-    # for i, element in enumerate(stochastic_dense_performances[ranked_index]):
-    #     if i == index_of_pruned_original or element == 1:
-    #         continue
-    #         # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-    #     else:
-    #         dense_point = ax.scatter(i, element, c="c", marker="1")
-    #         stochastic_models_points_dense.append(dense_point)
-    #
-    # plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
-    #             deterministic_pruning_line],
-    #            ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
-    #            scatterpoints=1,
-    #            numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
-    # plt.grid(ls='--', alpha=0.5)
-    # plt.savefig(
-    #     f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
-    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-    #     f"_{cfg.population}_{eval_set}_{name}.pdf")
-    # plt.savefig(
-    #     f"data/figures/_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
-    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-    #     f"_{cfg.population}_{eval_set}_{name}.pgf")
-
 
 if __name__ == '__main__':
     # MDS_projection_plot()
