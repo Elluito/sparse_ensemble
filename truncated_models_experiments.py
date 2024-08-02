@@ -452,6 +452,7 @@ def main(args):
                 log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
                 log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
+            log_dict["Final test accuracy"] = final_top1
 
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, mode="a", header=False, index=False)
@@ -462,6 +463,7 @@ def main(args):
                 log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
                 log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
+            log_dict["Final test accuracy"] = final_top1
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, sep=",", index=False)
 
