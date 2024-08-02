@@ -252,7 +252,7 @@ dataset=$2
 echo "model ${model} and dataset ${dataset}"
 
 #pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
-pruning_rates=("0.7" "0.8" "0.9" "0.95")
+pruning_rates=("0.8")
 
 # For resnet18
 
@@ -299,7 +299,7 @@ done
 
 #run_soup_stochastic resnet50 cifar10 1
 #run_soup_stochastic resnet50 cifar100 1
-run_soup_stochastic vgg19 cifar10 1
+#run_soup_stochastic vgg19 cifar10 1
 run_soup_stochastic vgg19 cifar100 1
 #run_soup_stochastic vgg19 cifar100 1
 
