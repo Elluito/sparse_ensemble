@@ -14,6 +14,7 @@ import omegaconf
 import torch.optim as optim
 import pandas as pd
 from sparse_ensemble_utils import disable_bn
+import gc
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
@@ -36,7 +37,7 @@ def get_logger(file_path):
 
 
 def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, schedulers=None, logger=None,
-                             number_losses=7):
+                             number_losses=7, is_ffcv=False):
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     data_time = hrutils.AverageMeter('Data', ':6.3f')
     losses_list = []
@@ -56,6 +57,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
     batch_size = batch[0].shape[0]
     # print_freq = ((len(train_loader) // batch_size) // 5)  # // batch_size
     print_freq = ((256 * 50) // batch_size)  # // batch_size
+    del batch_size
     # print_freq = 1
     end = time.time()
 
@@ -69,8 +71,9 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
     num_iter = len(train_loader)
     for batch_index, (images, target) in enumerate(train_loader):
         data_time.update(time.time() - end)
-        images = images.cuda()
-        target = target.cuda()
+        if not is_ffcv:
+            images = images.cuda()
+            target = target.cuda()
 
         # compute outputy
         intermideate_logits, final_logits = model(images)
@@ -107,11 +110,14 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
         batch_time.update(time.time() - end)
         end = time.time()
         print("Have finished batch {} out of {} with time processing {}".format(batch_index, num_iter, batch_time.avg))
+
         torch.cuda.empty_cache()
+        gc.collect()
+
         if batch_index % print_freq == 0:
             if logger:
                 logger.info('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
-                logger.info("Average Time per batch {}, Average time loading:{}".format(batch_time.avg,data_time.avg))
+                logger.info("Average Time per batch {}, Average time loading:{}".format(batch_time.avg, data_time.avg))
             else:
                 print('Epoch[{0}]({1}/{2}):'.format(epoch, batch_index, num_iter))
             for i in range(len(losses_list)):
@@ -209,6 +215,8 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
         print("(Final output) Loss  {loss.avg:.4f} Prec@1(1,5) {top1.avg:.2f}, {top5.avg:.2f}".format(
             loss=final_loss, top1=final_top1, top5=final_top5))
     # logger.info(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+    torch.cuda.empty_cache()
+    gc.collect()
     #             .format(top1=top1, top5=top5))
 
     return losses_list, top1_list, top5_list, final_loss, final_top1, final_top5
@@ -438,7 +446,8 @@ def main(args):
         loss_list_epoch, top1_list_epoch, top5_list_epoch = train_probes_with_logger(epoch, trainloader, net, criterion,
                                                                                      optimizers,
                                                                                      logger=logger,
-                                                                                     number_losses=num_losses)
+                                                                                     number_losses=num_losses,
+                                                                                     is_ffcv=args.ffcv)
         loss_list_epoch_val, top1_list_epoch_val, top5_list_epoch_val, final_loss, final_top1, final_top5 = validate_with_logger(
             epoch, testloader, net,
             criterion, args,
@@ -546,7 +555,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=1, type=int, help='Number of epochs to train')
     # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--batch_size', default=256, type=int, help='Batch size')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
 
