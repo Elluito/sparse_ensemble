@@ -278,7 +278,7 @@ for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 t
 #qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
 #echo "Entered in the loop!"
 
-  sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.err" --output="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.out" --job-name="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}" slurm_run_ffcv.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}" "${pruners[$idxC]}"
+  sbatch --nodes=1 --time=00:30:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.err" --output="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.out" --job-name="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}" slurm_run_ffcv.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}" "${pruners[$idxC]}"
 
 done
 done
