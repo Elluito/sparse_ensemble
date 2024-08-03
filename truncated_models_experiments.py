@@ -426,8 +426,9 @@ def main(args):
         # schedulers.append(scheduler)
 
     now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-    additional_path_name = "{model}/{dataset}/{RF_level}".format(model=args.model, dataset=args.dataset,
-                                                                 RF_level=args.RF_level)
+    additional_path_name = "{model}/{dataset}/{RF_level}_{batch_size}".format(model=args.model, dataset=args.dataset,
+                                                                              RF_level=args.RF_level,
+                                                                              batch_size=batch_size)
 
     # additional_path_name = "{model}/{dataset}/{RF_level}/{now}_{seed}".format(model=args.model, dataset=args.dataset,
     #                                                                           RF_level=args.RF_level, now=now,
