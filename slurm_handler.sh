@@ -268,16 +268,16 @@ pruners=("global")
 pruners_max=${#pruners[@]}                                  # Take the length of that array
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-echo "About to enter the for loops"
+#echo "About to enter the for loops"
 for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-echo "Entered the pruning rate loop"
+#echo "Entered the pruning rate loop"
 for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-echo "Entered the level for loop"
+#echo "Entered the level for loop"
 for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 to length
-  echo "Entered the pruners loop"
+#  echo "Entered the pruners loop"
 #qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
 #echo "Entered in the loop!"
-
+  echo "${rf_levels[$idxB]} ${pruning_rates[$idxA]} ${pruners[$idxC]}"
   sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.err" --output="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.out" --job-name="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}" slurm_run_ffcv.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}" "${pruners[$idxC]}"
 
 done
