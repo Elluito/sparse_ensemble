@@ -11453,7 +11453,7 @@ if __name__ == '__main__':
     parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
                         required=False)
     ############# this is for pr and sigma optim ###############################
-    parser.add_argument('-nw', '--num_workers', type=int, default=4, help='Number of workers', required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=0, help='Number of workers', required=False)
     parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
                         required=False)
 
