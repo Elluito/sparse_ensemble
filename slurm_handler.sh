@@ -264,7 +264,7 @@ else
     rf_levels=("0.007" "0.008" "0.01")
 fi
 #pruners=("global" "lamp")
-pruners=("global")
+pruners=("lamp")
 pruners_max=${#pruners[@]}                                  # Take the length of that array
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
