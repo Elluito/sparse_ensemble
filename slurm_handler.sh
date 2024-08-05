@@ -46,7 +46,9 @@ grad_clip=0.4
 
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="test_small_resnet_lv_5_small_imagenet_no_ffcv.err" --gres=gpu:1 --output="test_small_resnet_lv_5_small_imagenet_no_ffcv.output"  --job-name="test_small_resnet_lv_5_small_imagenet_no_ffcv" slurm_run.sh "resnet_small" "small_imagenet" 4 5 "normal" 200 "test_no_ffcv" 1 0
 
-#sbatch --array=1-4 --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="task_small_resnet_lv_3_small_imagenet_ffcv.err" --gres=gpu:1 --output="task_small_resnet_lv_3_small_imagenet_ffcv.output"  --job-name="task_small_resnet_lv_3_small_imagenet_ffcv" slurm_run_ffcv.sh "resnet_small" "small_imagenet" 4 3 "normal" 200 "recording_200_ffcv" 1 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_10_small_imagenet_no_ffcv.err" --gres=gpu:1 --output="small_resnet_lv_10_small_imagenet_no_ffcv.output"  --job-name="task_small_resnet_lv_10_small_imagenet_no_ffcv" slurm_run.sh "resnet_small" "small_imagenet" 4 10 "normal" 200 "no_recording_200_no_ffcv" 1 1 #"/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_6_small_imagenet_no_ffcv.err" --gres=gpu:1 --output="small_resnet_lv_6_small_imagenet_no_ffcv.output"  --job-name="small_resnet_lv_6_small_imagenet_no_ffcv" slurm_run.sh "resnet_small" "small_imagenet" 4 6 "normal" 200 "no_recording_200_no_ffcv" 1 1 #"/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+
 #sbatch --array=1-4 --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_4_small_imagenet_no_ffcv.err" --gres=gpu:1 --output="small_resnet_lv_4_small_imagenet_no_ffcv.output"  --job-name="small_resnet_lv_4_small_imagenet_no_ffcv" slurm_run.sh "resnet_small" "small_imagenet" 4 4 "normal" 200 "recording_200_no_ffcv" 1 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="small_resnet_lv_5_small_imagenet_no_ffcv.err" --gres=gpu:1 --output="small_resnet_lv_5_small_imagenet_no_ffcv.output"  --job-name="small_resnet_lv_5_small_imagenet_no_ffcv" slurm_run.sh "resnet_small" "small_imagenet" 4 5 "normal" 200 "recording_200_no_ffcv" 1 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
 #sbatch --array=1-4 --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="task_small_resnet_lv_6_small_imagenet_ffcv.err" --gres=gpu:1 --output="task_small_resnet_lv_6_small_imagenet_ffcv.output"  --job-name="task_small_resnet_lv_6_small_imagenet_ffcv" slurm_run_ffcv.sh "resnet_small" "small_imagenet" 4 6 "normal" 200 "recording_200_ffcv" 1 1 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
@@ -245,52 +247,52 @@ grad_clip=0.4
 #####################################################################################
 
 
-run_soup_stochastic() {
-model=$1
-dataset=$2
-
-echo "model ${model} and dataset ${dataset}"
-
-#pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
-
-pruning_rates=("0.6")
-
-# For resnet18
-
-if [ "${3}" -eq 1 ]; then
-
-#    rf_levels=("0.001" "0.003" "0.005")
-
-    rf_levels=("0.01")
-else
-
-    rf_levels=("0.007" "0.008" "0.01")
-fi
-
-pruners=("global" "lamp")
-
-#pruners=("lamp")
-
-pruners_max=${#pruners[@]}                                  # Take the length of that array
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
-#echo "About to enter the for loops"
-for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
-#echo "Entered the pruning rate loop"
-for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
-#echo "Entered the level for loop"
-for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 to length
-#  echo "Entered the pruners loop"
-#qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
-#echo "Entered in the loop!"
-  echo "${rf_levels[$idxB]} ${pruning_rates[$idxA]} ${pruners[$idxC]}"
-  sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.err" --output="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.out" --job-name="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}" slurm_run_ffcv.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}" "${pruners[$idxC]}"
-
-done
-done
-done
-
-}
+#run_soup_stochastic() {
+#model=$1
+#dataset=$2
+#
+#echo "model ${model} and dataset ${dataset}"
+#
+##pruning_rates=("0.5" "0.6" "0.7" "0.8" "0.9" "0.95")
+#
+#pruning_rates=("0.6")
+#
+## For resnet18
+#
+#if [ "${3}" -eq 1 ]; then
+#
+##    rf_levels=("0.001" "0.003" "0.005")
+#
+#    rf_levels=("0.01")
+#else
+#
+#    rf_levels=("0.007" "0.008" "0.01")
+#fi
+#
+#pruners=("global" "lamp")
+#
+##pruners=("lamp")
+#
+#pruners_max=${#pruners[@]}                                  # Take the length of that array
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#number_pruning_rates=${#pruning_rates[@]}                            # Take the length of that array
+##echo "About to enter the for loops"
+#for ((idxA=0; idxA<number_pruning_rates; idxA++)); do                # iterate idxA from 0 to length
+##echo "Entered the pruning rate loop"
+#for ((idxB=0; idxB<levels_max; idxB++));do              # iterate idxB from 0 to length
+##echo "Entered the level for loop"
+#for ((idxC=0; idxC<pruners_max; idxC++));do              # iterate idxB from 0 to length
+##  echo "Entered the pruners loop"
+##qsub -l coproc_v100=1 -l h_rt=02:00:00 -N "${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}" run.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}"
+##echo "Entered in the loop!"
+#  echo "${rf_levels[$idxB]} ${pruning_rates[$idxA]} ${pruners[$idxC]}"
+#  sbatch --nodes=1 --time=01:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.err" --output="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}.out" --job-name="${model}_${dataset}_soup_idea_${rf_levels[$idxB]}_${pruning_rates[$idxA]}_${pruners[$idxC]}" slurm_run_ffcv.sh "${pruning_rates[$idxA]}" "${model}" "${rf_levels[$idxB]}" "${dataset}" "${pruners[$idxC]}"
+#
+#done
+#done
+#done
+#
+#}
 #
 #run_soup_stochastic resnet18 cifar10 0
 ##run_soup_stochastic resnet18 cifar100 0
@@ -304,7 +306,7 @@ done
 
 
 #run_soup_stochastic resnet50 cifar10 1
-run_soup_stochastic resnet50 cifar100 1
+#run_soup_stochastic resnet50 cifar100 1
 #run_soup_stochastic vgg19 cifar10 1
 #run_soup_stochastic vgg19 cifar100 1
 #run_soup_stochastic vgg19 cifar100 1

@@ -919,6 +919,7 @@ def iterative_RF_experiments(args):
 
 
 def main(args):
+
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
@@ -1194,6 +1195,7 @@ def main(args):
     # print("Last learning rate:{}".format(lr_list[-1]))
 
     for epoch in range(start_epoch, start_epoch + args.epochs):
+
         print(epoch)
         t0 = time.time()
         train_acc = train(epoch)
@@ -1246,6 +1248,7 @@ def main(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
     parser.add_argument('--epochs', default=200, type=int, help='epochs to train')
