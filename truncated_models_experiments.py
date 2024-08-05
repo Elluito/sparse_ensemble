@@ -142,6 +142,7 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
 
 
 def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None, number_losses=7):
+
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     # losses = hrutils.AverageMeter('Loss', ':.4e')
     # top1 = hrutils.AverageMeter('Acc@1', ':6.2f')
@@ -223,6 +224,7 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -465,7 +467,7 @@ def main(args):
                 log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
                 log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
-            log_dict["Final test accuracy"] = final_top1
+            log_dict["Final test accuracy"] = final_top1.avg
 
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, mode="a", header=False, index=False)
@@ -476,7 +478,7 @@ def main(args):
                 log_dict["Prob {} train accuracy".format(i)] = top1_acc.avg
             for i, top1_acc in enumerate(top1_list_epoch_val):
                 log_dict["Prob {} test accuracy".format(i)] = top1_acc.avg
-            log_dict["Final test accuracy"] = final_top1
+            log_dict["Final test accuracy"] = final_top1.avg
             df = pd.DataFrame(log_dict)
             df.to_csv(filepath, sep=",", index=False)
 
