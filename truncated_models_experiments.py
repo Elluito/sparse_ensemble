@@ -426,9 +426,12 @@ def main(args):
         # schedulers.append(scheduler)
 
     now = datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-    additional_path_name = "{model}/{dataset}/{RF_level}_{batch_size}".format(model=args.model, dataset=args.dataset,
+    ffcv_string = "no_ffcv"
+    if args.ffcv:
+        ffcv_string = "ffcv"
+    additional_path_name = "{model}/{dataset}/{RF_level}_{batch_size}_{ffcv_use}".format(model=args.model, dataset=args.dataset,
                                                                               RF_level=args.RF_level,
-                                                                              batch_size=batch_size)
+                                                                              batch_size=batch_size,ffcv_use=ffcv_string)
 
     # additional_path_name = "{model}/{dataset}/{RF_level}/{now}_{seed}".format(model=args.model, dataset=args.dataset,
     #                                                                           RF_level=args.RF_level, now=now,
@@ -556,7 +559,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=1, type=int, help='Number of epochs to train')
     # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--batch_size', default=64, type=int, help='Batch size')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
 
