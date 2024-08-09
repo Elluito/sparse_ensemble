@@ -29,7 +29,6 @@
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 #module load pytorch
 
-which python
 
 #python train_CIFAR10.py --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5
 
@@ -75,11 +74,15 @@ which python
 #python hao_models_pruning_test.py --workers 32
 export LD_LIBRARY_PATH=""
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
+export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
 #unset GOMP_CPU_AFFINITY
 #unset KMP_AFFINITY
+echo $PYTHONPATH
 python -c "import os; print(os.environ)"
 python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 
+
+which python
 
 
 if [ "${10}" -eq 1 ]; then
