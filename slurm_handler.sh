@@ -1,5 +1,8 @@
 #!/bin/bash
 #
+#####################################################################################
+################################ #######################
+#####################################################################################
 grad_clip=0.4
 #sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="ekfac_optim_rf_1_cifar10_rs_gc_${grad_clip}.err" --output="ekfac_optim_rf_1_cifar10_rs_gc_${grad_clip}.output"  --job-name="ekfac_optim_rf_1_cifar10_rs_gc_${grad_clip}" slurm_2nd_order.sh "cifar10" "resnet50" "1" "normal" "ekfac_optim_hyper_100_gc_${grad_clip}" "1" grad_clip
 #sbatch --nodes=1 --time=24:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="ekfac_optim_rf_2_cifar10_rs_gc_${grad_clip}.err" --output="ekfac_optim_rf_2_cifar10_rs_gc_${grad_clip}.output" --job-name="ekfac_optim_rf_2_cifar10_rs_gc_${grad_clip}" slurm_2nd_order.sh "cifar10" "resnet50" "2" "normal" "ekfac_optim_hyper_100_gc_${grad_clip}" "1" grad_clip

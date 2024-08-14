@@ -90,7 +90,7 @@ python -c "import os; print(os.environ)"
 
 # Without FFCV
 
-python train_CIFAR10.py --batch_size 128 --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/additional_checkpoints" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9
+python train_CIFAR10.py --record_time --record_flops --batch_size 128 --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --save_folder "${10}"
 
 #############################################################
 #     One shot with specific pruning rate results
