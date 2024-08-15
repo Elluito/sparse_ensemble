@@ -14,6 +14,8 @@ record=$5
 save_folder=$6
 epochs=$7
 ffcv=$8
+ffcv_train=$9
+ffcv_val="${10}"
 
 echo "model ${model} and dataset ${dataset}"
 
@@ -67,7 +69,7 @@ done
 }
 
 save_folder="${HOME}/original_paper_checkpoints"
-run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0"
-run_paper_training "vgg19" "tiny_imagenet" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0"
-run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0"
-run_paper_training "resnet50" "tiny_imagenet" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0"
+run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+#run_paper_training "vgg19" "tiny_imagenet" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+#run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+#run_paper_training "resnet50" "tiny_imagenet" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
