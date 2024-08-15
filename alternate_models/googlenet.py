@@ -179,17 +179,18 @@ def test_rf():
     from main import get_features_only_until_block_layer
 
     from torchvision.models import googlenet,mobilenet_v2
+    from mobilenetv1 import MobileNetV1_RF
 
     pytorch_googlenet = googlenet()
-    pytorch_mobilenet = mobilenet_v2()
+    pytorch_mobilenet = MobileNetV1_RF()
 
     net1 = GoogLeNet()
 
     # net2=()
 
-    save_onnx(pytorch_mobilenet,"pytorch_mobilenet")
-    save_onnx(pytorch_googlenet,"pytorch_googlenet")
-    save_onnx(net1,"local_googlenet")
+    # save_onnx(pytorch_mobilenet,"pytorch_mobilenet")
+    # save_onnx(pytorch_googlenet,"pytorch_googlenet")
+    # save_onnx(net1,"local_googlenet")
 
     # blocks=[0,1,2,3,4]
     # print("RF of pytorch implementation")
@@ -198,9 +199,9 @@ def test_rf():
     # le_rf = receptivefield(pytorch_dense_net, size)
     # print(le_rf.rfsize)
 
-    print("RF of pytorch implementation of Mobilenet")
-    get_features_only_until_block_layer_googlenet(net1, block=4, net_type=1)
-    get_features_only_until_block_layer_googlenet_pytorch(pytorch_googlenet, block=4, net_type=1)
+    print("RF of pytorch implementation of Mobilenetv1")
+    # get_features_only_until_block_layer_googlenet(net1, block=4, net_type=1)
+    # get_features_only_until_block_layer_googlenet_pytorch(pytorch_googlenet, block=4, net_type=1)
     mobilenet_features(pytorch_mobilenet)
 
     size = [1, 3, 500, 500]
