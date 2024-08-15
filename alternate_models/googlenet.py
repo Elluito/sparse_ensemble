@@ -103,5 +103,120 @@ def test():
     x = torch.randn(1,3,32,32)
     y = net(x)
     print(y.size())
+def get_features_only_until_block_layer_googlenet(net, block=2, net_type=0):
+    def features_only(self, x):
+        out = self.pre_layers(x)
+        out = self.a3(out)
+        out = self.b3(out)
+        out = self.maxpool(out)
+        out = self.a4(out)
+        out = self.b4(out)
+        out = self.c4(out)
+        out = self.d4(out)
+        out = self.e4(out)
+        out = self.maxpool(out)
+        out = self.a5(out)
+        out = self.b5(out)
+        return out
+    net.forward = features_only.__get__(net)  # bind method
+def get_features_only_until_block_layer_googlenet_pytorch(net, block=2, net_type=0):
+    def features_only(self, x):
+        x = self.conv1(x)
+        # N x 64 x 112 x 112
+        x = self.maxpool1(x)
+        # N x 64 x 56 x 56
+        x = self.conv2(x)
+        # N x 64 x 56 x 56
+        x = self.conv3(x)
+        # N x 192 x 56 x 56
+        x = self.maxpool2(x)
 
+        # N x 192 x 28 x 28
+        x = self.inception3a(x)
+        # N x 256 x 28 x 28
+        x = self.inception3b(x)
+        # N x 480 x 28 x 28
+        x = self.maxpool3(x)
+        # N x 480 x 14 x 14
+        x = self.inception4a(x)
+        # N x 512 x 14 x 14
+        aux1 = None
+        if self.aux1 is not None:
+            if self.training:
+                aux1 = self.aux1(x)
+
+        x = self.inception4b(x)
+        # N x 512 x 14 x 14
+        x = self.inception4c(x)
+        # N x 512 x 14 x 14
+        x = self.inception4d(x)
+        # N x 528 x 14 x 14
+        aux2 = None
+        if self.aux2 is not None:
+            if self.training:
+                aux2 = self.aux2(x)
+
+        x = self.inception4e(x)
+        # N x 832 x 14 x 14
+        x = self.maxpool4(x)
+        # N x 832 x 7 x 7
+        x = self.inception5a(x)
+        # N x 832 x 7 x 7
+        x = self.inception5b(x)
+        # N x 1024 x 7 x 7
+        return x
+
+    net.forward = features_only.__get__(net)  # bind method
+def mobilenet_features(net,block=2):
+
+    def features_only(self, x):
+        out=self.features(x)
+        return out
+    net.forward = features_only.__get__(net)  # bind method
+def test_rf():
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+
+    from main import get_features_only_until_block_layer
+
+    from torchvision.models import googlenet,mobilenet_v2
+
+    pytorch_googlenet = googlenet()
+    pytorch_mobilenet = mobilenet_v2()
+
+    net1 = GoogLeNet()
+
+    # net2=()
+
+    save_onnx(pytorch_mobilenet,"pytorch_mobilenet")
+    save_onnx(pytorch_googlenet,"pytorch_googlenet")
+    save_onnx(net1,"local_googlenet")
+
+    # blocks=[0,1,2,3,4]
+    # print("RF of pytorch implementation")
+    # get_features_only_until_block_layer_densenet_pytorch(pytorch_dense_net)
+    # size = [1, 3, 900, 900]
+    # le_rf = receptivefield(pytorch_dense_net, size)
+    # print(le_rf.rfsize)
+
+    print("RF of pytorch implementation of Mobilenet")
+    get_features_only_until_block_layer_googlenet(net1, block=4, net_type=1)
+    get_features_only_until_block_layer_googlenet_pytorch(pytorch_googlenet, block=4, net_type=1)
+    mobilenet_features(pytorch_mobilenet)
+
+    size = [1, 3, 500, 500]
+    le_rf = receptivefield(pytorch_mobilenet, size)
+    print(le_rf.rfsize)
+def save_onnx(net, name: str = ""):
+    input_names = ['Image']
+
+    output_names = ['y_hat']
+
+    size = [2, 3, 32, 32]
+    dummy_input = torch.randn(size)
+    torch.onnx.export(net, dummy_input,
+                      f'/home/luisaam/PycharmProjects/sparse_ensemble/onnx_models/onnx_models_{name}.onnx',
+                      input_names=input_names,
+                      output_names=output_names)
+if __name__ == '__main__':
+    test_rf()
 # test()

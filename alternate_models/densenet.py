@@ -142,14 +142,14 @@ def test_rf():
     blocks=[0,1,2,3,4]
     print("RF of pytorch implementation")
     get_features_only_until_block_layer_densenet_pytorch(pytorch_dense_net)
-    size = [1, 3, 224, 224]
+    size = [1, 3, 2000, 2000]
     le_rf = receptivefield(pytorch_dense_net, size)
     print(le_rf.rfsize)
     for block in blocks:
         print("Block {}".format(block))
         get_features_only_until_block_layer_densenet(net1, block=block, net_type=1)
 
-        size = [1, 3, 224, 224]
+        size = [1, 3, 2000, 2000]
 
         le_rf = receptivefield(net1, size)
         print(le_rf.rfsize)
