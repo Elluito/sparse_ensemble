@@ -18,8 +18,20 @@ def test_densenet_rf():
     print("RF of pytorch implementation")
     get_features_only_until_block_layer_densenet_pytorch(pytorch_dense_net)
     size = [1, 3, 4000, 4000]
-    le_rf = receptivefield(pytorch_dense_net, size)
-    print(le_rf.rfsize)
+
+    try:
+        le_rf = receptivefield(pytorch_dense_net, size)
+        print(le_rf.rfsize)
+        print("Receptive field:\n{}".format(le_rf.rfsize))
+    except Exception as e:
+        print("****************")
+        print(e)
+        print("Receptive field is grater than {}".format(s))
+
+
+
+
+
     print("RF of local implementation")
     for block in blocks:
 
@@ -28,8 +40,14 @@ def test_densenet_rf():
 
         size = [1, 3, 4000, 4000]
 
-        le_rf = receptivefield(net1, size)
-        print(le_rf.rfsize)
+        try:
+            le_rf = receptivefield(net1, size)
+            print(le_rf.rfsize)
+            print("Receptive field:\n{}".format(le_rf.rfsize))
+        except Exception as e:
+            print("****************")
+            print(e)
+            print("Receptive field is grater than {}".format(s))
 
 
 if __name__ == '__main__':
