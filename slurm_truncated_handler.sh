@@ -132,8 +132,8 @@ echo "model ${model} and dataset ${dataset}"
 #echo "train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}"
 #  sbatch --nodes=1 --time=10:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.err" --output="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.out" --job-name="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv" slurm_original_paper_run.sh
 
-#name="${model}_${dataset}_lvl${RF_level}"
-sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_${name}.err" --output="logistic_probes_${name}.out"  --job-name="logistic_probes_${name}" slurm_truncated_run.sh "${model}" "${dataset}" "${solution}" "${name}" "${RF_level}" "normal" "${save_folder}" "${epochs}" "${lr}" "${ffcv}"
+name_job="${model}_${dataset}_lvl${RF_level}"
+sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_${name_job}.err" --output="logistic_probes_${name_job}.out"  --job-name_job="logistic_probes_${name_job}" slurm_truncated_run.sh "${model}" "${dataset}" "${solution}" "${name}" "${RF_level}" "normal" "${save_folder}" "${epochs}" "${lr}" "${ffcv}"
 
 #done
 #done
