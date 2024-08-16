@@ -177,7 +177,7 @@ class TruncatedBottleneck(nn.Module):
         out = self.relu(out)
 
         inter3 = self.avgpool(out)
-        inter3 = inter1.view(inter3.size(0), -1)
+        inter3 = inter3.view(inter3.size(0), -1)
         pred3 = self.fc3(inter3)
         return [pred1, pred2, pred3], out
 

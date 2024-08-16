@@ -181,17 +181,19 @@ class truncated_VGG_RF(nn.Module):
         #     except:
         #
         #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        prob_indx = 0
         for i, m in enumerate(self.features):
             out = m(out)
             if isinstance(m, nn.ReLU):
                 inter = self.avgpool(out)
                 inter = inter.view(inter.size(0), -1)
-                inter_pred = self.fc_probes[i](inter)
+                inter_pred = self.fc_probes[prob_indx](inter)
                 intermediate_predictions.append(inter_pred)
+                prob_indx +=1
 
         # out = self.features(x)
         # out = x
-        # out = self.avgpool(out)
+        out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)
         return intermediate_predictions, out

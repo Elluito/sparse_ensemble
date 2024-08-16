@@ -54,9 +54,9 @@ fi
       thing="${pathname/"${list_to_use[$idxA]}"/$replace_string}"
       echo "${thing}"
 #      echo "${directory}/${pathname} ==> ${directory}/${thing}"
-        mv -i "${directory}/${pathname}" "${directory}/${thing}"
+#        mv -i "${directory}/${pathname}" "${directory}/${thing}"
     done
   done
 }
 
-run_change_of_name $1 "resnet_small" "small_imagenet" $2 $3
+run_change_of_name $1 $2 $3 $4 $5

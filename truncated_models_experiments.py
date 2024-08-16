@@ -142,7 +142,6 @@ def train_probes_with_logger(epoch, train_loader, model, criterion, optimizers, 
 
 
 def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None, number_losses=7):
-
     batch_time = hrutils.AverageMeter('Time', ':6.3f')
     # losses = hrutils.AverageMeter('Loss', ':.4e')
     # top1 = hrutils.AverageMeter('Acc@1', ':6.2f')
@@ -224,7 +223,6 @@ def validate_with_logger(epoch, val_loader, model, criterion, args, logger=None,
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -431,9 +429,11 @@ def main(args):
     ffcv_string = "no_ffcv"
     if args.ffcv:
         ffcv_string = "ffcv"
-    additional_path_name = "{model}/{dataset}/{RF_level}_{batch_size}_{ffcv_use}".format(model=args.model, dataset=args.dataset,
-                                                                              RF_level=args.RF_level,
-                                                                              batch_size=batch_size,ffcv_use=ffcv_string)
+    additional_path_name = "{model}/{dataset}/{RF_level}_{batch_size}_{ffcv_use}".format(model=args.model,
+                                                                                         dataset=args.dataset,
+                                                                                         RF_level=args.RF_level,
+                                                                                         batch_size=batch_size,
+                                                                                         ffcv_use=ffcv_string)
 
     # additional_path_name = "{model}/{dataset}/{RF_level}/{now}_{seed}".format(model=args.model, dataset=args.dataset,
     #                                                                           RF_level=args.RF_level, now=now,
@@ -505,94 +505,97 @@ def main(args):
 
 def run_local_test():
     cfg = omegaconf.DictConfig({
-        "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
+        # "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
+        # "solution": "/home/luisaam/checkpoints/vgg19_normal_cifar10_1723720946.9104598_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth",
+        "solution": "/home/luisaam/checkpoints/resnet50_normal_cifar10_1723722961.8540442_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth",
         "modeltype1": "normal",
         "seedname1": "_seed_8",
-        "RF_level": 5,
+        "RF_level": 2,
         "epochs": 1,
         "ffcv": 0,
         "ffcv_val": "",
         "ffcv_train": "",
         "batch_size": 64,
-        "model": "resnet_small",
-        "dataset": "small_imagenet",
+        "model": "resnet50",
+        "dataset": "cifar10",
         "num_workers": 0,
-        "input_resolution": 224,
+        "input_resolution": 32,
         "width": 1,
         "name": "no_name",
         "job_dir": "truncated_results_local",
         "lr": 0.1,
         "resume": False,
+        "eval_size": 5000,
 
     })
+
     main(cfg)
 
 
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(description='Truncated experiments')
-    # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
+    # parser = argparse.ArgumentParser(description='Truncated experiments')
+    # # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
+    # #                     required=True)
+    #
+    # parser.add_argument('-s', '--solution', type=str, default="", help='',
+    #                     required=False)
+    #
+    # parser.add_argument('-sn1', '--seedname1', type=str, default="", help='',
     #                     required=True)
+    # parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
+    #                     required=False)
+    # parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
+    #                     required=False)
+    # parser.add_argument('-e', '--experiment', type=int, default=1, help='',
+    #                     required=False)
+    # parser.add_argument('-mt1', '--modeltype1', type=str, default="alternative", help='',
+    #                     required=False)
+    # parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
+    #                     required=False)
+    # parser.add_argument('-ft1', '--filetype1', type=str, default="npy", help='',
+    #                     required=False)
+    # parser.add_argument('-ft2', '--filetype2', type=str, default="npy", help='',
+    #                     required=False)
+    # parser.add_argument('-t', '--train', type=int, default=1, help='',
+    #                     required=False)
+    #
+    # parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
+    # parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
+    # parser.add_argument('--epochs', default=1, type=int, help='Number of epochs to train')
+    # # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
+    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    # parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    # parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
+    # parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+    #
+    # parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
+    # # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
+    # parser.add_argument('--job_dir', default="/nobackup/sclaam/checkpoints", type=str,
+    #                     help='Location where the output of the algorithm is going to be saved')
+    # # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+    # #                     help='Location of the dataset', required=True)
+    # parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    # # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
+    # # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
+    # parser.add_argument('--input_resolution', default=224, type=int,
+    #                     help='Input Resolution for Small ImageNet')
+    # parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+    #
+    # parser.add_argument('--ffcv_train',
+    #                     default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+    #                     type=str, help='FFCV train dataset')
+    #
+    # parser.add_argument('--ffcv_val',
+    #                     default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+    #                     type=str, help='FFCV val dataset')
+    # parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
+    # parser.add_argument('--resume', action="store_true", help='Resuming training')
+    # # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
+    # # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
+    #
+    # args = parser.parse_args()
+    #
+    # if args.experiment == 1:
+    #     main(args)
 
-    parser.add_argument('-s', '--solution', type=str, default="", help='',
-                        required=False)
-
-    parser.add_argument('-sn1', '--seedname1', type=str, default="", help='',
-                        required=True)
-    parser.add_argument('-sn2', '--seedname2', type=str, default="", help='',
-                        required=False)
-    parser.add_argument('-li', '--layer_index', type=int, default=0, help='',
-                        required=False)
-    parser.add_argument('-e', '--experiment', type=int, default=1, help='',
-                        required=False)
-    parser.add_argument('-mt1', '--modeltype1', type=str, default="alternative", help='',
-                        required=False)
-    parser.add_argument('-mt2', '--modeltype2', type=str, default="alternative", help='',
-                        required=False)
-    parser.add_argument('-ft1', '--filetype1', type=str, default="npy", help='',
-                        required=False)
-    parser.add_argument('-ft2', '--filetype2', type=str, default="npy", help='',
-                        required=False)
-    parser.add_argument('-t', '--train', type=int, default=1, help='',
-                        required=False)
-
-    parser.add_argument('--RF_level', default=3, type=int, help='Receptive field of model 1')
-    parser.add_argument('--lr', default=0.1, type=float, help='Learning rate for the fine-tuning')
-    parser.add_argument('--epochs', default=1, type=int, help='Number of epochs to train')
-    # parser.add_argument('--RF_level2', default=3, type=int, help='Receptive field of model 2')
-    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    parser.add_argument('--dataset', default="cifar10", type=str, help='Dataset to use [cifar10,cifar100]')
-    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-
-    parser.add_argument('--name', '-n', default="no_name", help='name of the loss files, usually the seed name')
-    # parser.add_argument('--eval_set', '-es', default="val", help='On which set to performa the calculations')
-    parser.add_argument('--job_dir', default="/nobackup/sclaam/checkpoints", type=str,
-                        help='Location where the output of the algorithm is going to be saved')
-    # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
-    #                     help='Location of the dataset', required=True)
-    parser.add_argument('--width', default=1, type=int, help='Width of the model')
-    # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
-    # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
-    parser.add_argument('--input_resolution', default=224, type=int,
-                        help='Input Resolution for Small ImageNet')
-    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
-
-    parser.add_argument('--ffcv_train',
-                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
-                        type=str, help='FFCV train dataset')
-
-    parser.add_argument('--ffcv_val',
-                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
-                        type=str, help='FFCV val dataset')
-    parser.add_argument('--device', default="cpu", type=str, help='Which device to perform the matrix multiplication')
-    parser.add_argument('--resume', action="store_true", help='Resuming training')
-    # parser.add_argument('--num_losses', default=7, type=int, help='How many intermediate predictions there are')
-    # parser.add_argument('--subtract_mean', default=1, type=int, help='Subtract mean of representations')
-
-    args = parser.parse_args()
-
-    if args.experiment == 1:
-        main(args)
-
-    # run_local_test()
+    run_local_test()
