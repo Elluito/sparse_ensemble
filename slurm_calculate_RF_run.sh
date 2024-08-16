@@ -23,7 +23,7 @@
 #SBATCH --mail-type=ALL
 
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
@@ -82,22 +82,4 @@ export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/
 #unset KMP_AFFINITY
 
 echo $PYTHONPATH
-python -c "import os; print(os.environ)"
-python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
-
-
-which python
-
-#python alternate_models/densenet.py
-
-
-
-if [ "${10}" -eq 1 ]; then
-
-python  truncated_models_experiments.py --ffcv --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --job_dir $7 --epochs $8 --lr $9
-
-else
-
-python truncated_models_experiments.py --experiment 1 --model $1 --dataset $2 --solution $3 --seedname1 $4 --RF_level $5 --modeltype1 $6 --job_dir $7 --epochs $8 --lr $9
-
-fi
+python test_receptive_field.py
