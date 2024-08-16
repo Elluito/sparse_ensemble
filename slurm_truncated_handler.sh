@@ -166,9 +166,9 @@ rf_levels=("1" "2" "3" "4")
 solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
 names=("seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
-run_paper_truncated "vgg19" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-done
+#for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+#run_paper_truncated "vgg19" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#done
 
 
 ## RESNET50
@@ -179,9 +179,15 @@ solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}"
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+#for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+#run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#done
+idxA=2
 run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-done
+idxA=3
+run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+idxA=4
+run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
 # Tiny IMagenet
 ## vgg
 
