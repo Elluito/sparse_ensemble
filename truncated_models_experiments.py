@@ -575,7 +575,7 @@ if __name__ == '__main__':
     # parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
     #                     help='Location of the dataset', required=True)
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
-    # parser.add_argument('--eval_size', default=1000, type=int, help='How many images to use in the calculation')
+    parser.add_argument('--eval_size', default=5000, type=int, help='How many images to use in the calculation')
     # parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for loading data')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for Small ImageNet')
