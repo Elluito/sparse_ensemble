@@ -17,10 +17,12 @@ def test_densenet_rf():
     blocks = [0, 1, 2, 3, 4]
     print("RF of pytorch implementation")
     get_features_only_until_block_layer_densenet_pytorch(pytorch_dense_net)
-    size = [1, 3, 2000, 2000]
+    size = [1, 3, 4000, 4000]
     le_rf = receptivefield(pytorch_dense_net, size)
     print(le_rf.rfsize)
+    print("RF of local implementation")
     for block in blocks:
+
         print("Block {}".format(block))
         get_features_only_until_block_layer_densenet(net1, block=block, net_type=1)
 
