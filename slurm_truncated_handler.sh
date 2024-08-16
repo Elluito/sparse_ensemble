@@ -132,7 +132,7 @@ echo "model ${model} and dataset ${dataset}"
 #echo "train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}"
 #  sbatch --nodes=1 --time=10:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.err" --output="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.out" --job-name="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv" slurm_original_paper_run.sh
 
-name="${model}_${dataset}_lvl${RF_level}"
+#name="${model}_${dataset}_lvl${RF_level}"
 sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="logistic_probes_${name}.err" --output="logistic_probes_${name}.out"  --job-name="logistic_probes_${name}" slurm_truncated_run.sh "${model}" "${dataset}" "${solution}" "${name}" "${RF_level}" "normal" "${save_folder}" "${epochs}" "${lr}" "${ffcv}"
 
 #done
@@ -143,22 +143,41 @@ sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL
 
 # CIFAR 10
 ## vgg
-save_folder="~/save_folder"
+save_folder="${HOME}/truncated_models_results"
+sol1vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_cifar10_seed.0_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth
+sol2vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_cifar10_seed.0_rf_level_2_recording_200_no_ffcv_test_acc_90.98.pth
+sol3vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_cifar10_seed.0_rf_level_3_recording_200_no_ffcv_test_acc_88.13.pth
+sol4vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_cifar10_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_86.12.pth
+# Resnet50 CIFAR10
+sol1rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_1_recording_200_no_ffcv_test_acc_94.99.pth
+sol2rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth
+sol3rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_3_recording_200_no_ffcv_test_acc_92.3.pth
+sol4rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_90.91.pth
+sol5rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_9_recording_200_no_ffcv_test_acc_73.45.pth
+sol6rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_10_recording_200_no_ffcv_test_acc_53.77.pth
+sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_11_recording_200_no_ffcv_test_acc_50.06.pth
+
+
+
+
+
 
 rf_levels=("1" "2" "3" "4")
-solutions=("sol1" "sol2" "sol3" "sol4")
-names=("name1" "name2" "name3" "name4")
+solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
+names=("seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 run_paper_truncated "vgg19" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
 done
+
+
 ## RESNET50
 
-save_folder="~/save_folder"
 
 rf_levels=("1" "2" "3" "4" "9" "10" "11")
-solutions=("sol1" "sol2" "sol3" "sol4" "sol5" "sol6" "sol7")
-names=("name1" "name2" "name3" "name4" )
+solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol4rs50}" "${sol4rs50}" "${sol4rs50}")
+#names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
+names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
