@@ -3,14 +3,14 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=00:09:00
+#SBATCH --time=02:00:00
 
 # set name of job
-#SBATCH --job-name=pytorch_test
+#SBATCH --job-name=RF_pytorch_test
 
-#SBATCH --error=pytorch_test.err
+#SBATCH --error=RF_pytorch_test.err
 
-#SBATCH --output=pytorch_test.output
+#SBATCH --output=RF_pytorch_test.output
 
 # set partition (devel, small, big)
 
