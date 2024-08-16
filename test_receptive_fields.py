@@ -24,7 +24,7 @@ def test_densenet_rf():
         print("Block {}".format(block))
         get_features_only_until_block_layer_densenet(net1, block=block, net_type=1)
 
-        size = [1, 3, 3000, 3000]
+        size = [1, 3, 4000, 4000]
 
         le_rf = receptivefield(net1, size)
         print(le_rf.rfsize)
