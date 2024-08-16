@@ -175,7 +175,7 @@ done
 
 
 rf_levels=("1" "2" "3" "4" "9" "10" "11")
-solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol4rs50}" "${sol4rs50}" "${sol4rs50}")
+solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}" "${sol6rs50}" "${sol7rs50}")
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
