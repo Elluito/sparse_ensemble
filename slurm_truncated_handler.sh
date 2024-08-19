@@ -162,10 +162,10 @@ sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resn
 
 
 
-rf_levels=("1" "2" "3" "4")
-solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
-names=("seed_0" "seed_0" "seed_0" "seed_0")
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#rf_levels=("1" "2" "3" "4")
+#solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
+#names=("seed_0" "seed_0" "seed_0" "seed_0")
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 #run_paper_truncated "vgg19" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
 #done
@@ -174,21 +174,70 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 ## RESNET50
 
 
-rf_levels=("1" "2" "3" "4" "9" "10" "11")
-solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}" "${sol6rs50}" "${sol7rs50}")
+#rf_levels=("1" "2" "3" "4" "9" "10" "11")
+#solutions=("${sol1rs50}" "${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}" "${sol6rs50}" "${sol7rs50}")
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
-names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 #run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
 #done
-idxA=2
-run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=3
-run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=4
-run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-# Tiny IMagenet
+#idxA=2
+#run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=3
+#run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=4
+#run_paper_truncated "resnet50" "cifar10" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+
+
+
+# Tiny IMagenet ###################################################################
+
 ## vgg
+sol1vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_tiny_imagenet_seed.0_rf_level_1_recording_200_no_ffcv_test_acc_60.95.pth
+sol2vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_tiny_imagenet_seed.0_rf_level_2_recording_200_no_ffcv_test_acc_53.21.pth
+sol3vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_tiny_imagenet_seed.0_rf_level_3_recording_200_no_ffcv_test_acc_43.97.pth
+sol4vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_tiny_imagenet_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_39.34.pth
+
+
+rf_levels=("1" "2" "3" "4")
+solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
+names=("seed_0" "seed_0" "seed_0" "seed_0")
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+
+run_paper_truncated "vgg19" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+
+done
+
+
+
+
+
+
+
 
 ## RESNET50
+sol2rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_2_recording_200_no_ffcv_test_acc_62.78.pth
+sol3rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_3_recording_200_no_ffcv_test_acc_59.46.pth
+sol4rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_55.59.pth
+sol5rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_9_recording_200_no_ffcv_test_acc_36.0.pth
+sol6rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_10_recording_200_no_ffcv_test_acc_33.18.pth
+sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_11_recording_200_no_ffcv_test_acc_25.44.pth
+
+
+
+
+rf_levels=("2" "3" "4" "9" "10" "11")
+
+solutions=("${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}" "${sol6rs50}" "${sol7rs50}")
+
+names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
+
+levels_max=${#rf_levels[@]}                                  # Take the length of that array
+
+for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+
+run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+
+done

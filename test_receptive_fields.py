@@ -26,7 +26,7 @@ def test_densenet_rf():
     except Exception as e:
         print("****************")
         print(e)
-        print("Receptive field is grater than {}".format(s))
+        print("Receptive field is grater than {}".format(4000))
 
 
 
@@ -47,7 +47,7 @@ def test_densenet_rf():
         except Exception as e:
             print("****************")
             print(e)
-            print("Receptive field is grater than {}".format(s))
+            print("Receptive field is grater than {}".format(4000))
 
 
 if __name__ == '__main__':
