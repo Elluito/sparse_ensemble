@@ -1,0 +1,30 @@
+2024-08-16-16:37:55
+
+solution: /jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_cifar10_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_86.12.pth
+seedname1: seed_0
+seedname2: 
+layer_index: 0
+experiment: 1
+modeltype1: normal
+modeltype2: alternative
+filetype1: npy
+filetype2: npy
+train: 1
+RF_level: 4
+lr: 0.001
+epochs: 50
+num_workers: 4
+batch_size: 128
+dataset: cifar10
+model: vgg19
+name: no_name
+job_dir: /jmain02/home/J2AD014/mtc03/lla98-mtc03/truncated_models_results/vgg19/cifar10/4_128_no_ffcv
+width: 1
+eval_size: 5000
+input_resolution: 224
+ffcv: False
+ffcv_train: /jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv
+ffcv_val: /jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv
+device: cpu
+resume: False
+
