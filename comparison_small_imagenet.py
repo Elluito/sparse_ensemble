@@ -46,7 +46,7 @@ def test_images(args):
         i = 0
         for img2 in imgs_ffcv:
             pil_image = F.to_pil_image(img2)
-            pil_image.save(f"{i}_normal.png")
+            pil_image.save(f"{i}_ffcv.png")
             i += 1
         np.save("normal_images.npy", imgs1.numpy())
 
