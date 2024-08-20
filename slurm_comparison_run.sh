@@ -26,4 +26,8 @@
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
+export LD_LIBRARY_PATH=""
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
+export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
+
 python compare_small_imagenet.py
