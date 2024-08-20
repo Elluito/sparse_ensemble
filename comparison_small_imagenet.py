@@ -71,7 +71,7 @@ def main():
         "model": "resnet50",
         "dataset": "cifar10",
         "num_workers": 0,
-        "input_resolution": 32,
+        "input_resolution": 224,
         "width": 1,
         "name": "no_name",
         "job_dir": "truncated_results_local",

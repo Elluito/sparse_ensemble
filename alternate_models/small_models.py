@@ -115,6 +115,58 @@ class small_Bottleneck(nn.Module):
         return out
 
 
+class small_deep_Bottleneck(nn.Module):
+    expansion = 4
+
+    def __init__(self, in_planes, planes, stride=1, fixed_points=None):
+        super(small_deep_Bottleneck, self).__init__()
+
+        self.relu = nn.ReLU()
+        if fixed_points is None:
+            self.conv1_1x1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
+            self.bn1 = nn.BatchNorm2d(planes)
+            self.conv2 = nn.Conv2d(planes, self.expansion * planes, kernel_size=3,
+                                   stride=stride, padding=1, bias=False)
+            self.bn2 = nn.BatchNorm2d(self.expansion * planes)
+            # self.conv3 = nn.Conv2d(planes, self.expansion *
+            #                        planes, kernel_size=1, bias=False)
+            # self.bn3 = nn.BatchNorm2d(self.expansion * planes)
+
+            self.shortcut = nn.Sequential()
+            if stride != 1 or in_planes != self.expansion * planes:
+                self.shortcut = nn.Sequential(
+                    nn.Conv2d(in_planes, self.expansion * planes,
+                              kernel_size=1, stride=stride, bias=False),
+                    nn.BatchNorm2d(self.expansion * planes)
+                )
+
+        if fixed_points is not None:
+
+            self.conv1 = curves.Conv2d(in_planes, planes, kernel_size=1, bias=False, fix_points=fixed_points)
+            self.bn1 = curves.BatchNorm2d(planes, fix_points=fixed_points)
+            self.conv2 = curves.Conv2d(planes, planes, kernel_size=3,
+                                       stride=stride, padding=1, bias=False, fix_points=fixed_points)
+            self.bn2 = curves.BatchNorm2d(planes, fix_points=fixed_points)
+            self.conv3 = curves.Conv2d(planes, self.expansion *
+                                       planes, kernel_size=1, bias=False, fix_points=fixed_points)
+            self.bn3 = curves.BatchNorm2d(self.expansion * planes, fix_points=fixed_points)
+
+            self.shortcut = nn.Sequential()
+            if stride != 1 or in_planes != self.expansion * planes:
+                self.shortcut = nn.Sequential(
+                    curves.Conv2d(in_planes, self.expansion * planes,
+                                  kernel_size=1, stride=stride, bias=False, fix_points=fixed_points),
+                    curves.BatchNorm2d(self.expansion * planes, fix_points=fixed_points)
+                )
+
+    def forward(self, x):
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        # out = self.bn3(self.conv3(out))
+        out = out + self.shortcut(x)
+        out = self.relu(out)
+        return out
+
 class ResNet(nn.Module):
     def __init__(self, block: typing.Union[small_BasicBlock, small_Bottleneck], num_blocks, num_classes=10,
                  fixed_points=None):
@@ -242,7 +294,7 @@ class small_ResNetRF(nn.Module):
         out = self.linear(out)
         return out
 
-
+class Deep_small_ResNet_RF
 class small_VGG_RF(nn.Module):
     def __init__(self, vgg_name, num_classes=10, RF_level=0):
         super(small_VGG_RF, self).__init__()
