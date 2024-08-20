@@ -1,3 +1,4 @@
+#!/bin/bash
 # set the number of nodes
 #SBATCH --nodes=1
 
