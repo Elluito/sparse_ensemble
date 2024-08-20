@@ -50,7 +50,7 @@ def test_images(args):
             i += 1
         np.save("normal_images.npy", imgs1.numpy())
 
-        np.save("ffcv_images.npy", imgs_ffcv.numpy())
+        np.save("ffcv_images.npy", imgs_ffcv.cpu().numpy())
 
         break
 
