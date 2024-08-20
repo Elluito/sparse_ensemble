@@ -215,10 +215,10 @@ names=("seed_0" "seed_0" "seed_0" "seed_0")
 #done
 #
 
-idxA=2
-run_paper_truncated "vgg19" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=3
-run_paper_truncated "vgg19" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=2
+#run_paper_truncated "vgg19" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=3
+#run_paper_truncated "vgg19" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
 
 
 
@@ -251,11 +251,11 @@ names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 
 
 
-idxA=1
+idxA=0
 run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=2
-run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=3
-run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
-idxA=4
-run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=2
+#run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=3
+#run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
+#idxA=4
+#run_paper_truncated "resnet50" "tiny_imagenet" "${rf_levels[$idxA]}" "${names[$idxA]}" "${solutions[$idxA]}" "${save_folder}" "50" "0.001" "0"
