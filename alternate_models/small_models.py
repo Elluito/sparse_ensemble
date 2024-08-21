@@ -127,13 +127,12 @@ class small_deep_Bottleneck(nn.Module):
             self.bn1 = nn.BatchNorm2d(planes)
             self.conv2_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
             self.bn2 = nn.BatchNorm2d(planes)
-            self.conv3_3x3 = nn.Conv2d(planes, planes, kernel_size=3, bias=False)
+            self.conv3_3x3 = nn.Conv2d(planes, planes, kernel_size=3,stride=stride,padding=1,bias=False)
             self.bn3 = nn.BatchNorm2d(planes)
             self.conv4_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
             self.bn4 = nn.BatchNorm2d(planes)
 
-            self.conv5_1x1 = nn.Conv2d(planes, self.expansion * planes, kernel_size=1,
-                                   stride=stride, padding=1, bias=False)
+            self.conv5_1x1 = nn.Conv2d(planes, self.expansion * planes, kernel_size=1, bias=False)
             self.bn5 = nn.BatchNorm2d(self.expansion * planes)
             # self.conv3 = nn.Conv2d(planes, self.expansion *
             #                        planes, kernel_size=1, bias=False)
@@ -168,9 +167,9 @@ class small_deep_Bottleneck(nn.Module):
 
     def forward(self, x):
         out = self.relu(self.bn1(self.conv1_1x1(x)))
-        out = self.relu(self.bn1(self.conv2_1x1(x)))
-        out = self.relu(self.bn1(self.conv3_3x3(x)))
-        out = self.relu(self.bn1(self.conv4_1x1(x)))
+        out = self.relu(self.bn1(self.conv2_1x1(out)))
+        out = self.relu(self.bn1(self.conv3_3x3(out)))
+        out = self.relu(self.bn1(self.conv4_1x1(out)))
         out = self.bn5(self.conv5_1x1(out))
         # out = self.bn3(self.conv3(out))
         out = out + self.shortcut(x)
@@ -357,7 +356,7 @@ class Deep_small_ResNetRF(nn.Module):
         # bn2 = nn.BatchNorm2d(1 * 256)
         # self.layer3 = nn.Sequential(*[conv2, bn2])
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-        # self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
         self.linear = nn.Linear(256 * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
@@ -613,9 +612,9 @@ def test_models():
         # loss.backward()
         # print(y_resnet)
 
-        get_output_until_block_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 1200, 1200))
-        print("Receptive field of ResNet Level {}".format(i))
+        get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
+        resnet_rf = receptivefield(resnet_net, (1, 3, 700, 700))
+        print("Receptive field of deep small ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
 
 
