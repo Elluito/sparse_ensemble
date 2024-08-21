@@ -557,6 +557,19 @@ def get_output_until_block_small_resnet(net, block, net_type=1):
 
     net.forward = features_only.__get__(net)  # bind method
 
+def get_output_until_block_deep_small_resnet(net, block, net_type=1):
+    def features_only(self, x):
+        # x = self.features(x)
+        out = self.relu(self.bn1(self.conv1(x)))
+        # if self.rf_level != 1:
+        out = self.maxpool(out)
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        return out
+
+    net.forward = features_only.__get__(net)  # bind method
 
 def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
@@ -584,7 +597,7 @@ def test_models():
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
-        resnet_net = small_ResNetRF(small_BasicBlock, num_blocks=[1, 1, 1, 1], num_classes=10, RF_level=i)
+        resnet_net = deep_small_ResNet_rf(10,RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']

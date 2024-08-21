@@ -18,11 +18,6 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
                                          shuffle_test=False, shuffle_val=True):
-    paths = {
-        'train': train_dataset,
-        'test': val_dataset
-
-    }
 
     if num_workers == 0:
         num_workers = 1
@@ -49,11 +44,11 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     image_pipeline: List[Operation] = [
         decoder,
-        RandomHorizontalFlip(),
+        # RandomHorizontalFlip(),
         ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
+        # NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, torch.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -104,7 +99,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
+        # NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
     ]
 
     label_pipeline = [
@@ -148,4 +143,41 @@ if __name__ == '__main__':
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
         ,
-        128, 4, testsize=1000)
+        512, 4, testsize=1000)
+    mean = 0.0
+    for images, _ in trainloader:
+        batch_samples = images.size(0)
+        images = images.view(batch_samples, images.size(1), -1)
+        mean += images.mean(2).sum(0)
+    mean = mean / len(trainloader.dataset)
+
+    var = 0.0
+    for images, _ in trainloader:
+        batch_samples = images.size(0)
+        images = images.view(batch_samples, images.size(1), -1)
+        var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
+    std = torch.sqrt(var / (len(trainloader.dataset) * 224 * 224))
+    print("Mean for train loader")
+    print("{}".format(mean))
+    print("STD for train loader")
+    print("{}".format(std))
+
+    mean = 0.0
+    for images, _ in testloader:
+        batch_samples = images.size(0)
+        images = images.view(batch_samples, images.size(1), -1)
+        mean += images.mean(2).sum(0)
+    mean = mean / len(testloader.dataset)
+
+    var = 0.0
+    for images, _ in testloader:
+        batch_samples = images.size(0)
+        images = images.view(batch_samples, images.size(1), -1)
+        var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
+    std = torch.sqrt(var / (len(testloader.dataset) * 224 * 224))
+
+    print("\n Test loader ####################")
+    print("Mean for test loader")
+    print("{}".format(mean))
+    print("STD for test loader")
+    print("{}".format(std))
