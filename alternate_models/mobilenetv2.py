@@ -78,7 +78,7 @@ class MobileNetV2_cifar(nn.Module):
 class MobileNetV2_imagenet(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
     cfg = [(1,  16, 1, 1),
-           (6,  24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
+           (6,  24, 2, 2),  # NOTE: change stride 2 -> 1 for CIFAR10  | | change stride 1 -> 2 for ImageNet
            (6,  32, 3, 2),
            (6,  64, 4, 2),
            (6,  96, 3, 1),
@@ -113,8 +113,17 @@ class MobileNetV2_imagenet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+def get_features_mobilenetv2(net):
+    def features_only(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layers(out)
+        out = F.relu(self.bn2(self.conv2(out)))
+        return out
+
+    net.forward = features_only.__get__(net)  # bind method
 
 
+    net.forward = features_only.__get__(net)  # bind method
 def test():
     net = MobileNetV2_cifar()
     x = torch.randn(2,3,32,32)

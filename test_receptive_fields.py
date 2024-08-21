@@ -125,5 +125,5 @@ def test_RF_densenet40():
         le_rf = receptivefield(net1, size)
         print(le_rf.rfsize)
 if __name__ == '__main__':
-    test_deep_RF_models()
+    # test_deep_RF_models()
     test_RF_densenet40()
