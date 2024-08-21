@@ -7,7 +7,7 @@ import math
 
 norm_mean, norm_var = 0.0, 1.0
 
-cov_cfg=[(3*i+1) for i in range(12*3+2+1)]
+cov_cfg = [(3 * i + 1) for i in range(12 * 3 + 2 + 1)]
 
 
 class DenseBasicBlock(nn.Module):
@@ -32,6 +32,7 @@ class DenseBasicBlock(nn.Module):
 
         return out
 
+
 class Transition(nn.Module):
     def __init__(self, inplanes, outplanes):
         super(Transition, self).__init__()
@@ -50,17 +51,17 @@ class Transition(nn.Module):
 
 class DenseNet(nn.Module):
 
-    def __init__(self, compress_rate, depth=40, block=DenseBasicBlock,
+    def __init__(self, compress_rate, depth=40, block=DenseBasicBlock, RF_level=1,
                  dropRate=0, num_classes=10, growthRate=12, compressionRate=1):
         super(DenseNet, self).__init__()
-        self.compress_rate=compress_rate
+        self.compress_rate = compress_rate
 
         assert (depth - 4) % 3 == 0, 'depth should be 3n+4'
         n = (depth - 4) // 3 if 'DenseBasicBlock' in str(block) else (depth - 4) // 6
 
         transition = Transition
 
-        self.covcfg=cov_cfg
+        self.covcfg = cov_cfg
 
         self.growthRate = growthRate
         self.dropRate = dropRate
@@ -69,11 +70,11 @@ class DenseNet(nn.Module):
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, padding=1,
                                bias=False)
 
-        self.dense1 = self._make_denseblock(block, n, compress_rate[1:n+1])
-        self.trans1 = self._make_transition(transition, compressionRate, compress_rate[n+1])
-        self.dense2 = self._make_denseblock(block, n, compress_rate[n+2:2*n+2])
-        self.trans2 = self._make_transition(transition, compressionRate, compress_rate[2*n+2])
-        self.dense3 = self._make_denseblock(block, n, compress_rate[2*n+3:3*n+3])
+        self.dense1 = self._make_denseblock(block, n, compress_rate[1:n + 1])
+        self.trans1 = self._make_transition(transition, compressionRate, compress_rate[n + 1])
+        self.dense2 = self._make_denseblock(block, n, compress_rate[n + 2:2 * n + 2])
+        self.trans2 = self._make_transition(transition, compressionRate, compress_rate[2 * n + 2])
+        self.dense3 = self._make_denseblock(block, n, compress_rate[2 * n + 3:3 * n + 3])
         self.bn = nn.BatchNorm2d(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
         self.avgpool = nn.AvgPool2d(8)
@@ -92,14 +93,15 @@ class DenseNet(nn.Module):
     def _make_denseblock(self, block, blocks, compress_rate):
         layers = []
         for i in range(blocks):
-            layers.append(block(self.inplanes, outplanes=int(self.growthRate*(1-compress_rate[i])), dropRate=self.dropRate))
-            self.inplanes += int(self.growthRate*(1-compress_rate[i]))
+            layers.append(
+                block(self.inplanes, outplanes=int(self.growthRate * (1 - compress_rate[i])), dropRate=self.dropRate))
+            self.inplanes += int(self.growthRate * (1 - compress_rate[i]))
 
         return nn.Sequential(*layers)
 
     def _make_transition(self, transition, compressionRate, compress_rate):
         inplanes = self.inplanes
-        outplanes = int(math.floor(self.inplanes*(1-compress_rate) // compressionRate))
+        outplanes = int(math.floor(self.inplanes * (1 - compress_rate) // compressionRate))
         self.inplanes = outplanes
         return transition(inplanes, outplanes)
 
@@ -122,5 +124,106 @@ class DenseNet(nn.Module):
         return x
 
 
-def densenet_40(compress_rate):
-    return DenseNet(compress_rate=compress_rate, depth=40, block=DenseBasicBlock)
+class DenseNetRF(nn.Module):
+
+    def __init__(self, compress_rate, depth=40, block=DenseBasicBlock, RF_level=1,
+                 dropRate=0, num_classes=10, growthRate=12, compressionRate=1):
+        super(DenseNetRF, self).__init__()
+        self.compress_rate = compress_rate
+
+        assert (depth - 4) % 3 == 0, 'depth should be 3n+4'
+        n = (depth - 4) // 3 if 'DenseBasicBlock' in str(block) else (depth - 4) // 6
+
+        self.rf_level = RF_level
+        if self.rf_level == 0:
+            self.maxpool = nn.Identity()
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+        transition = Transition
+
+        self.covcfg = cov_cfg
+
+        self.growthRate = growthRate
+        self.dropRate = dropRate
+
+        self.inplanes = growthRate * 2
+        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, padding=1,
+                               bias=False)
+
+        self.dense1 = self._make_denseblock(block, n, compress_rate[1:n + 1])
+        self.trans1 = self._make_transition(transition, compressionRate, compress_rate[n + 1])
+        self.dense2 = self._make_denseblock(block, n, compress_rate[n + 2:2 * n + 2])
+        self.trans2 = self._make_transition(transition, compressionRate, compress_rate[2 * n + 2])
+        self.dense3 = self._make_denseblock(block, n, compress_rate[2 * n + 3:3 * n + 3])
+        self.bn = nn.BatchNorm2d(self.inplanes)
+        self.relu = nn.ReLU(inplace=True)
+        self.avgpool = nn.AvgPool2d(8)
+
+        self.fc = nn.Linear(self.inplanes, num_classes)
+
+        # Weight initialization
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def _make_denseblock(self, block, blocks, compress_rate):
+        layers = []
+        for i in range(blocks):
+            layers.append(
+                block(self.inplanes, outplanes=int(self.growthRate * (1 - compress_rate[i])), dropRate=self.dropRate))
+            self.inplanes += int(self.growthRate * (1 - compress_rate[i]))
+
+        return nn.Sequential(*layers)
+
+    def _make_transition(self, transition, compressionRate, compress_rate):
+        inplanes = self.inplanes
+        outplanes = int(math.floor(self.inplanes * (1 - compress_rate) // compressionRate))
+        self.inplanes = outplanes
+        return transition(inplanes, outplanes)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.maxpool(x)
+
+        x = self.dense1(x)
+        x = self.trans1(x)
+        x = self.dense2(x)
+        x = self.trans2(x)
+        x = self.dense3(x)
+        x = self.bn(x)
+        x = self.relu(x)
+
+        x = self.avgpool(x)
+        x = x.view(x.size(0), -1)
+
+        x = self.fc(x)
+
+        return x
+
+
+def densenet_40_RF(compress_rate, num_classes=10, RF_level=0):
+    return DenseNet(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
