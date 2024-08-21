@@ -124,11 +124,17 @@ class small_deep_Bottleneck(nn.Module):
         self.relu = nn.ReLU()
         if fixed_points is None:
             self.conv1_1x1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
-            self.conv1_1x1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
             self.bn1 = nn.BatchNorm2d(planes)
-            self.conv2 = nn.Conv2d(planes, self.expansion * planes, kernel_size=3,
+            self.conv2_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
+            self.bn2 = nn.BatchNorm2d(planes)
+            self.conv3_3x3 = nn.Conv2d(planes, planes, kernel_size=3, bias=False)
+            self.bn3 = nn.BatchNorm2d(planes)
+            self.conv4_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
+            self.bn4 = nn.BatchNorm2d(planes)
+
+            self.conv5_1x1 = nn.Conv2d(planes, self.expansion * planes, kernel_size=1,
                                    stride=stride, padding=1, bias=False)
-            self.bn2 = nn.BatchNorm2d(self.expansion * planes)
+            self.bn5 = nn.BatchNorm2d(self.expansion * planes)
             # self.conv3 = nn.Conv2d(planes, self.expansion *
             #                        planes, kernel_size=1, bias=False)
             # self.bn3 = nn.BatchNorm2d(self.expansion * planes)
@@ -161,8 +167,11 @@ class small_deep_Bottleneck(nn.Module):
                 )
 
     def forward(self, x):
-        out = self.relu(self.bn1(self.conv1(x)))
-        out = self.bn2(self.conv2(out))
+        out = self.relu(self.bn1(self.conv1_1x1(x)))
+        out = self.relu(self.bn1(self.conv2_1x1(x)))
+        out = self.relu(self.bn1(self.conv3_3x3(x)))
+        out = self.relu(self.bn1(self.conv4_1x1(x)))
+        out = self.bn5(self.conv5_1x1(out))
         # out = self.bn3(self.conv3(out))
         out = out + self.shortcut(x)
         out = self.relu(out)
@@ -454,7 +463,10 @@ def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
                               RF_level=RF_level,
                               multiplier=multiplier)
 
-
+def deep_small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
+    return Deep_small_ResNetRF(small_deep_Bottleneck, [2, 2, 2, 2], num_classes=num_classes, fixed_points=fix_points,
+                          RF_level=RF_level,
+                          multiplier=multiplier)
 def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
         return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
