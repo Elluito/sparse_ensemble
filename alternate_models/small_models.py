@@ -578,7 +578,7 @@ def get_output_until_block_deep_small_resnet(net, block, net_type=1):
     net.forward = features_only.__get__(net)  # bind method
 
 
-def test_models():
+def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
@@ -621,7 +621,7 @@ def test_models():
         # print(y_resnet)
 
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 700, 700))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 600, 600))
         print("Receptive field of deep small ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
 

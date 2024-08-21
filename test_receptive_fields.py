@@ -50,5 +50,53 @@ def test_densenet_rf():
             print("Receptive field is grater than {}".format(4000))
 
 
+def test_deep_RF_models():
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+    import torch
+    from alternate_models.small_models import deep_small_ResNet_rf,get_output_until_block_deep_small_resnet
+
+    # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
+    blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+    for i in blocks:
+        # samples = []
+        # for j in range(10):
+        x = torch.randn(3, 3, 400, 400)
+        dummy_y = torch.zeros(3, 10)
+        dummy_y[:, 5] = 1
+        #
+        # if i < 5:
+        # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
+        # #     y_vgg = vgg_net(x)
+        # #     print(y_vgg)
+        # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        # vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
+        # print("Receptive field of Small Vgg Level {}".format(i))
+        # print(vgg_rf.rfsize)
+        #
+        #     print("Receptive field of VGG")
+        #     print(vgg_rf)
+
+        resnet_net = deep_small_ResNet_rf(10, RF_level=i)
+
+        # y_resnet = resnet_net(x)
+        # input_names = ['Image']
+        #
+        # output_names = ['y_hat']
+        #
+        # torch.onnx.export(resnet_net, x,
+        #                   f'onnx_model_small_resnet_small_imagenet.onnx',
+        #                   input_names=input_names,
+        #                   output_names=output_names)
+        #
+        # loss = dummy_loss(y_resnet, dummy_y)
+        # loss.backward()
+        # print(y_resnet)
+
+        get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
+        resnet_rf = receptivefield(resnet_net, (1, 3, 600, 600))
+        print("Receptive field of deep small ResNet Level {}".format(i))
+        print(resnet_rf.rfsize)
+
 if __name__ == '__main__':
-    test_densenet_rf()
+    test_deep_RF_models()

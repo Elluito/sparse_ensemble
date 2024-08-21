@@ -18,7 +18,6 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
                                          shuffle_test=False, shuffle_val=True):
-
     if num_workers == 0:
         num_workers = 1
 
@@ -36,8 +35,6 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
     small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
 
-
-
     ########## train
 
     decoder = RandomResizedCropRGBImageDecoder((resolution, resolution))
@@ -49,7 +46,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         # NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, torch.float32)
-        NormalizeImage((0,0,0),(1,1,1),torch.float32)
+        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -101,7 +98,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         # NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
-        NormalizeImage((0,0,0),(1,1,1),torch.float32)
+        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline = [
