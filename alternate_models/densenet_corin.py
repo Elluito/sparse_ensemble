@@ -208,7 +208,6 @@ class DenseNetRF(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.maxpool(x)
-
         x = self.dense1(x)
         x = self.trans1(x)
         x = self.dense2(x)
@@ -226,4 +225,4 @@ class DenseNetRF(nn.Module):
 
 
 def densenet_40_RF(compress_rate, num_classes=10, RF_level=0):
-    return DenseNet(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
+    return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)

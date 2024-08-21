@@ -1107,7 +1107,25 @@ def main(args):
 
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
+    if args.model == "densenet40":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_40_RF([0]*100,num_classes=10,RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_40_RF([0]*100,num_classes=100,RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_40_RF([0]*100,num_classes=200,RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_40_RF([0]*100,num_classes=200,RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_40_RF([0]*100,num_classes=1000,RF_level=args.RF_level)
 
+    if args.model == "mobilenetv2":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = MobileNetV2_cifar(num)
+        if args.type == "normal" and args.dataset == "cifar100":
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+        if args.type == "normal" and args.dataset == "small_imagenet":
+        pass
     # Training
     # # Model
     # print('==> Building model..')
