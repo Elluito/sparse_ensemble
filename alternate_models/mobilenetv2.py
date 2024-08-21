@@ -125,7 +125,7 @@ class MobileNetV2_cifar_RF(nn.Module):
 
     def __init__(self, num_classes=10,RF_level=0):
         super(MobileNetV2_cifar_RF, self).__init__()
-        self.rf_levele=RF_level
+        self.rf_level=RF_level
         if self.rf_level == 0:
             self.maxpool = nn.Identity()
         if self.rf_level == 1:
@@ -254,9 +254,24 @@ def get_features_mobilenetv2(net):
 
     net.forward = features_only.__get__(net)  # bind method
 def test():
-    net = MobileNetV2_cifar()
-    x = torch.randn(2,3,32,32)
-    y = net(x)
-    print(y.size())
+    for i in [1,2,3,4,5,6,7,8,9,10,11]:
+        try:
+            net = MobileNetV2_cifar_RF(10,RF_level=i)
+            x = torch.randn(2,3,32,32)
+            y = net(x)
+            print(y.size())
+        except Exception as e:
+            print("RF level: {} is too big for imagesize of 32x32".format(i))
+            print(e)
 
+        try:
+            net = MobileNetV2_cifar_RF(10,RF_level=i)
+            x = torch.randn(2,3,64,64)
+            y = net(x)
+            print(y.size())
+        except Exception as e:
+            print("RF level: {} is too big for imagesize of 64x64".format(i))
+            print(e)
 # test()
+if __name__ == '__main__':
+    test()

@@ -226,3 +226,27 @@ class DenseNetRF(nn.Module):
 
 def densenet_40_RF(compress_rate, num_classes=10, RF_level=0):
     return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
+def densenet_20_RF(compress_rate, num_classes=10, RF_level=0):
+    return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=20, block=DenseBasicBlock, RF_level=RF_level)
+def test():
+    for i in [0,1,2,3,4,5,6,7,8,9,10,11]:
+        try:
+            net =densenet_40_RF([0]*100,10,RF_level=i)
+            x = torch.randn(2,3,32,32)
+            y = net(x)
+            print(y.size())
+        except Exception as e:
+            print("RF level: {} is too big for imagesize of 32x32".format(i))
+            print(e)
+
+        try:
+            net =densenet_40_RF([0]*100,10,RF_level=i)
+            x = torch.randn(2,3,64,64)
+            y = net(x)
+            print(y.size())
+        except Exception as e:
+            print("RF level: {} is too big for imagesize of 64x64".format(i))
+            print(e)
+# test()
+if __name__ == '__main__':
+    test()
