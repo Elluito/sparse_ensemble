@@ -6,17 +6,18 @@
 #SBATCH --time=00:30:00
 
 # set name of job
-#SBATCH --job-name=compare_small_imagenet
+#SBATCH --job-name=ffcv_statistics_small_imagenet
 
-#SBATCH --error=compare_small_imagenet.err
+#SBATCH --error=ffcv_statistics_small_imagenet.err
 
-#SBATCH --output=compare_small_imagenet.output
+#SBATCH --output=ffcv_statistics_small_imagenet.output
 
 # set partition (devel, small, big)
 
 #SBATCH --partition=small
 
 # set number of GPUs
+
 #SBATCH --gres=gpu:1
 
 # mail alert at start, end and abortion of execution
