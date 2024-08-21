@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import traceback
 import math
 
 norm_mean, norm_var = 0.0, 1.0
@@ -177,7 +177,8 @@ class DenseNetRF(nn.Module):
         self.dense3 = self._make_denseblock(block, n, compress_rate[2 * n + 3:3 * n + 3])
         self.bn = nn.BatchNorm2d(self.inplanes)
         self.relu = nn.ReLU(inplace=True)
-        self.avgpool = nn.AvgPool2d(8)
+        # self.avgpool = nn.AvgPool2d((8, 8))  # Note: change to adaptive average 2d pooling
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))  # Note: change to adaptive average 2d pooling
 
         self.fc = nn.Linear(self.inplanes, num_classes)
 
@@ -226,27 +227,35 @@ class DenseNetRF(nn.Module):
 
 def densenet_40_RF(compress_rate, num_classes=10, RF_level=0):
     return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
-def densenet_20_RF(compress_rate, num_classes=10, RF_level=0):
-    return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=20, block=DenseBasicBlock, RF_level=RF_level)
+
+
+def densenet_28_RF(compress_rate, num_classes=10, RF_level=0):
+    return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=28, block=DenseBasicBlock, RF_level=RF_level)
+
+
 def test():
-    for i in [0,1,2,3,4,5,6,7,8,9,10,11]:
+    for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
+        print("INPUT 32x32")
         try:
-            net =densenet_40_RF([0]*100,10,RF_level=i)
-            x = torch.randn(2,3,32,32)
+            net = densenet_40_RF([0] * 100, 10, RF_level=i)
+            x = torch.randn(2, 3, 32, 32)
             y = net(x)
-            print(y.size())
+            print("Receptive field level {} is just good for size 32x32".format(i))
         except Exception as e:
             print("RF level: {} is too big for imagesize of 32x32".format(i))
-            print(e)
+            print(traceback.format_exc())
 
+        print("INPUT 64x64")
         try:
-            net =densenet_40_RF([0]*100,10,RF_level=i)
-            x = torch.randn(2,3,64,64)
+            net = densenet_40_RF([0] * 100, 10, RF_level=i)
+            x = torch.randn(2, 3, 64, 64)
             y = net(x)
-            print(y.size())
+            print("Receptive field level {} is just good for size 64x64".format(i))
         except Exception as e:
-            print("RF level: {} is too big for imagesize of 64x64".format(i))
-            print(e)
+            print("RF level: {} is too big for image size of 64x64".format(i))
+            print(traceback.format_exc())
+
+
 # test()
 if __name__ == '__main__':
     test()

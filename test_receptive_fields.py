@@ -119,3 +119,4 @@ def test_RF_mobilenet_imagenet():
 if __name__ == '__main__':
     # test_deep_RF_models()
     test_RF_densenet40()
+    test_RF_mobilenet_cifar()

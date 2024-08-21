@@ -150,7 +150,7 @@ class MobileNetV2_cifar_RF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
         if self.rf_level == 11:
             self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
-
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))  # Note: change to adaptive average 2d pooling
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
@@ -173,7 +173,8 @@ class MobileNetV2_cifar_RF(nn.Module):
         out = self.layers(out)
         out = F.relu(self.bn2(self.conv2(out)))
         # NOTE: change pooling kernel_size 7 -> 4 for CIFAR10
-        out = F.avg_pool2d(out, 4)
+        # out = F.avg_pool2d(out, 4)
+        out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
@@ -255,6 +256,7 @@ def get_features_mobilenetv2(net):
     net.forward = features_only.__get__(net)  # bind method
 def test():
     for i in [1,2,3,4,5,6,7,8,9,10,11]:
+        print("INPUT 32x32")
         try:
             net = MobileNetV2_cifar_RF(10,RF_level=i)
             x = torch.randn(2,3,32,32)
@@ -264,6 +266,7 @@ def test():
             print("RF level: {} is too big for imagesize of 32x32".format(i))
             print(e)
 
+        print("INPUT 64x64")
         try:
             net = MobileNetV2_cifar_RF(10,RF_level=i)
             x = torch.randn(2,3,64,64)
