@@ -123,8 +123,34 @@ class MobileNetV2_cifar_RF(nn.Module):
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10,RF_level=0):
         super(MobileNetV2_cifar_RF, self).__init__()
+        self.rf_levele=RF_level
+        if self.rf_level == 0:
+            self.maxpool = nn.Identity()
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)

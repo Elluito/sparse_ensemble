@@ -1121,10 +1121,15 @@ def main(args):
 
     if args.model == "mobilenetv2":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = MobileNetV2_cifar(num)
+            net = MobileNetV2_cifar_RF(num_classes=10,RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
+            net = MobileNetV2_cifar_RF(num_classes=100,RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = MobileNetV2_cifar_RF(num_classes=200,RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=200,RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=1000,RF_level=args.RF_level)
         pass
     # Training
     # # Model

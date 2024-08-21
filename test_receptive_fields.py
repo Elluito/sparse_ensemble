@@ -82,7 +82,7 @@ def test_RF_densenet40():
             print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
 
 
-def test_RF_mobilenet():
+def test_RF_mobilenet_cifar():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from alternate_models.mobilenetv2 import get_features_mobilenetv2, MobileNetV2_cifar_RF
 
@@ -90,15 +90,31 @@ def test_RF_mobilenet():
 
     for i in blocks:
         try:
+            print("Receptive field of MobileNet cifar Level {}".format(i))
             net1 = MobileNetV2_cifar_RF(num_classes=10, RF_level=i)
-            print("Receptive field of Densenet40 Level {}".format(i))
             get_features_mobilenetv2(net1, block=4, net_type=1)
             size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception:
-            print("The receptive field for level {} is greater than 5000".format(i))
+            print("The receptive field for level {} in Mobile net cifar is greater than 5000".format(i))
 
+def test_RF_mobilenet_imagenet():
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from alternate_models.mobilenetv2 import get_features_mobilenetv2, MobileNetV2_imagenet_RF
+
+    blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+    for i in blocks:
+        try:
+            print("Receptive field of MobileNet imagenet Level {}".format(i))
+            net1 = MobileNetV2_imagenet_RF(num_classes=10, RF_level=i)
+            get_features_mobilenetv2(net1, block=4, net_type=1)
+            size = [1, 3, 5000, 5000]
+            le_rf = receptivefield(net1, size)
+            print(le_rf.rfsize)
+        except Exception:
+            print("The receptive field for level {}  in Moblienet imagenetis greater than 5000".format(i))
 
 if __name__ == '__main__':
     # test_deep_RF_models()
