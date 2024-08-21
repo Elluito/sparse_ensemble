@@ -145,6 +145,7 @@ def get_features_only_until_block_layer_densenet_corin(net, block=2, net_type=0)
 
     def features_only(self, x):
         x = self.conv1(x)
+        x = self.maxpooling(x)
         x = self.dense1(x)
         x = self.trans1(x)
         x = self.dense2(x)

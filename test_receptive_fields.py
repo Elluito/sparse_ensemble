@@ -56,45 +56,13 @@ def test_deep_RF_models():
     from alternate_models.small_models import deep_small_ResNet_rf,get_output_until_block_deep_small_resnet
 
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    blocks = [ 10, 11]
+    # blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     for i in blocks:
-        # samples = []
-        # for j in range(10):
-        x = torch.randn(3, 3, 400, 400)
-        dummy_y = torch.zeros(3, 10)
-        dummy_y[:, 5] = 1
-        #
-        # if i < 5:
-        # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
-        # #     y_vgg = vgg_net(x)
-        # #     print(y_vgg)
-        # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
-        # vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
-        # print("Receptive field of Small Vgg Level {}".format(i))
-        # print(vgg_rf.rfsize)
-        #
-        #     print("Receptive field of VGG")
-        #     print(vgg_rf)
-
         resnet_net = deep_small_ResNet_rf(10, RF_level=i)
-
-        # y_resnet = resnet_net(x)
-        # input_names = ['Image']
-        #
-        # output_names = ['y_hat']
-        #
-        # torch.onnx.export(resnet_net, x,
-        #                   f'onnx_model_small_resnet_small_imagenet.onnx',
-        #                   input_names=input_names,
-        #                   output_names=output_names)
-        #
-        # loss = dummy_loss(y_resnet, dummy_y)
-        # loss.backward()
-        # print(y_resnet)
-
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 2000, 2000))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 3000, 3000))
         print("Receptive field of deep small ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
 def test_RF_densenet40():
@@ -109,7 +77,7 @@ def test_RF_densenet40():
     # save_onnx(pytorch_dense_net, "pytorch_densenet_121")
     # save_onnx(net1, "densenet_cifar")
     # save_onnx(net2, "local_densenet_121")
-    blocks = [0, 1, 2, 3, 4]
+    # blocks = [0, 1, 2, 3, 4]
     # print("RF of pytorch implementation")
     # get_features_only_until_block_layer_densenet_pytorch(pytorch_dense_net)
     # size = [1, 3, 300, 2000]
@@ -122,9 +90,6 @@ def test_RF_densenet40():
     for i in blocks:
         # samples = []
         # for j in range(10):
-        x = torch.randn(3, 3, 400, 400)
-        dummy_y = torch.zeros(3, 10)
-        dummy_y[:, 5] = 1
         #
         # if i < 5:
         # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
@@ -154,13 +119,11 @@ def test_RF_densenet40():
         # loss.backward()
         # print(y_resnet)
 
-        get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-        resnet_rf = receptivefield(net1, (1, 3, 2000, 2000))
         print("Receptive field of Densenet40 Level {}".format(i))
-        print(resnet_rf.rfsize)
         get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-        size = [1, 3, 2000, 2000]
+        size = [1, 3, 3500, 3500]
         le_rf = receptivefield(net1, size)
         print(le_rf.rfsize)
 if __name__ == '__main__':
     test_deep_RF_models()
+    test_RF_densenet40()
