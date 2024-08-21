@@ -94,7 +94,7 @@ def test_deep_RF_models():
         # print(y_resnet)
 
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 600, 600))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 2000, 2000))
         print("Receptive field of deep small ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
 
