@@ -49,6 +49,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         # NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, torch.float32)
+        NormalizeImage((0,0,0),(1,1,1),torch.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -100,6 +101,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         # NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
+        NormalizeImage((0,0,0),(1,1,1),torch.float32)
     ]
 
     label_pipeline = [

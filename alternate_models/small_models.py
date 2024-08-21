@@ -127,7 +127,7 @@ class small_deep_Bottleneck(nn.Module):
             self.bn1 = nn.BatchNorm2d(planes)
             self.conv2_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
             self.bn2 = nn.BatchNorm2d(planes)
-            self.conv3_3x3 = nn.Conv2d(planes, planes, kernel_size=3,stride=stride,padding=1,bias=False)
+            self.conv3_3x3 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
             self.bn3 = nn.BatchNorm2d(planes)
             self.conv4_1x1 = nn.Conv2d(planes, planes, kernel_size=1, bias=False)
             self.bn4 = nn.BatchNorm2d(planes)
@@ -175,6 +175,7 @@ class small_deep_Bottleneck(nn.Module):
         out = out + self.shortcut(x)
         out = self.relu(out)
         return out
+
 
 class ResNet(nn.Module):
     def __init__(self, block: typing.Union[small_BasicBlock, small_Bottleneck], num_blocks, num_classes=10,
@@ -303,6 +304,7 @@ class small_ResNetRF(nn.Module):
         out = self.linear(out)
         return out
 
+
 class Deep_small_ResNetRF(nn.Module):
     def __init__(self, block: typing.Union[small_BasicBlock, small_Bottleneck], num_blocks, num_classes=10,
                  multiplier=1,
@@ -357,7 +359,7 @@ class Deep_small_ResNetRF(nn.Module):
         # self.layer3 = nn.Sequential(*[conv2, bn2])
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512* block.expansion, num_classes)
+        self.linear = nn.Linear(512 * block.expansion, num_classes)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -383,6 +385,7 @@ class Deep_small_ResNetRF(nn.Module):
         # print("out:{}".format(out.size()))
         out = self.linear(out)
         return out
+
 
 class small_VGG_RF(nn.Module):
     def __init__(self, vgg_name, num_classes=10, RF_level=0):
@@ -462,10 +465,13 @@ def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
                               RF_level=RF_level,
                               multiplier=multiplier)
 
+
 def deep_small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     return Deep_small_ResNetRF(small_deep_Bottleneck, [2, 2, 2, 2], num_classes=num_classes, fixed_points=fix_points,
-                          RF_level=RF_level,
-                          multiplier=multiplier)
+                               RF_level=RF_level,
+                               multiplier=multiplier)
+
+
 def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
         return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
@@ -556,6 +562,7 @@ def get_output_until_block_small_resnet(net, block, net_type=1):
 
     net.forward = features_only.__get__(net)  # bind method
 
+
 def get_output_until_block_deep_small_resnet(net, block, net_type=1):
     def features_only(self, x):
         # x = self.features(x)
@@ -570,11 +577,12 @@ def get_output_until_block_deep_small_resnet(net, block, net_type=1):
 
     net.forward = features_only.__get__(net)  # bind method
 
+
 def test_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [1,2]
+    blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     for i in blocks:
         # samples = []
@@ -596,7 +604,7 @@ def test_models():
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
-        resnet_net = deep_small_ResNet_rf(10,RF_level=i)
+        resnet_net = deep_small_ResNet_rf(10, RF_level=i)
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
