@@ -245,7 +245,7 @@ class MobileNetV2_imagenet_RF(nn.Module):
 def get_features_mobilenetv2(net):
     def features_only(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
-        out = self.maxpooling(x)
+        out = self.maxpool(out)
         out = self.layers(out)
         out = F.relu(self.bn2(self.conv2(out)))
         return out
