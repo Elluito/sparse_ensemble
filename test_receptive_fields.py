@@ -79,7 +79,7 @@ def test_RF_densenet40():
             net1 = densenet_40_RF([0] * 100, RF_level=i)
             print("Receptive field of Densenet40 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-            size = [1, 3, 900, 900]
+            size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
@@ -87,6 +87,24 @@ def test_RF_densenet40():
             print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
 
 
+def test_RF_densenet28():
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from alternate_models.densenet_corin import densenet_28_RF
+    from alternate_models.densenet import get_features_only_until_block_layer_densenet_corin
+
+    blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+    for i in blocks:
+        try:
+            net1 =densenet_28_RF([0] * 100, RF_level=i)
+            print("Receptive field of Densenet28 Level {}".format(i))
+            get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
+            size = [1, 3, 5000, 5000]
+            le_rf = receptivefield(net1, size)
+            print(le_rf.rfsize)
+        except Exception as e:
+            print(traceback.format_exc())
+            print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
 def test_RF_mobilenet_cifar():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from alternate_models.mobilenetv2 import get_features_mobilenetv2, MobileNetV2_cifar_RF
