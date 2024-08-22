@@ -80,7 +80,8 @@ def test_RF_densenet40():
             size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
-        except Exception:
+        except Exception as e:
+            print(traceback.format_exc())
             print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
 
 
