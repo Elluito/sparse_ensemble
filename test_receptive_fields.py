@@ -79,7 +79,7 @@ def test_RF_densenet40():
             net1 = densenet_40_RF([0] * 100, RF_level=i)
             print("Receptive field of Densenet40 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-            size = [1, 3, 5000, 5000]
+            size = [1, 3, 900, 900]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
@@ -169,6 +169,6 @@ def test_RF_vgg_stride():
 if __name__ == '__main__':
     # test_deep_RF_models()
     test_RF_densenet40()
-    # test_RF_mobilenet_cifar()
+    test_RF_mobilenet_cifar()
     # test_RF_resnet50_stride()
     # test_RF_vgg_stride()
