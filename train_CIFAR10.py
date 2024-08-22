@@ -1090,6 +1090,24 @@ def main(args):
             # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
         if args.type == "pytorch" and args.dataset == "cifar100":
+    if args.model == "deep_resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net =deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net =deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
             raise NotImplementedError
             # net = resnet50()
             # in_features = net.fc.in_features
@@ -1118,7 +1136,6 @@ def main(args):
             net = densenet_40_RF([0]*100,num_classes=200,RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "imagenet":
             net = densenet_40_RF([0]*100,num_classes=1000,RF_level=args.RF_level)
-
     if args.model == "mobilenetv2":
         if args.type == "normal" and args.dataset == "cifar10":
             net = MobileNetV2_cifar_RF(num_classes=10,RF_level=args.RF_level)
