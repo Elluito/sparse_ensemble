@@ -27,6 +27,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     small_imagenet_MEAN = [125.307, 122.961, 113.8575]
 
+    small_imagenet_test_mean = [120.6614, 112.3769, 98.3527]
+    small_imagenet_test_std =[68.9266, 66.2883, 69.4644]
     CIFAR_STD = [51.5865, 50.847, 51.255]
 
     small_imagenet_MEAN_train = np.array([0.4802, 0.4481, 0.3975])

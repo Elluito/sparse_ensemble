@@ -16,6 +16,7 @@ from pathlib import Path
 import pandas as pd
 from shrinkbench.metrics.flops import flops
 import math
+
 os.environ["LD_LIBRARY_PATH"] = ""
 
 ###########################################
@@ -92,12 +93,12 @@ class CosineDecayWithWarmUpScheduler(object):
             T_cur = self.T_mul ** self.num_T
             if self.iters <= self.num_step_down * T_cur:
                 lr = self.min_lr + (self.max_lr - self.min_lr) * (
-                            1 + math.cos(math.pi * self.iters / (self.num_step_down * T_cur))) / 2
+                        1 + math.cos(math.pi * self.iters / (self.num_step_down * T_cur))) / 2
                 if lr < self.min_lr:
                     lr = self.min_lr
             elif self.iters > self.num_step_down * T_cur:
                 lr = self.min_lr + (self.max_lr - self.min_lr) / (self.num_step_up * T_cur) * (
-                            self.iters - self.num_step_down * T_cur)
+                        self.iters - self.num_step_down * T_cur)
                 if lr > self.max_lr:
                     lr = self.max_lr
 
@@ -106,6 +107,8 @@ class CosineDecayWithWarmUpScheduler(object):
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr
             self.lr_list.append(lr)
+
+
 def get_mean_and_std(dataset):
     '''Compute the mean and std value of dataset.'''
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
@@ -279,7 +282,6 @@ def train(epoch):
         # print(
         #     'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
         if batch_idx % 10 == 0:
-
             print("Inputs device :{}".format(inputs.data.device))
             print("Outputs device :{}".format(outputs.data.device))
 
@@ -646,6 +648,8 @@ def get_model_RF(args, RF=None):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=RF)
     return net
+
+
 def adjust_optim(optimizer, n_iter):
     if n_iter == 1000:
         optimizer.param_groups[0]['betas'] = (0.3, optimizer.param_groups[0]['betas'][1])
@@ -653,9 +657,7 @@ def adjust_optim(optimizer, n_iter):
         optimizer.param_groups[0]['lr'] *= 0.9999
 
 
-
 def iterative_RF_experiments(args):
-
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
@@ -737,7 +739,7 @@ def iterative_RF_experiments(args):
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-            "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
 
     # inputs, y = next(iter(trainloader))
     #
@@ -782,7 +784,6 @@ def iterative_RF_experiments(args):
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
 
-
     if args.resume:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         # Load checkpoint.
@@ -804,7 +805,7 @@ def iterative_RF_experiments(args):
     else:
         seed = time.time()
         # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=int(args.epochs/3)+1)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=int(args.epochs / 3) + 1)
 
         solution_name = "{}_{}_{}_{}_rf_level_{}_{}_iterative".format(args.model, args.type, args.dataset, seed,
                                                                       args.RF_level,
@@ -919,7 +920,6 @@ def iterative_RF_experiments(args):
 
 
 def main(args):
-
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
@@ -1026,13 +1026,29 @@ def main(args):
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-
         if args.type == "normal" and args.dataset == "cifar100":
             net = ResNet50_rf(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = ResNet50_rf(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "resnet50_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_stride(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_stride(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -1074,6 +1090,15 @@ def main(args):
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+    if args.model == "vgg19_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_stride("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_stride("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
             net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
@@ -1090,12 +1115,12 @@ def main(args):
             # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
         if args.type == "pytorch" and args.dataset == "cifar100":
-            raise  NotImplementedError
+            raise NotImplementedError
     if args.model == "deep_resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
-            net =deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+            net = deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "cifar100":
-            net =deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+            net = deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "small_imagenet":
@@ -1128,26 +1153,26 @@ def main(args):
             net = small_VGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
     if args.model == "densenet40":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = densenet_40_RF([0]*100,num_classes=10,RF_level=args.RF_level)
+            net = densenet_40_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = densenet_40_RF([0]*100,num_classes=100,RF_level=args.RF_level)
+            net = densenet_40_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = densenet_40_RF([0]*100,num_classes=200,RF_level=args.RF_level)
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = densenet_40_RF([0]*100,num_classes=200,RF_level=args.RF_level)
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "imagenet":
-            net = densenet_40_RF([0]*100,num_classes=1000,RF_level=args.RF_level)
+            net = densenet_40_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
     if args.model == "mobilenetv2":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = MobileNetV2_cifar_RF(num_classes=10,RF_level=args.RF_level)
+            net = MobileNetV2_cifar_RF(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = MobileNetV2_cifar_RF(num_classes=100,RF_level=args.RF_level)
+            net = MobileNetV2_cifar_RF(num_classes=100, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = MobileNetV2_cifar_RF(num_classes=200,RF_level=args.RF_level)
+            net = MobileNetV2_cifar_RF(num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
-            net = MobileNetV2_imagenet_RF(num_classes=200,RF_level=args.RF_level)
+            net = MobileNetV2_imagenet_RF(num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "imagenet":
-            net = MobileNetV2_imagenet_RF(num_classes=1000,RF_level=args.RF_level)
+            net = MobileNetV2_imagenet_RF(num_classes=1000, RF_level=args.RF_level)
         pass
     # Training
     # # Model

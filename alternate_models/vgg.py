@@ -60,8 +60,8 @@ class VGG_RF(nn.Module):
         if self.rf_level == 5:
             self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
             # self.config = [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512, 512]
-        # if self.rf_level == "k6":
-        #     self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            # if self.rf_level == "k6":
+            #     self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
             self.config = cfg[vgg_name]
         if self.rf_level == 6:
             self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
@@ -199,16 +199,17 @@ class VGG_RF_stride(nn.Module):
             layers.insert(1, self.maxpool)
         return nn.Sequential(*layers)
 
+
 def get_features_only_VGG(net):
     # ResNet block to compute receptive field for
-        def features_only(self, x):
-            x = self.features(x)
-            return x
+    def features_only(self, x):
+        x = self.features(x)
+        return x
 
-        net.forward = features_only.__get__(net)  # bind method
+    net.forward = features_only.__get__(net)  # bind method
+
 
 def test():
-
     # net = VGG('VGG11')
 
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
@@ -266,6 +267,16 @@ def test():
     # plt.show()
 
 
+def test_cifar():
+    p = [1, 2, 3, 4]
+    input_ =torch.rand(2,3,32,32)
+    for i in p:
+        print("level {}".format(i))
+        net = VGG_RF_stride('VGG19_rf', RF_level=i)
+        net(input_)
+        print("all good")
+
+
 if __name__ == '__main__':
-    test()
+    test_cifar()
 # test()

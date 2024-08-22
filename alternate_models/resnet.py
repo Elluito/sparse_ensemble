@@ -470,8 +470,8 @@ def test():
 
     # print(y.size())
 
-def get_resnet_features(net):
 
+def get_resnet_features(net):
     def features_only(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
@@ -487,6 +487,21 @@ def get_resnet_features(net):
         return x
 
     net.forward = features_only.__get__(net)  # bind method
+
+
 # test()
+def test_cifar():
+    p = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    input_ = torch.rand(2, 3, 32, 32)
+    for i in p:
+        print("level {}".format(i))
+        net = ResNet50_rf_stride(num_classes=10, rf_level=i)
+        try:
+            net(input_)
+            print("all good")
+        except Exception as e:
+            print(e)
+
+
 if __name__ == '__main__':
-    test()
+    test_cifar()
