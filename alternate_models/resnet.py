@@ -278,7 +278,7 @@ class ResNetRFStride(nn.Module):
         self.width_multiplier = multiplier
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         if self.rf_level == 1:
-            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2)
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         if self.rf_level == 2:
             self.maxpool = nn.MaxPool2d(kernel_size=3, stride=3, padding=1)
         if self.rf_level == 3:
@@ -340,6 +340,7 @@ class ResNetRFStride(nn.Module):
         out = self.linear(out)
         return out
 
+
 def ResNet18(num_classes=10, fix_points=None):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
 
@@ -367,6 +368,15 @@ def ResNet50_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     else:
         return ResNetRF(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points, RF_level=rf_level,
                         multiplier=multiplier)
+
+
+def ResNet50_rf_stride(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
+    if rf_level == 0:
+        return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
+    else:
+        return ResNetRFStride(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points,
+                              RF_level=rf_level,
+                              multiplier=multiplier)
 
 
 def ResNet24_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
@@ -460,7 +470,23 @@ def test():
 
     # print(y.size())
 
+def get_resnet_features(net):
 
+    def features_only(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        return x
+
+    net.forward = features_only.__get__(net)  # bind method
 # test()
 if __name__ == '__main__':
     test()
