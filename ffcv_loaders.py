@@ -73,22 +73,26 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                           }, distributed=distributed)
 
     order = OrderOption.QUASI_RANDOM if shuffle_val else OrderOption.SEQUENTIAL
-    val_loader = Loader(train_dataset,
-                        batch_size=batch_size,
-                        num_workers=num_workers,
-                        order=order,
-                        indices=whole_dataset_indices[-valsize:],
-                        os_cache=in_memory,
-                        seed=random_seed,
-                        drop_last=True,
-                        pipelines={
-                            'image': image_pipeline,
-                            'label': label_pipeline
-                        },
-                        distributed=distributed)
+    if valsize != 0:
+        val_loader = Loader(train_dataset,
+                            batch_size=batch_size,
+                            num_workers=num_workers,
+                            order=order,
+                            indices=whole_dataset_indices[-valsize:],
+                            os_cache=in_memory,
+                            seed=random_seed,
+                            drop_last=True,
+                            pipelines={
+                                'image': image_pipeline,
+                                'label': label_pipeline
+                            },
+                            distributed=distributed)
 
-    val_path = Path(val_dataset)
-    assert val_path.is_file()
+        val_path = Path(val_dataset)
+        assert val_path.is_file()
+    else:
+        val_loader = None
+
     res_tuple = (resolution, resolution)
     DEFAULT_CROP_RATIO = resolution / 256
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
@@ -142,20 +146,20 @@ if __name__ == '__main__':
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
         ,
-        512, 4, testsize=1000)
+        512, 4, valsize=0, testsize = 10000)
     mean = 0.0
     for images, _ in trainloader:
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         mean += images.mean(2).sum(0)
-    mean = mean / len(trainloader.dataset)
+    mean = mean / len(99999)
 
     var = 0.0
     for images, _ in trainloader:
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
-    std = torch.sqrt(var / (len(trainloader.dataset) * 224 * 224))
+    std = torch.sqrt(var / (len(99999) * 224 * 224))
     print("Mean for train loader")
     print("{}".format(mean))
     print("STD for train loader")
@@ -166,14 +170,14 @@ if __name__ == '__main__':
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         mean += images.mean(2).sum(0)
-    mean = mean / len(testloader.dataset)
+    mean = mean / len(10000)
 
     var = 0.0
     for images, _ in testloader:
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
-    std = torch.sqrt(var / (len(testloader.dataset) * 224 * 224))
+    std = torch.sqrt(var / (len(10000) * 224 * 224))
 
     print("\n Test loader ####################")
     print("Mean for test loader")

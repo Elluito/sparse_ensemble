@@ -266,6 +266,80 @@ class ResNetRF(nn.Module):
         return out
 
 
+class ResNetRFStride(nn.Module):
+    def __init__(self, block: typing.Union[BasicBlock, Bottleneck], num_blocks, num_classes=10, multiplier=1,
+                 fixed_points=None,
+                 RF_level=1):
+        super(ResNetRFStride, self).__init__()
+        self.in_planes = 64 * multiplier
+        self.fix_points = fixed_points
+        self.rf_level = RF_level
+        self.relu = nn.ReLU()
+        self.width_multiplier = multiplier
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+        if self.fix_points is None:
+            self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+                                   stride=1, padding=1, bias=False)
+            self.bn1 = nn.BatchNorm2d(64 * self.width_multiplier)
+            self.layer1 = self._make_layer(block, 64 * self.width_multiplier, num_blocks[0], stride=1)
+            self.layer2 = self._make_layer(block, 128 * self.width_multiplier, num_blocks[1], stride=2)
+            self.layer3 = self._make_layer(block, 256 * self.width_multiplier, num_blocks[2], stride=2)
+            self.layer4 = self._make_layer(block, 512 * self.width_multiplier, num_blocks[3], stride=2)
+            self.linear = nn.Linear(512 * block.expansion * self.width_multiplier, num_classes)
+        if self.fix_points is not None:
+            self.conv1 = curves.Conv2d(3, 64, kernel_size=3,
+                                       stride=1, padding=1, bias=False, fix_points=self.fix_points)
+            self.bn1 = curves.BatchNorm2d(64, fix_points=self.fix_points)
+            self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+            self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+            self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+            self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+            self.linear = curves.Linear(512 * block.expansion, num_classes, self.fix_points)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = self.relu(self.bn1(self.conv1(x)))
+        # if self.rf_level != 1:
+        out = self.maxpool(out)
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        # print("out:{}".format(out.size()))
+        out = self.linear(out)
+        return out
+
 def ResNet18(num_classes=10, fix_points=None):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
 
