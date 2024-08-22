@@ -95,7 +95,7 @@ def test_RF_mobilenet_cifar():
         try:
             print("Receptive field of MobileNet cifar Level {}".format(i))
             net1 = MobileNetV2_cifar_RF(num_classes=10, RF_level=i)
-            get_features_mobilenetv2(net1, block=4, net_type=1)
+            get_features_mobilenetv2(net1)
             size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
@@ -113,7 +113,7 @@ def test_RF_mobilenet_imagenet():
         try:
             print("Receptive field of MobileNet imagenet Level {}".format(i))
             net1 = MobileNetV2_imagenet_RF(num_classes=10, RF_level=i)
-            get_features_mobilenetv2(net1, block=4, net_type=1)
+            get_features_mobilenetv2(net1)
             size = [1, 3, 6000, 6000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
