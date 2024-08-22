@@ -187,6 +187,7 @@ def test_RF_vgg_stride():
 if __name__ == '__main__':
     # test_deep_RF_models()
     test_RF_densenet40()
+    test_RF_densenet28()
     test_RF_mobilenet_cifar()
     # test_RF_resnet50_stride()
     # test_RF_vgg_stride()
