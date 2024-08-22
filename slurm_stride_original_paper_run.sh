@@ -93,4 +93,4 @@ export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/
 #############################################################
 
 
-python train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/stride_original_paper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9
+python3.9 train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/stride_original_paper" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9
