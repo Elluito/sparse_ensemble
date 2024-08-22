@@ -159,7 +159,7 @@ if __name__ == '__main__':
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
-    std = torch.sqrt(var / (99999 * 224 * 224))
+    std = torch.sqrt(var / torch.tensor(99999 * 224 * 224))
     print("Mean for train loader")
     print("{}".format(mean))
     print("STD for train loader")
@@ -177,7 +177,7 @@ if __name__ == '__main__':
         batch_samples = images.size(0)
         images = images.view(batch_samples, images.size(1), -1)
         var += ((images - mean.unsqueeze(1)) ** 2).sum([0, 2])
-    std = torch.sqrt(var / (10000 * 224 * 224))
+    std = torch.sqrt(var / torch.tensor(10000 * 224 * 224))
 
     print("\n Test loader ####################")
     print("Mean for test loader")
