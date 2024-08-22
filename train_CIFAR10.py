@@ -1090,6 +1090,7 @@ def main(args):
             # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 10)
         if args.type == "pytorch" and args.dataset == "cifar100":
+            raise  NotImplementedError
     if args.model == "deep_resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
             net =deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)

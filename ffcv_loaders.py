@@ -57,20 +57,34 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     ]
 
     order = OrderOption.RANDOM if distributed else OrderOption.QUASI_RANDOM
+    if valsize == 0:
+        train_loader = Loader(train_dataset,
+                              batch_size=batch_size,
+                              num_workers=num_workers,
+                              # indices=whole_dataset_indices[:-valsize],
+                              order=order,
+                              os_cache=in_memory,
+                              seed=random_seed,
+                              drop_last=True,
+                              pipelines={
+                                  'image': image_pipeline,
+                                  'label': label_pipeline
+                              }, distributed=distributed)
+    else:
 
-    whole_dataset_indices = np.arange(length_small_imagenet)
-    train_loader = Loader(train_dataset,
-                          batch_size=batch_size,
-                          num_workers=num_workers,
-                          indices=whole_dataset_indices[:-valsize],
-                          order=order,
-                          os_cache=in_memory,
-                          seed=random_seed,
-                          drop_last=True,
-                          pipelines={
-                              'image': image_pipeline,
-                              'label': label_pipeline
-                          }, distributed=distributed)
+        whole_dataset_indices = np.arange(length_small_imagenet)
+        train_loader = Loader(train_dataset,
+                              batch_size=batch_size,
+                              num_workers=num_workers,
+                              indices=whole_dataset_indices[:-valsize],
+                              order=order,
+                              os_cache=in_memory,
+                              seed=random_seed,
+                              drop_last=True,
+                              pipelines={
+                                  'image': image_pipeline,
+                                  'label': label_pipeline
+                              }, distributed=distributed)
 
     order = OrderOption.QUASI_RANDOM if shuffle_val else OrderOption.SEQUENTIAL
     if valsize != 0:
@@ -146,7 +160,7 @@ if __name__ == '__main__':
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
         ,
-        512, 4, valsize=0, testsize = 10000)
+        512, 4, valsize=0, testsize=10000)
     mean = 0.0
     for images, _ in trainloader:
         batch_samples = images.size(0)

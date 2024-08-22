@@ -80,14 +80,17 @@ def test_RF_densenet40():
             print("Receptive field of Densenet40 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
             if i < 4:
-                size = [1, 3, 2000, 2000]
+                size = [1, 3, 1200, 1200]
             else:
                 size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
             print(traceback.format_exc())
-            print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
+            if i < 4:
+                print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
+            else:
+                print("The receptive field for level {} of densenet40 is greater than 2000".format(i))
 
 
 def test_RF_densenet28():
