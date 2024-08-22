@@ -1,5 +1,7 @@
 import traceback
 
+import torch
+
 from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 from alternate_models.densenet import test_rf, get_features_only_until_block_layer_densenet, \
     get_features_only_until_block_layer_densenet_pytorch, DenseNet121, densenet_cifar
@@ -127,14 +129,14 @@ def test_RF_resnet50_stride():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from alternate_models.resnet import get_resnet_features, ResNet50_rf_stride
 
-    blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    blocks = [9, 10, 11]
 
     for i in blocks:
         try:
             print("Receptive field of RSENET50 with stride Level {}".format(i))
             net1 = ResNet50_rf_stride(num_classes=10, rf_level=i)
             get_resnet_features(net1)
-            size = [1, 3, 900, 900]
+            size = [1, 3, 1500, 1500]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
@@ -142,8 +144,31 @@ def test_RF_resnet50_stride():
             print("The receptive field for level {}  in resnet50 stride is greater than 5000".format(i))
 
 
+def test_RF_vgg_stride():
+    from easy_receptive_fields_pytorch.receptivefield import receptivefield
+    from alternate_models.vgg import VGG_RF_stride, get_features_only_VGG
+
+    blocks = [11]
+
+    for i in blocks:
+        try:
+            print("Receptive field of vgg19 with stride Level {}".format(i))
+            net1 = VGG_RF_stride(vgg_name="VGG19_rf", num_classes=10, RF_level=i)
+            get_features_only_VGG(net1)
+            size = [1, 3, 2500, 2500]
+            le_rf = receptivefield(net1, size)
+            print(le_rf.rfsize)
+            x = torch.rand(2, 3, 32, 32)
+            # net1(x)
+            print("all good for cifar10")
+        except Exception as e:
+            print(traceback.format_exc())
+            print("The receptive field for level {}  in VGG19 stride is greater than 5000".format(i))
+
+
 if __name__ == '__main__':
     # test_deep_RF_models()
     # test_RF_densenet40()
     # test_RF_mobilenet_cifar()
-    test_RF_resnet50_stride()
+    # test_RF_resnet50_stride()
+    test_RF_vgg_stride()

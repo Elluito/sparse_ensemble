@@ -121,6 +121,92 @@ class VGG_RF(nn.Module):
         return nn.Sequential(*layers)
 
 
+class VGG_RF_stride(nn.Module):
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_stride, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=9, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=10, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=11, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=12, padding=1)
+            self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+
+        # for i, layer in enumerate(self.features):
+        #     x = layer(x)
+        #     try:
+        #         print("{}".format(cfg["VGG19"][i]))
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        #     except:
+        #
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        out = self.features(x)
+        # out = x
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+def get_features_only_VGG(net):
+    # ResNet block to compute receptive field for
+        def features_only(self, x):
+            x = self.features(x)
+            return x
+
+        net.forward = features_only.__get__(net)  # bind method
+
 def test():
 
     # net = VGG('VGG11')
