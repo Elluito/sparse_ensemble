@@ -1,3 +1,5 @@
+import traceback
+
 from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 from alternate_models.densenet import test_rf, get_features_only_until_block_layer_densenet, \
     get_features_only_until_block_layer_densenet_pytorch, DenseNet121, densenet_cifar
@@ -97,6 +99,7 @@ def test_RF_mobilenet_cifar():
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception:
+            print(traceback.format_exc())
             print("The receptive field for level {} in Mobile net cifar is greater than 5000".format(i))
 
 def test_RF_mobilenet_imagenet():
@@ -110,11 +113,12 @@ def test_RF_mobilenet_imagenet():
             print("Receptive field of MobileNet imagenet Level {}".format(i))
             net1 = MobileNetV2_imagenet_RF(num_classes=10, RF_level=i)
             get_features_mobilenetv2(net1, block=4, net_type=1)
-            size = [1, 3, 5000, 5000]
+            size = [1, 3, 6000, 6000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
-        except Exception:
-            print("The receptive field for level {}  in Moblienet imagenetis greater than 5000".format(i))
+        except Exception as e:
+            print(traceback.format_exc())
+            print("The receptive field for level {}  in Mobilenet imagenet is greater than 5000".format(i))
 
 if __name__ == '__main__':
     # test_deep_RF_models()
