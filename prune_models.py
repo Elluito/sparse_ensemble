@@ -1016,6 +1016,7 @@ def n_shallow_layer_experiment(args):
     train, val, testloader = get_datasets(cfg)
 
     from torchvision.models import resnet18, resnet50
+
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
