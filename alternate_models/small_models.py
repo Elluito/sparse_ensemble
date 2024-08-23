@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import dnn_mode_connectivity.curves as curves
+import traceback
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -379,7 +380,7 @@ class Deep_small_ResNetRF(nn.Module):
         # print("shape layer2: {}".format(out.shape))
         out = self.layer3(out)
         # print("shape layer3: {}".format(out.shape))
-        # out = self.layer4(out)
+        out = self.layer4(out)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         # print("out:{}".format(out.size()))
@@ -582,12 +583,12 @@ def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    blocks = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     for i in blocks:
         # samples = []
         # for j in range(10):
-        x = torch.randn(3, 3, 400, 400)
+        x = torch.randn(2, 3, 32,32)
         dummy_y = torch.zeros(3, 10)
         dummy_y[:, 5] = 1
         dummy_loss = nn.CrossEntropyLoss()
@@ -604,7 +605,15 @@ def test_deep_RF_models():
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
 
+        print("Deep resnet level {}".format(i))
         resnet_net = deep_small_ResNet_rf(10, RF_level=i)
+        try:
+            resnet_net(x)
+            print("All good")
+        except Exception as e:
+            print(traceback.format_exc())
+            print(e)
+
 
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
@@ -614,16 +623,15 @@ def test_deep_RF_models():
         # torch.onnx.export(resnet_net, x,
         #                   f'onnx_model_small_resnet_small_imagenet.onnx',
         #                   input_names=input_names,
-        #                   output_names=output_names)
         #
         # loss = dummy_loss(y_resnet, dummy_y)
         # loss.backward()
         # print(y_resnet)
 
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 3200, 3200))
+        # resnet_rf = receptivefield(resnet_net, (1, 3, 3200, 3200))
         print("Receptive field of deep small ResNet Level {}".format(i))
-        print(resnet_rf.rfsize)
+        # print(resnet_rf.rfsize)
 
 
 def models_info():
