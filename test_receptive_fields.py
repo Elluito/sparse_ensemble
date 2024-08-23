@@ -105,7 +105,10 @@ def test_RF_densenet28():
             net1 =densenet_28_RF([0] * 100, RF_level=i)
             print("Receptive field of Densenet28 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-            size = [1, 3, 5000, 5000]
+            if i < 4:
+                size = [1, 3, 1200, 1200]
+            else:
+                size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
@@ -122,7 +125,10 @@ def test_RF_mobilenet_cifar():
             print("Receptive field of MobileNet cifar Level {}".format(i))
             net1 = MobileNetV2_cifar_RF(num_classes=10, RF_level=i)
             get_features_mobilenetv2(net1)
-            size = [1, 3, 5000, 5000]
+            if i < 4:
+                size = [1, 3, 1200, 1200]
+            else:
+                size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception:
@@ -141,7 +147,10 @@ def test_RF_mobilenet_imagenet():
             print("Receptive field of MobileNet imagenet Level {}".format(i))
             net1 = MobileNetV2_imagenet_RF(num_classes=10, RF_level=i)
             get_features_mobilenetv2(net1)
-            size = [1, 3, 6000, 6000]
+            if i < 4:
+                size = [1, 3, 1200, 1200]
+            else:
+                size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
             print(le_rf.rfsize)
         except Exception as e:
@@ -192,8 +201,9 @@ def test_RF_vgg_stride():
 
 if __name__ == '__main__':
     # test_deep_RF_models()
-    test_RF_densenet40()
-    test_RF_densenet28()
+    # test_RF_densenet40()
+    # test_RF_densenet28()
     test_RF_mobilenet_cifar()
+    test_RF_mobilenet_imagenet()
     # test_RF_resnet50_stride()
     # test_RF_vgg_stride()
