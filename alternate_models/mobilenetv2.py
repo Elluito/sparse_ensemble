@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
+
     def __init__(self, in_planes, out_planes, expansion, stride):
         super(Block, self).__init__()
         self.stride = stride
@@ -33,17 +34,17 @@ class Block(nn.Module):
         out = F.relu(self.bn1(self.conv1(x)))
         out = F.relu(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
-        out = out + self.shortcut(x) if self.stride==1 else out
+        out = out + self.shortcut(x) if self.stride == 1 else out
         return out
 
 
 class MobileNetV2_cifar(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
-    cfg = [(1,  16, 1, 1),
-           (6,  24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
-           (6,  32, 3, 2),
-           (6,  64, 4, 2),
-           (6,  96, 3, 1),
+    cfg = [(1, 16, 1, 1),
+           (6, 24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
+           (6, 32, 3, 2),
+           (6, 64, 4, 2),
+           (6, 96, 3, 1),
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
@@ -60,7 +61,7 @@ class MobileNetV2_cifar(nn.Module):
     def _make_layers(self, in_planes):
         layers = []
         for expansion, out_planes, num_blocks, stride in self.cfg:
-            strides = [stride] + [1]*(num_blocks-1)
+            strides = [stride] + [1] * (num_blocks - 1)
             for stride in strides:
                 layers.append(Block(in_planes, out_planes, expansion, stride))
                 in_planes = out_planes
@@ -75,13 +76,15 @@ class MobileNetV2_cifar(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+
 class MobileNetV2_imagenet(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
-    cfg = [(1,  16, 1, 1),
-           (6,  24, 2, 2),  # NOTE: change stride 2 -> 1 for CIFAR10  | | change stride 1 -> 2 for ImageNet
-           (6,  32, 3, 2),
-           (6,  64, 4, 2),
-           (6,  96, 3, 1),
+    cfg = [(1, 16, 1, 1),
+           (6, 24, 2, 2),  # NOTE: change stride 2 -> 1 for CIFAR10  | | change stride 1 -> 2 for ImageNet
+           (6, 32, 3, 2),
+           (6, 64, 4, 2),
+           (6, 96, 3, 1),
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
@@ -98,7 +101,7 @@ class MobileNetV2_imagenet(nn.Module):
     def _make_layers(self, in_planes):
         layers = []
         for expansion, out_planes, num_blocks, stride in self.cfg:
-            strides = [stride] + [1]*(num_blocks-1)
+            strides = [stride] + [1] * (num_blocks - 1)
             for stride in strides:
                 layers.append(Block(in_planes, out_planes, expansion, stride))
                 in_planes = out_planes
@@ -113,19 +116,21 @@ class MobileNetV2_imagenet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+
 class MobileNetV2_cifar_RF(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
-    cfg = [(1,  16, 1, 1),
-           (6,  24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
-           (6,  32, 3, 2),
-           (6,  64, 4, 2),
-           (6,  96, 3, 1),
+    cfg = [(1, 16, 1, 1),
+           (6, 24, 2, 1),  # NOTE: change stride 2 -> 1 for CIFAR10
+           (6, 32, 3, 2),
+           (6, 64, 4, 2),
+           (6, 96, 3, 1),
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
-    def __init__(self, num_classes=10,RF_level=0):
+    def __init__(self, num_classes=10, RF_level=0):
         super(MobileNetV2_cifar_RF, self).__init__()
-        self.rf_level=RF_level
+        self.rf_level = RF_level
         if self.rf_level == 0:
             self.maxpool = nn.Identity()
         if self.rf_level == 1:
@@ -162,7 +167,7 @@ class MobileNetV2_cifar_RF(nn.Module):
     def _make_layers(self, in_planes):
         layers = []
         for expansion, out_planes, num_blocks, stride in self.cfg:
-            strides = [stride] + [1]*(num_blocks-1)
+            strides = [stride] + [1] * (num_blocks - 1)
             for stride in strides:
                 layers.append(Block(in_planes, out_planes, expansion, stride))
                 in_planes = out_planes
@@ -178,20 +183,22 @@ class MobileNetV2_cifar_RF(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+
 class MobileNetV2_imagenet_RF(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
-    cfg = [(1,  16, 1, 1),
-           (6,  24, 2, 2),  # NOTE: change stride 2 -> 1 for CIFAR10  | | change stride 1 -> 2 for ImageNet
-           (6,  32, 3, 2),
-           (6,  64, 4, 2),
-           (6,  96, 3, 1),
+    cfg = [(1, 16, 1, 1),
+           (6, 24, 2, 2),  # NOTE: change stride 2 -> 1 for CIFAR10  | | change stride 1 -> 2 for ImageNet
+           (6, 32, 3, 2),
+           (6, 64, 4, 2),
+           (6, 96, 3, 1),
            (6, 160, 3, 2),
            (6, 320, 1, 1)]
 
-    def __init__(self, num_classes=10,RF_level=0):
+    def __init__(self, num_classes=10, RF_level=0):
         super(MobileNetV2_imagenet_RF, self).__init__()
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10, || NOTE: change conv1 stride 1 -> 2 for IMagenet
-        self.rf_level=RF_level
+        self.rf_level = RF_level
         if self.rf_level == 0:
             self.maxpool = nn.Identity()
         if self.rf_level == 1:
@@ -226,7 +233,7 @@ class MobileNetV2_imagenet_RF(nn.Module):
     def _make_layers(self, in_planes):
         layers = []
         for expansion, out_planes, num_blocks, stride in self.cfg:
-            strides = [stride] + [1]*(num_blocks-1)
+            strides = [stride] + [1] * (num_blocks - 1)
             for stride in strides:
                 layers.append(Block(in_planes, out_planes, expansion, stride))
                 in_planes = out_planes
@@ -242,6 +249,8 @@ class MobileNetV2_imagenet_RF(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out
+
+
 def get_features_mobilenetv2(net):
     def features_only(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
@@ -252,14 +261,16 @@ def get_features_mobilenetv2(net):
 
     net.forward = features_only.__get__(net)  # bind method
 
-
     net.forward = features_only.__get__(net)  # bind method
+
+
 def test():
-    for i in [1,2,3,4,5,6,7,8,9,10,11]:
+    for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
         print("INPUT 32x32")
         try:
-            net = MobileNetV2_cifar_RF(10,RF_level=i)
-            x = torch.randn(2,3,32,32)
+            print("RF level {}".format(i))
+            net = MobileNetV2_cifar_RF(10, RF_level=i)
+            x = torch.randn(2, 3, 32, 32)
             y = net(x)
             print(y.size())
         except Exception as e:
@@ -268,13 +279,16 @@ def test():
 
         print("INPUT 64x64")
         try:
-            net = MobileNetV2_cifar_RF(10,RF_level=i)
-            x = torch.randn(2,3,64,64)
+            print("RF level {}".format(i))
+            net = MobileNetV2_cifar_RF(10, RF_level=i)
+            x = torch.randn(2, 3, 64, 64)
             y = net(x)
             print(y.size())
         except Exception as e:
             print("RF level: {} is too big for imagesize of 64x64".format(i))
             print(e)
+
+
 # test()
 if __name__ == '__main__':
     test()

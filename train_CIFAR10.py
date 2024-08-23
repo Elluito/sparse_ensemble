@@ -1176,7 +1176,18 @@ def main(args):
             net = MobileNetV2_imagenet_RF(num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "imagenet":
             net = MobileNetV2_imagenet_RF(num_classes=1000, RF_level=args.RF_level)
-        pass
+    if args.model == "densenet28":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_28_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_28_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
+
     # Training
     # # Model
     # print('==> Building model..')
@@ -1331,7 +1342,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location to save the models')
     parser.add_argument('--data_folder', default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets", type=str,
-                        help='Location of the datasets', required=True)
+                        help='Location of the datasets', required=False)
     parser.add_argument('--resume_solution', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Solution from which resume t')
     parser.add_argument('--resume', '-r', action='store_true',
