@@ -581,9 +581,11 @@ def get_output_until_block_deep_small_resnet(net, block, net_type=1):
 
 def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
-
+    from sparse_ensemble_utils import count_parameters
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
     blocks = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    resnet_net = deep_small_ResNet_rf(10, RF_level=4)
+    print("parameter count: {}".format(count_parameters(resnet_net)))
 
     for i in blocks:
         # samples = []
@@ -606,8 +608,8 @@ def test_deep_RF_models():
         #     print(vgg_rf)
 
         print("Deep resnet level {}".format(i))
-        resnet_net = deep_small_ResNet_rf(10, RF_level=i)
         try:
+            resnet_net = deep_small_ResNet_rf(10, RF_level=i)
             resnet_net(x)
             print("All good")
         except Exception as e:

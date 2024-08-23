@@ -82,4 +82,4 @@ export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/
 #unset KMP_AFFINITY
 
 echo $PYTHONPATH
-python test_receptive_fields.py
+python3.9 test_receptive_fields.py
