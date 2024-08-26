@@ -168,9 +168,9 @@ class small_deep_Bottleneck(nn.Module):
 
     def forward(self, x):
         out = self.relu(self.bn1(self.conv1_1x1(x)))
-        out = self.relu(self.bn1(self.conv2_1x1(out)))
-        out = self.relu(self.bn1(self.conv3_3x3(out)))
-        out = self.relu(self.bn1(self.conv4_1x1(out)))
+        out = self.relu(self.bn2(self.conv2_1x1(out)))
+        out = self.relu(self.bn3(self.conv3_3x3(out)))
+        out = self.relu(self.bn4(self.conv4_1x1(out)))
         out = self.bn5(self.conv5_1x1(out))
         # out = self.bn3(self.conv3(out))
         out = out + self.shortcut(x)

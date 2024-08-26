@@ -700,7 +700,6 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -870,7 +869,87 @@ def main(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
-
+    if args.model == "deep_resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+    if args.model == "densenet40":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_40_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_40_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
+    if args.model == "mobilenetv2":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = MobileNetV2_cifar_RF(num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = MobileNetV2_cifar_RF(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = MobileNetV2_cifar_RF(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=1000, RF_level=args.RF_level)
+    if args.model == "densenet28":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_28_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_28_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
+    if args.model == "resnet50_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_stride(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_stride(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_stride("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_stride("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
@@ -956,9 +1035,13 @@ def main(args):
         df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
         print("Seed from file {}".format(seed_from_file1))
         df2.to_csv(
-            "{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_modified_bottleNeck.csv".format(args.model, args.RF_level, seed_from_file,
-                                                                              args.dataset, args.name,
-                                                                              args.pruning_rate),
+            "{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}.csv".format(args.save_folder,
+                                                                                                     args.model,
+                                                                                                     args.RF_level,
+                                                                                                     seed_from_file,
+                                                                                                     args.dataset,
+                                                                                                     args.name,
+                                                                                                     args.pruning_rate),
             index=False)
 
         print("Done")
@@ -971,9 +1054,12 @@ def main(args):
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
     df.to_csv(
-        "RF_{}_{}_{}_{}_{}_one_shot_summary_modified_bottleNeck.csv".format(args.model, args.RF_level, args.dataset, args.pruning_rate,
-                                                        args.name),
+        "{}/RF_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
+                                                                               args.RF_level, args.dataset,
+                                                                               args.pruning_rate,
+                                                                               args.name),
         index=False)
+
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
     count_fn = lambda w: w.nelement()
@@ -1362,6 +1448,8 @@ if __name__ == '__main__':
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
+    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Output folder of the pruning results')
     parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
                         help='Location to save the models', required=True)
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
