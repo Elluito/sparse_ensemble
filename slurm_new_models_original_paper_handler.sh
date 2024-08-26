@@ -1,5 +1,5 @@
 #!/bin/bash
-for lvl in 1 2 4 8; do                # iterate idxa from 0 to length
+for lvl in 2; do                # iterate idxa from 0 to length
 #for lvl in 8; do                # iterate idxa from 0 to length
 for model in "densenet40";do
 for dataset in "tiny_imagenet"; do
