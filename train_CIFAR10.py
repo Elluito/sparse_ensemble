@@ -265,7 +265,7 @@ def train(epoch):
         print("\n")
         print("Predictions: {}".format(outputs))
         print("\n")
-        print("Predictions shape {}".format(targets.shape))
+        print("Predictions shape {}".format(outputs.shape))
         print("\n")
         if batch_idx == 0:
             t1 = time.time()
