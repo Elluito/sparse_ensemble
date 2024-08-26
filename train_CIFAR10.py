@@ -262,6 +262,8 @@ def train(epoch):
         loss = criterion(outputs, targets)
         if batch_idx == 0:
             t0 = time.time()
+        print("Labels: {}".format(targets))
+        print("Predictions: {}".format(targets))
         loss.backward()
         if record_flops:
             backwardflops = 2 * batch_flops
