@@ -226,7 +226,7 @@ class DenseNetRF(nn.Module):
 
 
 def densenet_40_RF(compress_rate, num_classes=10, RF_level=0):
-    return DenseNetRF(num_classes=10, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
+    return DenseNetRF(num_classes=num_classes, compress_rate=compress_rate, depth=40, block=DenseBasicBlock, RF_level=RF_level)
 
 
 def densenet_28_RF(compress_rate, num_classes=10, RF_level=0):

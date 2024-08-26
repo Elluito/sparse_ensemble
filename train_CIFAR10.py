@@ -271,9 +271,10 @@ def train(epoch):
             t1 = time.time()
             print("Time for forward pass {}".format(t1 - t0))
         loss = criterion(outputs, targets)
+        print("Loss:{}".format(loss))
         if batch_idx == 0:
             t0 = time.time()
-        print("Labels: {}".format(targets.to(torch.long)))
+        print("Labels: {}".format(targets))
         print("Predictions: {}".format(outputs))
         loss.backward()
         if record_flops:
