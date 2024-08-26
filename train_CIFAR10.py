@@ -259,23 +259,12 @@ def train(epoch):
         if batch_idx == 0:
             t0 = time.time()
         outputs = net(inputs)
-        print("Labels: {}".format(targets))
-        print("\n")
-        print("Labels shape {}".format(targets.shape))
-        print("\n")
-        print("Predictions: {}".format(outputs))
-        print("\n")
-        print("Predictions shape {}".format(outputs.shape))
-        print("\n")
         if batch_idx == 0:
             t1 = time.time()
             print("Time for forward pass {}".format(t1 - t0))
         loss = criterion(outputs, targets)
-        print("Loss:{}".format(loss))
         if batch_idx == 0:
             t0 = time.time()
-        print("Labels: {}".format(targets))
-        print("Predictions: {}".format(outputs))
         loss.backward()
         if record_flops:
             backwardflops = 2 * batch_flops
