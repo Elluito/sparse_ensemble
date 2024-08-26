@@ -260,7 +260,13 @@ def train(epoch):
             t0 = time.time()
         outputs = net(inputs)
         print("Labels: {}".format(targets.to(torch.LongTensor)))
+        print("\n")
+        print("Labels shape {}".format(targets.shape))
+        print("\n")
         print("Predictions: {}".format(outputs))
+        print("\n")
+        print("Predictions shape {}".format(targets.shape))
+        print("\n")
         if batch_idx == 0:
             t1 = time.time()
             print("Time for forward pass {}".format(t1 - t0))
