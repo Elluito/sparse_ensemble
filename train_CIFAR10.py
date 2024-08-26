@@ -259,7 +259,7 @@ def train(epoch):
         if batch_idx == 0:
             t0 = time.time()
         outputs = net(inputs)
-        print("Labels: {}".format(targets.to(torch.LongTensor)))
+        print("Labels: {}".format(targets))
         print("\n")
         print("Labels shape {}".format(targets.shape))
         print("\n")
