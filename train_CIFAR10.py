@@ -1,5 +1,8 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
+
+import torch
+
 from shrinkbench.metrics import flops
 import wandb
 import omegaconf
@@ -256,6 +259,8 @@ def train(epoch):
         if batch_idx == 0:
             t0 = time.time()
         outputs = net(inputs)
+        print("Labels: {}".format(targets.to(torch.LongTensor)))
+        print("Predictions: {}".format(outputs))
         if batch_idx == 0:
             t1 = time.time()
             print("Time for forward pass {}".format(t1 - t0))
