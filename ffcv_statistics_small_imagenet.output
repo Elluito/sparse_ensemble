@@ -1,0 +1,11 @@
+/jmain02/apps/python3/anaconda3/bin/python
+Mean for train loader
+tensor([122.4760, 113.6542,  99.5722], device='cuda:0')
+STD for train loader
+tensor([69.5428, 66.8305, 70.2595], device='cuda:0')
+
+ Test loader ####################
+Mean for test loader
+tensor([120.6614, 112.3769,  98.3527], device='cuda:0')
+STD for test loader
+tensor([68.9266, 66.2883, 69.4644], device='cuda:0')
