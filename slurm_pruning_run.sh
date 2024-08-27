@@ -130,7 +130,7 @@ echo "use FFCV!"
 
 #    python prune_models.py --name "${NAME}" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
-    python prune_models.py --ffcv --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --data_folder "${DATA_FOLDER}"
+    python3.9 prune_models.py --ffcv --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --ffcv_train "${FFCV_TRAIN}" --ffcv_val "${FFCV_VAL}" --data_folder "${DATA_FOLDER}" --save_folder "${SAVE_FOLDER}"
 else
 
 #    echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
@@ -139,7 +139,7 @@ else
     echo "Don't use FFCV!"
 #./slurm_pruning_run.sh FFCV=0 NAME=recording_200_no_ffcv MODEL=resnet_small DATASET=small_imagenet NUMW=4 RFL=10 TYPE=normal FOLDER=$HOME/checkpoints PR=0.6 EXPERIMENT=1
 
-    python prune_models.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --data_folder "${DATA_FOLDER}"
+    python3.9 prune_models.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --data_folder "${DATA_FOLDER}" --save_folder "${SAVE_FOLDER}"
   fi
 
 #############################################################
