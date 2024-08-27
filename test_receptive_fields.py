@@ -105,8 +105,8 @@ def test_RF_densenet28():
             net1 =densenet_28_RF([0] * 100, RF_level=i)
             print("Receptive field of Densenet28 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
-            if i < 4:
-                size = [1, 3, 1200, 1200]
+            if i <= 4:
+                size = [1, 3, 1500, 1500]
             else:
                 size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
@@ -140,7 +140,7 @@ def test_RF_mobilenet_imagenet():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from alternate_models.mobilenetv2 import get_features_mobilenetv2, MobileNetV2_imagenet_RF
 
-    blocks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    blocks = [3]
 
     for i in blocks:
         try:
@@ -148,7 +148,7 @@ def test_RF_mobilenet_imagenet():
             net1 = MobileNetV2_imagenet_RF(num_classes=10, RF_level=i)
             get_features_mobilenetv2(net1)
             if i < 4:
-                size = [1, 3, 1200, 1200]
+                size = [1, 3, 1500, 1500]
             else:
                 size = [1, 3, 5000, 5000]
             le_rf = receptivefield(net1, size)
@@ -200,10 +200,10 @@ def test_RF_vgg_stride():
 
 
 if __name__ == '__main__':
-    # test_deep_RF_models()
+    test_deep_RF_models()
     # test_RF_densenet40()
     # test_RF_densenet28()
-    test_RF_mobilenet_cifar()
-    test_RF_mobilenet_imagenet()
+    # test_RF_mobilenet_cifar()
+    # test_RF_mobilenet_imagenet()
     # test_RF_resnet50_stride()
     # test_RF_vgg_stride()
