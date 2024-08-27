@@ -46,7 +46,6 @@ else
 #done
 }
 # New models pruning results
-
 for model in "densenet40" "mobilenetv2"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0.8" "0.9"; do
