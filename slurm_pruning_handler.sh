@@ -58,6 +58,7 @@ done
 done
 done
 
+
 # Stride models pruning results
 #
 #for model in "resnet50_stride" ; do
