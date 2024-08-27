@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_stride_normal_tiny_imagenet_seed.0_rf_level_9_recording_200_test_acc_40.07.pth,40.07,31.03
