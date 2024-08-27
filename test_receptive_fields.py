@@ -53,16 +53,21 @@ def test_densenet_rf():
 def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     import torch
-    from alternate_models.small_models import deep_small_ResNet_rf, get_output_until_block_deep_small_resnet
+    from alternate_models.small_models import deep_small_ResNet_rf, get_output_until_block_deep_small_resnet, \
+        deep_2_small_Resnet_rf
 
-    # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [10, 11]
+    # blocks = [2,3, 4, 5, 6, 7, 8, 9, 10]
+    blocks = [1, 2, 3, 4, 5, 6, 7]
     # blocks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
     for i in blocks:
-        resnet_net = deep_small_ResNet_rf(10, RF_level=i)
+        resnet_net = deep_2_small_Resnet_rf(10, RF_level=i, number_layers=25)
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 3000, 3000))
+        if i < 3:
+            size = [1, 3, 224, 224]
+        else:
+            size = [1, 3, 900, 900]
+        resnet_rf = receptivefield(resnet_net, size)
         print("Receptive field of deep small ResNet Level {}".format(i))
         print(resnet_rf.rfsize)
 
@@ -102,7 +107,7 @@ def test_RF_densenet28():
 
     for i in blocks:
         try:
-            net1 =densenet_28_RF([0] * 100, RF_level=i)
+            net1 = densenet_28_RF([0] * 100, RF_level=i)
             print("Receptive field of Densenet28 Level {}".format(i))
             get_features_only_until_block_layer_densenet_corin(net1, block=4, net_type=1)
             if i <= 4:
@@ -114,6 +119,8 @@ def test_RF_densenet28():
         except Exception as e:
             print(traceback.format_exc())
             print("The receptive field for level {} of densenet40 is greater than 5000".format(i))
+
+
 def test_RF_mobilenet_cifar():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     from alternate_models.mobilenetv2 import get_features_mobilenetv2, MobileNetV2_cifar_RF

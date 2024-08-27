@@ -473,6 +473,19 @@ def deep_small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier
                                multiplier=multiplier)
 
 
+def deep_2_small_Resnet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1, number_layers=25):
+    if number_layers == 25:
+        return Deep_small_ResNetRF(small_deep_Bottleneck, [1, 1, 2, 1], num_classes=num_classes,
+                                   fixed_points=fix_points,
+                                   RF_level=RF_level,
+                                   multiplier=multiplier)
+    if number_layers == 40:
+        return Deep_small_ResNetRF(small_deep_Bottleneck, [2, 2, 2, 2], num_classes=num_classes,
+                                   fixed_points=fix_points,
+                                   RF_level=RF_level,
+                                   multiplier=multiplier)
+
+
 def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
         return small_ResNetRF(small_BasicBlock, [1, 1, 1, 1], num_classes, fix_points)
@@ -590,7 +603,7 @@ def test_deep_RF_models():
     for i in blocks:
         # samples = []
         # for j in range(10):
-        x = torch.randn(2, 3, 32,32)
+        x = torch.randn(2, 3, 32, 32)
         dummy_y = torch.zeros(3, 10)
         dummy_y[:, 5] = 1
         dummy_loss = nn.CrossEntropyLoss()
@@ -616,7 +629,6 @@ def test_deep_RF_models():
             print(traceback.format_exc())
             print(e)
 
-
         # y_resnet = resnet_net(x)
         # input_names = ['Image']
         #
@@ -631,7 +643,7 @@ def test_deep_RF_models():
         # print(y_resnet)
 
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        # resnet_rf = receptivefield(resnet_net, (1, 3, 3200, 3200))
+        resnet_rf = receptivefield(resnet_net, (1, 3, 3200, 3200))
         print("Receptive field of deep small ResNet Level {}".format(i))
         # print(resnet_rf.rfsize)
 
