@@ -1122,7 +1122,7 @@ def main(args):
             # net.fc = nn.Linear(in_features, 10)
         if args.type == "pytorch" and args.dataset == "cifar100":
             raise NotImplementedError
-    if args.model == "deep_resnet_small":
+    if args.model == "resnet40_small_":
         if args.type == "normal" and args.dataset == "cifar10":
             net = deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "cifar100":
@@ -1131,6 +1131,33 @@ def main(args):
             net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+
+    if args.model == "resnet25_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = deep_2_small_Resnet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = deep_2_small_Resnet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_2_small_Resnet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_2_small_Resnet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
         if args.type == "pytorch" and args.dataset == "cifar10":
             raise NotImplementedError
             # net = resnet50()

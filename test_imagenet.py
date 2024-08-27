@@ -308,6 +308,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
 
     ratio = 256 / 224
 
+
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 

@@ -82,7 +82,7 @@
 #unset KMP_AFFINITY
 
 python -c "import os; print(os.environ)"
-python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
+#python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 
 export LD_LIBRARY_PATH=""
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
@@ -94,4 +94,4 @@ export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/
 echo $PYTHONPATH
 which python
 which python3.9
-python3.9 train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_resnet" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9
+python3.9 train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_resnet" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
