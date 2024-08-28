@@ -32,11 +32,11 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     # CIFAR_STD = [51.5865, 50.847, 51.255]
 
-    # small_imagenet_MEAN_train = np.array([0.4802, 0.4481, 0.3975])
-    # small_imagenet_MEAN_test = np.array([0.4824, 0.4495, 0.3981])
+    small_imagenet_MEAN_train = np.array([0.4802, 0.4481, 0.3975])
+    small_imagenet_MEAN_test = np.array([0.4824, 0.4495, 0.3981])
     # #
-    # small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
-    # small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
+    small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
+    small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
 
     ########## train
 
@@ -48,8 +48,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         torch_trnfs.ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        # NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
-        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
+        NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
+        # NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -119,8 +119,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         torch_trnfs.ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        # NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
-        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
+        NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
+        # NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline = [
