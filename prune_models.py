@@ -702,7 +702,13 @@ def pruning_fine_tuning_experiment(args):
 def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
-    else:
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "densenet" in args.model:
+        exclude_layers = ["conv1", "fc"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "mobilenet" in args.model:
         exclude_layers = ["conv1", "linear"]
 
     cfg = omegaconf.DictConfig(
