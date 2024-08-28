@@ -54,7 +54,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     image_pipeline: List[Operation] = [
         decoder,
         RandomHorizontalFlip(),
-        ToTensor(),
+        PytorchtoTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
@@ -126,7 +126,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
     image_pipeline = [
         cropper,
-        ToTensor(),
+        PytorchtoTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
