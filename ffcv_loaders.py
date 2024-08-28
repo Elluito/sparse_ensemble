@@ -25,10 +25,10 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     start_time = time.time()
 
-    small_imagenet_MEAN_train= [122.4760, 113.6542, 99.5722]
-    small_imagenet_STD_train =  [69.5428, 66.8305, 70.2595]
-    small_imagenet_MEAN_test = [120.6614, 112.3769, 98.3527]
-    small_imagenet_STD_test =[68.9266, 66.2883, 69.4644]
+    small_imagenet_MEAN_train= np.array([122.4760, 113.6542, 99.5722])
+    small_imagenet_STD_train = np.array( [69.5428, 66.8305, 70.2595])
+    small_imagenet_MEAN_test = np.array([120.6614, 112.3769, 98.3527])
+    small_imagenet_STD_test = np.array([68.9266, 66.2883, 69.4644])
 
     # CIFAR_STD = [51.5865, 50.847, 51.255]
 
