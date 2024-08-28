@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_stride_normal_tiny_imagenet_1724696181.98296_rf_level_1_recording_200_test_acc_50.15.pth,50.15,23.98

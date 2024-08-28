@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_stride_normal_cifar10_1724696180.9667594_rf_level_2_recording_200_test_acc_88.12.pth,88.12,87.98
