@@ -474,6 +474,12 @@ def deep_small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier
 
 
 def deep_2_small_Resnet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1, number_layers=25):
+    if number_layers == 20:
+        return Deep_small_ResNetRF(small_deep_Bottleneck, [1, 1, 1, 1], num_classes=num_classes,
+                                   fixed_points=fix_points,
+                                   RF_level=RF_level,
+                                   multiplier=multiplier)
+
     if number_layers == 25:
         return Deep_small_ResNetRF(small_deep_Bottleneck, [1, 1, 2, 1], num_classes=num_classes,
                                    fixed_points=fix_points,
