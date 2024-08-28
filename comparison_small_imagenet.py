@@ -35,6 +35,7 @@ def test_images(args):
         {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
          "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
         val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False)
+
     for (imgs1, y1), (imgs_ffcv, y2) in zip(testloader, ffcv_testloader):
         print(f"Normal loader labels {y1}")
         print(f"FCCV loader labels {y2}")
@@ -53,6 +54,11 @@ def test_images(args):
         np.save("ffcv_images.npy", imgs_ffcv.cpu().numpy())
 
         break
+
+
+def test_predictions_models():
+    ffc_images = np.load("")
+    normal_images = np.load("")
 
 
 def main():

@@ -517,7 +517,7 @@ def run_local_test():
         "ffcv_train": "",
         "batch_size": 64,
         "model": "resnet50",
-        "dataset": "cifar10",
+        "dataset": "",
         "num_workers": 0,
         "input_resolution": 32,
         "width": 1,
