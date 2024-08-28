@@ -44,7 +44,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     image_pipeline: List[Operation] = [
         decoder,
-        # RandomHorizontalFlip(),
+        RandomHorizontalFlip(),
         ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
@@ -111,7 +111,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         val_loader = None
 
     res_tuple = (resolution, resolution)
-    DEFAULT_CROP_RATIO = resolution / 256
+    DEFAULT_CROP_RATIO = 224 / 256
+
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
     image_pipeline = [
         cropper,

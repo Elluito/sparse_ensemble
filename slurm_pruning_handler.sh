@@ -46,17 +46,17 @@ else
 #done
 }
 # New models pruning results
-for model in "densenet40"; do
-for dataset in "cifar10"; do
-for pruning_rate in "0.8" "0.9"; do
-for rf_level in "1" "2" "4"; do
-
-run_pruning "${model}" "$dataset" "${HOME}/new_models_original_paper" "${HOME}/datasets" "${HOME}/sparse_ensemble/new_models_original_paper" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-done
-done
-done
-done
+#for model in "densenet40"; do
+#for dataset in "cifar10"; do
+#for pruning_rate in "0.8" "0.9"; do
+#for rf_level in "1" "2" "4"; do
+#
+#run_pruning "${model}" "$dataset" "${HOME}/new_models_original_paper" "${HOME}/datasets" "${HOME}/sparse_ensemble/new_models_original_paper" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#done
+#done
+#done
+#done
 
 
 ## Stride models pruning results
