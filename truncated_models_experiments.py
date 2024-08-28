@@ -505,9 +505,9 @@ def main(args):
 
 def run_local_test():
     cfg = omegaconf.DictConfig({
-        # "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
+        "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
         # "solution": "/home/luisaam/checkpoints/vgg19_normal_cifar10_1723720946.9104598_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth",
-        "solution": "/home/luisaam/checkpoints/resnet50_normal_cifar10_1723722961.8540442_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth",
+        # "solution": "/home/luisaam/checkpoints/resnet50_normal_cifar10_1723722961.8540442_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth",
         "modeltype1": "normal",
         "seedname1": "_seed_8",
         "RF_level": 2,

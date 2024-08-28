@@ -12,7 +12,7 @@ from ffcv.fields.rgb_image import CenterCropRGBImageDecoder, \
     RandomResizedCropRGBImageDecoder
 from ffcv.fields.basics import IntDecoder
 from ffcv.transforms.common import Squeeze
-
+import torchvision.transforms as torch_trnfs
 
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
@@ -25,16 +25,16 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     start_time = time.time()
 
-    small_imagenet_MEAN_train= np.array([122.4760, 113.6542, 99.5722])
-    small_imagenet_STD_train = np.array( [69.5428, 66.8305, 70.2595])
-    small_imagenet_MEAN_test = np.array([120.6614, 112.3769, 98.3527])
-    small_imagenet_STD_test = np.array([68.9266, 66.2883, 69.4644])
+    # small_imagenet_MEAN_train= np.array([122.4760, 113.6542, 99.5722])
+    # small_imagenet_STD_train = np.array( [69.5428, 66.8305, 70.2595])
+    # small_imagenet_MEAN_test = np.array([120.6614, 112.3769, 98.3527])
+    # small_imagenet_STD_test = np.array([68.9266, 66.2883, 69.4644])
 
     # CIFAR_STD = [51.5865, 50.847, 51.255]
 
     # small_imagenet_MEAN_train = np.array([0.4802, 0.4481, 0.3975])
     # small_imagenet_MEAN_test = np.array([0.4824, 0.4495, 0.3981])
-    #
+    # #
     # small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
     # small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
 
@@ -45,11 +45,11 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     image_pipeline: List[Operation] = [
         decoder,
         RandomHorizontalFlip(),
-        ToTensor(),
+        torch_trnfs.ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
-        # NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
+        # NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
+        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline: List[Operation] = [
@@ -116,11 +116,11 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
     image_pipeline = [
         cropper,
-        ToTensor(),
+        torch_trnfs.ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
-        NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
-        # NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
+        # NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
+        NormalizeImage(np.array([0, 0, 0]), np.array([1, 1, 1]), np.float32)
     ]
 
     label_pipeline = [
