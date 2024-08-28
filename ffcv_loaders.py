@@ -14,6 +14,13 @@ from ffcv.fields.basics import IntDecoder
 from ffcv.transforms.common import Squeeze
 import torchvision.transforms as torch_trnfs
 
+class PytorchtoTensor(torch.nn.Module):
+    def __init__(self, scale=1):
+        super(PytorchtoTensor, self).__init__()
+        self.scale = scale
+
+    def forward(self, x):
+        return torch_trnfs.ToTensor(x)
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
@@ -45,7 +52,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     image_pipeline: List[Operation] = [
         decoder,
         RandomHorizontalFlip(),
-        torch_trnfs.ToTensor(),
+        PytorchtoTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
@@ -116,7 +123,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
     image_pipeline = [
         cropper,
-        torch_trnfs.ToTensor(),
+        PytorchtoTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
