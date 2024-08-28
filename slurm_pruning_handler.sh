@@ -89,7 +89,7 @@ else
 for model in "vgg19_stride" ; do
 for dataset in "tiny_imagenet"; do
 for pruning_rate in  "0.8" "0.9"; do
-for rf_level in  "1" "2"; do
+for rf_level in  "3"; do
 
 run_pruning "${model}" "$dataset" "${HOME}/stride_original_paper" "${HOME}/datasets" "${HOME}/sparse_ensemble/stride_original_paper" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 
@@ -99,14 +99,14 @@ done
 done
 
 
-for model in "vgg19_stride" ; do
-for dataset in "cifar10"; do
-for pruning_rate in "0.8" "0.9"; do
-for rf_level in  "1" "2" "3"; do
-
-run_pruning "${model}" "$dataset" "${HOME}/stride_original_paper" "${HOME}/datasets" "${HOME}/sparse_ensemble/stride_original_paper" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-done
-done
-done
-done
+#for model in "vgg19_stride" ; do
+#for dataset in "cifar10"; do
+#for pruning_rate in "0.8" "0.9"; do
+#for rf_level in  "1" "2" "3"; do
+#
+#run_pruning "${model}" "$dataset" "${HOME}/stride_original_paper" "${HOME}/datasets" "${HOME}/sparse_ensemble/stride_original_paper" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#done
+#done
+#done
+#done
