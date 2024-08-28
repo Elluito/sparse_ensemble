@@ -20,7 +20,7 @@ class PytorchtoTensor(torch.nn.Module):
         self.scale = scale
 
     def forward(self, x):
-        return torch_trnfs.ToTensor(x)
+        return torch_trnfs.ToTensor(x).cpu()
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
@@ -41,7 +41,9 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     small_imagenet_MEAN_train = np.array([0.4802, 0.4481, 0.3975])
     small_imagenet_MEAN_test = np.array([0.4824, 0.4495, 0.3981])
+
     # #
+
     small_imagenet_STD_train = np.array([0.2302, 0.2265, 0.2262])
     small_imagenet_STD_test = np.array([0.2301, 0.2264, 0.2261])
 
@@ -52,7 +54,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     image_pipeline: List[Operation] = [
         decoder,
         RandomHorizontalFlip(),
-        PytorchtoTensor(),
+        ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_train, small_imagenet_STD_train, np.float32)
@@ -118,12 +120,13 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
         val_loader = None
 
     res_tuple = (resolution, resolution)
+
     DEFAULT_CROP_RATIO = 224 / 256
 
     cropper = CenterCropRGBImageDecoder(res_tuple, ratio=DEFAULT_CROP_RATIO)
     image_pipeline = [
         cropper,
-        PytorchtoTensor(),
+        ToTensor(),
         ToDevice(torch.device("cuda:0"), non_blocking=True),
         ToTorchImage(),
         NormalizeImage(small_imagenet_MEAN_test, small_imagenet_STD_test, np.float32)
@@ -167,6 +170,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
 
 if __name__ == '__main__':
+
     trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
