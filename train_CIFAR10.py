@@ -993,9 +993,15 @@ def main(args):
             testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
     if args.dataset == "tiny_imagenet":
         from test_imagenet import load_tiny_imagenet
-        trainloader, valloader, testloader = load_tiny_imagenet(
-            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-             "num_workers": args.num_workers, "batch_size": batch_size})
+        from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+        if args.ffcv:
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                                      batch_size, args.num_workers,
+                                                                                      resolution=64)
+        else:
+            trainloader, valloader, testloader = load_tiny_imagenet(
+                {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size})
     if args.dataset == "small_imagenet":
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
