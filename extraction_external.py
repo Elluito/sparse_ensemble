@@ -18,6 +18,7 @@ import torchvision
 from torch.utils.data import random_split
 import torch.nn as nn
 from alternate_models import *
+
 if os.name == 'nt':  # running on windows:
     import win32file
 
@@ -265,11 +266,10 @@ class LatentRepresentationCollector:
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
-        exclude_layers = ["conv1", "linear","fc"]
+        exclude_layers = ["conv1", "linear", "fc"]
 
     print("Normal data loaders loaded!!!!")
 
@@ -448,8 +448,10 @@ def main(args):
                     real_dict[new_key] = item
             net.load_state_dict(real_dict, strict=False)
             print("Loaded solution!")
+    extractor = Extract()
+    extractor(net, args.model, args.dataset, args.input_resolution, trainloader, testloader, args.device,
+              args.save_path, args.RF_level)
 
-    pass
 
 def extract_from_dataset(logger: LatentRepresentationCollector,
                          train: bool, model: Module, dataset: DataLoader, device: str) -> None:
@@ -484,6 +486,8 @@ def extract_from_dataset(logger: LatentRepresentationCollector,
             else:
                 logger.logs[mode]['labels'] = np.hstack((logger.logs[mode]['labels'], labels.cpu().numpy()))
     print('accuracy:', correct / total)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
@@ -497,6 +501,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    parser.add_argument('--save_path', default=".logs/", type=int, help='Save path of logs')
     args = parser.parse_args()
 
     main(args)
