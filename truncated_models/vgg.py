@@ -168,6 +168,7 @@ class truncated_VGG_RF(nn.Module):
 
         self.features, self.fc_probes = self._make_layers(self.config)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool_probs = nn.AdaptiveAvgPool2d((4, 4))
         self.classifier = nn.Linear(512, num_classes)
 
     def forward(self, x):
@@ -184,8 +185,8 @@ class truncated_VGG_RF(nn.Module):
         prob_indx = 0
         for i, m in enumerate(self.features):
             out = m(out)
-            if isinstance(m, nn.ReLU):
-                inter = self.avgpool(out)
+            if isinstance(m, nn.Conv2d):
+                inter = self.avgpool_probs(out)
                 inter = inter.view(inter.size(0), -1)
                 inter_pred = self.fc_probes[prob_indx](inter)
                 intermediate_predictions.append(inter_pred)
@@ -223,7 +224,7 @@ class truncated_VGG_RF(nn.Module):
                 layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
                            nn.BatchNorm2d(x),
                            nn.ReLU(inplace=True)]
-                probe_layers += [nn.Linear(x, self.num_classes)]
+                probe_layers += [nn.Linear(x*4*4, self.num_classes)]
                 in_channels = x
 
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]

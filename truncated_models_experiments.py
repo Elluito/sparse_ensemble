@@ -226,7 +226,7 @@ def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
-        exclude_layers = ["conv1", "linear"]
+        exclude_layers = ["conv1", "linear","fc"]
 
     print("Normal data loaders loaded!!!!")
 
@@ -502,7 +502,8 @@ def main(args):
         # if os.path.isfile('{}/{}_logit_probes.pth'.format(save_folder, name, best_acc)):
         #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
 
-
+# def extract_featuremaps(args):
+#
 def run_local_test():
     cfg = omegaconf.DictConfig({
         "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",

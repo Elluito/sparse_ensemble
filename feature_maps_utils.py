@@ -9,6 +9,12 @@ from torch import nn
 from npy_append_array import NpyAppendArray
 
 
+
+
+
+
+
+
 def hook_applyfn(hook, model, forward=False, backward=False):
     """
 
@@ -126,7 +132,7 @@ def save_layer_feature_maps_for_batch(model, input, batch_size, file_prefix="", 
         # module_names.append(str(module))
 
     for name, module in model.named_modules():
-        if isinstance(module, nn.ReLU):
+        if isinstance(module, nn.Conv2d):
             hooks.append(module.register_forward_hook(store_activations))
             # break
     #

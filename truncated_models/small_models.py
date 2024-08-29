@@ -70,6 +70,7 @@ class small_truncated_Bottleneck(nn.Module):
 
         self.relu = nn.ReLU()
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool_probs = nn.AdaptiveAvgPool2d((4, 4))
         if fixed_points is None:
             self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
             self.bn1 = nn.BatchNorm2d(planes)
@@ -112,18 +113,21 @@ class small_truncated_Bottleneck(nn.Module):
 
     def forward(self, x):
 
-        out = self.relu(self.bn1(self.conv1(x)))
-        inter1 = self.avgpool(out)
+        out = self.conv1(x)
+        inter1 = self.avgpool_probs(out)
         inter1 = inter1.view(inter1.size(0), -1)
         pred1 = self.fc1(inter1)
-        out = self.bn2(self.conv2(out))
+        out = self.relu(self.bn1(out))
+        out = self.conv2(out)
+
+        inter2 = self.avgpool_probs(out)
+        inter2 = inter2.view(inter2.size(0), -1)
+        pred2 = self.fc2(inter2)
+        out = self.bn2(out)
         # out = self.bn3(self.conv3(out))
         out = out + self.shortcut(x)
         out = self.relu(out)
 
-        inter2 = self.avgpool(out)
-        inter2 = inter2.view(inter2.size(0), -1)
-        pred2 = self.fc2(inter2)
         return [pred1, pred2], out
 
 
