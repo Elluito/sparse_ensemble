@@ -15,8 +15,9 @@ import pickle
 import argparse
 import torchvision.transforms as transforms
 import torchvision
-
-
+from torch.utils.data import random_split
+import torch.nn as nn
+from alternate_models import *
 if os.name == 'nt':  # running on windows:
     import win32file
 
@@ -374,11 +375,11 @@ def main(args):
             net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
-            net = truncated_ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net = truncated_ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net = truncated_ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
 
         if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
@@ -390,14 +391,14 @@ def main(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
-            net = truncated_VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net = truncated_VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net = truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
-            net = truncated_VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
@@ -414,13 +415,13 @@ def main(args):
                                                                                      args.dataset))
     if args.model == "resnet_small":
         if args.modeltype1 == "normal" and args.dataset == "cifar10":
-            net = small_truncated_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
         if args.modeltype1 == "normal" and args.dataset == "cifar100":
-            net = small_truncated_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
         if args.modeltype1 == "normal" and args.dataset == "tiny_imagenet":
-            net = small_truncated_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.modeltype1 == "normal" and args.dataset == "small_imagenet":
-            net = small_truncated_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
         if args.modeltype1 == "pytorch" and args.dataset == "cifar10":
             # raise NotImplementedError
             net = resnet50()
@@ -448,7 +449,7 @@ def main(args):
             net.load_state_dict(real_dict, strict=False)
             print("Loaded solution!")
 
-   pass
+    pass
 
 def extract_from_dataset(logger: LatentRepresentationCollector,
                          train: bool, model: Module, dataset: DataLoader, device: str) -> None:
@@ -493,6 +494,8 @@ if __name__ == '__main__':
     parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
     parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     args = parser.parse_args()
 
     main(args)
