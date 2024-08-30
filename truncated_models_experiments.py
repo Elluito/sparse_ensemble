@@ -534,6 +534,7 @@ def run_local_test():
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='Truncated experiments')
     # parser.add_argument('-arch', '--architecture', type=str, default="resnet18", help='Architecture for analysis',
     #                     required=True)

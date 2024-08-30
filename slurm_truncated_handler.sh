@@ -195,7 +195,7 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 
 
 
-# Tiny IMagenet ###################################################################
+# Tiny ImageNet ###################################################################
 
 ## vgg
 sol1vgg=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/vgg19_normal_tiny_imagenet_seed.0_rf_level_1_recording_200_no_ffcv_test_acc_60.95.pth

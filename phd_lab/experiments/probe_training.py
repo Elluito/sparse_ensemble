@@ -83,6 +83,7 @@ def obtain_all_dataset(folder: str) -> Tuple[List[Tuple[str, str]], List[Tuple[s
     """
     all_files = get_all_npy_files(folder)
     data, labels = seperate_labels_from_data(all_files)
+    data.sort()
     train_data, train_label = filter_files_by_string_key(data, 'train-'), filter_files_by_string_key(labels, 'train-')
     eval_data, eval_label = filter_files_by_string_key(data, 'eval-'), filter_files_by_string_key(labels, 'eval-')
     train_set = [elem for elem in product(train_data, train_label)]
@@ -214,7 +215,7 @@ def main(args: PseudoArgs):
         names.append(os.path.basename(train_data[0][:-2]))
         if args.mp == 0:
             print('Multiprocessing is disabled starting training...')
-            train_acc, eval_acc = train_model_for_data(train_data, eval_data)
+            train_acc, eval_acc = train_model_for_data(train_data, eval_data,verbose=1)
             t_accs.append(train_acc)
             e_accs.append(eval_acc)
             pd.DataFrame.from_dict(

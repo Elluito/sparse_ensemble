@@ -1,6 +1,7 @@
 # This file was taken from  https://github.com/delve-team/phd-lab/blob/master/phd_lab/experiments/utils/extraction.py#L109
 from torch.nn import Module
 import torch
+import omegaconf
 import os
 from os import makedirs
 from os.path import exists, join
@@ -18,7 +19,7 @@ import torchvision
 from torch.utils.data import random_split
 import torch.nn as nn
 from alternate_models import *
-
+from typing import Optional
 if os.name == 'nt':  # running on windows:
     import win32file
 
@@ -51,7 +52,9 @@ class Extract:
                 )
             ),
             downsampling=self.downsampling,
-            save_per_position=self.save_feature_map_positions_individually
+            save_per_position=self.save_feature_map_positions_individually,
+            overwrite=True
+
         )
         print('Extracting training')
         model.train()
@@ -174,7 +177,7 @@ class LatentRepresentationCollector:
                 return
 
             # Increment step counter
-            layer.forward_iter += 1
+            # layer.forward_iter += 1
 
             training_state = 'train' if layer.training else 'eval'
             activations_batch = output.data
@@ -266,6 +269,7 @@ class LatentRepresentationCollector:
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -278,16 +282,16 @@ def main(args):
     stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
     # Data
     print('==> Preparing data..')
-    current_directory = Path().cwd()
-    data_path = "."
-    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-        data_path = "/nobackup/sclaam/data"
-    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
-        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
-    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-        data_path = "/home/luisaam/Documents/PhD/data/"
+    # current_directory = args.folder
+    data_path = args.folder
+    # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+    #     data_path = "/nobackup/sclaam/data"
+    # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+    #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+    #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+    #     data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
     batch_size = args.batch_size
     if "32" in args.name:
@@ -488,20 +492,55 @@ def extract_from_dataset(logger: LatentRepresentationCollector,
     print('accuracy:', correct / total)
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
-    parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
-    parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
-    parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
-    parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
-    parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
-    parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
-    parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
-    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--width', default=1, type=int, help='Width of the Network')
-    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    parser.add_argument('--save_path', default=".logs/", type=int, help='Save path of logs')
-    args = parser.parse_args()
+def run_local_test():
+    cfg = omegaconf.DictConfig({
+        # "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
+        "solution": "/home/luisaam/checkpoints/vgg19_normal_cifar10_1723720946.9104598_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth",
+        # "solution": "/home/luisaam/checkpoints/resnet50_normal_cifar10_1723722961.8540442_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth",
+        "modeltype1": "normal",
+        "seedname1": "_seed_8",
+        "RF_level": 2,
+        "epochs": 1,
+        "ffcv": 0,
+        "ffcv_val": "",
+        "ffcv_train": "",
+        "batch_size": 64,
+        "model": "resnet50",
+        "dataset": "cifar10",
+        "num_workers": 0,
+        "input_resolution": 32,
+        "width": 1,
+        "name": "no_name",
+        "save_path": "./logs/",
+        "folder": "/home/luisaam/Documents/PhD/data/",
+        "lr": 0.1,
+        "device": "cpu",
+        "type": "normal",
+        "resume": False,
+        "eval_size": 5000,
 
-    main(args)
+    })
+
+    main(cfg)
+
+if __name__ == '__main__':
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
+    # parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
+    # parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
+    # parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
+    # parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
+    # parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
+    # parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
+    # parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
+    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    # parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    # parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    # parser.add_argument('--save_path', default=".probes_logs/", type=int, help='Save path of logs')
+    # args = parser.parse_args()
+    #
+    # main(args)
+
+
+    run_local_test()
