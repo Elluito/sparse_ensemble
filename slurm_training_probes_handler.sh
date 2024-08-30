@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 run_training() {
 model=$1

@@ -1,4 +1,4 @@
-#!/user/bin/bash
+#!/bin/bash
 
 
 run_extraction() {
