@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+mobilenetv2_normal_cifar10_seed.0_rf_level_8_recording_200_test_acc_92.65.pth,10.12,10.0
