@@ -52,6 +52,7 @@ sol5rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resn
 sol6rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_10_recording_200_no_ffcv_test_acc_53.77.pth
 sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_cifar10_seed.0_rf_level_11_recording_200_no_ffcv_test_acc_50.06.pth
 
+
 rf_levels=("1" "2" "3" "4")
 solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
 names=("seed_0" "seed_0" "seed_0" "seed_0")

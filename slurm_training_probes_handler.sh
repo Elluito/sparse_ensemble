@@ -30,6 +30,8 @@ logs_folder="./probes_logs/"
 
 
 
+
+
 rf_levels=("1" "2" "3" "4")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
