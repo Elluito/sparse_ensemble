@@ -537,7 +537,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    parser.add_argument('--save_path', default=".probes_logs/", type=int, help='Save path of logs')
+    parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
     args = parser.parse_args()
 
     main(args)
