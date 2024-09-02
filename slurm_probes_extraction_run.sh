@@ -1,4 +1,4 @@
-#!/user/bin/bash
+#!/bin/bash
 
 python3.9 -c "import os; print(os.environ)"
 python3.9 -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
