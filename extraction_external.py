@@ -524,23 +524,23 @@ def run_local_test():
     main(cfg)
 
 if __name__ == '__main__':
-    #
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
-    # parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
-    # parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
-    # parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
-    # parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
-    # parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
-    # parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
-    # parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
-    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    # parser.add_argument('--width', default=1, type=int, help='Width of the Network')
-    # parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    # parser.add_argument('--save_path', default=".probes_logs/", type=int, help='Save path of logs')
-    # args = parser.parse_args()
-    #
-    # main(args)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
+    parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
+    parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
+    parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
+    parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
+    parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
+    parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
+    parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    parser.add_argument('--save_path', default=".probes_logs/", type=int, help='Save path of logs')
+    args = parser.parse_args()
+
+    main(args)
 
 
-    run_local_test()
+    # run_local_test()
