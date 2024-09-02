@@ -265,7 +265,7 @@ def get_features_mobilenetv2(net):
     net.forward = features_only.__get__(net)  # bind method
 
 
-def test():
+def rf_test():
     for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]:
         print("INPUT 32x32")
         try:
@@ -292,4 +292,4 @@ def test():
 
 # test()
 if __name__ == '__main__':
-    test()
+    rf_test()

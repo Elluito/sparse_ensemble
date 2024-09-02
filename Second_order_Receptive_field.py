@@ -4,6 +4,7 @@ import wandb
 import torch
 import torch.nn as nn
 import optuna
+from delve import SaturationTracker
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
 from KFAC_Pytorch.optimizers import KFACOptimizer, EKFACOptimizer
 import argparse
@@ -15,6 +16,7 @@ import pandas as pd
 from pathlib import Path
 from sam import SAM
 from thop import profile
+from shrinkbench.metrics.flops import flops
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -72,16 +74,29 @@ print("Device:{}".format(device))
 
 def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
-             grad_clip=0, macs_per_batch=None):
+             grad_clip=0, saturationTracker=False, record_flops=False, macs_per_batch=None, flops_per_batch=None):
     criterion = nn.CrossEntropyLoss()
     net.to(device)
 
+    if saturationTracker:
+        csv_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="csv", modules=net,
+                                        device=device)
+        plot_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="plot", modules=net,
+                                         device=device)
     if use_scheduler:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
     best_acc = 0
-    # if macs_per_batch:
-    #     total_training_macs = 0
+
+    if record_flops:
+        assert macs_per_batch is not None, "You cannot set record_flops=True and not specify macs_per_batch"
+        assert flops_per_batch is not None, "You cannot set record_flops=True and not specify flops_per_batch"
+        total_training_macs = 0
+        total_training_flops = 0
+        forward_call_macs = macs_per_batch
+        forward_call_flops = flops_per_batch
+        backward_call_macs = macs_per_batch * 2
+        backward_call_flops = flops_per_batch * 2
 
     for epoch in range(epochs):  # loop over the dataset multiple times
 
@@ -123,6 +138,9 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.step()
 
+                if record_flops:
+                    total_training_macs += (forward_call_macs + 4 * backward_call_macs)
+                    total_training_flops += (forward_call_flops + 4 * backward_call_flops)
                 #
                 # if record_function_calls:
                 #     with open(file_name_sufix + "/function_call_" + surname + ".txt", "a") as f:
@@ -145,6 +163,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 #     f.write(f"{item}\n")
                 if use_scheduler and use_scheduler_batch:
                     scheduler.step()
+
             if isinstance(optimizer, SAM):
 
                 # first forward-backward pass
@@ -161,25 +180,17 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.second_step(zero_grad=True)
 
-                #
-                #
-                #
-                #
-                #
-                #
-                #
-                #
-                #
-                #
-                #
-                #
+                if record_flops:
+                    total_training_macs += 2 * (forward_call_macs + backward_call_macs)
+                    total_training_flops += 2 * (forward_call_flops + backward_call_flops)
+
                 # def closure():
                 #     loss = criterion(labels, net(inputs))
                 #     loss.backward()
                 #     return loss
-                #
+
                 # loss = criterion(labels, net(inputs))
-                #
+
                 # loss.backward()
 
                 # optimizer.step()
@@ -237,6 +248,34 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_accuracy], "training accuracy": [train_accuracy]}
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
+        if record_flops:
+            filepath = "{}/{}_flops.csv".format(save_folder, file_name_sufix)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "flops": [total_training_flops], "mac": [total_training_macs]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "flops": [total_training_flops], "mac": [total_training_macs]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+
+        if saturationTracker:
+            # add some additional metrics we want to keep track of
+            csv_tracker.add_scalar("test_accuracy", correct / total)
+            # csv_tracker.add_scalar("loss", test_loss / total)
+
+            plot_tracker.add_scalar("test_accuracy", correct / total)
+            # plot_tracker.add_scalar("loss", test_loss / total)
+
+            # add saturations to the mix
+            csv_tracker.add_saturations()
+            plot_tracker.add_saturations()
+
+            # close the tracker to finish training
+    if saturationTracker:
+        csv_tracker.close()
+        plot_tracker.close()
 
     return best_acc
 
@@ -329,15 +368,20 @@ def main(args):
 
     t0 = time.time()
 
-    input = torch.randn(1, 3, 224, 224)
-
-    macs_one_image, params = profile(net, inputs=(input,))
-
-    macs_batch = macs_one_image * args.batch_size
-
+    total_flops = 0
+    x = None
+    y = None
+    if args.record_flops:
+        x, y = next(iter(trainloader))
+        x = x.to(device)
+        batch_flops, _ = flops(net, x)
+        input = torch.randn(1, 3, 224, 224)
+        macs_one_image, params = profile(net, inputs=(input,))
+        macs_batch = macs_one_image * args.batch_size
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
-                             record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time)
+                             record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time,
+                             macs_per_batch=macs_batch, flops_per_batch=batch_flops)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))
@@ -433,49 +477,79 @@ def optuna_optimization(args):
         print(omegaconf.OmegaConf.to_yaml(print_param))
 
 
+def run_local_test():
+    cfg = omegaconf.DictConfig({
+        "model": "vgg19",
+        "dataset": "cifar10",
+        "type": "normal",
+        "RF_level": 3,
+        "lr": 0.1,
+        "grad_clip": 1,
+        "momentum": 0.9,
+        "num_workers": 0,
+        "optimiser": "sam",
+        "record": False,
+        "record_flops": True,
+        "recrod_time": False,
+        "use_scheduler_batch": False,
+        "use_scheduler": True,
+        "batch_size": 128,
+        "epochs": 1,
+        "name": "no_name",
+        "save": False,
+        "save_folder": "./second_order_results",
+        "record_saturation": True
+
+    })
+    main(cfg)
+
+
 if __name__ == '__main__':
+    # parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
+    # parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
+    # parser.add_argument('--lr', default=0.1, type=float, help='Learning Rate')
+    # parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
+    # parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
+    # parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
+    # parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
+    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    # parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
+    #                     help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
+    # parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+    # parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
+    #                     help='Location where saved models are')
+    # parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
+    # parser.add_argument('--solution', default="", type=str, help='Solution to use')
+    # parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
+    # parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
+    # parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
+    # parser.add_argument('--save', default=0, type=int, help="Save the best model")
+    # parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
+    # parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
 
-    parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
-    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
-    parser.add_argument('--lr', default=0.1, type=float, help='Learning Rate')
-    parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
-    parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
-    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-    parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
-    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
-                        help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
-    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
-                        help='Location where saved models are')
-    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
-    parser.add_argument('--solution', default="", type=str, help='Solution to use')
-    parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
-    parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
-    parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
-    parser.add_argument('--save', default=0, type=int, help="Save the best model")
-    parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
-    parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
-    parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
-    parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
-    parser.add_argument('--use_scheduler_batch', default=1, type=int,
-                        help="Use scheduler for batches instead of epochs")
-    parser.add_argument('--count_flops', '-r', action='store_true',
-                        help='Count the flops of training')
+    # parser.add_argument('--record_flops', '-r', type=int, help='Count the flops of training')
+    # parser.add_argument('--record_saturation', type=int, help='Count the flops of training')
 
-    args = parser.parse_args()
+    # parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
+    # parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
+    # parser.add_argument('--use_scheduler_batch', default=1, type=int,
+    #                     help="Use scheduler for batches instead of epochs")
+    #
+    # args = parser.parse_args()
+    #
+    # try:
+    #
+    #     args.RF_level = int(args.RF_level)
+    #
+    # except Exception as e:
+    #
+    #     pass
+    # if args.experiment == 1:
+    #     print(args)
+    #
+    #     main(args)
+    #
+    # if args.experiment == 2:
+    #     optuna_optimization(args)
 
-    try:
-
-        args.RF_level = int(args.RF_level)
-
-    except Exception as e:
-
-        pass
-    if args.experiment == 1:
-        print(args)
-
-        main(args)
-
-    if args.experiment == 2:
-        optuna_optimization(args)
+    run_local_test()
