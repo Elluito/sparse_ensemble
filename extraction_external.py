@@ -294,10 +294,10 @@ def main(args):
     #     data_path = "/home/luisaam/Documents/PhD/data/"
     print(data_path)
     batch_size = args.batch_size
-    if "32" in args.name:
-        batch_size = 32
-    if "64" in args.name:
-        batch_size = 64
+    # if "32" in args.name:
+    #     batch_size = 32
+    # if "64" in args.name:
+    #     batch_size = 64
 
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
