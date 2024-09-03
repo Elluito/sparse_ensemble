@@ -562,5 +562,6 @@ if __name__ == '__main__':
     #     optuna_optimization(args)
     parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
     parser.add_argument('--level', default=1, type=int, help="RF level")
+    args = parser.parse_args()
 
     run_local_test(args.level)
