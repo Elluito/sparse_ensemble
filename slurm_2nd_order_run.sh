@@ -3,14 +3,14 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=00:09:00
+#SBATCH --time=01:00:00
 
 # set name of job
-#SBATCH --job-name=pytorch_test
+#SBATCH --job-name=zero_cost_nas_rf
 
-#SBATCH --error=pytorch_test.err
+#SBATCH --error=zero_cost_nas_rf.err
 
-#SBATCH --output=pytorch_test.output
+#SBATCH --output=zero_cost_nas_rf.output
 
 # set partition (devel, small, big)
 
