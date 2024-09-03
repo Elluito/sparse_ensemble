@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 import wandb
@@ -194,11 +195,12 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # loss.backward()
 
                 # optimizer.step()
+                break
 
         t1 = time.time_ns()
 
-        test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
         train_accuracy = test(net, use_cuda=True, testloader=trainloader, verbose=0)
+        test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
         if verbose == 2:
             print("Test Accuracy at Epoch {}:{}".format(epoch, test_accuracy))
 
@@ -262,10 +264,10 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
 
         if saturationTracker:
             # add some additional metrics we want to keep track of
-            csv_tracker.add_scalar("test_accuracy", correct / total)
+            csv_tracker.add_scalar("test_accuracy", test_accuracy)
             # csv_tracker.add_scalar("loss", test_loss / total)
 
-            plot_tracker.add_scalar("test_accuracy", correct / total)
+            plot_tracker.add_scalar("test_accuracy", test_accuracy)
             # plot_tracker.add_scalar("loss", test_loss / total)
 
             # add saturations to the mix
@@ -332,6 +334,8 @@ def main(args):
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -371,17 +375,22 @@ def main(args):
     total_flops = 0
     x = None
     y = None
+    net.to(device)
     if args.record_flops:
         x, y = next(iter(trainloader))
         x = x.to(device)
         batch_flops, _ = flops(net, x)
         input = torch.randn(1, 3, 224, 224)
-        macs_one_image, params = profile(net, inputs=(input,))
+        input = input.to(device)
+        macs_one_image, params = profile(copy.deepcopy(net), inputs=(input,))
         macs_batch = macs_one_image * args.batch_size
+
     best_accuracy = training(net, trainloader, testloader, optimiser, solution_name, epochs=args.epochs,
                              save_folder=args.save_folder, use_scheduler=args.use_scheduler, save=args.save,
                              record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time,
-                             macs_per_batch=macs_batch, flops_per_batch=batch_flops)
+                             record_flops=args.record_flops,
+                             macs_per_batch=macs_batch, flops_per_batch=batch_flops,
+                             saturationTracker=args.record_saturation)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))
@@ -479,10 +488,10 @@ def optuna_optimization(args):
 
 def run_local_test():
     cfg = omegaconf.DictConfig({
-        "model": "vgg19",
+        "model": "resnet50",
         "dataset": "cifar10",
         "type": "normal",
-        "RF_level": 3,
+        "RF_level": 1,
         "lr": 0.1,
         "grad_clip": 1,
         "momentum": 0.9,
@@ -490,7 +499,7 @@ def run_local_test():
         "optimiser": "sam",
         "record": False,
         "record_flops": True,
-        "recrod_time": False,
+        "record_time": False,
         "use_scheduler_batch": False,
         "use_scheduler": True,
         "batch_size": 128,
