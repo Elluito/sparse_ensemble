@@ -198,9 +198,9 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 break
 
         t1 = time.time_ns()
-
-        train_accuracy = test(net, use_cuda=True, testloader=trainloader, verbose=0)
-        test_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+        use_cuda = True if torch.cuda.is_available() else False
+        train_accuracy = test(net, use_cuda=use_cuda, testloader=trainloader, verbose=0)
+        test_accuracy = test(net, use_cuda=use_cuda, testloader=testloader, verbose=0)
         if verbose == 2:
             print("Test Accuracy at Epoch {}:{}".format(epoch, test_accuracy))
 
