@@ -55,4 +55,5 @@ export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/
 #python3.9 Second_order_Receptive_field.py --lr "0.1" --momentum "0.7" --grad_clip "1" --save 1 --experiment 1 --record_time 1 --epochs 200 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
 #  fi
 #
-python3.9 Second_order_Receptive_field.py --level $1
+#python3.9 Second_order_Receptive_field.py --level $1
+python zero_cost_nas_RF.py
