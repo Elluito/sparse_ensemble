@@ -486,12 +486,12 @@ def optuna_optimization(args):
         print(omegaconf.OmegaConf.to_yaml(print_param))
 
 
-def run_local_test():
+def run_local_test(level):
     cfg = omegaconf.DictConfig({
         "model": "resnet50",
         "dataset": "cifar10",
         "type": "normal",
-        "RF_level": 1,
+        "RF_level": level,
         "lr": 0.1,
         "grad_clip": 1,
         "momentum": 0.9,
@@ -560,5 +560,7 @@ if __name__ == '__main__':
     #
     # if args.experiment == 2:
     #     optuna_optimization(args)
+    parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
+    parser.add_argument('--level', default=1, type=int, help="RF level")
 
-    run_local_test()
+    run_local_test(args.level)
