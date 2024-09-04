@@ -26,16 +26,17 @@ def main(args):
 
     # Data
     print('==> Preparing data..')
-    current_directory = Path().cwd()
-    data_path = "."
-    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-        data_path = "/nobackup/sclaam/data"
-    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
-        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
-    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-        data_path = "/home/luisaam/Documents/PhD/data/"
+    # current_directory = Path().cwd()
+    # data_path = "."
+    # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+    #     data_path = "/nobackup/sclaam/data"
+    # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+    #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+    #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+    #     data_path = "/home/luisaam/Documents/PhD/data/"
+    data_path=args.data_path
     print(data_path)
     batch_size = args.batch_size
 
@@ -323,7 +324,9 @@ def run_local_test():
             "ffcv": False,
             "save": False,
             "save_folder": "./second_order_results",
-            "record_saturation": True
+            "record_saturation": True,
+            # "data_path": "/home/luisaam/Documents/PhD/data/",
+            "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
         })
 
         jacob, snip, synflow = main(cfg)
@@ -344,4 +347,5 @@ def run_local_test():
     df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf.csv",sep=",", index=False)
 
 if __name__ == '__main__':
+
     run_local_test()
