@@ -288,7 +288,7 @@ def main(args):
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
 
     print("Device: {}".format(device))
-    jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 200, 200), device, measure_names=["jacob_cov","snip","synflow"])
+    jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 32, 200), device, measure_names=["jacob_cov","snip","synflow"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 

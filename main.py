@@ -114,7 +114,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 fs = 25
 
-fig_size = (5, 3)
+fig_size = (15, 10)
 sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
@@ -136,7 +136,9 @@ plt.rcParams.update({
     "ytick.major.width": 0.5,
     "ytick.minor.size": 1.5,
     "ytick.minor.width": 0.5,
-    "figure.figsize": [3.3, 2.5],
+    # "figure.figsize": [3.3, 2.5],
+    'axes.labelsize': 'xx-large',
+    'axes.titlesize': 'xx-large',
     "text.usetex": True,
     "font.family": "serif",
     "text.latex.preamble": r"\usepackage{bm} \usepackage{amsmath}",

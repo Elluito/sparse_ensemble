@@ -19,6 +19,7 @@ from pathlib import Path
 import pandas as pd
 from shrinkbench.metrics.flops import flops
 import math
+from delve import SaturationTracker
 
 os.environ["LD_LIBRARY_PATH"] = ""
 
@@ -234,7 +235,7 @@ def format_time(seconds):
 
 
 # Training
-def train(epoch):
+def train(epoch, saturationTracker=None):
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
 
     print('\nEpoch: %d' % epoch)
@@ -1309,12 +1310,14 @@ def main(args):
     #     scheduler.step()
     # print("First learning rate:{}".format(lr_list[0]))
     # print("Last learning rate:{}".format(lr_list[-1]))
-
+    if args.record_saturation:
+        csv_tracker = SaturationTracker("{}/{}".format(args.save_folder, solution_name), save_to="csv", modules=net,
+                                        device=device)
     for epoch in range(start_epoch, start_epoch + args.epochs):
 
         print(epoch)
         t0 = time.time()
-        train_acc = train(epoch)
+        train_acc = train(epoch, saturationTracker=csv_tracker)
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
@@ -1355,8 +1358,16 @@ def main(args):
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
+        if args.record_saturation:
+            csv_tracker.add_scalar("test_accuracy", test_acc)
+            # csv_tracker.add_scalar("loss", test_loss / total)
+
+            # add saturations to the mix
+            csv_tracker.add_saturations()
         scheduler.step()
 
+    if args.record_saturation:
+        csv_tracker.close()
     if args.use_wandb:
         wandb.finish()
 
@@ -1393,6 +1404,7 @@ if __name__ == '__main__':
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     parser.add_argument('--record_time', action='store_true', help="Record the training time")
     parser.add_argument('--record_flops', action='store_true', help="Record the training time")
+    parser.add_argument('--record_saturation', default=1, type=int, help="Record the saturation")
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
     parser.add_argument('--ffcv_train',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
