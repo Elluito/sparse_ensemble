@@ -287,7 +287,8 @@ def main(args):
         if args.type == "normal" and args.dataset == "imagenet":
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
 
-    jacob_measure,snip,synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names=["jacob_cov","snip","synflow"])
+    print("Device: {}".format(device))
+    jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 200, 200), device, measure_names=["jacob_cov","snip","synflow"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 

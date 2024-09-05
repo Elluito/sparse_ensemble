@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 
 # set max wallclock time
-#SBATCH --time=01:00:00
+#SBATCH --time=05:00:00
 
 # set name of job
 #SBATCH --job-name=zero_cost_nas_rf
