@@ -300,7 +300,7 @@ def main(args):
 def run_local_test():
     rf_levels = [3, 4, 5, 6, 7, 8, 9, 10]
     real_ranks = [3, 2, 1, 4, 5, 6, 7, 8]
-    jacob_measures = []
+    # jacob_measures = []
     snip_measures = []
     synflow_measures = []
     for level in rf_levels:
@@ -344,7 +344,7 @@ def run_local_test():
     df = pd.DataFrame({
         "Ranks":real_ranks,
         "Rf_level": rf_levels,
-        "jacob_cov": jacob_measures,
+        # "jacob_cov": jacob_measures,
         "snip": snip_measures,
         "synflow": synflow_measures,
     })
