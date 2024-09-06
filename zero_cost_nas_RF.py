@@ -289,12 +289,13 @@ def main(args):
 
     print("Device: {}".format(device))
     # jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
-    snip,synflow = find_measures(net, trainloader, ("random", 128, 200), device, measure_names=["snip","synflow"])
+    measures = find_measures(net, trainloader, ("random", 128, 200), device, measure_names=["snip","synflow"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 
     # return jacob_measure, snip, synflow
-    return snip, synflow
+    # return snip, synflow
+    return measures
 
 
 def run_local_test():
@@ -333,13 +334,13 @@ def run_local_test():
         })
 
         # jacob, snip, synflow = main(cfg)
-        snip, synflow = main(cfg)
+        measures= main(cfg)
 
         # jacob_measures.append(jacob)
 
-        snip_measures.append(snip)
+        snip_measures.append(measures["snip"])
 
-        synflow_measures.append(synflow)
+        synflow_measures.append(measures["synflow"])
 
     df = pd.DataFrame({
         "Ranks":real_ranks,
