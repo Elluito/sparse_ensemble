@@ -514,54 +514,54 @@ def run_local_test(level):
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
-    # parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
-    # parser.add_argument('--lr', default=0.1, type=float, help='Learning Rate')
-    # parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
-    # parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
-    # parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-    # parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
-    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    # parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
-    #                     help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
-    # parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
-    # parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
-    #                     help='Location where saved models are')
-    # parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
-    # parser.add_argument('--solution', default="", type=str, help='Solution to use')
-    # parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
-    # parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
-    # parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
-    # parser.add_argument('--save', default=0, type=int, help="Save the best model")
-    # parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
-    # parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
-
-    # parser.add_argument('--record_flops', '-r', type=int, help='Count the flops of training')
-    # parser.add_argument('--record_saturation', type=int, help='Count the flops of training')
-
-    # parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
-    # parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
-    # parser.add_argument('--use_scheduler_batch', default=1, type=int,
-    #                     help="Use scheduler for batches instead of epochs")
-    #
-    # args = parser.parse_args()
-    #
-    # try:
-    #
-    #     args.RF_level = int(args.RF_level)
-    #
-    # except Exception as e:
-    #
-    #     pass
-    # if args.experiment == 1:
-    #     print(args)
-    #
-    #     main(args)
-    #
-    # if args.experiment == 2:
-    #     optuna_optimization(args)
     parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
-    parser.add_argument('--level', default=1, type=int, help="RF level")
+    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
+    parser.add_argument('--lr', default=0.1, type=float, help='Learning Rate')
+    parser.add_argument('--grad_clip', default=0.1, type=float, help='Gradient clipping')
+    parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
+    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
+    parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
+                        help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
+    parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location where saved models are')
+    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
+    parser.add_argument('--solution', default="", type=str, help='Solution to use')
+    parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
+    parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
+    parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
+    parser.add_argument('--save', default=0, type=int, help="Save the best model")
+    parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
+    parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
+    parser.add_argument('--record_flops', '-r', type=int, help='Count the flops of training')
+    parser.add_argument('--record_saturation', type=int, help='Count the flops of training')
+    parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
+    parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
+    parser.add_argument('--use_scheduler_batch', default=1, type=int,
+                        help="Use scheduler for batches instead of epochs")
+
+
     args = parser.parse_args()
 
-    run_local_test(args.level)
+    try:
+
+        args.RF_level = int(args.RF_level)
+
+    except Exception as e:
+
+        pass
+    if args.experiment == 1:
+        print(args)
+
+        main(args)
+
+    if args.experiment == 2:
+        optuna_optimization(args)
+
+    # parser = argparse.ArgumentParser(description='Second Order and Receptive field experiments')
+    # parser.add_argument('--level', default=1, type=int, help="RF level")
+    # args = parser.parse_args()
+
+    # run_local_test()
