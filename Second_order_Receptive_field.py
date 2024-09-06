@@ -195,7 +195,6 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # loss.backward()
 
                 # optimizer.step()
-                break
 
         t1 = time.time_ns()
         use_cuda = True if torch.cuda.is_available() else False
