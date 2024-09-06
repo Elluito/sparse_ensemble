@@ -1348,7 +1348,7 @@ def main(args):
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         if args.record:
-            filepath = "{}/{}.csv".format(args.save_folder, solution_name)
+            filepath = "{}/{}_acc.csv".format(args.save_folder, solution_name)
             if Path(filepath).is_file():
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_acc], "training accuracy": [train_acc]}
                 df = pd.DataFrame(log_dict)
@@ -1359,6 +1359,7 @@ def main(args):
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         if args.record_saturation:
+            csv_tracker.add_scalar("Epoch",epoch)
             csv_tracker.add_scalar("test_accuracy", test_acc)
             # csv_tracker.add_scalar("loss", test_loss / total)
 

@@ -82,8 +82,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
     if saturationTracker:
         csv_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="csv", modules=net,
                                         device=device)
-        plot_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="plot", modules=net,
-                                         device=device)
+        # plot_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="plot", modules=net,
+        #                                  device=device)
     if use_scheduler:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
@@ -264,19 +264,20 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
         if saturationTracker:
             # add some additional metrics we want to keep track of
             csv_tracker.add_scalar("test_accuracy", test_accuracy)
+            csv_tracker.add_scalar("Epoch",epoch)
             # csv_tracker.add_scalar("loss", test_loss / total)
 
-            plot_tracker.add_scalar("test_accuracy", test_accuracy)
+            # plot_tracker.add_scalar("test_accuracy", test_accuracy)
             # plot_tracker.add_scalar("loss", test_loss / total)
 
             # add saturations to the mix
             csv_tracker.add_saturations()
-            plot_tracker.add_saturations()
+            # plot_tracker.add_saturations()
 
             # close the tracker to finish training
     if saturationTracker:
         csv_tracker.close()
-        plot_tracker.close()
+        # plot_tracker.close()
 
     return best_acc
 
