@@ -145,7 +145,7 @@ echo "use FFCV!"
 
 #    python prune_models.py --name "${NAME}" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
-    python train_CIFAR10.py --ffcv --record_time --record_flops --batch_size 128 --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --save_folder "${FOLDER}" --ffcv_train "${FFCV_TRAIN}" ffcv_val"${FFCV_VAL}" --record "${RECORD}" --epochs "${EPOCHS}"
+    python train_CIFAR10.py --ffcv --record_time --record_flops --record_saturation 1 --batch_size 128 --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --save_folder "${FOLDER}" --ffcv_train "${FFCV_TRAIN}" ffcv_val"${FFCV_VAL}" --record "${RECORD}" --epochs "${EPOCHS}"
 else
 
 #    echo "CPUs allocated: $SLURM_JOB_CPUS_PER_NODE"
@@ -157,6 +157,6 @@ else
 #    python confidence_experiments.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --data_folder "${DATA_FOLDER}" --topk "${TOPK}" --output_folder "${OUTPUT_DIR}"
 #    python train_CIFAR10.py --record_time --record_flops --batch_size 128 --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --save_folder "$"
 
-    python train_CIFAR10.py  --record_time --record_flops --batch_size 128 --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --save_folder "${FOLDER}" --record "${RECORD}" --epochs "${EPOCHS}"
+    python train_CIFAR10.py  --record_time --record_flops --record_saturation 1 --batch_size 128 --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --save_folder "${FOLDER}" --record "${RECORD}" --epochs "${EPOCHS}"
   fi
 

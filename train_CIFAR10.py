@@ -1405,6 +1405,7 @@ if __name__ == '__main__':
     parser.add_argument('--record_time', action='store_true', help="Record the training time")
     parser.add_argument('--record_flops', action='store_true', help="Record the training time")
     parser.add_argument('--record_saturation', default=1, type=int, help="Record the saturation")
+
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
     parser.add_argument('--ffcv_train',
                         default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
