@@ -288,11 +288,13 @@ def main(args):
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
 
     print("Device: {}".format(device))
-    jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
+    # jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
+    snip,synflow = find_measures(net, trainloader, ("random", 128, 200), device, measure_names=["snip","synflow"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 
-    return jacob_measure, snip, synflow
+    # return jacob_measure, snip, synflow
+    return snip, synflow
 
 
 def run_local_test():
@@ -330,9 +332,10 @@ def run_local_test():
             "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
         })
 
-        jacob, snip, synflow = main(cfg)
+        # jacob, snip, synflow = main(cfg)
+        snip, synflow = main(cfg)
 
-        jacob_measures.append(jacob)
+        # jacob_measures.append(jacob)
 
         snip_measures.append(snip)
 
