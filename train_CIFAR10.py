@@ -235,7 +235,7 @@ def format_time(seconds):
 
 
 # Training
-def train(epoch, saturationTracker=None):
+def train(epoch):
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
 
     print('\nEpoch: %d' % epoch)
@@ -1317,7 +1317,7 @@ def main(args):
 
         print(epoch)
         t0 = time.time()
-        train_acc = train(epoch, saturationTracker=csv_tracker)
+        train_acc = train(epoch)
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)

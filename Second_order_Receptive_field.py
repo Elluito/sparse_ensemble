@@ -239,7 +239,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         if record:
-            filepath = "{}/{}.csv".format(save_folder, file_name_sufix)
+            filepath = "{}/{}_test_acc.csv".format(save_folder, file_name_sufix)
             if Path(filepath).is_file():
                 log_dict = {"Epoch": [epoch], "test accuracy": [test_accuracy], "training accuracy": [train_accuracy]}
                 df = pd.DataFrame(log_dict)
@@ -264,7 +264,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
         if saturationTracker:
             # add some additional metrics we want to keep track of
             csv_tracker.add_scalar("test_accuracy", test_accuracy)
-            csv_tracker.add_scalar("Epoch",epoch)
+            csv_tracker.add_scalar("Epoch", epoch)
             # csv_tracker.add_scalar("loss", test_loss / total)
 
             # plot_tracker.add_scalar("test_accuracy", test_accuracy)
@@ -353,12 +353,15 @@ def main(args):
                                                                                      args.dataset))
 
     if args.optimiser == "kfac":
-        optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
+        # optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
+        optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=5e-4, damping=0.03)
     if args.optimiser == "ekfac":
-        optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
+        # optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
+        optimiser = EKFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=5e-4, damping=0.03)
     if args.optimiser == "sam":
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
-        optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum)
+        optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum, rho=0.5, adaptive=True,
+                        weight_decay=5e-4)
     seed = time.time()
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
@@ -541,7 +544,6 @@ if __name__ == '__main__':
     parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
     parser.add_argument('--use_scheduler_batch', default=1, type=int,
                         help="Use scheduler for batches instead of epochs")
-
 
     args = parser.parse_args()
 
