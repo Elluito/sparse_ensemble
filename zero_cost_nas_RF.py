@@ -289,7 +289,7 @@ def main(args):
 
     print("Device: {}".format(device))
     # jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
-    measures = find_measures(net, trainloader, ("random", 128, 200), device, measure_names=["snip","synflow"])
+    measures = find_measures(net, trainloader, ("random", 5, 200), device, measure_names=["jacob_cov"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 
@@ -301,9 +301,9 @@ def main(args):
 def run_local_test():
     rf_levels = [3, 4, 5, 6, 7, 8, 9, 10]
     real_ranks = [3, 2, 1, 4, 5, 6, 7, 8]
-    # jacob_measures = []
-    snip_measures = []
-    synflow_measures = []
+    jacob_measures = []
+    # snip_measures = []
+    # synflow_measures = []
     for level in rf_levels:
         cfg = omegaconf.DictConfig({
             "model": "resnet_small",
@@ -336,20 +336,20 @@ def run_local_test():
         # jacob, snip, synflow = main(cfg)
         measures= main(cfg)
 
-        # jacob_measures.append(jacob)
+        jacob_measures.append(measures["jacob_cov"])
 
-        snip_measures.append(measures["snip"])
-
-        synflow_measures.append(measures["synflow"])
+        # snip_measures.append(measures["snip"])
+        #
+        # synflow_measures.append(measures["synflow"])
 
     df = pd.DataFrame({
         "Ranks":real_ranks,
         "Rf_level": rf_levels,
-        # "jacob_cov": jacob_measures,
-        "snip": snip_measures,
-        "synflow": synflow_measures,
+        "jacob_cov": jacob_measures,
+        # "snip": snip_measures,
+        # "synflow": synflow_measures,
     })
-    df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf.csv",sep=",", index=False)
+    df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_jacob.csv",sep=",", index=False)
 
 if __name__ == '__main__':
 
