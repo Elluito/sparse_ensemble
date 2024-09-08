@@ -536,7 +536,7 @@ if __name__ == '__main__':
     parser.add_argument('--record', default=0, type=int, help="Record the test/training accuracy")
     parser.add_argument('--record_time', default=0, type=int, help="Record the training time")
     parser.add_argument('--record_flops', '-r', type=int, help='Count the flops of training')
-    parser.add_argument('--record_saturation', type=int, help='Count the flops of training')
+    parser.add_argument('--record_saturation', type=int, help='Calculate saturation')
     parser.add_argument('--batch_size', default=128, type=int, help="Batch size for training/testing")
     parser.add_argument('--use_scheduler', default=1, type=int, help="Use sine scheduler")
     parser.add_argument('--use_scheduler_batch', default=1, type=int,
