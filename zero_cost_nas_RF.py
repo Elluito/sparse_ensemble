@@ -14,6 +14,8 @@ from pathlib import Path
 import pandas as pd
 from shrinkbench.metrics.flops import flops
 import math
+from collections import defaultdict
+import numpy as np
 
 
 def main(args):
@@ -36,7 +38,7 @@ def main(args):
     #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
     # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
     #     data_path = "/home/luisaam/Documents/PhD/data/"
-    data_path=args.data_path
+    data_path = args.data_path
     print(data_path)
     batch_size = args.batch_size
 
@@ -289,7 +291,8 @@ def main(args):
 
     print("Device: {}".format(device))
     # jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
-    measures = find_measures(net, trainloader, ("random", 5, 200), device, measure_names=["jacob_cov"])
+    measures = find_measures(net, trainloader, ("random", 1, 200), device,
+                             measure_names=["jacob_cov", "snip", "synflow", "grad_norm", "fisher"])
     # snip = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="snip")
     # synflow = find_measures(net, trainloader, ("grasp", 10, 200), device, measure_names="synflow")
 
@@ -299,58 +302,84 @@ def main(args):
 
 
 def run_local_test():
+    number_of_samples = 5
     rf_levels = [3, 4, 5, 6, 7, 8, 9, 10]
     real_ranks = [3, 2, 1, 4, 5, 6, 7, 8]
     jacob_measures = []
-    # snip_measures = []
-    # synflow_measures = []
-    for level in rf_levels:
-        cfg = omegaconf.DictConfig({
-            "model": "resnet_small",
-            "dataset": "small_imagenet",
-            "type": "normal",
-            "RF_level": level,
-            "lr": 0.1,
-            "grad_clip": 1,
-            "momentum": 0.9,
-            "num_workers": 0,
-            "optimiser": "sam",
-            "record": False,
-            "record_flops": True,
-            "record_time": False,
-            "use_scheduler_batch": False,
-            "use_scheduler": True,
-            "batch_size": 128,
-            "epochs": 1,
-            "width": 1,
-            "input_resolution": 224,
-            "name": "no_name",
-            "ffcv": False,
-            "save": False,
-            "save_folder": "./second_order_results",
-            "record_saturation": True,
-            # "data_path": "/home/luisaam/Documents/PhD/data/",
-            "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
+    snip_measures = []
+    synflow_measures = []
+
+    all_df = None
+    for sample_index in range(number_of_samples):
+        measures_dict = defaultdict(list)
+        temp_measures = None
+        for level in rf_levels:
+            cfg = omegaconf.DictConfig({
+                "model": "resnet_small",
+                "dataset": "small_imagenet",
+                "type": "normal",
+                "RF_level": level,
+                "lr": 0.1,
+                "grad_clip": 1,
+                "momentum": 0.9,
+                "num_workers": 0,
+                "optimiser": "sam",
+                "record": False,
+                "record_flops": True,
+                "record_time": False,
+                "use_scheduler_batch": False,
+                "use_scheduler": True,
+                "batch_size": 320,
+                "epochs": 1,
+                "width": 1,
+                "input_resolution": 224,
+                "name": "no_name",
+                "ffcv": False,
+                "save": False,
+                "save_folder": "./second_order_results",
+                "record_saturation": True,
+                # "data_path": "/home/luisaam/Documents/PhD/data/",
+                "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
+            })
+
+            # jacob, snip, synflow = main(cfg)
+            measures = main(cfg)
+            for k, v in measures.items():
+                if k == "jacob_cov":
+                    measures_dict[k] = [abs(complex(measures["jacob_cov"]))]
+                else:
+                    measures_dict[k] = measures[k]
+            # jacob_measures.append(abs(complex(measures["jacob_cov"])))
+            #
+            # snip_measures.append(measures["snip"])
+            # #
+            # synflow_measures.append(measures["synflow"])
+
+        df = pd.DataFrame({
+            "Ranks": real_ranks,
+            "Rf_level": rf_levels,
+            # "jacob_cov": jacob_measures,
+            # "jacob_cov_ranks": np.argsort(jacob_measures)[::-1],
+            # "snip": snip_measures,
+            # "snip_ranks": np.argsort(snip_measures)[::-1],
+            # "synflow": synflow_measures,
+            # "synflow_ranks": np.argsort(synflow_measures)[::-1],
+            "sample": [sample_index] * len(rf_levels),
         })
+        for k, v in measures_dict:
+            df["{}".format(k)] = v
+        for k,v in measures_dict:
+            df["{}_rank".format(k)] = pd.DataFrame.rank(df["{}".format(k)],ascending=False)
+        # df["jacob_cov_ranks"] = df["jacob_cov"].rank(ascending=False)
+        # df["synflow_ranks"] = df["synflow_ranks"].rank(ascending=False)
+        # df["snip_ranks"] = df["snip"].rank(ascending=False)
+    if all_df is None:
+        all_df = df
+    else:
+        all_df = pd.concat((all_df, df), ignore_index=True)
 
-        # jacob, snip, synflow = main(cfg)
-        measures= main(cfg)
+    all_df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_more_measures_5_samples.csv", sep=",", index=False)
 
-        jacob_measures.append(measures["jacob_cov"])
-
-        # snip_measures.append(measures["snip"])
-        #
-        # synflow_measures.append(measures["synflow"])
-
-    df = pd.DataFrame({
-        "Ranks":real_ranks,
-        "Rf_level": rf_levels,
-        "jacob_cov": jacob_measures,
-        # "snip": snip_measures,
-        # "synflow": synflow_measures,
-    })
-    df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_jacob.csv",sep=",", index=False)
 
 if __name__ == '__main__':
-
     run_local_test()
