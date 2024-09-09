@@ -98,12 +98,12 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
         forward_call_flops = flops_per_batch
         backward_call_macs = macs_per_batch * 2
         backward_call_flops = flops_per_batch * 2
-
     for epoch in range(epochs):  # loop over the dataset multiple times
 
         t0 = time.time_ns()
         running_loss = 0.0
 
+        net.train()
         correct = 0
         total = 0
 
@@ -150,13 +150,13 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 item = loss.item()
                 running_loss += item
 
-                # if torch.all(outputs > 0):
-                #     _, predicted = torch.max(outputs.data, 1)
-                # else:
-                #     soft_max_outputs = F.softmax(outputs, dim=1)
-                #     _, predicted = torch.max(soft_max_outputs, 1)
-                # total += labels.size(0)
-                # correct += predicted.eq(labels.data).cpu().sum()
+                if torch.all(outputs > 0):
+                    _, predicted = torch.max(outputs.data, 1)
+                else:
+                    soft_max_outputs = F.softmax(outputs, dim=1)
+                    _, predicted = torch.max(soft_max_outputs, 1)
+                total += labels.size(0)
+                correct += predicted.eq(labels.data).cpu().sum()
 
                 if verbose == 1:
                     print("Running loss: {}".format(running_loss))
@@ -181,6 +181,14 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     nn.utils.clip_grad_norm_(net.parameters(), grad_clip)
                 optimizer.second_step(zero_grad=True)
 
+                if torch.all(outputs > 0):
+                    _, predicted = torch.max(outputs.data, 1)
+                else:
+                    soft_max_outputs = F.softmax(outputs, dim=1)
+                    _, predicted = torch.max(soft_max_outputs, 1)
+                total += labels.size(0)
+                correct += predicted.eq(labels.data).cpu().sum()
+
                 if record_flops:
                     total_training_macs += 2 * (forward_call_macs + backward_call_macs)
                     total_training_flops += 2 * (forward_call_flops + backward_call_flops)
@@ -198,7 +206,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
 
         t1 = time.time_ns()
         use_cuda = True if torch.cuda.is_available() else False
-        train_accuracy = test(net, use_cuda=use_cuda, testloader=trainloader, verbose=0)
+        # train_accuracy = test(net, use_cuda=use_cuda, testloader=trainloader, verbose=0)
+        train_accuracy = 100. * correct / total
         test_accuracy = test(net, use_cuda=use_cuda, testloader=testloader, verbose=0)
         if verbose == 2:
             print("Test Accuracy at Epoch {}:{}".format(epoch, test_accuracy))

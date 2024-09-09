@@ -3644,6 +3644,7 @@ def get_model(cfg: omegaconf.DictConfig):
                     # net = resnet18(weights="IMAGENET1K_V1")
 
             return net
+
     if cfg.architecture == "vgg19":
         if not cfg.solution:
             if "csgmcmc" == cfg.model_type:
@@ -4395,7 +4396,7 @@ def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.Dict
 
 
 def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.DictConfig, specific_sigmas: list,
-                                              specific_pruning_rates: list):
+                                              specific_pruning_rates: list,legend=True):
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
@@ -4503,7 +4504,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                                 # palette="set2",
                                 alpha=0.5,
                                 data=current_df,
-                                ax=axj)
+                                ax=axj,legend=legend)
             # axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=15)
             # plt.ylabel("Accuracy", fontsize=20)
             # ticks = g.get_yticks(minor=False)
@@ -4522,11 +4523,13 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
             #                 )
             # ax2.yaxis.label.set_color('red')
             # ax2.invert_yaxis()
-
-            handles, labels = axj.get_legend_handles_labels()
-            new_labels = ["Stochastic GMP", "Sto. Mask on Original Weights", "Det. Mask on Sto. Weights",
-                          "Deterministic GMP"]
-            l = axj.legend(handles[:4], new_labels, fontsize=fs * 0.8)
+            if legend:
+                handles, labels = axj.get_legend_handles_labels()
+                new_labels = ["Stochastic GMP", "Sto. Mask on Original Weights", "Det. Mask on Sto. Weights",
+                              "Deterministic GMP"]
+                l = axj.legend(handles[:4], new_labels, fontsize=fs * 0.8)
+            else:
+                axj.get_legend().set_visible(False)
             axj.tick_params(
                 axis='x',  # changes apply to the x-axis
                 which='both',  # both major and minor ticks are affected
@@ -4587,9 +4590,9 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         # plt.tight_layout()
         pr_string = "_".join(list(map(str, specific_pruning_rates)))
         # plt.show()
-        plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pgf".format(cfg.dataset, cfg.architecture, pr_string,
-                                                                               current_sigma, cfg.pruner),
-                    bbox_inches="tight")
+        # plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pgf".format(cfg.dataset, cfg.architecture, pr_string,
+        #                                                                        current_sigma, cfg.pruner),
+        #             bbox_inches="tight")
         plt.savefig("data/epsilon_allN_all_{}_{}_pr_{}_sigma={}_{}.pdf".format(cfg.dataset, cfg.architecture, pr_string,
                                                                                current_sigma, cfg.pruner),
                     bbox_inches="tight")
@@ -11387,89 +11390,102 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
     #
     # fp = "epsilon_experiments_lamp_full.csv"
-    # fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
+    fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
     # fp = "data/epsilon_experiments_mnist_resnet18_global_1680114120.50534_full.csv"
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # fp = "data/epsilon_experiments_cifar10_VGG19_global_1680561544.77210_full.csv"
     # [0.72, 0.88, 0.94]
-    # cfg = omegaconf.DictConfig({
-    #     "architecture": "resnet18",
-    #     "dataset": "cifar10",
-    #     "exclude_layers": ["conv1", "linear"],
-    #     "model_type":"alternative",
-    #     "pruner": "global",
-    #     "amount": 0.9,
-    #     "batch_size": 512,
-    #     "lr": 0.001,
-    #     "momentum": 0.9,
-    #     "weight_decay": 1e-4,\
-    #     "cyclic_lr": True,
-    #     "lr_peak_epoch": 5,
-    #     "optim": "adam",
-    #     "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #     "num_workers": 1,
-    #     "cosine_schedule": False,
-    #     "epochs": 24
-    # })
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.9])
-    #
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-    #                                           specific_pruning_rates=[0.5])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.9])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-    #                                           specific_pruning_rates=[0.5])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.9])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.8])
-    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-    #                                           specific_pruning_rates=[0.5])
+    cfg = omegaconf.DictConfig({
+        # "architecture": "vgg19",
+        "architecture": "resnet18",
+        "dataset": "cifar100",
+        "exclude_layers": ["conv1", "linear","fc","classifier"],
+        "model_type":"alternative",
+        "pruner": "global",
+        "amount": 0.9,
+        "batch_size": 512,
+        "lr": 0.001,
+        "momentum": 0.9,
+        "weight_decay": 1e-4,\
+        "cyclic_lr": True,
+        "lr_peak_epoch": 5,
+        "optim": "adam",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        "num_workers": 1,
+        "cosine_schedule": False,
+        "epochs": 24
+    })
+
+    print(cfg)
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+                                              specific_pruning_rates=[0.9])
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+                                              specific_pruning_rates=[0.8],legend=False)
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+                                              specific_pruning_rates=[0.5],legend=False)
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+                                              specific_pruning_rates=[0.9])
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+                                              specific_pruning_rates=[0.8],legend=False)
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+                                              specific_pruning_rates=[0.5],legend=False)
+
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+                                              specific_pruning_rates=[0.9])
+
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+                                              specific_pruning_rates=[0.8],legend=False)
+    plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+                                              specific_pruning_rates=[0.5],legend=False)
+
     #
     # # ##############################################################################
     # #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
     # # ##############################################################################
 
     #
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    ############# this is for pr and sigma optim ###############################
-    parser.add_argument('-nw', '--num_workers', type=int, default=0, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
-
-    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-                        help='Use log scale for sigma in pr,sigma optim', required=False)
-    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-                        required=False)
-    parser.add_argument('-fnc', '--functions', type=int, default=1,
-                        help='Type of functions for MOO optim of sigma and pr', required=False)
-
-    args = vars(parser.parse_args())
-
-    LeMain(args)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # ############# this is for pr and sigma optim ###############################
+    # parser.add_argument('-nw', '--num_workers', type=int, default=0, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
+    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+    #                     required=False)
+    # parser.add_argument('-fnc', '--functions', type=int, default=1,
+    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
+    #
+    # args = vars(parser.parse_args())
+    #
+    # LeMain(args)
 
     #
     # MDS_projection_plot()

@@ -1151,7 +1151,6 @@ def main(args):
             # net = resnet50()
             # in_features = net.fc.in_features
             # net.fc = nn.Linear(in_features, 100)
-
     if args.model == "resnet25_small":
         if args.type == "normal" and args.dataset == "cifar10":
             net = deep_2_small_Resnet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width,
