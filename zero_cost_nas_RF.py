@@ -348,7 +348,7 @@ def run_local_test():
                 if k == "jacob_cov":
                     measures_dict[k].extend([abs(complex(measures["jacob_cov"]))])
                 else:
-                    measures_dict[k].extend(measures[k])
+                    measures_dict[k].extend([measures[k]])
             # jacob_measures.append(abs(complex(measures["jacob_cov"])))
             #
             # snip_measures.append(measures["snip"])

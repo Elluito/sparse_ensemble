@@ -112,12 +112,12 @@ plt.rcParams["mathtext.fontset"] = "cm"
 # enable cuda devices
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-fs = 25
 
-fig_size = (15, 10)
 sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
+fs = 25
+fig_size = (15, 10)
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
