@@ -346,9 +346,9 @@ def run_local_test():
             measures = main(cfg)
             for k, v in measures.items():
                 if k == "jacob_cov":
-                    measures_dict[k] = [abs(complex(measures["jacob_cov"]))]
+                    measures_dict[k].extend([abs(complex(measures["jacob_cov"]))])
                 else:
-                    measures_dict[k] = measures[k]
+                    measures_dict[k].extend(measures[k])
             # jacob_measures.append(abs(complex(measures["jacob_cov"])))
             #
             # snip_measures.append(measures["snip"])
@@ -366,9 +366,11 @@ def run_local_test():
             # "synflow_ranks": np.argsort(synflow_measures)[::-1],
             "sample": [sample_index] * len(rf_levels),
         })
+        print("df")
+        print(df)
+        print(v)
         for k, v in measures_dict.items():
             df["{}".format(k)] = v
-        for k,v in measures_dict.items():
             df["{}_rank".format(k)] = pd.DataFrame.rank(df["{}".format(k)],ascending=False)
         # df["jacob_cov_ranks"] = df["jacob_cov"].rank(ascending=False)
         # df["synflow_ranks"] = df["synflow_ranks"].rank(ascending=False)
