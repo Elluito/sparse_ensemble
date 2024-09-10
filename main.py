@@ -11390,8 +11390,8 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_t_1-33_full.csv" # -> The name of this must be the result of  the previews function and be consistent with the cfg.
     #
     # fp = "epsilon_experiments_lamp_full.csv"
-    fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
-    # fp = "data/epsilon_experiments_mnist_resnet18_global_1680114120.50534_full.csv"
+    # fp = "data/epsilon_experiments_cifar100_resnet18_global_1680113970.02633_full.csv"
+    fp = "data/epsilon_experiments_mnist_resnet18_global_1680114120.50534_full.csv"
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # fp = "data/epsilon_experiments_cifar10_VGG19_global_1680561544.77210_full.csv"
     # [0.72, 0.88, 0.94]
@@ -11399,7 +11399,7 @@ if __name__ == '__main__':
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
         "architecture": "resnet18",
-        "dataset": "cifar100",
+        "dataset": "mnist",
         "exclude_layers": ["conv1", "linear","fc","classifier"],
         "model_type":"alternative",
         "pruner": "global",
@@ -11412,10 +11412,10 @@ if __name__ == '__main__':
         "lr_peak_epoch": 5,
         "optim": "adam",
         # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "",
+        "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         "num_workers": 1,
         "cosine_schedule": False,
         "epochs": 24
