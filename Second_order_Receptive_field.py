@@ -171,7 +171,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                 # print("batch:{}".format(i))
                 # print(net(inputs).shape)
                 # print(labels.shape)
-                loss = criterion(net(inputs), labels)  # use this loss for any training statistics
+                outputs = net(inputs)
+                loss = criterion(outputs, labels)  # use this loss for any training statistics
                 loss.backward()
                 optimizer.first_step(zero_grad=True)
                 # print(loss.item())

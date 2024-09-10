@@ -11395,6 +11395,7 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # fp = "data/epsilon_experiments_cifar10_VGG19_global_1680561544.77210_full.csv"
     # [0.72, 0.88, 0.94]
+
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
         "architecture": "resnet18",
@@ -11414,6 +11415,7 @@ if __name__ == '__main__':
         "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        # "solution": "",
         "num_workers": 1,
         "cosine_schedule": False,
         "epochs": 24
@@ -11445,6 +11447,7 @@ if __name__ == '__main__':
                                               specific_pruning_rates=[0.8],legend=False)
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
                                               specific_pruning_rates=[0.5],legend=False)
+
 
     #
     # # ##############################################################################
