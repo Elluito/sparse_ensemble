@@ -73,10 +73,11 @@ print("Device:{}".format(device))
 #     return best_acc
 
 
-def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="", epochs=40, record_time=False,
+def training(net, trainloader, testloader, optimizer, file_name_sufix, config, surname="", epochs=40, record_time=False,
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
              grad_clip=0, saturationTracker=False, record_flops=False, macs_per_batch=None, flops_per_batch=None):
     criterion = nn.CrossEntropyLoss()
+    args = config
     net.to(device)
 
     if saturationTracker:
@@ -406,7 +407,7 @@ def main(args):
                              record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time,
                              record_flops=args.record_flops,
                              macs_per_batch=macs_batch, flops_per_batch=batch_flops,
-                             saturationTracker=args.record_saturation, coonfig=args)
+                             saturationTracker=args.record_saturation, config=args)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))
