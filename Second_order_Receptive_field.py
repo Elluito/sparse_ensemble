@@ -224,6 +224,8 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, surname="
                     'net': net.state_dict(),
                     'acc': test_accuracy,
                     'epoch': epoch,
+                    "cfg": omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
+
                 }
 
                 if not os.path.isdir(save_folder):
@@ -380,6 +382,7 @@ def main(args):
             'net': net.state_dict(),
             'acc': 0,
             'epoch': -1,
+            "cfg": omegaconf.OmegaConf.to_container(omegaconf.DictConfig(vars(args)), resolve=True),
         }
         torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
 
@@ -403,7 +406,7 @@ def main(args):
                              record=args.record, verbose=2, grad_clip=args.grad_clip, record_time=args.record_time,
                              record_flops=args.record_flops,
                              macs_per_batch=macs_batch, flops_per_batch=batch_flops,
-                             saturationTracker=args.record_saturation)
+                             saturationTracker=args.record_saturation, coonfig=args)
     t1 = time.time()
     training_time = t1 - t0
     print("Training time: {}".format(training_time))

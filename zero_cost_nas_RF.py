@@ -375,10 +375,10 @@ def run_local_test():
         # df["jacob_cov_ranks"] = df["jacob_cov"].rank(ascending=False)
         # df["synflow_ranks"] = df["synflow_ranks"].rank(ascending=False)
         # df["snip_ranks"] = df["snip"].rank(ascending=False)
-    if all_df is None:
-        all_df = df
-    else:
-        all_df = pd.concat((all_df, df), ignore_index=True)
+        if all_df is None:
+            all_df = df
+        else:
+            all_df = pd.concat((all_df, df), ignore_index=True)
 
     all_df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_more_measures_5_samples.csv", sep=",", index=False)
 
