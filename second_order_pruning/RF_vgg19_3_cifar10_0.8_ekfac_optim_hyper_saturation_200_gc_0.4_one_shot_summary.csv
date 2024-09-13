@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0.4_test_acc_84.3.pth,84.3,84.16
