@@ -723,7 +723,8 @@ def main(args):
          "amount": args.pruning_rate,
          "noise": "gaussian",
          "sigma": 0.005,
-         "pruner": "global",
+         # "pruner": "global",
+         "pruner": "lamp",
          "exclude_layers": exclude_layers,
          "data_path": args.data_folder,
          "input_resolution": args.input_resolution
