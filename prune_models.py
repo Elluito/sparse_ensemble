@@ -1061,10 +1061,10 @@ def main(args):
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
     df.to_csv(
-        "{}/RF_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
+        "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
                                                                                args.RF_level, args.dataset,
                                                                                args.pruning_rate,
-                                                                               args.name),
+                                                                               args.name,cfg.pruner),
         index=False)
 
 
