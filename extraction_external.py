@@ -453,7 +453,7 @@ def main(args):
             net.load_state_dict(real_dict, strict=False)
             print("Loaded solution!")
     extractor = Extract()
-    net.to(device=args.device)
+    net.to(args.device)
     extractor(net, args.model, args.dataset, args.input_resolution, trainloader, testloader, args.device,
               args.save_path, args.RF_level)
 
