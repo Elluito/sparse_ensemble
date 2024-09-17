@@ -40,6 +40,7 @@ def check_correctness(outputs, targets):
 
 
 def correct_incorrect_max_prob(outputs, targets):
+
     _, predicted = torch.max(outputs.data, 1)
     soft_max_outputs = F.softmax(outputs, dim=1)
     soft_max_pred, predicted_soft_max = torch.max(soft_max_outputs.data, 1)
