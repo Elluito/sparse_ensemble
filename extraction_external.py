@@ -20,6 +20,7 @@ from torch.utils.data import random_split
 import torch.nn as nn
 from alternate_models import *
 from typing import Optional
+
 if os.name == 'nt':  # running on windows:
     import win32file
 
@@ -33,23 +34,36 @@ class Extract:
 
     # def __call__(self, trainer: Trainer):
     def __call__(self, model, model_name, dataset_name, data_resolution, train_loader, test_loader, device, save_path,
-                 RF_level):
+                 RF_level, name=None):
         # trainer._tracker.stop()
         # model = trainer.model if not isinstance(trainer.model, DataParallel) else trainer.model.module
         print('Initializing logger')
+        save_name = '{}_{}_{}_{}'.format(
+            # model.module.name if isinstance(model, DataParallel) else model.name,
+            model_name,
+            # trainer.data_bundle.dataset_name,
+            dataset_name,
+            # trainer.data_bundle.output_resolution
+            data_resolution,
+            RF_level
+        )
+        if name:
+            save_name = '{}_{}_{}_{}'.format(
+                # model.module.name if isinstance(model, DataParallel) else model.name,
+                model_name,
+                # trainer.data_bundle.dataset_name,
+                dataset_name,
+                # trainer.data_bundle.output_resolution
+                data_resolution,
+                RF_level,
+                name
+            )
+
         logger = LatentRepresentationCollector(
             model,
             savepath=os.path.join(
                 self.latent_representation_logs,
-                '{}_{}_{}_{}'.format(
-                    # model.module.name if isinstance(model, DataParallel) else model.name,
-                    model_name,
-                    # trainer.data_bundle.dataset_name,
-                    dataset_name,
-                    # trainer.data_bundle.output_resolution
-                    data_resolution,
-                    RF_level
-                )
+                save_name
             ),
             downsampling=self.downsampling,
             save_per_position=self.save_feature_map_positions_individually,
@@ -269,7 +283,6 @@ class LatentRepresentationCollector:
 
 
 def main(args):
-
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -524,8 +537,8 @@ def run_local_test():
 
     main(cfg)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
     parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
@@ -542,6 +555,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     main(args)
-
 
     # run_local_test()

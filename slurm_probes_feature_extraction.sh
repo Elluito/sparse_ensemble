@@ -54,11 +54,17 @@ sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resn
 
 
 rf_levels=("1" "2" "3" "4")
+
 solutions=("${sol1vgg}" "${sol2vgg}" "${sol3vgg}" "${sol4vgg}")
+
 names=("seed_0" "seed_0" "seed_0" "seed_0")
+
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
+
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+
  run_extraction "vgg19" "cifar10" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "32" 2 128 "${logs_folder}"  # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+
 done
 
 
@@ -113,4 +119,7 @@ sol6rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resn
 sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resnet50_normal_tiny_imagenet_seed.0_rf_level_11_recording_200_no_ffcv_test_acc_25.44.pth
 rf_levels=("2" "3" "4" "9" "10" "11")
 solutions=("${sol2rs50}" "${sol3rs50}" "${sol4rs50}" "${sol5rs50}" "${sol6rs50}" "${sol7rs50}")
-
+####################################################################
+#                     second order information
+####################################################################
+#CIFAR10
