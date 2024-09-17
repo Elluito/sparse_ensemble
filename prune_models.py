@@ -700,6 +700,7 @@ def pruning_fine_tuning_experiment(args):
 
 
 def main(args):
+
     if "vgg" in args.model:
         exclude_layers = ["features.0", "classifier"]
     if "resnet" in args.model:
