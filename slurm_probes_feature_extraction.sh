@@ -63,7 +63,7 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 
- run_extraction "vgg19" "cifar10" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "32" 2 128 "${logs_folder}"  # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_extraction "vgg19" "cifar10" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "32" 2 128 "${logs_folder}" "sgd" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 
 done
 
@@ -77,7 +77,7 @@ names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_extraction "resnet50" "cifar10" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "32" 2 128 "${logs_folder}"  # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_extraction "resnet50" "cifar10" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "32" 2 128 "${logs_folder}" "sgd" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
 
 
