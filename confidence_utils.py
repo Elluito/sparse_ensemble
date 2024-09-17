@@ -104,6 +104,7 @@ def get_correctness_dataloader(model, dataloader, device,topk=5):
 
         outputs = model(x)
         total, correct, correct_soft_max, accuracies, confidences = check_correctness(outputs, y)
+
         correct_maxprob, incorrect_maxprob = correct_incorrect_max_prob(outputs, y)
         correct_topk, incorrect_topk, correct_topk_index, incorrect_topk_index = correct_incorrect_top_k_prob(outputs,
                                                                                                               y,k=topk)

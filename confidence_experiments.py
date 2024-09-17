@@ -112,25 +112,6 @@ def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint
     acc = 100. * correct / total
     return acc
 
-def check_correctness_dataloaders(model1,model2, dataloader, device,topk=5):
-    model1 = model1.to(device)
-    model2= model2.to(device)
-    model1.eval()
-    model2.eval()
-
-    full_accuracies = None
-    full_confidences = None
-    full_max_prob_model1 = None
-    full_correct_model1 = None
-    full_correct_model2 = None
-
-    for x, y in dataloader:
-        x, y = x.to(device), y.to(device)
-
-        outputs1 = model(x)
-        outputs2 = model(x)
-        total1, correct1, correct_soft_max_1, accuracies1, confidences1 = check_correctness(outputs1, y)
-        total2, correct2, correct_soft_max_2, accuracies2, confidences2 = check_correctness(outputs2, y)
 def main(args):
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]

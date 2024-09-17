@@ -16,7 +16,19 @@ import numpy as np
 from torch.nn.utils import parameters_to_vector
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 import random
+from confidence_utils import check_none_and_replace
+def check_correctness(outputs, targets):
+    correct_soft_max = 0
+    soft_max_outputs = F.softmax(outputs, dim=1)
+    print("soft_max:{}".format(soft_max_outputs))
+    _, predicted = torch.max(outputs.data, 1)
+    soft_max_pred, predicted_soft_max = torch.max(soft_max_outputs.data, 1)
+    # total += targets.size(0)
+    correct_list = predicted.eq(targets.data).cpu()
 
+    correct_soft_max += predicted_soft_max.eq(targets.data).cpu().sum()
+
+    return correct_list , soft_max_pred
 def cascade_accuracy(max_prob1, correct1, correct2):
     accuracy = []
 
@@ -237,6 +249,28 @@ def load_model(args):
     return net
 
 
+def check_correctness_dataloaders(model1,model2, dataloader, device,topk=5):
+    model1 = model1.to(device)
+    model2= model2.to(device)
+    model1.eval()
+    model2.eval()
+
+    full_accuracies = None
+    full_confidences = None
+    full_max_prob_model1 = None
+    full_correct_model1 = None
+    full_correct_model2 = None
+
+    for x, y in dataloader:
+        x, y = x.to(device), y.to(device)
+
+        outputs1 = model1(x)
+        outputs2 = model2(x)
+        correct1, confidences1 = check_correctness(outputs1, y)
+        correct2, confidences2 = check_correctness(outputs2, y)
+        full_max_prob_model1 = check_none_and_replace(full_max_prob_model1,confidences1)
+        full_correct_model1 = check_none_and_replace(full_correct_model1,correct1)
+        full_correct_model2 = check_none_and_replace(full_correct_model2,correct2)
 def main(args):
 
     if "vgg" in args.model:
