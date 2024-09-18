@@ -101,9 +101,9 @@ else
 
 
 
-for model in "vgg19" "resnet50"; do
+for model in "resnet50"; do
 for dataset in "cifar10"; do
-for pruning_rate in "0.8" "0.9" "0.95"; do
+for pruning_rate in "0.8"; do
 for rf_level in "3" "4"; do
 
 run_pruning "${model}" "$dataset" "${HOME}/original_paper_checkpoints" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
