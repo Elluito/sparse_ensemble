@@ -1,6 +1,6 @@
 from zero_cost_nas.foresight.pruners.predictive import find_measures
 from alternate_models import *
-
+import seaborn as sns
 import omegaconf
 import torch.optim as optim
 import torchvision
@@ -16,7 +16,7 @@ from shrinkbench.metrics.flops import flops
 import math
 from collections import defaultdict
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def main(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -371,7 +371,7 @@ def run_local_test():
         print(v)
         for k, v in measures_dict.items():
             df["{}".format(k)] = v
-            df["{}_rank".format(k)] = pd.DataFrame.rank(df["{}".format(k)],ascending=False)
+            df["{}_rank".format(k)] = pd.DataFrame.rank(df["{}".format(k)], ascending=False)
         # df["jacob_cov_ranks"] = df["jacob_cov"].rank(ascending=False)
         # df["synflow_ranks"] = df["synflow_ranks"].rank(ascending=False)
         # df["snip_ranks"] = df["snip"].rank(ascending=False)
@@ -380,8 +380,52 @@ def run_local_test():
         else:
             all_df = pd.concat((all_df, df), ignore_index=True)
 
-    all_df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_more_measures_5_samples.csv", sep=",", index=False)
+    all_df.to_csv("predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_more_measures_5_samples.csv", sep=",",
+                  index=False)
+
+
+def run_analysis_of_measures():
+    from scipy.stats import spearmanr
+    df_primal = pd.read_csv(
+        "/home/luisaam/PycharmProjects/sparse_ensemble/predicting_optimal_RF/small_resnet_small_imagenet_predict_rf_more_measures_5_samples.csv",
+        sep=",")
+    measure_names = ["jacob_cov", "snip", "synflow", "grad_norm", "fisher"]
+    correlation_to_actual_rank_whole = {}
+    correlation_to_actual_rank_samples = defaultdict(list)
+    for m in measure_names:
+        df=df_primal[df_primal["Rf_level"]>=7]
+        object = spearmanr(df["Ranks"], df[m])
+        statistic, p_value = object.statistic, object.pvalue
+
+        correlation_to_actual_rank_whole[m] = statistic
+        for i in range(5):
+            current_df = df_primal[df_primal["sample"] == i]
+            object = spearmanr(current_df["Ranks"], current_df[m])
+            statistic, p_value = object.statistic, object.pvalue
+            correlation_to_actual_rank_samples[m].append(statistic)
+
+    df_whole = pd.DataFrame(
+        {"Method": list(correlation_to_actual_rank_whole.keys()),
+         "spearman rank correlation": list(correlation_to_actual_rank_whole.values())
+         }
+    )
+
+    # df_whole.plot()
+    sns.barplot(data=df_whole, x="Method", y="spearman rank correlation")
+    plt.show()
+    # samples_dict = {}
+
+    # for m in measure_names:
+    #
+    #     samples_dict["method"]=
+    #
+    # df_samples = pd.DataFrame(
+    #     {
+    #
+    #     }
+    # )
 
 
 if __name__ == '__main__':
-    run_local_test()
+    # run_local_test()
+    run_analysis_of_measures()

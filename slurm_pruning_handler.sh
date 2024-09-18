@@ -73,24 +73,24 @@ else
 
 # For original paper
 
-for model in "resnet50"; do
+#for model in "resnet50"; do
+#for dataset in "cifar10"; do
+#for pruning_rate in "0.8" "0.9" "0.95"; do
+#for rf_level in "3" "4"; do
+#
+#run_pruning "${model}" "$dataset" "${HOME}/second_order_experiments" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "ekfac_optim_hyper_saturation_200_gc_1" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#done
+#done
+#done
+#done
+
+for model in "vgg"; do
 for dataset in "cifar10"; do
-for pruning_rate in "0.8" "0.9" "0.95"; do
+for pruning_rate in "0.9" "0.95"; do
 for rf_level in "3" "4"; do
 
-run_pruning "${model}" "$dataset" "${HOME}/second_order_experiments" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "ekfac_optim_hyper_saturation_200_gc_1" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-done
-done
-done
-done
-
-for model in "resnet50"; do
-for dataset in "cifar10"; do
-for pruning_rate in "0.8" "0.9" "0.95"; do
-for rf_level in "3" "4"; do
-
-run_pruning "${model}" "$dataset" "${HOME}/second_order_experiments" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+run_pruning "${model}" "$dataset" "${HOME}/second_order_experiments" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 
 done
 done

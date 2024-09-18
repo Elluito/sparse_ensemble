@@ -17,8 +17,8 @@ memory = Memory(".memcache", verbose=0)
 
 
 @attrs(auto_attribs=True, slots=True)
-class PseudoArgs:
     """The pseudo args configurng the training of a probe.
+class PseudoArgs:
     Args:
         model_name: The name of the model
         folder:     The folder containing the latent representation

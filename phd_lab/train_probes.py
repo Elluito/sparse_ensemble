@@ -9,6 +9,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
     parser.add_argument('-mp', dest='mp', type=int, default=cpu_count(), help='Enable multiprocessing')
+    parser.add_argument('--name', dest='name', type=str, default="", help='Name of files')
     parser.add_argument('--config', dest='config', type=str, default=None, help='Path to a config file')
     parser.add_argument('--prefix', dest='prefix', type=str, default=None, help='Postfix added to the result csv')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=False, help='Show Epoch counter')
