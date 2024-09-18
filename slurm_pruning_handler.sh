@@ -85,7 +85,7 @@ else
 #done
 #done
 
-for model in "vgg"; do
+for model in "vgg19"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0.9" "0.95"; do
 for rf_level in "3" "4"; do
