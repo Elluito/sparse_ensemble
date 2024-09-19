@@ -17,6 +17,8 @@ ffcv=$8
 ffcv_train=$9
 ffcv_val="${10}"
 RF_level="${11}"
+record_sat="${12}"
+array="${13}"
 
 echo "model ${model} and dataset ${dataset}"
 
@@ -58,7 +60,12 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 
 #if [ $ffcv -eq 1 ]; then
 
-sbatch --nodes=1 --time=40:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.err" --output="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.out" --job-name="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}" slurm_original_paper_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW="${num_workers}"  RFL="${RF_level}" TYPE="normal" FOLDER="${save_folder}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" EPOCHS="${epochs}" RECORD="${record}" #DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+if [ "${array}" -eq 1 ]; then
+sbatch --nodes=1 --array=1-3 --time=40:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.err" --output="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.out" --job-name="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}" slurm_original_paper_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW="${num_workers}"  RFL="${RF_level}" TYPE="normal" FOLDER="${save_folder}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" EPOCHS="${epochs}" RECORD="${record}" RECORD_SAT="${record_sat}" #DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+else
+sbatch --nodes=1  --time=40:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.err" --output="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.out" --job-name="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}" slurm_original_paper_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW="${num_workers}"  RFL="${RF_level}" TYPE="normal" FOLDER="${save_folder}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" EPOCHS="${epochs}" RECORD="${record}" RECORD_SAT="${record_sat}" #DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+
+fi
 #echo "train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}"
 #  sbatch --nodes=1 --time=10:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.err" --output="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.out" --job-name="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv" slurm_original_paper_run.sh
 
@@ -122,7 +129,7 @@ for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to
 
 #if [ $ffcv -eq 1 ]; then
 
-sbatch --nodes=1 --time=60:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.err" --output="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.out" --job-name="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}" slurm_original_paper_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW="${num_workers}"  RFL="${rf_levels[$idxA]}" TYPE="normal" FOLDER="${save_folder}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" EPOCHS="${epochs}" RECORD="${record}" #DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
+sbatch --nodes=1  --time=60:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.err" --output="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}.out" --job-name="train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}" slurm_original_paper_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW="${num_workers}"  RFL="${rf_levels[$idxA]}" TYPE="normal" FOLDER="${save_folder}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" EPOCHS="${epochs}" RECORD="${record}"  #DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
 #echo "train_${model}_${dataset}_${rf_levels[$idxA]}_${string_ffcv}"
 #  sbatch --nodes=1 --time=10:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.err" --output="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv.out" --job-name="train_${model}_${dataset}__${rf_levels[$idxB]}_no_ffcv" slurm_original_paper_run.sh
 
@@ -135,10 +142,21 @@ done
 
 save_folder="${HOME}/original_paper_checkpoints"
 
-#single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "1"
-#single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "2"
-single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "3"
-single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "4"
+single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "1" 1 0
+single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "2" 1 0
+
+single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "3" 0 1
+single_run_paper_training "vgg19" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "4" 0 1
+
+
+
+single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "1" 1 0
+single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "2" 1 0
+
+single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "3" 0 1
+#
+single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "4" 0 1
+
 
 #single_run_papertraining "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "2"
 #single_run_paper_training "resnet50" "cifar10" "4" "recording_200_no_ffcv" "1" "${save_folder}" "200" "0" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "3"
