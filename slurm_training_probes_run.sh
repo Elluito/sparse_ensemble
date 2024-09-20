@@ -23,7 +23,7 @@
 #SBATCH --mail-type=ALL
 
 #SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=4GB
 
 python3.9 -c "import os; print(os.environ)"
