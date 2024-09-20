@@ -38,11 +38,11 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
 
 
-
     parser.add_argument('--prefix', dest='prefix', type=str, default=None, help='Postfix added to the result csv')
     parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
     parser.add_argument('--config', dest='config', type=str, default=None, help='Path to a config file')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=False, help='Show Epoch counter')
+    parser.add_argument('--overwrite', dest='overwrite', type=bool, default=False, help='Overwrite existing results')
 
     args = parser.parse_args()
     # args = parser.parse_args()
@@ -61,5 +61,8 @@ if __name__ == '__main__':
             print(pargs)
             main(pargs)
     else:
+        # pargs = PseudoArgs(model_name=args.model,
+        #                    folder=args.save_path,
+        #                    mp=args.mp)
         main(args)
     # test_local()
