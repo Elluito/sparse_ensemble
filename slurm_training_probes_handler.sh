@@ -37,7 +37,7 @@ logs_folder="./probes_logs/"
 rf_levels=("1" "2" "3" "4")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_probe_training "vgg19" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}" " " # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_probe_training "vgg19" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}" "x" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
 
 
@@ -45,6 +45,6 @@ done
 rf_levels=("1" "2" "3" "4" "9" "10" "11")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_probe_training "resnet50" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}"  " " # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_probe_training "resnet50" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}" "x"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
 

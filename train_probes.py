@@ -35,10 +35,10 @@ if __name__ == '__main__':
     parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
     parser.add_argument('-mp', dest='mp', type=int, default=cpu_count(), help='Enable multiprocessing')
     parser.add_argument('--name', dest='name', type=str, default="", help='Name of the run')
+    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
     parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
     parser.add_argument('--prefix', dest='prefix', type=str, default=None, help='Postfix added to the result csv')
-    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
     parser.add_argument('--config', dest='config', type=str, default=None, help='Path to a config file')
     parser.add_argument('--verbose', dest='verbose', type=bool, default=False, help='Show Epoch counter')
     parser.add_argument('--overwrite', dest='overwrite', type=bool, default=False, help='Overwrite existing results')
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         # pargs = PseudoArgs(model_name=args.model,
         #                    folder=args.save_path,
         #                    mp=args.mp)
-        if args.name is not None or args.name !=" ":
+        if args.name is not None or args.name !="x":
             save_name = '{}_{}_{}_{}'.format(
                 # model.module.name if isinstance(model, DataParallel) else model.name,
                 args.model,
