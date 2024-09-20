@@ -22,9 +22,10 @@
 # mail alert at start, end and abortion of execution
 #SBATCH --mail-type=ALL
 
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=2GB
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=4GB
+
 python3.9 -c "import os; print(os.environ)"
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 

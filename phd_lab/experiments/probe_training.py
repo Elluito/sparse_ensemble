@@ -233,6 +233,7 @@ def main(args: PseudoArgs):
     if args.mp != 0:
         print("Entered the MP if")
         p = Parallel(n_jobs=args.mp, verbose=1000)
+
         results = p(delayed(train_model_for_data_mp)(farg) for farg in fargs)
         for i, result in enumerate(results):
             t_accs.append(result[0])
