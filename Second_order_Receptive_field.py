@@ -296,6 +296,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, config, s
 
 
 def main(args):
+
     if args.model == "vgg19":
         exclude_layers = ["features.0", "classifier"]
     else:
@@ -393,6 +394,9 @@ def main(args):
     x = None
     y = None
     net.to(device)
+    macs_batch = None
+    batch_flops = None
+
     if args.record_flops:
         x, y = next(iter(trainloader))
         x = x.to(device)
