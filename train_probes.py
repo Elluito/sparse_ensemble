@@ -35,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
     parser.add_argument('-mp', dest='mp', type=int, default=cpu_count(), help='Enable multiprocessing')
-    parser.add_argument('--save_path', default="./probes_logs/", type=int, help='Save path of logs')
+    parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
 
 
     args = parser.parse_args()

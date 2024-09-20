@@ -2,6 +2,7 @@
 
 run_probe_training() {
 model=$1
+
 dataset=$2
 #directory=$4
 #ffcv=$6
