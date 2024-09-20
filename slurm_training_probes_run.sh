@@ -34,5 +34,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03
 export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
 
 
-python3.9 train_probes.py -m $1 -d $2 --RF_level $3 --input_resolution $4 -mp 4 --save_path $5 --name $6
+python3.9 train_probes.py -m $1 -d $2 --RF_level $3 --input_resolution $4 -mp 0 --save_path $5 --name $6
 
