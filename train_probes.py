@@ -85,7 +85,7 @@ if __name__ == '__main__':
                 args.RF_level
                 )
         save_folder = os.path.join(args.save_path, save_name)
-        if not os.path.isdir():
+        if not os.path.isdir(save_folder):
             os.mkdir(save_folder)
         pargs = PseudoArgs(model_name=args.model,
                                folder=os.path.join(args.folder,save_name),
