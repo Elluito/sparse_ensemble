@@ -36,12 +36,15 @@ if __name__ == '__main__':
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
     parser.add_argument('-mp', dest='mp', type=int, default=cpu_count(), help='Enable multiprocessing')
     parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
+
+
+
     parser.add_argument('--prefix', dest='prefix', type=str, default=None, help='Postfix added to the result csv')
+    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
+    parser.add_argument('--config', dest='config', type=str, default=None, help='Path to a config file')
+    parser.add_argument('--verbose', dest='verbose', type=bool, default=False, help='Show Epoch counter')
 
     args = parser.parse_args()
-    # parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
-    # parser.add_argument('--config', dest='config', type=str, default=None, help='Path to a config file')
-    # parser.add_argument('--verbose', dest='verbose', type=bool, default=False, help='Show Epoch counter')
     # args = parser.parse_args()
     if args.prefix is not None:
         cfg.PROBE_PERFORMANCE_SAVEFILE = args.prefix + "_" + cfg.PROBE_PERFORMANCE_SAVEFILE
