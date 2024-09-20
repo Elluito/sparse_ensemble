@@ -205,6 +205,7 @@ def main(args: PseudoArgs):
         else:
             print("overwriting is disabled, stopping...")
             return
+    print("I am inside main")
     names, t_accs, e_accs = [], [], []
     train_set, eval_set = obtain_all_dataset(args.folder)
     if len(train_set) != len(eval_set):
@@ -213,6 +214,7 @@ def main(args: PseudoArgs):
                                 f"Make sure the datas has been extracted correctly. Consider rerunning "
                                 f"extraction.")
     fargs = []
+    print("I am about to begin the train data loop")
     for train_data, eval_data in zip(train_set, eval_set):
         names.append(os.path.basename(train_data[0][:-2]))
         if args.mp == 0:
