@@ -93,6 +93,7 @@ if __name__ == '__main__':
 
         # print(pargs)
         logs_save = args.save_path
-        args.save_path=save_folder
+        args.save_path = save_folder
+        args.folder = os.path.join(args.folder,save_name)
         main(args)
     # test_local()

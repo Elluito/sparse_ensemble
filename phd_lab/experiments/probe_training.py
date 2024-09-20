@@ -207,7 +207,10 @@ def main(args: PseudoArgs):
             return
     print("I am inside main")
     names, t_accs, e_accs = [], [], []
+    print(args.folder)
     train_set, eval_set = obtain_all_dataset(args.folder)
+    print("length of train set {}".format(len(train_set)))
+    print("length of test set {}".format(len(eval_set)))
     if len(train_set) != len(eval_set):
         raise FileNotFoundError(f"Number of training sets ({len(train_set)}) does not"
                                 f"match the number of test sets ({len(eval_set)})."
