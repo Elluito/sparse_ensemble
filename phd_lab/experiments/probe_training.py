@@ -189,6 +189,7 @@ def train_model_for_data_mp(args):
     Args:
         args: PseudodoArgs
     """
+    print("I am here in train_model data for mp")
     return train_model_for_data(*args)
 
 
@@ -230,6 +231,7 @@ def main(args: PseudoArgs):
             fargs.append((train_data, eval_data, args.verbose))
 
     if args.mp != 0:
+        print("Entered the MP if")
         p = Parallel(n_jobs=args.mp, verbose=1000)
         results = p(delayed(train_model_for_data_mp)(farg) for farg in fargs)
         for i, result in enumerate(results):
