@@ -92,5 +92,7 @@ if __name__ == '__main__':
                                mp=args.mp)
 
         # print(pargs)
-        main(pargs)
+        logs_save = args.save_path
+        args.save_path=save_folder
+        main(args)
     # test_local()
