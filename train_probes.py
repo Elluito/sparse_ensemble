@@ -92,5 +92,5 @@ if __name__ == '__main__':
                                mp=args.mp)
 
         # print(pargs)
-        main(args)
+        main(pargs)
     # test_local()
