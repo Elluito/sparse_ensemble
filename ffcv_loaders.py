@@ -14,6 +14,7 @@ from ffcv.fields.basics import IntDecoder
 from ffcv.transforms.common import Squeeze
 import torchvision.transforms as torch_trnfs
 
+
 class PytorchtoTensor(torch.nn.Module):
     def __init__(self, scale=1):
         super(PytorchtoTensor, self).__init__()
@@ -21,6 +22,8 @@ class PytorchtoTensor(torch.nn.Module):
 
     def forward(self, x):
         return torch_trnfs.ToTensor(x).cpu()
+
+
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
                                          in_memory=True, resolution=224, random_seed=1, valsize=5000, testsize=10000,
@@ -32,8 +35,8 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
 
     start_time = time.time()
 
-    small_imagenet_MEAN_train= np.array([122.4760, 113.6542, 99.5722])
-    small_imagenet_STD_train = np.array( [69.5428, 66.8305, 70.2595])
+    small_imagenet_MEAN_train = np.array([122.4760, 113.6542, 99.5722])
+    small_imagenet_STD_train = np.array([69.5428, 66.8305, 70.2595])
     small_imagenet_MEAN_test = np.array([120.6614, 112.3769, 98.3527])
     small_imagenet_STD_test = np.array([68.9266, 66.2883, 69.4644])
 
@@ -169,8 +172,19 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
     return train_loader, val_loader, test_loader
 
 
-if __name__ == '__main__':
+def test_loaders():
+    trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(
+        "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+        "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
+        ,
+        512, 4, valsize=0, testsize=10000)
+    s0 = time.time()
+    for images, _ in trainloader:
+        t = 0
+    s1 = time.time()
+    print("Loading one batch is {}s".format(s1-s0))
 
+def get_mean_of_train_val_loaders_imagenet_small():
     trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
@@ -213,3 +227,6 @@ if __name__ == '__main__':
     print("{}".format(mean))
     print("STD for test loader")
     print("{}".format(std))
+
+if __name__ == '__main__':
+    test_loaders()
