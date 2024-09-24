@@ -177,10 +177,11 @@ def test_loaders():
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
         "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
         ,
-        512, 4, valsize=0, testsize=10000)
+        512, 4, valsize=5000, testsize=10000)
     s0 = time.time()
     for images, _ in trainloader:
         t = 0
+        print("images")
     s1 = time.time()
     print("Loading one batch is {}s".format(s1-s0))
 

@@ -1007,7 +1007,8 @@ def main(args):
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
             trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
-                                                                                      batch_size, args.num_workers,resolution=args.input_resolution)
+                                                                                      batch_size, args.num_workers,
+                                                                                      resolution=args.input_resolution,valsize=0)
         else:
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
@@ -1358,7 +1359,7 @@ def main(args):
                 df = pd.DataFrame(log_dict)
                 df.to_csv(filepath, sep=",", index=False)
         if args.record_saturation:
-            csv_tracker.add_scalar("Epoch",epoch)
+            csv_tracker.add_scalar("Epoch", epoch)
             csv_tracker.add_scalar("test_accuracy", test_acc)
             # csv_tracker.add_scalar("loss", test_loss / total)
 
