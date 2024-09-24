@@ -23,7 +23,7 @@ class PytorchtoTensor(torch.nn.Module):
         return torch_trnfs.ToTensor(x).cpu()
 def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, batch_size=None, num_workers=2,
                                          distributed=False,
-                                         in_memory=True, resolution=224, random_seed=None, valsize=5000, testsize=10000,
+                                         in_memory=True, resolution=224, random_seed=0, valsize=5000, testsize=10000,
                                          shuffle_test=False, shuffle_val=True):
     if num_workers == 0:
         num_workers = 1

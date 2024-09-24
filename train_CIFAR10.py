@@ -1007,7 +1007,7 @@ def main(args):
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
             trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
-                                                                                      batch_size, args.num_workers)
+                                                                                      batch_size, args.num_workers,resolution=args.input_resolution)
         else:
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
