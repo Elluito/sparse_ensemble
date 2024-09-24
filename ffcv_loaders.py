@@ -79,7 +79,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                               # indices=whole_dataset_indices[:-valsize],
                               order=order,
                               os_cache=in_memory,
-                              seed=random_seed,
+                              # seed=random_seed,
                               drop_last=True,
                               pipelines={
                                   'image': image_pipeline,
@@ -94,7 +94,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                               indices=whole_dataset_indices[:-valsize],
                               order=order,
                               os_cache=in_memory,
-                              seed=random_seed,
+                              # seed=random_seed,
                               drop_last=True,
                               pipelines={
                                   'image': image_pipeline,
@@ -109,7 +109,7 @@ def make_ffcv_small_imagenet_dataloaders(train_dataset=None, val_dataset=None, b
                             order=order,
                             indices=whole_dataset_indices[-valsize:],
                             os_cache=in_memory,
-                            seed=random_seed,
+                            # seed=random_seed,
                             drop_last=True,
                             pipelines={
                                 'image': image_pipeline,
