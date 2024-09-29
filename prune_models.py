@@ -707,6 +707,7 @@ def prune_selective_layers(args):
         intermediate_layers = ["features.4", "features.8", "features.11", "features.15", "features.18", "features.21",
                                "features.24", "features.28", "features.31", "features.34", "features.37", "features.40",
                                "features.43", "features.46", "features.49"]
+
     if "resnet" in args.model:
         exclude_layers = ["conv1", "linear"]
         intermediate_layers = ["layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
@@ -723,6 +724,7 @@ def prune_selective_layers(args):
                                "layer4.2.conv1", "layer4.2.conv2", "layer4.2.conv3"]
         in_block_layers = [l for l in intermediate_layers if "conv1" in l or "conv2" in l]
         out_of_block_layer = [l for l in intermediate_layers if "conv3" in l or "shortcut" in l]
+
     if "densenet" in args.model:
         exclude_layers = ["conv1", "fc"]
     if "resnet" in args.model:
@@ -998,13 +1000,16 @@ def prune_selective_layers(args):
     whole_quality_df = None
 
     for i, name in enumerate(glob.glob(search_string)):
+
         print(name)
+
         print("Device: {}".format(device))
+
         state_dict_raw = torch.load(name, map_location=device)
         net.load_state_dict(state_dict_raw["net"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
         calculated_accuracy = test(net, testloader=testloader)
-        dict_of_dicts = measure_quality(copy.deepcopy(net))
+        dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
         quality_df =quality_df.reset_index()
         quality_df = quality_df.T
@@ -1139,10 +1144,11 @@ def prune_selective_layers(args):
 
     #           Quality summary save
     quality_df.to_csv(
-            "{}/RF_{}_{}_{}_quality_summary.csv".format(args.save_folder, args.model,
+            "{}/RF_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
                                                         args.RF_level, args.dataset,
                                                         args.name,args.args.pruning_rate))
     #### different pruning results
+
     df = pd.DataFrame({"Name": files_names,
                        })
 
@@ -1969,9 +1975,7 @@ if __name__ == '__main__':
     if args.experiment == 4:
         n_shallow_layer_experiment(args)
         # main(args)
-
     if args.experiment == 5:
-
         prune_selective_layers(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
