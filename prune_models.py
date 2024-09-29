@@ -1075,7 +1075,7 @@ def prune_selective_layers(args):
                 #     set(intermediate_layers[:-current_inter_layer_index]))
                 layers_to_be_pruned = [x for x in intermediate_layers if
                                        x not in intermediate_layers[:-current_inter_layer_index]]
-                cfg.exclude_layers = exclude_layers
+                cfg.exclude_layers = exclude_layers_copy
                 #  GMP
                 gmp_copy = copy.deepcopy(net)
                 prune_function(gmp_copy, cfg)
