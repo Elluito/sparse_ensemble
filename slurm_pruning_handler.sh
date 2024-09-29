@@ -44,7 +44,9 @@ else
   fi
 #done
 #done
+
 }
+
 # New models pruning results
 #for model in "densenet40"; do
 #for dataset in "tiny_imagenet"; do

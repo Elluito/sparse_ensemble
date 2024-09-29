@@ -1,6 +1,6 @@
+import copy
 import os
 import time
-
 import torch
 import re
 import argparse
@@ -16,6 +16,8 @@ from similarity_comparison_architecture import features_similarity_comparison_ex
 import numpy as np
 from torch.nn.utils import parameters_to_vector
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
+from collections import defaultdict
+from torchconvquality import measure_quality
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -699,8 +701,473 @@ def pruning_fine_tuning_experiment(args):
     # strings_in_between = re.findall("(?<=\_)(.*?)(?=\_)", file_name)
 
 
-def main(args):
+def prune_selective_layers(args):
+    if "vgg" in args.model:
+        exclude_layers = ["features.0", "classifier"]
+        intermediate_layers = ["features.4", "features.8", "features.11", "features.15", "features.18", "features.21",
+                               "features.24", "features.28", "features.31", "features.34", "features.37", "features.40",
+                               "features.43", "features.46", "features.49"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+        intermediate_layers = ["layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
+                               "layer1.1.conv1", "layer1.1.conv2", "layer1.1.conv3", "layer1.2.conv1", "layer1.2.conv2",
+                               "layer1.2.conv3", "layer2.0.conv1", "layer2.0.conv2", "layer2.0.conv3",
+                               "layer2.0.shortcut.0", "layer2.1.conv1", "layer2.1.conv2", "layer2.1.conv3",
+                               "layer2.2.conv1", "layer2.2.conv2", "layer2.2.conv3", "layer2.3.conv1", "layer2.3.conv2",
+                               "layer2.3.conv3", "layer3.0.conv1", "layer3.0.conv2", "layer3.0.conv3",
+                               "layer3.0.shortcut.0", "layer3.1.conv1", "layer3.1.conv2", "layer3.1.conv3",
+                               "layer3.2.conv1", "layer3.2.conv2", "layer3.2.conv3", "layer3.3.conv1", "layer3.3.conv2",
+                               "layer3.3.conv3", "layer3.4.conv1", "layer3.4.conv2", "layer3.4.conv3", "layer3.5.conv1",
+                               "layer3.5.conv2", "layer3.5.conv3", "layer4.0.conv1", "layer4.0.conv2", "layer4.0.conv3",
+                               "layer4.0.shortcut.0", "layer4.1.conv1", "layer4.1.conv2", "layer4.1.conv3",
+                               "layer4.2.conv1", "layer4.2.conv2", "layer4.2.conv3"]
+        in_block_layers = [l for l in intermediate_layers if "conv1" in l or "conv2" in l]
+        out_of_block_layer = [l for l in intermediate_layers if "conv3" in l or "shortcut" in l]
+    if "densenet" in args.model:
+        exclude_layers = ["conv1", "fc"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "mobilenet" in args.model:
+        exclude_layers = ["conv1", "linear"]
 
+    cfg = omegaconf.DictConfig(
+        {"architecture": args.model,
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         # "pruner": "lamp",
+         "exclude_layers": exclude_layers,
+         "data_path": args.data_folder,
+         "input_resolution": args.input_resolution
+         })
+
+    if args.ffcv:
+        from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+        train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                      128, args.num_workers)
+    else:
+        print("Normal data loaders loaded!!!!")
+        cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+        # Data
+        print('==> Preparing data..')
+        current_directory = Path().cwd()
+        data_path = "."
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "/home/luisaam/Documents/PhD/data/"
+        print(data_path)
+        batch_size = args.batch_size
+        if "32" in args.name:
+            batch_size = 32
+        if "64" in args.name:
+            batch_size = 64
+
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(*stats_to_use),
+        ])
+
+        transform_test = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
+
+        if args.dataset == "cifar10":
+            trainset = torchvision.datasets.CIFAR10(
+                root=data_path, train=True, download=True, transform=transform_train)
+            trainloader = torch.utils.data.DataLoader(
+                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+            testset = torchvision.datasets.CIFAR10(
+                root=data_path, train=False, download=True, transform=transform_test)
+            testloader = torch.utils.data.DataLoader(
+                testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+        if args.dataset == "cifar100":
+            trainset = torchvision.datasets.CIFAR100(
+                root=data_path, train=True, download=True, transform=transform_train)
+            trainloader = torch.utils.data.DataLoader(
+                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+
+            testset = torchvision.datasets.CIFAR100(
+                root=data_path, train=False, download=True, transform=transform_test)
+            testloader = torch.utils.data.DataLoader(
+                testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+        if args.dataset == "tiny_imagenet":
+            from test_imagenet import load_tiny_imagenet
+            trainloader, valloader, testloader = load_tiny_imagenet(
+                {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size})
+        if args.dataset == "small_imagenet":
+            if args.ffcv:
+                from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+                trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                          args.ffcv_val,
+                                                                                          batch_size, args.num_workers)
+            else:
+                from test_imagenet import load_small_imagenet
+                trainloader, valloader, testloader = load_small_imagenet(
+                    {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+
+    from torchvision.models import resnet18, resnet50
+
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet18_rf(num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet24":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type))
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "deep_resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+    if args.model == "densenet40":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_40_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_40_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_40_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
+    if args.model == "mobilenetv2":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = MobileNetV2_cifar_RF(num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = MobileNetV2_cifar_RF(num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = MobileNetV2_cifar_RF(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = MobileNetV2_imagenet_RF(num_classes=1000, RF_level=args.RF_level)
+    if args.model == "densenet28":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = densenet_28_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = densenet_28_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "imagenet":
+            net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
+    if args.model == "resnet50_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_stride(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_stride(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19_stride":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_stride("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_stride("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    dense_accuracy_list = []
+
+    pruned_accuracy_list = []
+    list_of_lists_of_intermediate_layers_pruned_accuracies = []
+    files_names = []
+
+    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                          args.RF_level, args.name)
+
+    things = list(glob.glob(search_string))
+
+    # if len(things) < 2:
+    #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
+    print("Glob text:{}".format(
+        "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                              args.name)))
+    print(things)
+
+    whole_quality_df = None
+
+    for i, name in enumerate(glob.glob(search_string)):
+        print(name)
+        print("Device: {}".format(device))
+        state_dict_raw = torch.load(name, map_location=device)
+        net.load_state_dict(state_dict_raw["net"])
+        print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+        calculated_accuracy = test(net, testloader=testloader)
+        dict_of_dicts = measure_quality(copy.deepcopy(net))
+        quality_df = pd.DataFrame(dict_of_dicts)
+        quality_df =quality_df.reset_index()
+        quality_df = quality_df.T
+        quality_df = quality_df.rename(columns={"index":"layer_name"})
+        solution_name = [name]*len(quality_df)
+        quality_df["Solution_name"] = solution_name
+
+        if not whole_quality_df:
+            whole_quality_df = quality_df
+        else:
+            whole_quality_df = pd.concat((whole_quality_df,quality_df))
+
+        ######## name of the current seed
+
+        seed_from_file1 = re.findall("_[0-9]_", name)
+
+        print(seed_from_file1)
+
+        seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
+
+        print(seed_from_file2)
+
+        seed_from_file3 = re.findall("\.[0-9]_", name)
+
+        print(seed_from_file3)
+
+        if seed_from_file3:
+
+            seed_from_file = seed_from_file3[0].replace(".", "_")
+
+        elif seed_from_file2:
+
+            seed_from_file = seed_from_file2[0].split("_")[2]
+
+        elif seed_from_file1:
+
+            seed_from_file = seed_from_file1[0].replace("_", "")
+        else:
+            seed_from_file = i
+
+        print("Seed from file {}".format(seed_from_file))
+
+        #################################
+
+
+        list_of_intermediate_layers_pruned_accuracies = defaultdict(list)
+
+        if args.model == "vgg19":
+
+            # intermediate_layers_reversed = intermediate_layers[::-1]
+
+            df2_dict = {}
+
+            #####################################################################
+            for current_inter_layer_index in range(1, len(intermediate_layers)):
+
+                exclude_layers_copy = exclude_layers.copy()
+
+                # Grab from the first to the current index intermediate layer (counting from the back) and exclude those from pruning
+
+                exclude_layers_copy.extend(intermediate_layers[:-current_inter_layer_index])
+
+                # layers_to_be_pruned = set(intermediate_layers).difference(
+                #     set(intermediate_layers[:-current_inter_layer_index]))
+                layers_to_be_pruned = [x for x in intermediate_layers if
+                                       x not in intermediate_layers[:-current_inter_layer_index]]
+                cfg.exclude_layers = exclude_layers
+                #  GMP
+                gmp_copy = copy.deepcopy(net)
+                prune_function(gmp_copy, cfg)
+                remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+
+                # Random
+                random_copy = copy.deepcopy(net)
+
+                cfg.pruner = "random"
+
+                prune_function(random_copy, cfg)
+
+                remove_reparametrization(random_copy, exclude_layer_list=cfg.exclude_layers)
+
+                if args.ffcv:
+                    gmp_pruned_accuracy = test_ffcv(gmp_copy, testloader=testloader, verbose=0)
+                    random_pruned_accuracy = test_ffcv(random_copy, testloader=testloader, verbose=0)
+                else:
+                    gmp_pruned_accuracy = test(gmp_copy, testloader=testloader)
+                    random_pruned_accuracy = test(random_copy, testloader=testloader)
+
+                del exclude_layers_copy[0]
+                del exclude_layers_copy[1]
+                list_of_intermediate_layers_pruned_accuracies[
+                    "gmp_Accuracy_pruning_from_{}_until_{}".format(layers_to_be_pruned[0],
+                                                                   layers_to_be_pruned[-1])] = gmp_pruned_accuracy
+                list_of_intermediate_layers_pruned_accuracies[
+                    "random_Accuracy_pruning_from_{}_until_{}".format(layers_to_be_pruned[0],
+                                                                      layers_to_be_pruned[-1])] = random_pruned_accuracy
+
+                weight_names, weights = zip(*get_layer_dict(net))
+
+                zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+                pruning_rates_per_layer = list(map(zero_number, weights))
+                df2_dict["pr_from_{}_to_{}".format(layers_to_be_pruned[0],
+                                                   layers_to_be_pruned[-1])] = pruning_rates_per_layer
+                df2_dict["layer_names"] = weight_names
+
+            list_of_lists_of_intermediate_layers_pruned_accuracies.append(
+                list_of_intermediate_layers_pruned_accuracies)
+            df2 = pd.DataFrame(df2_dict)
+            df2.to_csv("{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_escalated.csv".format(args.save_folder,
+                                                                                                      args.model,
+                                                                                                      args.RF_level,
+                                                                                                      seed_from_file,
+                                                                                                      args.dataset,
+                                                                                                      args.name,
+                                                                                                      args.pruning_rate,
+                                                                                                      layers_to_be_pruned[
+                                                                                                          0],
+                                                                                                      layers_to_be_pruned[
+                                                                                                          1]),
+                       index=False)
+
+            print("Done")
+            file_name = os.path.basename(name)
+            print(file_name)
+            files_names.append(file_name)
+
+        if args.model == "resnet50":
+            # TODO: wait for the results of the saturation to decide which pattern are you going to prune, (prune only inside block layers, or only outside block layers)
+            pass
+
+    # This needs to happen outside the for loop for the names
+
+    #           Quality summary save
+    quality_df.to_csv(
+            "{}/RF_{}_{}_{}_quality_summary.csv".format(args.save_folder, args.model,
+                                                        args.RF_level, args.dataset,
+                                                        args.name,args.args.pruning_rate))
+    #### different pruning results
+    df = pd.DataFrame({"Name": files_names,
+                       })
+
+    columns_names = list(list_of_lists_of_intermediate_layers_pruned_accuracies[0].keys())
+
+    accuracy_columns = defaultdict(list)
+
+    # This is # of seeds  long
+    for name in columns_names:
+        for dict in list_of_lists_of_intermediate_layers_pruned_accuracies:
+            # This should be # of intermediate layers long
+            accuracy_columns[name].append(dict[name])
+
+    for keys, values in accuracy_columns:
+        df[keys] = values
+
+    df.to_csv(
+        "{}/RF_{}_{}_{}_{}_{}_one_shot_inter_layers_summary.csv".format(args.save_folder, args.model,
+                                                                     args.RF_level, args.dataset,
+                                                                     args.pruning_rate,
+                                                                     args.name, cfg.pruner),
+        index=False)
+
+
+def main(args):
     if "vgg" in args.model:
         exclude_layers = ["features.0", "classifier"]
     if "resnet" in args.model:
@@ -729,7 +1196,6 @@ def main(args):
          "exclude_layers": exclude_layers,
          "data_path": args.data_folder,
          "input_resolution": args.input_resolution
-
          })
 
     if args.ffcv:
@@ -1011,7 +1477,6 @@ def main(args):
         weight_names, weights = zip(*get_layer_dict(net))
 
         zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
-
         pruning_rates_per_layer = list(map(zero_number, weights))
 
         seed_from_file1 = re.findall("_[0-9]_", name)
@@ -1044,12 +1509,12 @@ def main(args):
         print("Seed from file {}".format(seed_from_file1))
         df2.to_csv(
             "{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}.csv".format(args.save_folder,
-                                                                                                     args.model,
-                                                                                                     args.RF_level,
-                                                                                                     seed_from_file,
-                                                                                                     args.dataset,
-                                                                                                     args.name,
-                                                                                                     args.pruning_rate),
+                                                                                 args.model,
+                                                                                 args.RF_level,
+                                                                                 seed_from_file,
+                                                                                 args.dataset,
+                                                                                 args.name,
+                                                                                 args.pruning_rate),
             index=False)
 
         print("Done")
@@ -1063,9 +1528,9 @@ def main(args):
                        })
     df.to_csv(
         "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
-                                                                               args.RF_level, args.dataset,
-                                                                               args.pruning_rate,
-                                                                               args.name,cfg.pruner),
+                                                              args.RF_level, args.dataset,
+                                                              args.pruning_rate,
+                                                              args.name, cfg.pruner),
         index=False)
 
 
@@ -1504,6 +1969,10 @@ if __name__ == '__main__':
     if args.experiment == 4:
         n_shallow_layer_experiment(args)
         # main(args)
+
+    if args.experiment == 5:
+
+        prune_selective_layers(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()

@@ -2256,6 +2256,7 @@ def get_intelligent_pruned_network(cfg):
 
 
 def prune_function(net, cfg, pr_per_layer=None):
+
     target_sparsity = cfg.amount
     if cfg.pruner == "global":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
@@ -2274,6 +2275,10 @@ def prune_function(net, cfg, pr_per_layer=None):
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers,
                         type="layer-wise",
                         pruner=cfg.pruner)
+
+    if cfg.pruner == "random":
+
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="random")
 
 
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
