@@ -1011,16 +1011,16 @@ def prune_selective_layers(args):
         calculated_accuracy = test(net, testloader=testloader)
         dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
-        quality_df =quality_df.reset_index()
+        quality_df = quality_df.reset_index()
         quality_df = quality_df.T
-        quality_df = quality_df.rename(columns={"index":"layer_name"})
-        solution_name = [name]*len(quality_df)
+        quality_df = quality_df.rename(columns={"index": "layer_name"})
+        solution_name = [name] * len(quality_df)
         quality_df["Solution_name"] = solution_name
 
         if not whole_quality_df:
             whole_quality_df = quality_df
         else:
-            whole_quality_df = pd.concat((whole_quality_df,quality_df))
+            whole_quality_df = pd.concat((whole_quality_df, quality_df))
 
         ######## name of the current seed
 
@@ -1053,7 +1053,6 @@ def prune_selective_layers(args):
         print("Seed from file {}".format(seed_from_file))
 
         #################################
-
 
         list_of_intermediate_layers_pruned_accuracies = defaultdict(list)
 
@@ -1144,9 +1143,9 @@ def prune_selective_layers(args):
 
     #           Quality summary save
     quality_df.to_csv(
-            "{}/RF_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
-                                                        args.RF_level, args.dataset,
-                                                        args.name,args.args.pruning_rate))
+        "{}/RF_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
+                                                           args.RF_level, args.dataset,
+                                                           args.name, args.args.pruning_rate))
     #### different pruning results
 
     df = pd.DataFrame({"Name": files_names,
@@ -1167,9 +1166,9 @@ def prune_selective_layers(args):
 
     df.to_csv(
         "{}/RF_{}_{}_{}_{}_{}_one_shot_inter_layers_summary.csv".format(args.save_folder, args.model,
-                                                                     args.RF_level, args.dataset,
-                                                                     args.pruning_rate,
-                                                                     args.name, cfg.pruner),
+                                                                        args.RF_level, args.dataset,
+                                                                        args.pruning_rate,
+                                                                        args.name, cfg.pruner),
         index=False)
 
 
