@@ -1171,7 +1171,7 @@ def prune_selective_layers(args):
 
     #           Quality summary save
     quality_df.to_csv(
-        "{}/RF_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
+        "{}/RF_{}_{}_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
                                                            args.RF_level, args.dataset,
                                                            args.name, args.pruning_rate))
     #### different pruning results
