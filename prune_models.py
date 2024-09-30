@@ -1033,7 +1033,7 @@ def prune_selective_layers(args):
         quality_df = quality_df.T
         quality_df = quality_df.rename(columns={"index": "layer_name"})
         solution_name = [name] * len(quality_df)
-        quality_df["Solution_name"] = solution_name
+        quality_df["solution_name"] = solution_name
 
         if whole_quality_df is None:
             whole_quality_df = quality_df
