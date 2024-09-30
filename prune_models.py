@@ -1173,7 +1173,7 @@ def prune_selective_layers(args):
     quality_df.to_csv(
         "{}/RF_{}_{}_{}_filter_quality_summary.csv".format(args.save_folder, args.model,
                                                            args.RF_level, args.dataset,
-                                                           args.name, args.args.pruning_rate))
+                                                           args.name, args.pruning_rate))
     #### different pruning results
 
     df = pd.DataFrame({"Name": files_names,
