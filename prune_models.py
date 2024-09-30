@@ -1082,18 +1082,18 @@ def prune_selective_layers(args):
                 #  GMP
                 gmp_copy = copy.deepcopy(net)
                 prune_function(gmp_copy, cfg)
-                remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+                remove_reparametrization(gmp_copy, exclude_layer_list=cfg.exclude_layers)
 
                 weight_names, weights = zip(*get_layer_dict(gmp_copy))
                 zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
                 pruning_rates_per_layer = list(map(zero_number, weights))
-                pruning_rates_per_layer_dict = dict(weight_names,pruning_rates_per_layer)
+                pruning_rates_per_layer_dict = dict((weight_names,pruning_rates_per_layer))
                 # Random
                 random_copy = copy.deepcopy(net)
 
                 cfg.pruner = "random"
 
-                prune_function(random_copy, cfg,pruning_rates_per_layer=pruning_rates_per_layer_dict)
+                prune_function(random_copy, cfg,pr_per_layer=pruning_rates_per_layer_dict)
 
                 remove_reparametrization(random_copy, exclude_layer_list=cfg.exclude_layers)
 
