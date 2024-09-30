@@ -57,8 +57,8 @@ else
 for model in "vgg19"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0.9"; do
-#for rf_level in "1" "2" "3" "4"; do
-for rf_level in "1"; do
+for rf_level in "2" "3" "4"; do
+#for rf_level in "1"; do
 
 run_pruning "${model}" "${dataset}" "${HOME}/original_paper_checkpoints" "${HOME}/datasets" "${HOME}/sparse_ensemble/inter_layer_pruning_results" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 
@@ -87,30 +87,30 @@ done
 
 
 
-#for model in "vgg19"; do
-#for dataset in "cifar10"; do
-#for pruning_rate in "0.9"; do
-#for rf_level in "1" "2" "3" "4"; do
-#
-#run_pruning "${model}" "${dataset}" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/iter_layer_pruning_results" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-#
-#done
-#done
-#done
-#done
+for model in "vgg19"; do
+for dataset in "cifar10"; do
+for pruning_rate in "0.9"; do
+for rf_level in "1" "2" "3" "4"; do
+
+run_pruning "${model}" "${dataset}" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/iter_layer_pruning_results" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
+done
+done
+done
+done
 
 
 
 
-#for model in "vgg19"; do
-#for dataset in "cifar10"; do
-#for pruning_rate in "0.9"; do
-#for rf_level in "1" "2" "3" "4"; do
-#
-#run_pruning "${model}" "${dataset}" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/iter_layer_pruning_results" "ekfac_optim_hyper_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-#
-#done
-#done
-#done
-#done
+for model in "vgg19"; do
+for dataset in "cifar10"; do
+for pruning_rate in "0.9"; do
+for rf_level in "1" "2" "3" "4"; do
+
+run_pruning "${model}" "${dataset}" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/iter_layer_pruning_results" "ekfac_optim_hyper_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
+done
+done
+done
+done
 

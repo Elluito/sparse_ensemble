@@ -1105,7 +1105,10 @@ def prune_selective_layers(args):
                 weight_names, weights = zip(*get_layer_dict(gmp_copy))
                 zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
                 pruning_rates_per_layer = list(map(zero_number, weights))
-                pruning_rates_per_layer_dict = dict((weight_names, pruning_rates_per_layer))
+
+                pruning_rates_per_layer_dict = {}
+                for i in range(len(weight_names)):
+                    pruning_rates_per_layer_dict[weight_names[i]]=pruning_rates_per_layer[i]
                 # Random
                 random_copy = copy.deepcopy(net)
 
@@ -1148,7 +1151,7 @@ def prune_selective_layers(args):
                                                                                                       layers_to_be_pruned[
                                                                                                           0],
                                                                                                       layers_to_be_pruned[
-                                                                                                          1]),
+                                                                                                          -1]),
                        index=False)
 
             print("Done")
