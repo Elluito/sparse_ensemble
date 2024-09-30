@@ -367,7 +367,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
     return train_loader, val_loader, test_loader
 
 
-def load_tiny_imagenet(args):
+def load_tiny_imagenet(args,seed_worker=None):
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
@@ -381,6 +381,7 @@ def load_tiny_imagenet(args):
     test_loader = torch.utils.data.DataLoader(test_dataset,
                                               batch_size=args["batch_size"],
                                               num_workers=args["num_workers"],
+                                              worker_init_fn=seed_worker,
                                               shuffle=False)
 
     whole_train_dataset = datasets.ImageFolder(
@@ -397,10 +398,12 @@ def load_tiny_imagenet(args):
     train_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=args["batch_size"],
                                                num_workers=args["num_workers"],
+                                               worker_init_fn=seed_worker,
                                                shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_data,
                                              batch_size=args["batch_size"],
                                              num_workers=args["num_workers"],
+                                             worker_init_fn=seed_worker,
                                              shuffle=True)
 
     return train_loader, val_loader, test_loader

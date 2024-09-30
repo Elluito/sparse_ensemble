@@ -8,16 +8,24 @@ import glob
 import torchvision.transforms as transforms
 import torchvision
 from pathlib import Path
-from alternate_models import *
 import pandas as pd
-from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
-import omegaconf
-from similarity_comparison_architecture import features_similarity_comparison_experiments
 import numpy as np
+import random
+
+seed_for_this_documment = 123
+manual_generator = torch.manual_seed(seed_for_this_documment)
+torch.cuda.manual_seed(seed_for_this_documment)
+np.random.seed(seed_for_this_documment)
+random.seed(seed_for_this_documment)
+
+import omegaconf
 from torch.nn.utils import parameters_to_vector
-from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 from collections import defaultdict
 from torchconvquality import measure_quality
+from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
+from alternate_models import *
+from similarity_comparison_architecture import features_similarity_comparison_experiments
+from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
@@ -62,6 +70,12 @@ modelstypes = ["alternative"] * len(level)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 use_cuda = True if device == "cuda" else False
+
+
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2 ** 32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 
 def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modeltype="alternative", solution="",
@@ -756,6 +770,7 @@ def prune_selective_layers(args):
         train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
                                                                       128, args.num_workers)
     else:
+
         print("Normal data loaders loaded!!!!")
         cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
         cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
@@ -795,27 +810,27 @@ def prune_selective_layers(args):
             trainset = torchvision.datasets.CIFAR10(
                 root=data_path, train=True, download=True, transform=transform_train)
             trainloader = torch.utils.data.DataLoader(
-                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers, worker_init_fn=seed_worker)
 
             testset = torchvision.datasets.CIFAR10(
                 root=data_path, train=False, download=True, transform=transform_test)
             testloader = torch.utils.data.DataLoader(
-                testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+                testset, batch_size=100, shuffle=False, num_workers=args.num_workers, worker_init_fn=seed_worker)
         if args.dataset == "cifar100":
             trainset = torchvision.datasets.CIFAR100(
                 root=data_path, train=True, download=True, transform=transform_train)
             trainloader = torch.utils.data.DataLoader(
-                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+                trainset, batch_size=128, shuffle=True, num_workers=args.num_workers, worker_init_fn=seed_worker)
 
             testset = torchvision.datasets.CIFAR100(
                 root=data_path, train=False, download=True, transform=transform_test)
             testloader = torch.utils.data.DataLoader(
-                testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+                testset, batch_size=100, shuffle=False, num_workers=args.num_workers, worker_init_fn=seed_worker)
         if args.dataset == "tiny_imagenet":
             from test_imagenet import load_tiny_imagenet
             trainloader, valloader, testloader = load_tiny_imagenet(
                 {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size})
+                 "num_workers": args.num_workers, "batch_size": batch_size}, seed_worker=seed_worker)
         if args.dataset == "small_imagenet":
             if args.ffcv:
                 from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
@@ -826,7 +841,8 @@ def prune_selective_layers(args):
                 from test_imagenet import load_small_imagenet
                 trainloader, valloader, testloader = load_small_imagenet(
                     {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
+                    seed_worker=seed_worker)
 
     from torchvision.models import resnet18, resnet50
 
@@ -1087,13 +1103,13 @@ def prune_selective_layers(args):
                 weight_names, weights = zip(*get_layer_dict(gmp_copy))
                 zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
                 pruning_rates_per_layer = list(map(zero_number, weights))
-                pruning_rates_per_layer_dict = dict((weight_names,pruning_rates_per_layer))
+                pruning_rates_per_layer_dict = dict((weight_names, pruning_rates_per_layer))
                 # Random
                 random_copy = copy.deepcopy(net)
 
                 cfg.pruner = "random"
 
-                prune_function(random_copy, cfg,pr_per_layer=pruning_rates_per_layer_dict)
+                prune_function(random_copy, cfg, pr_per_layer=pruning_rates_per_layer_dict)
 
                 remove_reparametrization(random_copy, exclude_layer_list=cfg.exclude_layers)
 
@@ -1112,7 +1128,6 @@ def prune_selective_layers(args):
                 list_of_intermediate_layers_pruned_accuracies[
                     "random_Accuracy_pruning_from_{}_until_{}".format(layers_to_be_pruned[0],
                                                                       layers_to_be_pruned[-1])] = random_pruned_accuracy
-
 
                 df2_dict["pr_from_{}_to_{}".format(layers_to_be_pruned[0],
                                                    layers_to_be_pruned[-1])] = pruning_rates_per_layer
