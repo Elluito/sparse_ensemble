@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_88.5.pth,88.5,88.33
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_87.92.pth,87.92,87.66
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_87.91.pth,87.91,87.21
