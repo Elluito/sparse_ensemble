@@ -1075,18 +1075,25 @@ def prune_selective_layers(args):
                 #     set(intermediate_layers[:-current_inter_layer_index]))
                 layers_to_be_pruned = [x for x in intermediate_layers if
                                        x not in intermediate_layers[:-current_inter_layer_index]]
+
                 cfg.exclude_layers = exclude_layers_copy
+                print("Exclude layers")
+                print(cfg.exclude_layers)
                 #  GMP
                 gmp_copy = copy.deepcopy(net)
                 prune_function(gmp_copy, cfg)
                 remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 
+                weight_names, weights = zip(*get_layer_dict(gmp_copy))
+                zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+                pruning_rates_per_layer = list(map(zero_number, weights))
+                pruning_rates_per_layer_dict = dict(weight_names,pruning_rates_per_layer)
                 # Random
                 random_copy = copy.deepcopy(net)
 
                 cfg.pruner = "random"
 
-                prune_function(random_copy, cfg)
+                prune_function(random_copy, cfg,pruning_rates_per_layer=pruning_rates_per_layer_dict)
 
                 remove_reparametrization(random_copy, exclude_layer_list=cfg.exclude_layers)
 
@@ -1106,10 +1113,7 @@ def prune_selective_layers(args):
                     "random_Accuracy_pruning_from_{}_until_{}".format(layers_to_be_pruned[0],
                                                                       layers_to_be_pruned[-1])] = random_pruned_accuracy
 
-                weight_names, weights = zip(*get_layer_dict(net))
 
-                zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
-                pruning_rates_per_layer = list(map(zero_number, weights))
                 df2_dict["pr_from_{}_to_{}".format(layers_to_be_pruned[0],
                                                    layers_to_be_pruned[-1])] = pruning_rates_per_layer
                 df2_dict["layer_names"] = weight_names

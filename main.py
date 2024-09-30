@@ -112,7 +112,6 @@ plt.rcParams["mathtext.fontset"] = "cm"
 # enable cuda devices
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-
 sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
@@ -2256,13 +2255,13 @@ def get_intelligent_pruned_network(cfg):
 
 
 def prune_function(net, cfg, pr_per_layer=None):
-
     target_sparsity = cfg.amount
     if cfg.pruner == "global":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     if cfg.pruner == "manual":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner="manual", pr_per_layer=pr_per_layer)
+
         individual_prs_per_layer = prune_with_rate(net, target_sparsity,
                                                    exclude_layers=cfg.exclude_layers, type="layer-wise",
                                                    pruner="lamp", return_pr_per_layer=True)
@@ -2277,8 +2276,8 @@ def prune_function(net, cfg, pr_per_layer=None):
                         pruner=cfg.pruner)
 
     if cfg.pruner == "random":
-
-        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="random")
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="random",
+                        pr_per_layer=pr_per_layer)
 
 
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
@@ -2333,13 +2332,20 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     else:
                         prune.l1_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
     elif type == "random":
-        weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
+        # weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
         if criterion == "l1":
-            prune.random_structured(
-                weights,
-                # pruning_method=prune.L1Unstructured,
-                amount=amount
-            )
+            #
+            # prune.random_unstructured(
+            #     weights,
+            #     # pruning_method=prune.L1Unstructured,
+            #     amount=amount
+            # )
+            for name, module in net.named_modules():
+                with torch.no_grad():
+                    if name in exclude_layers or not is_prunable_module(module):
+                        continue
+                    else:
+                        prune.random_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
 
 
     else:
@@ -2458,8 +2464,12 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
             data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
 
-        transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
-        transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
+        transform_train = transforms.Compose(
+            [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+             transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
+        transform_test = transforms.Compose([transforms.ToTensor(),
+                                             transforms.Normalize((0.50707516, 0.48654887, 0.44091784),
+                                                                  (0.26733429, 0.25643846, 0.27615047))])
 
         trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
@@ -2655,7 +2665,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         from test_imagenet import load_small_imagenet
         trainloader, valloader, testloader = load_small_imagenet(
             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-             "num_workers": cfg.num_workers, "batch_size": cfg.batch_size,"resolution":cfg.input_resolution})
+             "num_workers": cfg.num_workers, "batch_size": cfg.batch_size, "resolution": cfg.input_resolution})
         return trainloader, valloader, testloader
 
     if 'tiny_imagenet' == cfg.dataset:
@@ -4401,7 +4411,7 @@ def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.Dict
 
 
 def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.DictConfig, specific_sigmas: list,
-                                              specific_pruning_rates: list,legend=True):
+                                              specific_pruning_rates: list, legend=True):
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
@@ -4509,7 +4519,7 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
                                 # palette="set2",
                                 alpha=0.5,
                                 data=current_df,
-                                ax=axj,legend=legend)
+                                ax=axj, legend=legend)
             # axj.set_title("Pruning Rate = {}".format(current_pr), fontsize=15)
             # plt.ylabel("Accuracy", fontsize=20)
             # ticks = g.get_yticks(minor=False)
@@ -11128,7 +11138,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
     determinsitc_model_performance_list = [pruned_original_performance] * number_of_samples
     original_with_new_pruning_rates_list = []
     dense_soup_then_prune_delta = []
-    dense_original_list =[original_performance]*number_of_samples
+    dense_original_list = [original_performance] * number_of_samples
     del pruned_original
 
     labels = []
@@ -11136,7 +11146,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
     ##########  first soup and then prune ############
     print("soup and then prune")
     for i in range(number_of_samples):
-        print("Sample: {}".format(i+1))
+        print("Sample: {}".format(i + 1))
 
         number_of_models = 0
         sum_vector = None
@@ -11182,11 +11192,10 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         soup1_list.append(soup_performance)
 
-
     ##########  first prune and then soup union ############
     print("Prune and then soup union ")
     for i in range(number_of_samples):
-        print("Sample: {}".format(i+1))
+        print("Sample: {}".format(i + 1))
         pruned_vector = None
         number_of_models = 0
         for n in range(N):
@@ -11220,7 +11229,7 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         soup2_model = copy.deepcopy(net)
 
-        vector_to_parameters(pruned_vector/number_of_models, soup2_model.parameters())
+        vector_to_parameters(pruned_vector / number_of_models, soup2_model.parameters())
 
         soup2_performance = test(soup2_model, use_cuda, evaluation_set, verbose=0)
         soup2_list.append(soup2_performance)
@@ -11260,10 +11269,9 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     ##########  first prune and then soup INTERSECTION ############
 
-
     print("Prune and then soup intersection")
     for i in range(number_of_samples):
-        print("Sample: {}".format(i+1))
+        print("Sample: {}".format(i + 1))
         pruned_vector = None
         mask_vector = None
         number_of_models = 0
@@ -11287,22 +11295,21 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
             if mask_vector is None:
 
                 pruned_vector = parameters_to_vector(current_model.parameters())
-                mask_vector = pruned_vector!=0
+                mask_vector = pruned_vector != 0
 
                 number_of_models += 1
 
             else:
-                current_pruned_vector =  parameters_to_vector(current_model.parameters())
+                current_pruned_vector = parameters_to_vector(current_model.parameters())
                 pruned_vector += current_pruned_vector
-                current_mask_vector = current_pruned_vector!=0
-                mask_vector = torch.logical_and(mask_vector,current_mask_vector).type(torch.int)
-
+                current_mask_vector = current_pruned_vector != 0
+                mask_vector = torch.logical_and(mask_vector, current_mask_vector).type(torch.int)
 
                 number_of_models += 1
 
         soup3_model = copy.deepcopy(net)
         pruned_vector.data.mul_(mask_vector)
-        vector_to_parameters(pruned_vector/number_of_models, soup3_model.parameters())
+        vector_to_parameters(pruned_vector / number_of_models, soup3_model.parameters())
 
         soup3_performance = test(soup3_model, use_cuda, evaluation_set, verbose=0)
         soup3_list.append(soup3_performance)
@@ -11340,17 +11347,14 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
         original_with_new_pruning_rates_intersection_list.append(deterministic_performance_with_new_pruning_rate)
 
-
-
-
     df = pd.DataFrame({"Original Pruning Rate": [cfg.amount] * number_of_samples,
                        "Deterministic performance": determinsitc_model_performance_list,
                        "Soup then Prune accuracy": soup1_list,
                        "Prune then Soup union accuracy": soup2_list,
                        "Original with new pruning rate union": original_with_new_pruning_rates_list,
                        "New pruning rate union": new_pruning_rates_list,
-                       "Dense soup then prune":dense_soup1_list,
-                       "Dense original":dense_original_list,
+                       "Dense soup then prune": dense_soup1_list,
+                       "Dense original": dense_original_list,
                        "Prune then Soup intersection accuracy": soup3_list,
                        "Original with new pruning rate intersection": original_with_new_pruning_rates_intersection_list,
                        "New pruning rate intersection": new_pruning_rates_intersection_list,
@@ -11358,9 +11362,10 @@ def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test",
 
     df.to_csv(
         "soup_ideas_results/soup_{}_{}_{}_{}_sigma_{}_{}_results.csv".format(cfg.architecture, cfg.dataset, cfg.amount,
-                                                                          name,
-                                                                          cfg.sigma,cfg.pruner),
+                                                                             name,
+                                                                             cfg.sigma, cfg.pruner),
         index=False)
+
 
 if __name__ == '__main__':
     # MDS_projection_plot()
@@ -11405,14 +11410,14 @@ if __name__ == '__main__':
         # "architecture": "vgg19",
         "architecture": "resnet18",
         "dataset": "mnist",
-        "exclude_layers": ["conv1", "linear","fc","classifier"],
-        "model_type":"alternative",
+        "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+        "model_type": "alternative",
         "pruner": "global",
         "amount": 0.9,
         "batch_size": 512,
         "lr": 0.001,
         "momentum": 0.9,
-        "weight_decay": 1e-4,\
+        "weight_decay": 1e-4, \
         "cyclic_lr": True,
         "lr_peak_epoch": 5,
         "optim": "adam",
@@ -11432,27 +11437,25 @@ if __name__ == '__main__':
                                               specific_pruning_rates=[0.9])
 
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-                                              specific_pruning_rates=[0.8],legend=False)
+                                              specific_pruning_rates=[0.8], legend=False)
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
-                                              specific_pruning_rates=[0.5],legend=False)
+                                              specific_pruning_rates=[0.5], legend=False)
 
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
                                               specific_pruning_rates=[0.9])
 
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-                                              specific_pruning_rates=[0.8],legend=False)
+                                              specific_pruning_rates=[0.8], legend=False)
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
-                                              specific_pruning_rates=[0.5],legend=False)
-
+                                              specific_pruning_rates=[0.5], legend=False)
 
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
                                               specific_pruning_rates=[0.9])
 
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-                                              specific_pruning_rates=[0.8],legend=False)
+                                              specific_pruning_rates=[0.8], legend=False)
     plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
-                                              specific_pruning_rates=[0.5],legend=False)
-
+                                              specific_pruning_rates=[0.5], legend=False)
 
     #
     # # ##############################################################################
