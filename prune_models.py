@@ -1117,6 +1117,10 @@ def prune_selective_layers(args):
                 prune_function(random_copy, cfg, pr_per_layer=pruning_rates_per_layer_dict)
 
                 remove_reparametrization(random_copy, exclude_layer_list=cfg.exclude_layers)
+                # Debo volver a poner el global para la siguiente iteración
+
+                cfg.pruner = "global"
+
 
                 if args.ffcv:
                     gmp_pruned_accuracy = test_ffcv(gmp_copy, testloader=testloader, verbose=0)
