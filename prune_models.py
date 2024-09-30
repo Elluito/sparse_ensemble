@@ -1035,7 +1035,7 @@ def prune_selective_layers(args):
         solution_name = [name] * len(quality_df)
         quality_df["Solution_name"] = solution_name
 
-        if not whole_quality_df:
+        if whole_quality_df is None:
             whole_quality_df = quality_df
         else:
             whole_quality_df = pd.concat((whole_quality_df, quality_df))
