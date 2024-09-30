@@ -25,7 +25,7 @@
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #module load pytorch
 
 
@@ -124,7 +124,7 @@ python3.9 -c "import os; print(os.environ)"
 python3.9 -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 export LD_LIBRARY_PATH=""
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
-export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
+#export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
 #############################################################
 #     One shot with specific pruning rate results
 #############################################################
