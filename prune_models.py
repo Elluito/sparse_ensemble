@@ -1996,6 +1996,7 @@ if __name__ == '__main__':
         n_shallow_layer_experiment(args)
         # main(args)
     if args.experiment == 5:
+        print("I'am about to enter the prune selective layer")
         prune_selective_layers(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
