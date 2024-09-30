@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.52.pth,90.52,59.17
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.26.pth,90.26,61.73
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.74.pth,90.74,41.59

@@ -1,3 +1,6 @@
 Name,Dense Accuracy,Pruned Accuracy
 vgg19_normal_cifar10_seed.0_rf_level_4_recording_200_no_ffcv_test_acc_86.12.pth,86.12,86.12
+vgg19_normal_cifar10_1726773382.9293978_rf_level_4_recording_200_no_ffcv_test_acc_86.0.pth,86.0,86.0
+vgg19_normal_cifar10_1726773361.111958_rf_level_4_recording_200_no_ffcv_test_acc_85.93.pth,85.93,85.93
+vgg19_normal_cifar10_1726773361.4550412_rf_level_4_recording_200_no_ffcv_test_acc_86.44.pth,86.44,86.44
 vgg19_normal_cifar10_1725640015.7435527_rf_level_4_recording_200_no_ffcv_test_acc_86.46.pth,86.46,86.46

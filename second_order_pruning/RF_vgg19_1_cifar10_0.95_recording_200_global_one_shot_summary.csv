@@ -1,0 +1,5 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_cifar10_1727020474.20769_rf_level_1_recording_200_no_ffcv_test_acc_93.44.pth,93.44,10.0
+vgg19_normal_cifar10_seed.0_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth,93.77,10.0
+vgg19_normal_cifar10_1726772593.4515305_rf_level_1_recording_200_no_ffcv_test_acc_93.28.pth,93.28,10.0
+vgg19_normal_cifar10_1727020472.9332635_rf_level_1_recording_200_no_ffcv_test_acc_93.85.pth,93.85,10.0
