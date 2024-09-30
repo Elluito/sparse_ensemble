@@ -1189,7 +1189,7 @@ def prune_selective_layers(args):
             # This should be # of intermediate layers long
             accuracy_columns[name].append(dict[name])
 
-    for keys, values in accuracy_columns:
+    for keys, values in accuracy_columns.items():
         df[keys] = values
 
     df.to_csv(
