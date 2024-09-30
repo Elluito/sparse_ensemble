@@ -98,10 +98,10 @@ done
 done
 done
 done
-#
-#
-#
-#
+
+
+
+
 for model in "vgg19"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0.9"; do
