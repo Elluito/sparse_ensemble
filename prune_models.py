@@ -471,6 +471,7 @@ def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
+
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
@@ -1025,6 +1026,7 @@ def prune_selective_layers(args):
         net.load_state_dict(state_dict_raw["net"])
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
         calculated_accuracy = test(net, testloader=testloader)
+        print("Calculated accuracy:{}".format(calculated_accuracy))
         dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
         quality_df = quality_df.reset_index()
