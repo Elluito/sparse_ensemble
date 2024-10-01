@@ -1001,7 +1001,7 @@ def prune_selective_layers(args):
     list_of_lists_of_intermediate_layers_pruned_accuracies = []
     files_names = []
 
-    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+    search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
                                                                           args.RF_level, args.name)
 
     things = list(glob.glob(search_string))
@@ -1010,7 +1010,7 @@ def prune_selective_layers(args):
     #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+        "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
                                                               args.name)))
     print(things)
 
