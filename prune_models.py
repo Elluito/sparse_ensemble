@@ -27,6 +27,8 @@ from alternate_models import *
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 
+from saturation_utils import calculate_train_eval_saturation_solution
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
 rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
@@ -1029,8 +1031,8 @@ def prune_selective_layers(args):
         print("Calculated accuracy:{}".format(calculated_accuracy))
         dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
-        quality_df = quality_df.reset_index()
         quality_df = quality_df.T
+        quality_df = quality_df.reset_index()
         quality_df = quality_df.rename(columns={"index": "layer_name"})
         solution_name = [name] * len(quality_df)
         quality_df["solution_name"] = solution_name

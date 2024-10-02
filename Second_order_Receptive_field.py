@@ -7,17 +7,12 @@ import torch.nn as nn
 import optuna
 from delve import SaturationTracker
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
-from KFAC_Pytorch.optimizers import KFACOptimizer, EKFACOptimizer
-import argparse
-import omegaconf
 from alternate_models import *
 from sparse_ensemble_utils import test
-import pickle
-import pandas as pd
 from pathlib import Path
 from sam import SAM
-from thop import profile
 from shrinkbench.metrics.flops import flops
+from KFAC_Pytorch.optimizers import KFACOptimizer, EKFACOptimizer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -77,11 +72,12 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, config, s
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
              grad_clip=0, saturationTracker=False, record_flops=False, macs_per_batch=None, flops_per_batch=None):
     criterion = nn.CrossEntropyLoss()
+    seed = time.time()
     args = config
     net.to(device)
 
     if saturationTracker:
-        csv_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="csv", modules=net,
+        csv_tracker = SaturationTracker("{}/{}_seed_{}".format(save_folder, file_name_sufix,seed), save_to="csv", modules=net,
                                         device=device)
         # plot_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="plot", modules=net,
         #                                  device=device)
@@ -376,7 +372,6 @@ def main(args):
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
         optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum, rho=0.5, adaptive=True,
                         weight_decay=5e-4)
-    seed = time.time()
     solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
                                                      args.name)
     if args.save:

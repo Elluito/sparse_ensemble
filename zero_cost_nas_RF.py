@@ -1,5 +1,4 @@
 from zero_cost_nas.foresight.pruners.predictive import find_measures
-from alternate_models import *
 import seaborn as sns
 import omegaconf
 import torch.optim as optim
@@ -17,6 +16,9 @@ import math
 from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
+from alternate_models import *
+from torchconvquality import measure_quality
+
 
 def main(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -290,6 +292,14 @@ def main(args):
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
 
     print("Device: {}".format(device))
+
+    dict_of_dicts = measure_quality(net.cpu())
+    quality_df = pd.DataFrame(dict_of_dicts)
+    quality_df = quality_df.T
+    quality_df = quality_df.reset_index()
+    quality_df = quality_df.rename(columns={"index": "layer_name"})
+    solution_name = ["test"] * len(quality_df)
+    quality_df["solution_name"] = solution_name
     # jacob_measure,snip,synflow = find_measures(net, trainloader, ("random", 16, 200), device, measure_names=["jacob_cov","snip","synflow"])
     measures = find_measures(net, trainloader, ("random", 1, 200), device,
                              measure_names=["jacob_cov", "snip", "synflow", "grad_norm", "fisher"])
@@ -338,8 +348,8 @@ def run_local_test():
                 "save": False,
                 "save_folder": "./second_order_results",
                 "record_saturation": True,
-                # "data_path": "/home/luisaam/Documents/PhD/data/",
-                "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
+                "data_path": "/home/luisaam/Documents/PhD/data/",
+                # "data_path": "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets",
             })
 
             # jacob, snip, synflow = main(cfg)
@@ -393,7 +403,7 @@ def run_analysis_of_measures():
     correlation_to_actual_rank_whole = {}
     correlation_to_actual_rank_samples = defaultdict(list)
     for m in measure_names:
-        df=df_primal[df_primal["Rf_level"]>=7]
+        df = df_primal[df_primal["Rf_level"] >= 7]
         object = spearmanr(df["Ranks"], df[m])
         statistic, p_value = object.statistic, object.pvalue
 
@@ -427,5 +437,5 @@ def run_analysis_of_measures():
 
 
 if __name__ == '__main__':
-    # run_local_test()
-    run_analysis_of_measures()
+    run_local_test()
+    # run_analysis_of_measures()
