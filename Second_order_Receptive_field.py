@@ -46,7 +46,7 @@ print("Device:{}".format(device))
 #                     backward_pass = 8 * macs_per_batch
 #                     total_training_macs = forward_pass + backward_pass
 #
-#             if isinstance(optimizer, SAM):
+#             if isinstance(optimizer, ASAM):
 #
 #                 if macs_per_batch:
 #                     forward_pass = macs_per_batch

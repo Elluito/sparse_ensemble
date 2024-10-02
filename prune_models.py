@@ -63,6 +63,29 @@ name_rf_level4_s1 = "_seed_1_rf_level_4"
 rf_level4_s2 = "trained_models/cifar10/resnet50_normal_cifar10_seed_2_rf_level_4_90.8.pth"
 name_rf_level4_s2 = "_seed_2_rf_level_4"
 
+def get_save_path_from_name_saturation(name):
+    jade_home = "/jmain02/home/J2AD014/mtc03/lla98-mtc03"
+    if "resnet50" in name:
+        if "cifar10" in name:
+            if "sam" in name:
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/resnet50/ASAM"
+            if "ekfac" in name:
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/resnet50/EKFAC"
+            else:
+
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/resnet50/SGD"
+
+    if "vgg19" in name:
+        if "cifar10" in name:
+            if "sam" in name:
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/vgg19/ASAM"
+            if "ekfac" in name:
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/vgg19/EKFAC"
+            else:
+
+                return f"{jade_home}/sparse_ensemble/saturation_results/cifar10/vgg19/SGD"
+
+
 files_names = [name_rf_level1_s1, name_rf_level1_s2, name_rf_level2_s1, name_rf_level2_s2, name_rf_level3_s1,
                name_rf_level3_s2, name_rf_level4_s1, name_rf_level4_s2]
 files = [rf_level1_s1, rf_level1_s2, rf_level2_s1, rf_level2_s2, rf_level3_s1, rf_level3_s2, rf_level4_s1, rf_level4_s2]
@@ -1462,7 +1485,7 @@ def main(args):
     dense_accuracy_list = []
     pruned_accuracy_list = []
     files_names = []
-    search_string = "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+    search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
                                                                           args.RF_level, args.name)
     things = list(glob.glob(search_string))
 
@@ -1470,7 +1493,7 @@ def main(args):
     #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
 
     print("Glob text:{}".format(
-        "{}/{}_normal_{}_*_level_{}*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+        "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
                                                               args.name)))
     print(things)
 
@@ -1495,6 +1518,7 @@ def main(args):
 
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+
 
         t0 = time.time()
         if args.ffcv:
