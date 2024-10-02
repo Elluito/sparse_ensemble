@@ -1052,6 +1052,7 @@ def prune_selective_layers(args):
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
         calculated_accuracy = test(net, testloader=testloader)
         print("Calculated accuracy:{}".format(calculated_accuracy))
+        dense_accuracy_list.append(calculated_accuracy)
         dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
         quality_df = quality_df.T
@@ -1201,7 +1202,7 @@ def prune_selective_layers(args):
                                                            args.name, args.pruning_rate))
     #### different pruning results
 
-    df = pd.DataFrame({"Name": files_names,
+    df = pd.DataFrame({"Name": files_names,"Dense Accuracy":dense_accuracy_list
                        })
 
     columns_names = list(list_of_lists_of_intermediate_layers_pruned_accuracies[0].keys())
