@@ -1226,6 +1226,7 @@ def prune_selective_layers(args):
 
 
 def main(args):
+
     if "vgg" in args.model:
         exclude_layers = ["features.0", "classifier"]
     if "resnet" in args.model:
