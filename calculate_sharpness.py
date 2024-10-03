@@ -72,136 +72,137 @@ def main(args):
     #######################################################################################
 
     if args.model == "resnet18":
-                                    if args.type == "normal" and args.dataset == "cifar10":
+                                if args.type == "normal" and args.dataset == "cifar10":
                                     model= ResNet18_rf(num_classes=10, RF_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "cifar100":
+                                if args.type == "normal" and args.dataset == "cifar100":
                                     model= ResNet18_rf(num_classes=100, RF_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                if args.type == "normal" and args.dataset == "tiny_imagenet":
                                     model= ResNet18_rf(num_classes=200, RF_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "small_imagenet":
+                                if args.type == "normal" and args.dataset == "small_imagenet":
                                     model= ResNet18_rf(num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet50":
-                                    if args.type == "normal" and args.dataset == "cifar10":
+                                if args.type == "normal" and args.dataset == "cifar10":
                                     model= ResNet50_rf(num_classes=10, rf_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "cifar100":
+                                if args.type == "normal" and args.dataset == "cifar100":
                                     model= ResNet50_rf(num_classes=100, rf_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                if args.type == "normal" and args.dataset == "tiny_imagenet":
                                     model= ResNet50_rf(num_classes=200, rf_level=args.RF_level)
-                                    if args.type == "pytorch" and args.dataset == "cifar10":
+                                if args.type == "pytorch" and args.dataset == "cifar10":
                                     model= resnet50()
                                     in_features = model.fc.in_features
                                     model.fc = nn.Linear(in_features, 10)
-                                    if args.type == "pytorch" and args.dataset == "cifar100":
+                                if args.type == "pytorch" and args.dataset == "cifar100":
                                     model= resnet50()
                                     in_features = model.fc.in_features
                                     model.fc = nn.Linear(in_features, 100)
+
     if args.model == "vgg19":
-                                 if args.type == "normal" and args.dataset == "cifar10":
+                             if args.type == "normal" and args.dataset == "cifar10":
                                  model= VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-                                 if args.type == "normal" and args.dataset == "cifar100":
+                             if args.type == "normal" and args.dataset == "cifar100":
                                  model= VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
-                                 if args.type == "normal" and args.dataset == "tiny_imagenet":
+                             if args.type == "normal" and args.dataset == "tiny_imagenet":
                                  model= VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
-                                 if args.type == "normal" and args.dataset == "small_imagenet":
+                             if args.type == "normal" and args.dataset == "small_imagenet":
                                  model= VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
     if args.model == "resnet24":
-                                    if args.type == "normal" and args.dataset == "cifar10":
+                                if args.type == "normal" and args.dataset == "cifar10":
                                     model= ResNet24_rf(num_classes=10, rf_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "cifar100":
+                                if args.type == "normal" and args.dataset == "cifar100":
                                     model= ResNet24_rf(num_classes=100, rf_level=args.RF_level)
-                                    if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                if args.type == "normal" and args.dataset == "tiny_imagenet":
                                     model= ResNet24_rf(num_classes=200, rf_level=args.RF_level)
-                                    if args.type == "pytorch" and args.dataset == "cifar10":
+                                if args.type == "pytorch" and args.dataset == "cifar10":
                                     # # model= resnet50()
                                     # # in_features = model.fc.in_features
                                     # model.fc = nn.Linear(in_features, 10)
                                     raise NotImplementedError(
                                     " There is no implementation for this combination {}, {} {} ".format(args.model, args.type))
     if args.model == "resnet_small":
-                                        if args.type == "normal" and args.dataset == "cifar10":
+                                    if args.type == "normal" and args.dataset == "cifar10":
                                         model= small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
-                                        if args.type == "normal" and args.dataset == "cifar100":
+                                    if args.type == "normal" and args.dataset == "cifar100":
                                         model= small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
-                                        if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                    if args.type == "normal" and args.dataset == "tiny_imagenet":
                                         model= small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-                                        if args.type == "normal" and args.dataset == "small_imagenet":
+                                    if args.type == "normal" and args.dataset == "small_imagenet":
                                         model= small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-                                        if args.type == "pytorch" and args.dataset == "cifar10":
+                                    if args.type == "pytorch" and args.dataset == "cifar10":
                                         raise NotImplementedError
-                                        if args.type == "pytorch" and args.dataset == "cifar100":
+                                    if args.type == "pytorch" and args.dataset == "cifar100":
                                         raise NotImplementedError
     if args.model == "deep_resnet_small":
-                                             if args.type == "normal" and args.dataset == "cifar10":
+                                         if args.type == "normal" and args.dataset == "cifar10":
                                              model= deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
-                                             if args.type == "normal" and args.dataset == "cifar100":
+                                         if args.type == "normal" and args.dataset == "cifar100":
                                              model= deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
-                                             if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                         if args.type == "normal" and args.dataset == "tiny_imagenet":
                                              model= deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-                                             if args.type == "normal" and args.dataset == "small_imagenet":
+                                         if args.type == "normal" and args.dataset == "small_imagenet":
                                              model= deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
-                                             if args.type == "pytorch" and args.dataset == "cifar10":
+                                         if args.type == "pytorch" and args.dataset == "cifar10":
                                              raise NotImplementedError
-                                             if args.type == "pytorch" and args.dataset == "cifar100":
+                                         if args.type == "pytorch" and args.dataset == "cifar100":
                                              raise NotImplementedError
     if args.model == "densenet40":
-                                      if args.type == "normal" and args.dataset == "cifar10":
+                                  if args.type == "normal" and args.dataset == "cifar10":
                                       model= densenet_40_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "cifar100":
+                                  if args.type == "normal" and args.dataset == "cifar100":
                                       model= densenet_40_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                  if args.type == "normal" and args.dataset == "tiny_imagenet":
                                       model= densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "small_imagenet":
+                                  if args.type == "normal" and args.dataset == "small_imagenet":
                                       model= densenet_40_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "imagenet":
+                                  if args.type == "normal" and args.dataset == "imagenet":
                                       model= densenet_40_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
     if args.model == "mobilenetv2":
-                                       if args.type == "normal" and args.dataset == "cifar10":
+                                   if args.type == "normal" and args.dataset == "cifar10":
                                        model= MobileNetV2_cifar_RF(num_classes=10, RF_level=args.RF_level)
-                                       if args.type == "normal" and args.dataset == "cifar100":
+                                   if args.type == "normal" and args.dataset == "cifar100":
                                        model= MobileNetV2_cifar_RF(num_classes=100, RF_level=args.RF_level)
-                                       if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                   if args.type == "normal" and args.dataset == "tiny_imagenet":
                                        model= MobileNetV2_cifar_RF(num_classes=200, RF_level=args.RF_level)
-                                       if args.type == "normal" and args.dataset == "small_imagenet":
+                                   if args.type == "normal" and args.dataset == "small_imagenet":
                                        model= MobileNetV2_imagenet_RF(num_classes=200, RF_level=args.RF_level)
-                                       if args.type == "normal" and args.dataset == "imagenet":
+                                   if args.type == "normal" and args.dataset == "imagenet":
                                        model= MobileNetV2_imagenet_RF(num_classes=1000, RF_level=args.RF_level)
     if args.model == "densenet28":
-                                      if args.type == "normal" and args.dataset == "cifar10":
+                                  if args.type == "normal" and args.dataset == "cifar10":
                                       model= densenet_28_RF([0] * 100, num_classes=10, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "cifar100":
+                                  if args.type == "normal" and args.dataset == "cifar100":
                                       model= densenet_28_RF([0] * 100, num_classes=100, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                  if args.type == "normal" and args.dataset == "tiny_imagenet":
                                       model= densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "small_imagenet":
+                                  if args.type == "normal" and args.dataset == "small_imagenet":
                                       model= densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
-                                      if args.type == "normal" and args.dataset == "imagenet":
+                                  if args.type == "normal" and args.dataset == "imagenet":
                                       model= densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
     if args.model == "resnet50_stride":
-                                           if args.type == "normal" and args.dataset == "cifar10":
+                                       if args.type == "normal" and args.dataset == "cifar10":
                                            model= ResNet50_rf_stride(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
-                                           if args.type == "normal" and args.dataset == "cifar100":
+                                       if args.type == "normal" and args.dataset == "cifar100":
                                            model= ResNet50_rf_stride(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
-                                           if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                       if args.type == "normal" and args.dataset == "tiny_imagenet":
                                            model= ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-                                           if args.type == "normal" and args.dataset == "small_imagenet":
+                                       if args.type == "normal" and args.dataset == "small_imagenet":
                                            model= ResNet50_rf_stride(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
-                                           if args.type == "pytorch" and args.dataset == "cifar10":
+                                       if args.type == "pytorch" and args.dataset == "cifar10":
                                            model= resnet50()
                                            in_features = model.fc.in_features
                                            model.fc = nn.Linear(in_features, 10)
-                                           if args.type == "pytorch" and args.dataset == "cifar100":
+                                       if args.type == "pytorch" and args.dataset == "cifar100":
                                            model= resnet50()
                                            in_features = model.fc.in_features
                                            model.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19_stride":
-                                        if args.type == "normal" and args.dataset == "cifar10":
+                                    if args.type == "normal" and args.dataset == "cifar10":
                                         model= VGG_RF_stride("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-                                        if args.type == "normal" and args.dataset == "cifar100":
+                                    if args.type == "normal" and args.dataset == "cifar100":
                                         model= VGG_RF_stride("VGG19_rf", num_classes=100, RF_level=args.RF_level)
-                                        if args.type == "normal" and args.dataset == "tiny_imagenet":
+                                    if args.type == "normal" and args.dataset == "tiny_imagenet":
                                         model= VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
-                                        if args.type == "normal" and args.dataset == "small_imagenet":
+                                    if args.type == "normal" and args.dataset == "small_imagenet":
                                         model= VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
     #######################################################################################
