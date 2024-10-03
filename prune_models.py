@@ -1198,6 +1198,9 @@ def prune_selective_layers(args):
         if args.model == "resnet50":
             # TODO: wait for the results of the saturation to decide which pattern are you going to prune, (prune only inside block layers, or only outside block layers)
 
+            list_of_in_block_layers_pruned_accuracies = defaultdict(list)
+            list_of_out_block_layers_pruned_accuracies = defaultdict(list)
+
             df2_dict = {}
             #####################################################################
             #                       Out of block
@@ -1211,7 +1214,7 @@ def prune_selective_layers(args):
                 exclude_layers_copy.extend(intermediate_layers[:-current_inter_layer_index])
 
                 # layers_to_be_pruned = set(intermediate_layers).difference(
-                #     set(intermediate_layers[:-current_inter_layer_index]))
+                #     set(intermediate_layers[:-curren            list_of_in_block_layers_pruned_accuracies = defaultdict(list)t_inter_layer_index]))
                 layers_to_be_pruned = [x for x in intermediate_layers if
                                        x not in intermediate_layers[:-current_inter_layer_index]]
 
@@ -1251,10 +1254,10 @@ def prune_selective_layers(args):
 
                 del exclude_layers_copy[0]
                 del exclude_layers_copy[1]
-                list_of_intermediate_layers_pruned_accuracies[
+                list_of_out_block_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
-                list_of_intermediate_layers_pruned_accuracies[
+                list_of_out_block_layers_pruned_accuracies[
                     "RANDOM Acc {}-{}".format(layers_to_be_pruned[0],
                                               layers_to_be_pruned[-1])] = random_pruned_accuracy
 
@@ -1263,7 +1266,7 @@ def prune_selective_layers(args):
                 df2_dict["layer_names"] = weight_names
 
             list_of_lists_of_out_block_layers_pruned_accuracies.append(
-                list_of_intermediate_layers_pruned_accuracies)
+                list_of_out_block_layers_pruned_accuracies)
             df2 = pd.DataFrame(df2_dict)
             df2.to_csv("{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_escalated_out_of_block.csv".format(
                 args.save_folder,
@@ -1332,10 +1335,10 @@ def prune_selective_layers(args):
 
                 del exclude_layers_copy[0]
                 del exclude_layers_copy[1]
-                list_of_intermediate_layers_pruned_accuracies[
+                list_of_in_block_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
-                list_of_intermediate_layers_pruned_accuracies[
+                list_of_in_block_layers_pruned_accuracies[
                     "RANDOM Acc {}-{}".format(layers_to_be_pruned[0],
                                               layers_to_be_pruned[-1])] = random_pruned_accuracy
 
@@ -1344,7 +1347,7 @@ def prune_selective_layers(args):
                 df2_dict["layer_names"] = weight_names
 
             list_of_lists_of_in_block_layers_pruned_accuracies.append(
-                list_of_intermediate_layers_pruned_accuracies)
+                list_of_in_block_layers_pruned_accuracies)
             df2 = pd.DataFrame(df2_dict)
             df2.to_csv("{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_escalated_out_of_block.csv".format(
                 args.save_folder,
@@ -1394,12 +1397,14 @@ def prune_selective_layers(args):
             index=False)
 
     if args.model == "resnet50":
-        # TODO: create two dataframes for in blcok and out block pruning of layers
         ############################ first out of block
         df1 = pd.DataFrame({"Name": files_names, "Dense Accuracy": dense_accuracy_list
                            })
 
-        columns_names = list(list_of_lists_of_intermediate_layers_pruned_accuracies[0].keys())
+        ######################################################
+        #           outside block
+        ######################################################
+        columns_names = list(list_of_out_block_layers_pruned_accuracies[0].keys())
 
         accuracy_columns = defaultdict(list)
 
@@ -1413,13 +1418,40 @@ def prune_selective_layers(args):
             df[keys] = values
 
         df.to_csv(
-            "{}/RF_{}_{}_{}_{}_{}_one_shot_inter_layers_summary.csv".format(args.save_folder, args.model,
+            "{}/RF_{}_{}_{}_{}_{}_one_shot_out_block_layer_summary.csv".format(args.save_folder, args.model,
                                                                             args.RF_level, args.dataset,
                                                                             args.pruning_rate,
                                                                             args.name, cfg.pruner),
             index=False)
 
-        ############################### second in block of block
+        ######################################################
+        #           inside block
+        ######################################################
+        columns_names = list(list_of_in_block_layers_pruned_accuracies[0].keys())
+
+        accuracy_columns = defaultdict(list)
+
+        # This is # of seeds  long
+
+        for name in columns_names:
+
+            for dict in list_of_lists_of_intermediate_layers_pruned_accuracies:
+
+                # This should be # of intermediate layers long
+
+                accuracy_columns[name].append(dict[name])
+
+        for keys, values in accuracy_columns.items():
+
+            df[keys] = values
+
+        df.to_csv(
+            "{}/RF_{}_{}_{}_{}_{}_one_shot_in_block_layers_summary.csv".format(args.save_folder, args.model,
+                                                                            args.RF_level, args.dataset,
+                                                                            args.pruning_rate,
+                                                                            args.name, cfg.pruner),
+            index=False)
+
 
 
 def main(args):
