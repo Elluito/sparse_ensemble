@@ -1061,6 +1061,9 @@ def prune_selective_layers(args):
         calculated_accuracy = test(net, testloader=testloader)
         print("Calculated accuracy:{}".format(calculated_accuracy))
         dense_accuracy_list.append(calculated_accuracy)
+        ############################################
+        #       filter quality measures
+        ############################################
         dict_of_dicts = measure_quality(copy.deepcopy(net).cpu())
         quality_df = pd.DataFrame(dict_of_dicts)
         quality_df = quality_df.T
@@ -1074,7 +1077,7 @@ def prune_selective_layers(args):
         else:
             whole_quality_df = pd.concat((whole_quality_df, quality_df))
 
-        ######## name of the current seed
+        ######## name of the current seed ######## ######## ######## ########
 
         seed_from_file1 = re.findall("_[0-9]_", name)
 
