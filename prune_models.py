@@ -1652,6 +1652,9 @@ def prune_selective_layers(args):
                 layers_to_be_pruned[
                     -1]))
 
+            file_name = os.path.basename(name)
+            print(file_name)
+            files_names.append(file_name)
     # This needs to happen outside the for loop for the names
 
     #           Quality summary save
