@@ -51,3 +51,11 @@ def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_
     csv_tracker.add_scalar("test accuracy", test_accuracy)
     csv_tracker.add_saturations()
     csv_tracker.close()
+
+
+
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()
