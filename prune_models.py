@@ -1691,7 +1691,7 @@ def prune_selective_layers(args):
 
     if args.model == "resnet50":
         ############################ first out of block
-        df1 = pd.DataFrame({"Name": files_names, "Dense Accuracy": dense_accuracy_list
+        df = pd.DataFrame({"Name": files_names, "Dense Accuracy": dense_accuracy_list
                             })
 
         ######################################################
