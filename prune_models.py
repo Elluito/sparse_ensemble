@@ -1697,7 +1697,7 @@ def prune_selective_layers(args):
         ######################################################
         #           outside block
         ######################################################
-        columns_names = list(list_of_out_block_layers_pruned_accuracies[0].keys())
+        columns_names = list(list_of_lists_of_out_block_layers_pruned_accuracies[0].keys())
 
         accuracy_columns = defaultdict(list)
 
@@ -1720,7 +1720,7 @@ def prune_selective_layers(args):
         ######################################################
         #           inside block
         ######################################################
-        columns_names = list(list_of_in_block_layers_pruned_accuracies[0].keys())
+        columns_names = list(list_of_lists_of_in_block_layers_pruned_accuracies[0].keys())
 
         accuracy_columns = defaultdict(list)
 
