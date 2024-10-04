@@ -2486,7 +2486,7 @@ def fine_tune_summary(args):
 
 
 if __name__ == '__main__':
-
+    from delve.writers import plot_stat_level_from_results
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
