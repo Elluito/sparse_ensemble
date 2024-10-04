@@ -12,7 +12,7 @@ def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_
 
     ##### First one epoch of the training data
 
-    criterion = nn.CrossEntropy()
+    criterion =  nn.CrossEntropyLoss()
     correct = 0
     total = 0
     train_loss = 0
