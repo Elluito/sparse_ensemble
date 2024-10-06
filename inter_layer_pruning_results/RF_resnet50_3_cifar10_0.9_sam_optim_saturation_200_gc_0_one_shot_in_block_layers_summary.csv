@@ -1,0 +1,4 @@
+Name,Dense Accuracy
+resnet50_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_92.52.pth,92.52
+resnet50_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_92.68.pth,92.68
+resnet50_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_92.54.pth,92.54
