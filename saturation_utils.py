@@ -9,7 +9,7 @@ def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_
                                     device=device, average_sat=True)
 
     net.train()
-
+    net.to(device)
     ##### First one epoch of the training data
 
     criterion =  nn.CrossEntropyLoss()

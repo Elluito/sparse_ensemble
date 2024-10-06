@@ -26,7 +26,7 @@ else
 
  echo "Don't use FFCV"
 
- sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_saturation_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_no_ffcv" slurm_inter_layer_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=0  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=6 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}"
+ sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_saturation_no_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_saturation_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_saturation_no_ffcv" slurm_inter_layer_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=0  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=6 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}"
   fi
 
 #done
