@@ -1494,14 +1494,16 @@ def prune_selective_layers(args):
             #####################################################################
             #                       Out of block
             #####################################################################
+            print("Out of block layers")
             for current_inter_layer_index in range(1, len(out_of_block_layer) + 1):
 
+                print("current out of block layer {}".format(current_inter_layer_index))
                 exclude_layers_copy = exclude_layers.copy()
 
                 # Grab from the first to the current index intermediate layer (counting from the back) and exclude those from pruning
 
                 exclude_layers_copy.extend(out_of_block_layer[:-current_inter_layer_index])
-
+                exclude_layers_copy.extend(in_block_layers)
                 # layers_to_be_pruned = set(intermediate_layers).difference(
                 #     set(intermediate_layers[:-curren            list_of_in_block_layers_pruned_accuracies = defaultdict(list)t_inter_layer_index]))
                 layers_to_be_pruned = [x for x in out_of_block_layer if
@@ -1583,12 +1585,14 @@ def prune_selective_layers(args):
 
 
             for current_inter_layer_index in range(1, len(in_block_layers) + 1):
+                print("current in block layer {}".format(current_inter_layer_index))
 
                 exclude_layers_copy = exclude_layers.copy()
 
                 # Grab from the first to the current index intermediate layer (counting from the back) and exclude those from pruning
 
                 exclude_layers_copy.extend(in_block_layers[:-current_inter_layer_index])
+                exclude_layers_copy.extend(out_of_block_layer)
 
                 # layers_to_be_pruned = set(intermediate_layers).difference(
                 #     set(intermediate_layers[:-current_inter_layer_index]))
@@ -1609,7 +1613,9 @@ def prune_selective_layers(args):
 
                 pruning_rates_per_layer_dict = {}
                 for i in range(len(weight_names)):
+
                     pruning_rates_per_layer_dict[weight_names[i]] = pruning_rates_per_layer[i]
+
                 # Random
                 random_copy = copy.deepcopy(net)
 
@@ -1630,7 +1636,9 @@ def prune_selective_layers(args):
                     random_pruned_accuracy = test(random_copy, testloader=testloader)
 
                 del exclude_layers_copy[0]
+
                 del exclude_layers_copy[0]
+
                 list_of_in_block_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
@@ -1640,10 +1648,14 @@ def prune_selective_layers(args):
 
                 df2_dict["pr_from_{}_to_{}".format(layers_to_be_pruned[0],
                                                    layers_to_be_pruned[-1])] = pruning_rates_per_layer
+
                 df2_dict["layer_names"] = weight_names
+
+
 
             list_of_lists_of_in_block_layers_pruned_accuracies.append(
                 list_of_in_block_layers_pruned_accuracies)
+
             df2 = pd.DataFrame(df2_dict)
             df2.to_csv("{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}_escalated_out_of_block.csv".format(
                 args.save_folder,
@@ -1709,7 +1721,8 @@ def prune_selective_layers(args):
 
         # This is # of seeds  long
         for name in columns_names:
-            for dict in list_of_lists_of_intermediate_layers_pruned_accuracies:
+
+            for dict in list_of_lists_of_out_block_layers_pruned_accuracies:
                 # This should be # of intermediate layers long
                 accuracy_columns[name].append(dict[name])
 
@@ -1735,7 +1748,7 @@ def prune_selective_layers(args):
 
         for name in columns_names:
 
-            for dict in list_of_lists_of_intermediate_layers_pruned_accuracies:
+            for dict in list_of_lists_of_in_block_layers_pruned_accuracies:
 
                 # This should be # of intermediate layers long
 
