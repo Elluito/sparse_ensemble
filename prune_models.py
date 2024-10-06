@@ -371,8 +371,8 @@ def calculate_saturation_models(args):
                                                                args.name)))
     print(things)
     sufix_name = "{}_{}_{}_{}_pr_{}_saturation".format(args.model,
-                                      args.RF_level, args.dataset,
-                                      args.name,args.pruning_rate)
+                                                       args.RF_level, args.dataset,
+                                                       args.name, args.pruning_rate)
     for i, name in enumerate(
             glob.glob(search_string)):
         state_dict_raw = torch.load(name, map_location=device)
@@ -382,7 +382,7 @@ def calculate_saturation_models(args):
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 
-        calculate_train_eval_saturation_solution(net, trainloader, testloader,args.save_folder, sufix_name, i, device)
+        calculate_train_eval_saturation_solution(net, trainloader, testloader, args.save_folder, sufix_name, i, device)
 
 
 def seed_worker(worker_id):
@@ -1452,7 +1452,7 @@ def prune_selective_layers(args):
                     random_pruned_accuracy = test(random_copy, testloader=testloader)
 
                 del exclude_layers_copy[0]
-                del exclude_layers_copy[1]
+                del exclude_layers_copy[0]
                 list_of_intermediate_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
@@ -1486,7 +1486,6 @@ def prune_selective_layers(args):
             files_names.append(file_name)
 
         if args.model == "resnet50":
-            # TODO: wait for the results of the saturation to decide which pattern are you going to prune, (prune only inside block layers, or only outside block layers)
 
             list_of_in_block_layers_pruned_accuracies = defaultdict(list)
             list_of_out_block_layers_pruned_accuracies = defaultdict(list)
@@ -1501,12 +1500,12 @@ def prune_selective_layers(args):
 
                 # Grab from the first to the current index intermediate layer (counting from the back) and exclude those from pruning
 
-                exclude_layers_copy.extend(intermediate_layers[:-current_inter_layer_index])
+                exclude_layers_copy.extend(out_of_block_layer[:-current_inter_layer_index])
 
                 # layers_to_be_pruned = set(intermediate_layers).difference(
                 #     set(intermediate_layers[:-curren            list_of_in_block_layers_pruned_accuracies = defaultdict(list)t_inter_layer_index]))
-                layers_to_be_pruned = [x for x in intermediate_layers if
-                                       x not in intermediate_layers[:-current_inter_layer_index]]
+                layers_to_be_pruned = [x for x in out_of_block_layer if
+                                       x not in out_of_block_layer[:-current_inter_layer_index]]
 
                 cfg.exclude_layers = exclude_layers_copy
                 print("Exclude layers")
@@ -1543,7 +1542,7 @@ def prune_selective_layers(args):
                     random_pruned_accuracy = test(random_copy, testloader=testloader)
 
                 del exclude_layers_copy[0]
-                del exclude_layers_copy[1]
+                del exclude_layers_copy[0]
                 list_of_out_block_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
@@ -1572,22 +1571,29 @@ def prune_selective_layers(args):
                     -1]),
                 index=False)
 
+
+
             #####################################################################
             #                       Inside of block
             #####################################################################
+
+
+
             df2_dict = {}
+
+
             for current_inter_layer_index in range(1, len(in_block_layers) + 1):
 
                 exclude_layers_copy = exclude_layers.copy()
 
                 # Grab from the first to the current index intermediate layer (counting from the back) and exclude those from pruning
 
-                exclude_layers_copy.extend(intermediate_layers[:-current_inter_layer_index])
+                exclude_layers_copy.extend(in_block_layers[:-current_inter_layer_index])
 
                 # layers_to_be_pruned = set(intermediate_layers).difference(
                 #     set(intermediate_layers[:-current_inter_layer_index]))
-                layers_to_be_pruned = [x for x in intermediate_layers if
-                                       x not in intermediate_layers[:-current_inter_layer_index]]
+                layers_to_be_pruned = [x for x in in_block_layers if
+                                       x not in in_block_layers[:-current_inter_layer_index]]
 
                 cfg.exclude_layers = exclude_layers_copy
                 print("Exclude layers")
@@ -1624,7 +1630,7 @@ def prune_selective_layers(args):
                     random_pruned_accuracy = test(random_copy, testloader=testloader)
 
                 del exclude_layers_copy[0]
-                del exclude_layers_copy[1]
+                del exclude_layers_copy[0]
                 list_of_in_block_layers_pruned_accuracies[
                     "GMP Acc {}-{}".format(layers_to_be_pruned[0],
                                            layers_to_be_pruned[-1])] = gmp_pruned_accuracy
@@ -1692,7 +1698,7 @@ def prune_selective_layers(args):
     if args.model == "resnet50":
         ############################ first out of block
         df = pd.DataFrame({"Name": files_names, "Dense Accuracy": dense_accuracy_list
-                            })
+                           })
 
         ######################################################
         #           outside block
@@ -1720,6 +1726,7 @@ def prune_selective_layers(args):
         ######################################################
         #           inside block
         ######################################################
+
         columns_names = list(list_of_lists_of_in_block_layers_pruned_accuracies[0].keys())
 
         accuracy_columns = defaultdict(list)
@@ -1729,6 +1736,7 @@ def prune_selective_layers(args):
         for name in columns_names:
 
             for dict in list_of_lists_of_intermediate_layers_pruned_accuracies:
+
                 # This should be # of intermediate layers long
 
                 accuracy_columns[name].append(dict[name])
@@ -1739,9 +1747,8 @@ def prune_selective_layers(args):
         df.to_csv(
             "{}/RF_{}_{}_{}_{}_{}_one_shot_in_block_layers_summary.csv".format(args.save_folder, args.model,
                                                                                args.RF_level, args.dataset,
-                                                                               args.pruning_rate,
-                                                                               args.name, cfg.pruner),
-            index=False)
+                                                                               args.pruning_rate, args.name,
+                                                                               cfg.pruner), index=False)
 
 
 def main(args):
@@ -2487,6 +2494,7 @@ def fine_tune_summary(args):
 
 if __name__ == '__main__':
     from delve.writers import plot_stat_level_from_results
+
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
     parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
