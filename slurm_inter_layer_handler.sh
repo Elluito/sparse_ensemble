@@ -54,20 +54,37 @@ else
 
 
 
-for model in "resnet50"; do
-for dataset in "cifar10"; do
-for pruning_rate in "0.9"; do
-for rf_level in "1" "2" "3" "4"; do
-#for rf_level in "1"; do
+#for model in "resnet50"; do
+#for dataset in "cifar10"; do
+#for pruning_rate in "0.9"; do
+#for rf_level in "1" "2" "3" "4"; do
+##for rf_level in "1"; do
+#
+#run_pruning "${model}" "${dataset}" "${HOME}/original_paper_checkpoints" "${HOME}/datasets" "${HOME}/sparse_ensemble/inter_layer_pruning_results" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#
+#done
+#done
+#done
+#done
 
-run_pruning "${model}" "${dataset}" "${HOME}/original_paper_checkpoints" "${HOME}/datasets" "${HOME}/sparse_ensemble/inter_layer_pruning_results" "recording_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
+
+
+for model in "resnet_small"; do
+for dataset in "small_imagenet"; do
+for pruning_rate in "0" "0.9"; do
+for rf_level in "3" "4" "5" "6" "7" "8" "9" "10"; do
+
+
+run_pruning "${model}" "${dataset}" "${HOME}/resnet_small_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/inter_layer_pruning_results" "recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
 
 
 done
 done
 done
 done
-
 
 #for model in "resnet50"; do
 #for dataset in "cifar10"; do
