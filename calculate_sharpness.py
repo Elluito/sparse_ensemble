@@ -25,6 +25,8 @@ def get_args():
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
 
+    parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
+
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Output folder of the sharpness results')
 
