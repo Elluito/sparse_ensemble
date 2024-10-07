@@ -73,7 +73,7 @@ else
 
 for model in "resnet_small"; do
 for dataset in "small_imagenet"; do
-for pruning_rate in "0" "0.9"; do
+for pruning_rate in "0.9"; do
 for rf_level in "3" "4" "5" "6" "7" "8" "9" "10"; do
 
 
