@@ -47,6 +47,7 @@ def get_loaders(dataset, n_ex, batch_size, split, shuffle, data_augm, val_indice
                 noise_type='sym', drop_last=False, normalization=True, randaug=False,dir='/tmlscratch/andriush/data'):
     # dir_ = '/tmlscratch/andriush/data'
     # dir_ = '/tmldata1/andriush/data'
+    dir_ = dir
     dataset_f = datasets_dict[dataset]
     batch_size = n_ex if n_ex < batch_size and n_ex != -1 else batch_size
     num_workers_train, num_workers_val, num_workers_test = 4, 4, 4
