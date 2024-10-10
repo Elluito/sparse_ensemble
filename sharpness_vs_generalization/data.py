@@ -4,7 +4,7 @@ import numpy as np
 from types import SimpleNamespace
 from torchvision import datasets, transforms
 # from robustbench.data import load_cifar10c, load_cifar100c
-from randomaug import RandAugment
+from .randomaug import RandAugment
 
 
 class DatasetWithLabelNoise(torch.utils.data.Dataset):
