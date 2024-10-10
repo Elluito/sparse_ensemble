@@ -1,8 +1,8 @@
 import torch
-import utils
 import copy
 import math
 from functools import partial
+import sharpness_vs_generalization.utils as utils #modified by me
 
 
 def zero_init_delta_dict(delta_dict, rho):
