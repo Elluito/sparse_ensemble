@@ -80,7 +80,7 @@ for dataset in "cifar10"; do
 for pruning_rate in "0.9"; do
 for rf_level in "1" "2" "3" "4"; do
 
-run_sharpness "${model}" "$dataset" "${HOME}/second_order_experiments" "${HOME}/datasets" "${HOME}/sparse_ensemble/sharpness_results" "ekfac_optim_hyper_saturation_200_gc_1" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "m_apgd_linf"
+run_sharpness "${model}" "$dataset" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/sharpness_results" "ekfac_optim_hyper_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "m_apgd_linf"
 
 done
 done
