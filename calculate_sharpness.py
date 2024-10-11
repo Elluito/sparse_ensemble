@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument('--dataset', default='cifar10', type=str)
     parser.add_argument('--model', default='resnet18', type=str)
     parser.add_argument('--model_path', type=str, help='model path')
-    parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
+    parser.add_argument('--RF_level', default=4, type=int, help='Receptive field level')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
     parser.add_argument('--name', default='resnet18', type=str)
