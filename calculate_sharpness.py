@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 import torch
 import time
+import glob
+import json
+import torch.nn.functional as F
 import sharpness_vs_generalization.data as data
 import sharpness_vs_generalization.models as models
 import sharpness_vs_generalization.utils as utils
-import json
 import sharpness_vs_generalization.sharpness as sharpness
 from alternate_models import *
-import torch.nn.functional as F
-import glob
 
 
 def get_args():
@@ -74,6 +74,7 @@ def get_args():
 
 def main(args):
     start_time = time.time()
+    print(f"\n{args}")
 
     n_cls = 10 if args.dataset != 'cifar100' else 100
     sharpness_split = 'test' if args.sharpness_on_test_set else 'train'
@@ -94,6 +95,7 @@ def main(args):
     # model_dict = torch.load('{}'.format(args.model_path))['last']
     # model.load_state_dict({k: v for k, v in model_dict.items()})
     # model = models.LogitNormalizationWrapper(model, normalize_logits=args.normalize_logits)
+
     #######################################################################################
     #                               My own models for calculating sharpness
     #######################################################################################
@@ -239,8 +241,6 @@ def main(args):
     eval_test_batches = data.get_loaders(args.dataset, args.n_eval, args.bs, split='test', shuffle=False,
                                          data_augm=False, drop_last=False,dir=args.data_folder)
     model.to(device)
-    train_err, train_loss = utils.compute_err(eval_train_batches, model)
-    test_err, test_loss = utils.compute_err(eval_test_batches, model)
     # eval_test_corruptions_batches = data.get_loaders(args.dataset + 'c', args.n_eval, args.bs, split='test',
     #                                                  shuffle=False,
     #                                                  data_augm=False, drop_last=False)
@@ -271,6 +271,9 @@ def main(args):
         state_dict_raw = torch.load(name, map_location=device)
 
         model.load_state_dict(state_dict_raw["net"])
+
+        train_err, train_loss = utils.compute_err(eval_train_batches, model)
+        test_err, test_loss = utils.compute_err(eval_test_batches, model)
 
         if args.algorithm == 'm_apgd_l2':
             sharpness_obj, sharpness_err, _, output = sharpness.eval_APGD_sharpness(
