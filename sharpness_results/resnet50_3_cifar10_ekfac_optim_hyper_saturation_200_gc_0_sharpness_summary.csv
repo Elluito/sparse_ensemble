@@ -1,0 +1,7 @@
+Name,sharpness_obj,sharpness_err,train_loss,train_err,test_loss,test_err
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.58.pth,641.2744761177673,0.90625,0.08583214709758759,0.0139,0.7417932094573975,0.1158
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.59.pth,641.2744761177673,0.90625,0.0694126552850008,0.0131,0.7196090335845947,0.1153
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.71.pth,641.2744761177673,0.90625,0.07998222749233246,0.017,0.713442174911499,0.1135
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.56.pth,641.2744761177673,0.90625,0.07229874952435493,0.0144,0.7225436634063721,0.1138
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.74.pth,641.2744761177673,0.90625,0.08649381504058838,0.0164,0.7270576187133789,0.111
+resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0_test_acc_90.87.pth,641.2744761177673,0.90625,0.07744334995746613,0.0164,0.6902676564216613,0.1116

@@ -1,0 +1,4 @@
+Name,sharpness_obj,sharpness_err,train_loss,train_err,test_loss,test_err
+resnet50_normal_cifar10_rf_level_4_ekfac_optim_hyper_saturation_200_gc_0_test_acc_88.44.pth,628.472231663065,0.912109375,0.09194711862206459,0.0189,0.8546211935997009,0.1374
+resnet50_normal_cifar10_rf_level_4_ekfac_optim_hyper_saturation_200_gc_0_test_acc_89.02.pth,628.472231663065,0.912109375,0.0893112487256527,0.0191,0.8274435914039612,0.1383
+resnet50_normal_cifar10_rf_level_4_ekfac_optim_hyper_saturation_200_gc_0_test_acc_88.47.pth,628.472231663065,0.912109375,0.0782580310344696,0.016,0.8563043814659118,0.1383
