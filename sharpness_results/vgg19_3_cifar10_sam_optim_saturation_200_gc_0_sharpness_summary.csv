@@ -1,0 +1,4 @@
+Name,sharpness_obj,sharpness_err,train_loss,train_err,test_loss,test_err
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_88.5.pth,25.10960910283029,0.888671875,0.13451949059963225,0.0426,0.4567950439929962,0.1407
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_87.92.pth,25.10960910283029,0.888671875,0.18288240332603456,0.0546,0.47306725854873655,0.1459
+vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0_test_acc_87.91.pth,25.10960910283029,0.888671875,0.17303457198143005,0.0527,0.47496961851119995,0.146
