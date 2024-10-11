@@ -238,6 +238,7 @@ def main(args):
                                           data_augm=False, drop_last=False,dir=args.data_folder)
     eval_test_batches = data.get_loaders(args.dataset, args.n_eval, args.bs, split='test', shuffle=False,
                                          data_augm=False, drop_last=False,dir=args.data_folder)
+    model.to(device)
     train_err, train_loss = utils.compute_err(eval_train_batches, model)
     test_err, test_loss = utils.compute_err(eval_test_batches, model)
     # eval_test_corruptions_batches = data.get_loaders(args.dataset + 'c', args.n_eval, args.bs, split='test',
