@@ -427,7 +427,6 @@ def get_model(args):
             net = densenet_28_RF([0] * 100, num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "imagenet":
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
-
     if args.model == "deep_small_vgg":
 
         if args.type == "normal" and args.dataset == "cifar10":
@@ -441,6 +440,7 @@ def get_model(args):
 
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = DeepSmallVGG_RF("deep_small_vgg", num_classes=200, RF_level=args.RF_level)
+    return net
 # =======================================================================================================================
 
 
