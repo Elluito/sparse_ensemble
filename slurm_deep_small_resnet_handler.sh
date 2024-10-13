@@ -2,7 +2,8 @@
 res=224
 epochs=200
 #for lvl in 5 6 7 8 9 10; do                # iterate idxA from 0 to length
-for model in "deep_small_vgg" "resnet25_small"; do
+#for model in "deep_small_vgg" "resnet25_small"; do
+for model in "resnet25_small"; do
 for lvl in 5; do                # iterate idxA from 0 to length
 
 sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_small_imagenet_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_small_imagenet_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_small_imagenet_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "small_imagenet" 8 ${lvl}  "normal" "${epochs}" "recording_${epochs}" 1 1 "${res}"
