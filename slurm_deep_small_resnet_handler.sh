@@ -1,6 +1,6 @@
 #!/bin/bash
 res=224
-epochs=100
+epochs=200
 #for lvl in 5 6 7 8 9 10; do                # iterate idxA from 0 to length
 for model in "deep_small_vgg" "resnet25_small"; do
 for lvl in 5; do                # iterate idxA from 0 to length
