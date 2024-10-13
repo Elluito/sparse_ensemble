@@ -111,7 +111,7 @@ python3.9 train_CIFAR10.py --ffcv --batch_size 128  --save_folder "/jmain02/home
 else
   echo "Don't use FFCV"
 
-python3.9 train_CIFAR10.py -batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/resnet_small_saturation" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 1
+python3.9 train_CIFAR10.py --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 1
 #python3.9 ffcv_loaders.py
 
   fi
