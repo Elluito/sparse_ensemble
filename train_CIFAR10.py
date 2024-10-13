@@ -276,7 +276,6 @@ def get_model(args):
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
     if args.model == "resnet24":
-
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
         if args.type == "normal" and args.dataset == "cifar100":
@@ -429,6 +428,19 @@ def get_model(args):
         if args.type == "normal" and args.dataset == "imagenet":
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
 
+    if args.model == "deep_small_vgg":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = DeepSmallVGG_RF("deep_small_vgg", num_classes=10, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = DeepSmallVGG_RF("deep_small_vgg", num_classes=100, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = DeepSmallVGG_RF("deep_small_vgg", num_classes=200, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = DeepSmallVGG_RF("deep_small_vgg", num_classes=200, RF_level=args.RF_level)
 # =======================================================================================================================
 
 
@@ -1158,17 +1170,32 @@ def main(args):
     if "64" in args.name:
         batch_size = 64
 
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(*stats_to_use),
-    ])
+    if args.pad:
+        pad_to_use =args.input_resolution-32
 
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-    ])
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=pad_to_use,padding_mode="edge"),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(*stats_to_use),
+        ])
+
+        transform_test = transforms.Compose([transforms.Pad( pad_to_use,padding_mode="edge"),
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                                                    ])
+    else:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(args.input_resolution, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(*stats_to_use),
+        ])
+
+        transform_test = transforms.Compose([transforms.Resize(args.input_resolution),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
 
     if args.dataset == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
@@ -1397,7 +1424,9 @@ if __name__ == '__main__':
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
     parser.add_argument('--save', default=1, type=int,
-                        help='Save best model from trainig')
+                        help='Save best model from training')
+    parser.add_argument('--pad', default=0, type=int,
+                        help='Pad the image to the input size ')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for small ImageNet')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')

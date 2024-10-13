@@ -12,7 +12,8 @@ cfg = {
     'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
     'VGG19_rf': [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, "M", 512, 512, 512, 512, 512, 512, 512, 512],
     'VGG19_rf_mod': [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, "M", 512, 512, 512, 512, 512, 512, 512, 512],
-    "small_vgg": [64, 64, "M", 128, 128, "M", 256]
+    "small_vgg": [64, 64, "M", 128, 128, "M", 256],
+    "deep_small_vgg": [64, 64, 128, 128, 128, 256, 256, 256, 256, 512, 512, 512, 512, 512, 512, 512]
 }
 
 
@@ -327,17 +328,23 @@ class Deep_small_ResNetRF(nn.Module):
         if self.rf_level == 4:
             self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
         if self.rf_level == 5:
-            self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
         if self.rf_level == 6:
-            self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
         if self.rf_level == 7:
-            self.maxpool = nn.MaxPool2d(kernel_size=35, stride=34, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=35, stride=34, padding=1)
         if self.rf_level == 8:
-            self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
         if self.rf_level == 9:
-            self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=10, stride=9, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
         if self.rf_level == 10:
-            self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=11, stride=10, padding=1)
+            # self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
         # if self.fix_points is None:
         #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
         #                            stride=1, padding=1, bias=False)
@@ -458,6 +465,88 @@ class small_VGG_RF(nn.Module):
         return nn.Sequential(*layers)
 
 
+class DeepSmallVGG_RF(nn.Module):
+    def __init__(self, vgg_name, num_classes=10, RF_level=0):
+        super(DeepSmallVGG_RF, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = nn.MaxPool2d(kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = nn.MaxPool2d(kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = nn.MaxPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=15, stride=14, padding=1)
+        if self.rf_level == 6:
+            self.maxpool = nn.MaxPool2d(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=20, stride=19, padding=1)
+        if self.rf_level == 7:
+            self.maxpool = nn.MaxPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=32, stride=31, padding=1)
+        if self.rf_level == 8:
+            self.maxpool = nn.MaxPool2d(kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=45, stride=44, padding=1)
+        if self.rf_level == 9:
+            self.maxpool = nn.MaxPool2d(kernel_size=10, stride=9, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
+        if self.rf_level == 10:
+            self.maxpool = nn.MaxPool2d(kernel_size=11, stride=10, padding=1)
+            self.config = cfg[vgg_name]
+            # self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+
+        # for i, layer in enumerate(self.features):
+        #     x = layer(x)
+        #     try:
+        #         print("{}".format(cfg["VGG19"][i]))
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        #     except:
+        #
+        #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+        out = self.features(x)
+        # out = x
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+
 def small_ResNet_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
     if RF_level == 0:
         return small_ResNetRF(small_Bottleneck, [1, 1, 1, 1], num_classes, fix_points)
@@ -490,6 +579,8 @@ def deep_2_small_Resnet_rf(num_classes=10, fix_points=None, RF_level=1, multipli
                                    fixed_points=fix_points,
                                    RF_level=RF_level,
                                    multiplier=multiplier)
+    else:
+        raise NotImplementedError(f"There is no model implemented for model with {number_layers} layers")
 
 
 def small_ResNet_BasicBlock_rf(num_classes=10, fix_points=None, RF_level=1, multiplier=1):
@@ -625,12 +716,16 @@ def test_deep_RF_models():
         #
         #     print("Receptive field of VGG")
         #     print(vgg_rf)
-
+        num_layers = 25
         print("Deep resnet level {}".format(i))
         try:
-            resnet_net = deep_small_ResNet_rf(10, RF_level=i)
+            resnet_net = deep_2_small_Resnet_rf(10, RF_level=i, number_layers=num_layers)
             resnet_net(x)
-            print("All good")
+            print(f"All good resnet with {num_layers}")
+            vgg_net = DeepSmallVGG_RF("deep_small_vgg", 10, RF_level=i)
+            vgg_net(x)
+            print(f"All good resnet with {num_layers}")
+
         except Exception as e:
             print(traceback.format_exc())
             print(e)
@@ -649,9 +744,18 @@ def test_deep_RF_models():
         # print(y_resnet)
 
         get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-        resnet_rf = receptivefield(resnet_net, (1, 3, 3200, 3200))
+        get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        if i <= 4:
+            image_size = (1, 3, 224, 224)
+        else:
+            image_size = (1, 3, 1200, 1200)
+
+        resnet_rf = receptivefield(resnet_net, image_size)
         print("Receptive field of deep small ResNet Level {}".format(i))
-        # print(resnet_rf.rfsize)
+        print(resnet_rf.rfsize)
+        vgg_rf = receptivefield(vgg_net, image_size)
+        print("Receptive field of deep small vgg Level {}".format(i))
+        print(vgg_rf.rfsize)
 
 
 def models_info():

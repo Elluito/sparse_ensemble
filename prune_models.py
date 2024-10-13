@@ -1071,7 +1071,7 @@ def prune_selective_layers(args):
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_m
          "dataset": args.dataset,
-         "batch_size": 128,
+         "batch_size": 128in_block_layers,
          "num_workers": args.num_workers,
          "amount": args.pruning_rate,
          "noise": "gaussian",

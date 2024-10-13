@@ -295,6 +295,7 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, config, s
     return best_acc
 
 
+
 def main(args):
 
     if args.model == "vgg19":
@@ -345,7 +346,6 @@ def main(args):
             net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
             net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
-
         if args.type == "normal" and args.dataset == "tiny_imagenet":
             net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
@@ -365,6 +365,89 @@ def main(args):
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
                                                                                      args.dataset))
+    if args.model == "vgg_small_deep":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = DeepSmallVGG_RF("small_vgg", num_classes=10, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = DeepSmallVGG_RF("small_vgg", num_classes=100, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = DeepSmallVGG_RF("small_vgg", num_classes=200, RF_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = DeepSmallVGG_RF("deep_small_vgg", num_classes=200, RF_level=args.RF_level)
+    if args.model == "resnet_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            raise NotImplementedError
+    if args.model == "resnet40_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = deep_small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = deep_small_ResNet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_small_ResNet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+    if args.model == "resnet25_small":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = deep_2_small_Resnet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = deep_2_small_Resnet_rf(num_classes=100, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = deep_2_small_Resnet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = deep_2_small_Resnet_rf(num_classes=200, RF_level=args.RF_level, multiplier=args.width,
+                                         number_layers=25)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+            raise NotImplementedError
+            # net = resnet50()
+            # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 100)
+
+
+        ########################################################################
+        #                            Optimiser
+        ########################################################################
 
     if args.optimiser == "kfac":
         # optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
