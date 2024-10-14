@@ -2471,7 +2471,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
             root=data_path, train=False, download=True, transform=transform_test)
         testloader = torch.utils.data.DataLoader(
             testset, batch_size=100, shuffle=False, num_workers=cfg.num_workers)
-        return trainloader,val
+        return trainloader,val_loader,testloader
     if cfg.dataset == "cifar100":
         current_directory = Path().cwd()
         data_path = ""
