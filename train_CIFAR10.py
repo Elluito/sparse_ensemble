@@ -1187,7 +1187,7 @@ def main(args):
                                              transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
                                              ])
     else:
-        transform_train = transforms.Compose([transforms.Resize(args.inpu_resolution, antialias=True),
+        transform_train = transforms.Compose([transforms.Resize(args.input_resolution, antialias=True),
                                               transforms.RandomCrop(args.input_resolution, padding=4),
                                               transforms.RandomHorizontalFlip(),
                                               transforms.ToTensor(),

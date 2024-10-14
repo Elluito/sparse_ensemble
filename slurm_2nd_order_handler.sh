@@ -39,7 +39,7 @@ grad_clip=0
 epochs=100
 resolution=224
 array=0
-for model in "resne25_small"; do
+for model in "resnet25_small"; do
   for lvl in 5 6 7 8 10; do
     for optim in "sam"; do
   #for model in "deep_small_vgg" "resnet25_small"; do # all two models
