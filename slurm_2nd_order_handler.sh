@@ -41,7 +41,7 @@ resolution=224
 array=0
 for model in "resne25_small"; do
   for lvl in 5 6 7 8 10; do
-    for optim in "ekfac"; do
+    for optim in "sam"; do
   #for model in "deep_small_vgg" "resnet25_small"; do # all two models
         run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${epochs}_res_${resolution}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
 
