@@ -2445,9 +2445,8 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
                                                  transforms.Normalize( (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
                                                  ])
         else:
-
             transform_train = transforms.Compose([ transforms.Resize(cfg.input_resolution, antialias=True),
-                transforms.RandomCrop(args.input_resolution, padding=4),
+                transforms.RandomCrop(cfg.input_resolution, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize( (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -2462,24 +2461,24 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         trainset = torchvision.datasets.CIFAR10(
             root=data_path, train=True, download=True, transform=transform_train)
         trainloader = torch.utils.data.DataLoader(
-            trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+            trainset, batch_size=128, shuffle=True, num_workers=cfg.num_workers)
 
         testset = torchvision.datasets.CIFAR10(
             root=data_path, train=False, download=True, transform=transform_test)
         testloader = torch.utils.data.DataLoader(
-            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+            testset, batch_size=100, shuffle=False, num_workers=cfg.num_workers)
 
-    if args.dataset == "cifar100":
+    if cfwg.dataset == "cifar100":
 
         trainset = torchvision.datasets.CIFAR100(
             root=data_path, train=True, download=True, transform=transform_train)
         trainloader = torch.utils.data.DataLoader(
-            trainset, batch_size=128, shuffle=True, num_workers=args.num_workers)
+            trainset, batch_size=128, shuffle=True, num_workers=cfg.num_workers)
 
         testset = torchvision.datasets.CIFAR100(
             root=data_path, train=False, download=True, transform=transform_test)
         testloader = torch.utils.data.DataLoader(
-            testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
+            testset, batch_size=100, shuffle=False, num_workers=cfg.num_workers)
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -2505,6 +2504,7 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         testloader = torch.utils.data.DataLoader(testset, batch_size=cfg.batch_size, shuffle=False,
                                                  num_workers=cfg.num_workers)
         return trainloader, val_loader, testloader
+
     if cfg.dataset == "cifar100":
         current_directory = Path().cwd()
         data_path = ""
@@ -2517,12 +2517,44 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
             data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
 
-        transform_train = transforms.Compose(
-            [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
-             transforms.Normalize((0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
-        transform_test = transforms.Compose([transforms.ToTensor(),
-                                             transforms.Normalize((0.50707516, 0.48654887, 0.44091784),
-                                                                  (0.26733429, 0.25643846, 0.27615047))])
+        # transform_train = transforms.Compose(
+        #     [transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(),
+        #      transforms.Normalize( (0.50707516, 0.48654887, 0.44091784), (0.26733429, 0.25643846, 0.27615047))])
+        # transform_test = transforms.Compose([transforms.ToTensor(),
+        #                                      transforms.Normalize( (0.50707516, 0.48654887, 0.44091784),
+        #                                                           (0.26733429, 0.25643846, 0.27615047))])
+
+        if cfg.pad:
+
+            pad_to_use = cfg.input_resolution-32
+
+            transform_train = transforms.Compose([
+                transforms.RandomCrop(32, padding=pad_to_use,padding_mode="edge"),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(),
+            ])
+
+            transform_test = transforms.Compose([transforms.Pad( pad_to_use,padding_mode="edge"),
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize( (0.50707516, 0.48654887, 0.44091784),
+                                                                  (0.26733429, 0.25643846, 0.27615047)),
+                                                 ])
+        else:
+            transform_train = transforms.Compose([ transforms.Resize(cfg.input_resolution, antialias=True),
+                                                   transforms.RandomCrop(cfg.input_resolution, padding=4),
+                                                   transforms.RandomHorizontalFlip(),
+                                                   transforms.ToTensor(),
+                                                   transforms.Normalize( (0.50707516, 0.48654887, 0.44091784),
+                                                                  (0.26733429, 0.25643846, 0.27615047)),
+                                                   ])
+
+            transform_test = transforms.Compose([transforms.Resize(cfg.input_resolution),
+                                                 transforms.ToTensor(),
+                                                 transforms.Normalize( (0.50707516, 0.48654887, 0.44091784),
+                                                                  (0.26733429, 0.25643846, 0.27615047)),
+                                                 ])
+
 
         trainset = torchvision.datasets.CIFAR100(root=data_path, train=True, download=True, transform=transform_train)
         cifar10_train, cifar10_val = random_split(trainset, [45000, 5000])
