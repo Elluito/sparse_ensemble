@@ -18,11 +18,11 @@ input_res="${10}"
 
 if [ "${array}" -eq 1 ]; then
 
-sbatch --nodes=1 --array=1-4 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" slurm_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${algorithm}_${epochs}_gc_${grad_clip}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
+sbatch --nodes=1 --array=1-4 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" slurm_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
 
 else
 
-sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" slurm_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${algorithm}_${epochs}_gc_${grad_clip}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
+sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" slurm_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
 
 fi
 }
@@ -43,7 +43,7 @@ for model in "resnet25_small"; do
   for lvl in 5 6 7 8 10; do
     for optim in "ekfac" "sam"; do
   #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${epochs}_res_${resolution}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
+        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 0 "${resolution}"
 
 done
 done
