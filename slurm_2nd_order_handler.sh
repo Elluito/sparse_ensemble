@@ -42,9 +42,12 @@ array=0
 for model in "resnet25_small"; do
   for lvl in 5 6 7 8 10; do
     for optim in "ekfac" "sam"; do
-  #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 0 "${resolution}"
+      for dataset in "cifar10"; do
 
+  #for model in "deep_small_vgg" "resnet25_small"; do # all two models
+        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${dataset}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 0 "${resolution}"
+
+done
 done
 done
 done
