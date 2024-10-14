@@ -2429,9 +2429,9 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         # data_path = "datasets" if platform.system() != "Windows" else "C:/Users\Luis Alfredo\OneDrive - " \
         #                                                                            "University of Leeds\PhD\Datasets\CIFAR10"
 
-        if args.pad:
+        if cfg.pad:
 
-            pad_to_use =args.input_resolution-32
+            pad_to_use = cfg.input_resolution-32
 
             transform_train = transforms.Compose([
                 transforms.RandomCrop(32, padding=pad_to_use,padding_mode="edge"),
@@ -2446,14 +2446,14 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
                                                  ])
         else:
 
-            transform_train = transforms.Compose([ transforms.Resize(args.input_resolution, antialias=True),
+            transform_train = transforms.Compose([ transforms.Resize(cfg.input_resolution, antialias=True),
                 transforms.RandomCrop(args.input_resolution, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize( (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
             ])
 
-            transform_test = transforms.Compose([transforms.Resize(args.input_resolution),
+            transform_test = transforms.Compose([transforms.Resize(cfg.input_resolution),
                                                  transforms.ToTensor(),
                                                  transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
                                                  ])
