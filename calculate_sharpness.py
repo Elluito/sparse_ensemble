@@ -295,6 +295,7 @@ def main(args):
                 adaptive=args.adaptive, norm='l2')
 
         if args.algorithm == 'avg_linf':
+
             sharpness_obj, sharpness_err, _, output = sharpness.eval_average_sharpness(
                 model, batches_sharpness, loss_f, rho=args.rho, n_iters=args.n_iters, return_output=True,
                 adaptive=args.adaptive, norm='linf')

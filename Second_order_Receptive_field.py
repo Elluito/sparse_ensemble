@@ -316,8 +316,10 @@ def main(args):
          "batch_size": args.batch_size,
          "num_workers": args.num_workers,
          "noise": "gaussian",
-
+         "input_resolution":args.input_resolution,
+         "pad":args.pad,
          })
+
     trainloader, valloader, testloader = get_datasets(cfg)
 
     net = get_model(args)
