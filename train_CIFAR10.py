@@ -230,6 +230,7 @@ def format_time(seconds):
         f = '0ms'
     return f
 
+
 def get_model(args):
     from torchvision.models import resnet50
     if args.model == "resnet18":
@@ -428,7 +429,6 @@ def get_model(args):
         if args.type == "normal" and args.dataset == "imagenet":
             net = densenet_28_RF([0] * 100, num_classes=1000, RF_level=args.RF_level)
     if args.model == "deep_small_vgg":
-
         if args.type == "normal" and args.dataset == "cifar10":
             net = DeepSmallVGG_RF("deep_small_vgg", num_classes=10, RF_level=args.RF_level)
 
@@ -441,6 +441,8 @@ def get_model(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = DeepSmallVGG_RF("deep_small_vgg", num_classes=200, RF_level=args.RF_level)
     return net
+
+
 # =======================================================================================================================
 
 
@@ -1171,31 +1173,31 @@ def main(args):
         batch_size = 64
 
     if args.pad:
-        pad_to_use =args.input_resolution-32
+        pad_to_use = args.input_resolution - 32
 
         transform_train = transforms.Compose([
-            transforms.RandomCrop(32, padding=pad_to_use,padding_mode="edge"),
+            transforms.RandomCrop(32, padding=pad_to_use, padding_mode="edge"),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(*stats_to_use),
         ])
 
-        transform_test = transforms.Compose([transforms.Pad( pad_to_use,padding_mode="edge"),
-                                                 transforms.ToTensor(),
-                                                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-                                                    ])
+        transform_test = transforms.Compose([transforms.Pad(pad_to_use, padding_mode="edge"),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                                             ])
     else:
-        transform_train = transforms.Compose([
-            transforms.RandomCrop(args.input_resolution, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(*stats_to_use),
-        ])
+        transform_train = transforms.Compose([transforms.Resize(args.inpu_resolution, antialias=True),
+                                              transforms.RandomCrop(args.input_resolution, padding=4),
+                                              transforms.RandomHorizontalFlip(),
+                                              transforms.ToTensor(),
+                                              transforms.Normalize(*stats_to_use),
+                                              ])
 
         transform_test = transforms.Compose([transforms.Resize(args.input_resolution),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
+                                             transforms.ToTensor(),
+                                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+                                             ])
 
     if args.dataset == "cifar10":
         trainset = torchvision.datasets.CIFAR10(
@@ -1233,7 +1235,8 @@ def main(args):
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
             trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
                                                                                       batch_size, args.num_workers,
-                                                                                      resolution=args.input_resolution,valsize=0)
+                                                                                      resolution=args.input_resolution,
+                                                                                      valsize=0)
         else:
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
@@ -1314,7 +1317,7 @@ def main(args):
             'net': net.state_dict(),
             'acc': 0,
             'epoch': -1,
-            "config": args,
+            "cfg": args,
         }
 
         torch.save(state, '{}/{}_initial_weights.pth'.format(args.save_folder, solution_name))
@@ -1428,7 +1431,7 @@ if __name__ == '__main__':
     parser.add_argument('--pad', default=0, type=int,
                         help='Pad the image to the input size ')
     parser.add_argument('--input_resolution', default=224, type=int,
-                        help='Input Resolution for small ImageNet')
+                        help='Input Resolution for the dataset')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
