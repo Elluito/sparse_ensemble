@@ -1207,7 +1207,7 @@ def main(args):
 
         testset = torchvision.datasets.CIFAR10(
             root=data_path, train=False, download=True, transform=transform_test)
-        testloader = torch.utils.data.DataLoader(
+        tloader = torch.utils.data.DataLoader(
             testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
     if args.dataset == "cifar100":
         trainset = torchvision.datasets.CIFAR100(
