@@ -645,6 +645,7 @@ if __name__ == '__main__':
                         help='Pad the image to the input size ')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for the dataset')
+    parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--epochs', default=50, type=int, help='Epochs to train')
     parser.add_argument('--optimiser', default="sam", type=str, help='Optimiser to use')
     parser.add_argument('--save', default=0, type=int, help="Save the best model")
