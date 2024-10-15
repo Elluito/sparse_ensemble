@@ -1801,7 +1801,7 @@ def main(args):
                                                                       128, args.num_workers)
     else:
 
-        cfg = omegaconf.DictConfig(
+        cfg1 = omegaconf.DictConfig(
         {"architecture": args.model,
          "model_type": "alternative",
          # "model_type": "hub",
@@ -1815,7 +1815,7 @@ def main(args):
          "pad":args.pad,
          })
         if "cifar" in args.dataset:
-            trainloader, valloader, testloader = get_datasets(cfg)
+            trainloader, valloader, testloader = get_datasets(cfg1)
         # print("Normal data loaders loaded!!!!")
         # cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
         # cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
