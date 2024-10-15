@@ -2549,6 +2549,8 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
+    parser.add_argument('--pad', default=0, type=int,
+                        help='Pad the image to the input size ')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for small ImageNet')
     parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
