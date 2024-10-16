@@ -20,7 +20,7 @@ if [ "${array}" -eq 1 ]; then
 
 #sbatch --nodes=1 --array=1-4 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" slurm_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
 
-qsub -l h_rt=36:00:00 -t 1-3 -l coproc_v100=1  -N  "${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" arc4_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
+qsub -l h_rt=44:00:00 -t 1-3 -l coproc_v100=1  -N  "${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}" arc4_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
 
 else
 
