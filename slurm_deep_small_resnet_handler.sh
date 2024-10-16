@@ -11,11 +11,11 @@ for dataset in "cifar10"; do
 for lvl in 5; do                # iterate idxA from 0 to length
 if [ "${array}" -eq 1 ]; then
 
-sbatch --nodes=1 --array=1-3 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_${dataset}_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 2 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}" 1 0 "${res}"
+sbatch --nodes=1 --array=1-3 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_${dataset}_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 0 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}" 1 0 "${res}"
 
 else
 
-sbatch --nodes=1  --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_${dataset}_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 2 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}" 1 0 "${res}"
+sbatch --nodes=1  --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_${dataset}_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 0 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}" 1 0 "${res}"
 fi
 
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_{}_lvl_${lvl}_small_imagenet_res_${res}.err" --gres=gpu:1 --output="deep_small_resnet_lvl_${lvl}_small_imagenet_res_${res}.output"  --job-name="deep_small_resnet_lvl_${lvl}_small_imagenet_res_${res}" slurm_deep_small_resnet_run.sh "resnet25_small" "small_imagenet" 8 ${lvl}  "normal" "${epochs}" "recording_${epochs}" 1 1 "${res}"
