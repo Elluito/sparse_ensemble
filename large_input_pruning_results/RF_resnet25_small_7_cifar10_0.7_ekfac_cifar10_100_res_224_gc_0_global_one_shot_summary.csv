@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_86.66.pth,86.66,64.03
