@@ -2,13 +2,13 @@
 
 res=224
 epochs=100
-array=1
+array=0
 #for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
 for model in "resnet25_small"; do
 for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-for lvl in 5 6 7 8 10; do                #
-#for lvl in 5; do                # iterate idxA from 0 to length
+#for lvl in 5 6 7 8 10; do                #
+for lvl in 5; do                # iterate idxA from 0 to length
 if [ "${array}" -eq 1 ]; then
 
 sbatch --nodes=1 --array=1-3 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.err" --gres=gpu:1 --output="deep_${model}_lvl_${lvl}_${dataset}_res_${res}.output"  --job-name="deep_${model}_lvl_${lvl}_${dataset}_res_${res}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 2 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}" 1 0 "${res}"
