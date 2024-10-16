@@ -2,7 +2,7 @@
 
 res=224
 epochs=100
-array=0
+array=1
 #for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
 for model in "resnet25_small"; do
 for dataset in "cifar10"; do
