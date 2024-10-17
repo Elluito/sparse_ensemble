@@ -43,7 +43,7 @@ array=1
 for model in "resnet25_small"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
   for lvl in 5 6 7 8 10; do
-    for optim in "ekfac"; do
+    for optim in "sam"; do
       for dataset in "cifar10"; do
 
 
