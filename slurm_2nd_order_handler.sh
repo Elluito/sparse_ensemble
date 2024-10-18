@@ -42,7 +42,7 @@ resolution=224
 array=0
 for model in "resnet25_small"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-  for lvl in 6 7; do
+  for lvl in 10; do
     for optim in "sam"; do
       for dataset in "cifar10"; do
 
