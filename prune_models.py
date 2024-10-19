@@ -2205,27 +2205,33 @@ def model_statistics(args):
                                                                     args.name), "wb") as f:
         pickle.dump(list_of_whole_weights, f)
 
-    mean__
 
-
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
 def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.05)):
-
     colors = ["m", "g", "r", "c"]
+    all_CDFS = []
+    bin_count = None
+    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
+    for one_whole_vector in list_of_whole_models:
+        whole_vector = one_whole_vector.flatten()
+        absolut_of_vector = np.abs(whole_vector)
+        count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
+        pdf2 = count2 / np.sum(count2)
+        cdf2 = np.cumsum(pdf2, dim=0)
+        all_CDFS.append(cdf2)
+        if bin_count is None:
+            bin_count = bin_counts2
 
-    whole_vector = list_of_whole_models.flatten()
-    absolut_of_vector = np.abs(whole_vector)
-    count2, bin_counts2 = np.histogram(absolut_of_vector, bins = len(absolut_of_vector), range = range)
-    pdf2 = count2 /np.sum(count2)
-    cdf2 = np.cumsum(pdf2, dim=0)
-    plt.plot(bin_counts2[1:], cdf2,label = f"Cumulative distribution of {}")
+    all_CDFS = np.array(all_CDFS)
+    mean = all_CDFS.mean(axis=0)
+    std = all_CDFS.std(axis=0)
+    axs.plot(bin_count[1:], mean, label=f"Average CDF")
+    axs.fill_between(bin_count[1:], mean - std, mean + std)
+    plt.grid()
 
-    names2, weights2 = zip(*get_layer_dict(noisy_model))
-
-    for i, pr in enumerate(pruning_rates):
-        threshold, index_threshold, full_vector = get_threshold_and_pruned_vector_from_pruning_rate(
-    list_of_layers = weights2, pruning_rate = pr)
-    plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
-    label = f"Threshold @ pr {pr} for Sto.")
 
 def per_layer_histograms(list_of_per_layer_weights: defaultdict(list)):
     pass
@@ -2673,6 +2679,8 @@ if __name__ == '__main__':
         prune_selective_layers(args)
     if args.experiment == 6:
         calculate_saturation_models(args)
+    if args.experiment == 7 :
+        model_statistics(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
     # similarity_comparisons()
