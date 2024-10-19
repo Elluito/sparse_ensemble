@@ -1,5 +1,6 @@
 import copy
 import os
+import pickle
 import time
 import torch
 import re
@@ -12,6 +13,11 @@ import pandas as pd
 import numpy as np
 import random
 
+import matplotlib as mpl
+
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 seed_for_this_documment = 123
 manual_generator = torch.manual_seed(seed_for_this_documment)
 torch.cuda.manual_seed(seed_for_this_documment)
@@ -22,13 +28,15 @@ import omegaconf
 from torch.nn.utils import parameters_to_vector
 from collections import defaultdict
 from torchconvquality import measure_quality
-from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters
+from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters, \
+    get_threshold_and_pruned_vector_from_pruning_rate
 from alternate_models import *
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
 from train_CIFAR10 import get_model
 from saturation_utils import calculate_train_eval_saturation_solution
 
+mpl.use('Agg')
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # Level 0
 rf_level0_s1 = "trained_models/cifar10/resnet50_cifar10.pth"
@@ -1071,7 +1079,7 @@ def prune_selective_layers(args):
          "solution": "trained_models/cifar10/resnet50_cifar10.pth",
          # "solution": "trained_m
          "dataset": args.dataset,
-         "batch_size":128,
+         "batch_size": 128,
          "num_workers": args.num_workers,
          "amount": args.pruning_rate,
          "noise": "gaussian",
@@ -1573,16 +1581,11 @@ def prune_selective_layers(args):
                     -1]),
                 index=False)
 
-
-
             #####################################################################
             #                       Inside of block
             #####################################################################
 
-
-
             df2_dict = {}
-
 
             for current_inter_layer_index in range(1, len(in_block_layers) + 1):
                 print("current in block layer {}".format(current_inter_layer_index))
@@ -1613,7 +1616,6 @@ def prune_selective_layers(args):
 
                 pruning_rates_per_layer_dict = {}
                 for i in range(len(weight_names)):
-
                     pruning_rates_per_layer_dict[weight_names[i]] = pruning_rates_per_layer[i]
 
                 # Random
@@ -1650,8 +1652,6 @@ def prune_selective_layers(args):
                                                    layers_to_be_pruned[-1])] = pruning_rates_per_layer
 
                 df2_dict["layer_names"] = weight_names
-
-
 
             list_of_lists_of_in_block_layers_pruned_accuracies.append(
                 list_of_in_block_layers_pruned_accuracies)
@@ -1749,7 +1749,6 @@ def prune_selective_layers(args):
         for name in columns_names:
 
             for dict in list_of_lists_of_in_block_layers_pruned_accuracies:
-
                 # This should be # of intermediate layers long
 
                 accuracy_columns[name].append(dict[name])
@@ -1802,18 +1801,18 @@ def main(args):
     else:
 
         cfg1 = omegaconf.DictConfig(
-        {"architecture": args.model,
-         "model_type": "alternative",
-         # "model_type": "hub",
-         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-         # "solution": "trained_m
-         "dataset": args.dataset,
-         "batch_size": args.batch_size,
-         "num_workers": args.num_workers,
-         "noise": "gaussian",
-         "input_resolution":args.input_resolution,
-         "pad":args.pad,
-         })
+            {"architecture": args.model,
+             "model_type": "alternative",
+             # "model_type": "hub",
+             "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+             # "solution": "trained_m
+             "dataset": args.dataset,
+             "batch_size": args.batch_size,
+             "num_workers": args.num_workers,
+             "noise": "gaussian",
+             "input_resolution": args.input_resolution,
+             "pad": args.pad,
+             })
         if "cifar" in args.dataset:
             trainloader, valloader, testloader = get_datasets(cfg1)
         # print("Normal data loaders loaded!!!!")
@@ -1888,7 +1887,6 @@ def main(args):
                 trainloader, valloader, testloader = load_small_imagenet(
                     {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
                      "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
-
 
     from torchvision.models import resnet18, resnet50
     net = get_model(args)
@@ -2149,6 +2147,88 @@ def main(args):
                                                               args.pruning_rate,
                                                               args.name, cfg.pruner),
         index=False)
+
+
+def model_statistics(args):
+    if "vgg" in args.model:
+        exclude_layers = ["features.0", "classifier"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "densenet" in args.model:
+        exclude_layers = ["conv1", "fc"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "mobilenet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+
+    net = get_model(args)
+
+    dense_accuracy_list = []
+    pruned_accuracy_list = []
+    files_names = []
+    search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                           args.RF_level, args.name)
+    things = list(glob.glob(search_string))
+
+    # if len(things) < 2:
+    #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
+    print("Glob text:{}".format(
+        "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                               args.name)))
+    print(things)
+    list_of_per_layer_weights = defaultdict(list)
+    list_of_whole_weights = []
+
+    for i, name in enumerate(
+            glob.glob(search_string)):
+
+        print(name)
+
+        print("Device: {}".format(device))
+
+        state_dict_raw = torch.load(name, map_location=device)
+
+        net.load_state_dict(state_dict_raw["net"])
+        weight_names, weights = zip(*get_layer_dict(net))
+        for i in range(len(weight_names)):
+            list_of_per_layer_weights[weight_names[weight_names[i]]].append(weights[i].flatten().numpy())
+        full_vector = parameters_to_vector(weights)
+        list_of_whole_weights.append(full_vector.numpy())
+    list_of_whole_weights = np.array(list_of_whole_weights)
+    with open("{}/{}_{}_level_{}_{}_per_layer_weights.pkl".format(args.save_folder, args.model, args.dataset,
+                                                                  args.RF_level,
+                                                                  args.name), "wb") as f:
+        pickle.dump(list_of_per_layer_weights, f)
+    with open("{}/{}_{}_level_{}_{}_whole_model_weights.pkl".format(args.save_folder, args.model, args.dataset,
+                                                                    args.RF_level,
+                                                                    args.name), "wb") as f:
+        pickle.dump(list_of_whole_weights, f)
+
+    mean__
+
+
+def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.05)):
+
+    colors = ["m", "g", "r", "c"]
+
+    whole_vector = list_of_whole_models.flatten()
+    absolut_of_vector = np.abs(whole_vector)
+    count2, bin_counts2 = np.histogram(absolut_of_vector, bins = len(absolut_of_vector), range = range)
+    pdf2 = count2 /np.sum(count2)
+    cdf2 = np.cumsum(pdf2, dim=0)
+    plt.plot(bin_counts2[1:], cdf2,label = f"Cumulative distribution of {}")
+
+    names2, weights2 = zip(*get_layer_dict(noisy_model))
+
+    for i, pr in enumerate(pruning_rates):
+        threshold, index_threshold, full_vector = get_threshold_and_pruned_vector_from_pruning_rate(
+    list_of_layers = weights2, pruning_rate = pr)
+    plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
+    label = f"Threshold @ pr {pr} for Sto.")
+
+def per_layer_histograms(list_of_per_layer_weights: defaultdict(list)):
+    pass
 
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):

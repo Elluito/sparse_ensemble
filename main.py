@@ -4128,6 +4128,7 @@ def number_of_0_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
     #     pickle.dump(in_det_dict,f)
 
 
+#TODO:this is the function that plot s the CDF
 def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = None, cfg2: omegaconf.DictConfig = None,
                                                   config_list=[], range: tuple = None):
     if cfg2 is None:
