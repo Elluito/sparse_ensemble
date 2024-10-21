@@ -1229,7 +1229,7 @@ def main(args):
         else:
             trainloader, valloader, testloader = load_tiny_imagenet(
                 {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size})
+                 "num_workers": args.num_workers, "batch_size": batch_size, "input_resolution": args.input_resolution})
     if args.dataset == "small_imagenet":
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders

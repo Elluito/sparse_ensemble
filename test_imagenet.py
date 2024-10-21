@@ -387,7 +387,8 @@ def load_tiny_imagenet(args,seed_worker=None):
     whole_train_dataset = datasets.ImageFolder(
         args["traindir"],
         transforms.Compose([
-            transforms.RandomResizedCrop(64),
+            # transforms.RandomResizedCrop(64),
+            transforms.RandomResizedCrop(args["input_resolution"]),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize_train,

@@ -699,7 +699,7 @@ def test_deep_RF_models():
 
     resnet_net = deep_2_small_Resnet_rf(10, RF_level=1, number_layers=25)
     print("parameter count resnet: {}".format(count_parameters(resnet_net)))
-    vgg_net = DeepSmallVGG_RF("deep_small_vgg", 10, RF_level=1)
+    vgg_net = DeepSmallVGG_RF("deep_small_vgg_2", 10, RF_level=1)
     print("parameter count vgg: {}".format(count_parameters(vgg_net)))
     return
     # for i in blocks:
