@@ -2195,7 +2195,9 @@ def model_statistics(args):
             list_of_per_layer_weights[weight_names[weight_names[i]]].append(weights[i].flatten().numpy())
         full_vector = parameters_to_vector(weights)
         list_of_whole_weights.append(full_vector.numpy())
+
     list_of_whole_weights = np.array(list_of_whole_weights)
+
     with open("{}/{}_{}_level_{}_{}_per_layer_weights.pkl".format(args.save_folder, args.model, args.dataset,
                                                                   args.RF_level,
                                                                   args.name), "wb") as f:
@@ -2205,6 +2207,15 @@ def model_statistics(args):
                                                                     args.name), "wb") as f:
         pickle.dump(list_of_whole_weights, f)
 
+    plot_whole_histogram(list_of_whole_weights, args.save_folder,
+                         "{}_{}_{}_{}".format(args.model, args.dataset, args.RF_level,
+                                              args.name))
+
+    plot_per_layer_histograms(list_of_per_layer_weights, args.save_folder,
+                              "{}_{}_{}_{}".format(args.model, args.dataset, args.RF_level,
+                                                   args.name))
+
+
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -2212,8 +2223,7 @@ def find_nearest(array, value):
     return array[idx]
 
 
-def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.1)):
-
+def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, range=(0, 0.1)):
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
     bin_count = None
@@ -2247,40 +2257,41 @@ def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.1)
     plt.savefig(f"{save_folder}/{name}_average_cdf.pdf")
 
 
-def per_layer_histograms(list_of_per_layer_weights: defaultdict(list)):
-
+def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save_folder, name):
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
     bin_count = None
     fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
-    for one_whole_vector in list_of_whole_models:
-        whole_vector = one_whole_vector.flatten()
-        absolut_of_vector = np.abs(whole_vector)
-        count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
-        pdf2 = count2 / np.sum(count2)
-        cdf2 = np.cumsum(pdf2, dim=0)
-        all_cdfs.append(cdf2)
-        if bin_count is None:
-            bin_count = bin_counts2
+    for i, (key, value) in enumerate(list_of_per_layer_weights.items()):
+        list_of_whole_samples_for_this_layer = value
+        for one_whole_vector in list_of_whole_samples_for_this_layer:
+            whole_vector = one_whole_vector.flatten()
+            absolut_of_vector = np.abs(whole_vector)
+            count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
+            pdf2 = count2 / np.sum(count2)
+            cdf2 = np.cumsum(pdf2, dim=0)
+            all_cdfs.append(cdf2)
+            if bin_count is None:
+                bin_count = bin_counts2
 
-    all_cdfs = np.array(all_cdfs)
-    mean = all_cdfs.mean(axis=0)
-    std = all_cdfs.std(axis=0)
-    axs.plot(bin_count[1:], mean, label=f"average cdf")
-    axs.fill_between(bin_count[1:], mean - std, mean + std)
-    threshold_09 = find_nearest(mean, 0.9)
-    threshold_08 = find_nearest(mean, 0.8)
-    threshold_07 = find_nearest(mean, 0.7)
-    thresholds = [threshold_07, threshold_08, threshold_09]
-    pruning_rates = [0.7, 0.8, 0.9]
+        all_cdfs = np.array(all_cdfs)
+        mean = all_cdfs.mean(axis=0)
+        std = all_cdfs.std(axis=0)
+        axs.plot(bin_count[1:], mean, label=f"average cdf")
+        axs.fill_between(bin_count[1:], mean - std, mean + std)
+        threshold_09 = find_nearest(mean, 0.9)
+        threshold_08 = find_nearest(mean, 0.8)
+        threshold_07 = find_nearest(mean, 0.7)
+        thresholds = [threshold_07, threshold_08, threshold_09]
+        pruning_rates = [0.7, 0.8, 0.9]
 
-    for i, threshold in enumerate(thresholds):
-        pr = pruning_rates[i]
-        plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
-                    label=f"threshold @ pr {pr}")
-    plt.grid()
-    plt.savefig(f"{save_folder}/{name}_average_cdf.pdf")
-    pass
+        for i, threshold in enumerate(thresholds):
+            pr = pruning_rates[i]
+            plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
+                        label=f"Threshold @ pr {pr}")
+        plt.grid()
+        Path(f"{save_folder}/{name}/").mkdir(exist_ok=True, parents=True)
+        plt.savefig(f"{save_folder}/{name}/{key}_cdf.pdf")
 
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
