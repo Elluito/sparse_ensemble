@@ -2210,9 +2210,12 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
-def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.05)):
+
+
+def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.1)):
+
     colors = ["m", "g", "r", "c"]
-    all_CDFS = []
+    all_cdfs = []
     bin_count = None
     fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
     for one_whole_vector in list_of_whole_models:
@@ -2221,19 +2224,62 @@ def plot_whole_histogram(list_of_whole_models, save_folder, name, range=(0, 0.05
         count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
         pdf2 = count2 / np.sum(count2)
         cdf2 = np.cumsum(pdf2, dim=0)
-        all_CDFS.append(cdf2)
+        all_cdfs.append(cdf2)
         if bin_count is None:
             bin_count = bin_counts2
 
-    all_CDFS = np.array(all_CDFS)
-    mean = all_CDFS.mean(axis=0)
-    std = all_CDFS.std(axis=0)
-    axs.plot(bin_count[1:], mean, label=f"Average CDF")
+    all_cdfs = np.array(all_cdfs)
+    mean = all_cdfs.mean(axis=0)
+    std = all_cdfs.std(axis=0)
+    axs.plot(bin_count[1:], mean, label=f"average cdf")
     axs.fill_between(bin_count[1:], mean - std, mean + std)
+    threshold_09 = find_nearest(mean, 0.9)
+    threshold_08 = find_nearest(mean, 0.8)
+    threshold_07 = find_nearest(mean, 0.7)
+    thresholds = [threshold_07, threshold_08, threshold_09]
+    pruning_rates = [0.7, 0.8, 0.9]
+
+    for i, threshold in enumerate(thresholds):
+        pr = pruning_rates[i]
+        plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
+                    label=f"threshold @ pr {pr}")
     plt.grid()
+    plt.savefig(f"{save_folder}/{name}_average_cdf.pdf")
 
 
 def per_layer_histograms(list_of_per_layer_weights: defaultdict(list)):
+
+    colors = ["m", "g", "r", "c"]
+    all_cdfs = []
+    bin_count = None
+    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
+    for one_whole_vector in list_of_whole_models:
+        whole_vector = one_whole_vector.flatten()
+        absolut_of_vector = np.abs(whole_vector)
+        count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
+        pdf2 = count2 / np.sum(count2)
+        cdf2 = np.cumsum(pdf2, dim=0)
+        all_cdfs.append(cdf2)
+        if bin_count is None:
+            bin_count = bin_counts2
+
+    all_cdfs = np.array(all_cdfs)
+    mean = all_cdfs.mean(axis=0)
+    std = all_cdfs.std(axis=0)
+    axs.plot(bin_count[1:], mean, label=f"average cdf")
+    axs.fill_between(bin_count[1:], mean - std, mean + std)
+    threshold_09 = find_nearest(mean, 0.9)
+    threshold_08 = find_nearest(mean, 0.8)
+    threshold_07 = find_nearest(mean, 0.7)
+    thresholds = [threshold_07, threshold_08, threshold_09]
+    pruning_rates = [0.7, 0.8, 0.9]
+
+    for i, threshold in enumerate(thresholds):
+        pr = pruning_rates[i]
+        plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
+                    label=f"threshold @ pr {pr}")
+    plt.grid()
+    plt.savefig(f"{save_folder}/{name}_average_cdf.pdf")
     pass
 
 
@@ -2679,7 +2725,7 @@ if __name__ == '__main__':
         prune_selective_layers(args)
     if args.experiment == 6:
         calculate_saturation_models(args)
-    if args.experiment == 7 :
+    if args.experiment == 7:
         model_statistics(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
