@@ -1,2 +1,5 @@
 Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_cifar10_rf_level_8_sam_cifar10_100_res_224_gc_0_test_acc_88.6.pth,88.6,10.05
 resnet25_small_normal_cifar10_rf_level_8_sam_cifar10_100_res_224_gc_0_test_acc_90.2.pth,90.2,16.59
+resnet25_small_normal_cifar10_rf_level_8_sam_cifar10_100_res_224_gc_0_test_acc_90.39.pth,90.39,10.0
+resnet25_small_normal_cifar10_rf_level_8_sam_cifar10_100_res_224_gc_0_test_acc_90.59.pth,90.59,10.0
