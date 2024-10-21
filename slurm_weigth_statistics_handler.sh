@@ -131,6 +131,7 @@ run_pruning "${model}" "$dataset" "${HOME}/second_order_saturation" "${HOME}/dat
 
 run_pruning "${model}" "$dataset" "${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/weight_distributions" "ekfac_optim_hyper_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 
+
 done
 done
 done
