@@ -1,11 +1,11 @@
 #!/bin/bash
 
-res=224
-epochs=100
+res=32
+epochs=200
 array=0
 #for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
 for model in "resnet25_small"; do
-for dataset in "small_imagenet"; do
+for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 for lvl in 5 6 7 8 10; do                #
 #for lvl in 5; do                # iterate idxA from 0 to length
