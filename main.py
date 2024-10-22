@@ -1305,6 +1305,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.
         else:
             return median, sample_pruning_rate
     else:
+
         stochastic_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
         # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
         prune_function(stochastic_model, cfg_copy)
@@ -1392,9 +1393,9 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     function_string = "F1" if functions == 1 else "F2"
     if sampler == "nsga":
         # sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,inc_popsize=2)
-        sampler = optuna.samplers.NSGAIISampler()
+        sampler = optuna.samplers.NSGAIISampler( )
     elif sampler == "tpe":
-        sampler = optuna.samplers.TPESampler()
+        sampler = optuna.samplers.TPESampler( )
     else:
         raise Exception("Sampler {} is not suported for this experiment".format(sampler))
     # # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
@@ -7468,7 +7469,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int 
         print("Began experiment 16")
         solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
         exclude_layers = ["conv1", "fc"]
-        cfg2 = omegaconf.DictConfig({
+        cfg2 = omegaconftDictConfig({
             "population": 5,
             "generations": 10,
             "epochs": 100,

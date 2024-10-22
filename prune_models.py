@@ -2192,7 +2192,7 @@ def model_statistics(args):
         net.load_state_dict(state_dict_raw["net"])
         weight_names, weights = zip(*get_layer_dict(net))
         for i in range(len(weight_names)):
-            list_of_per_layer_weights[weight_names[weight_names[i]]].append(weights[i].flatten().numpy())
+            list_of_per_layer_weights[weight_names[i]].append(weights[i].flatten().numpy())
         full_vector = parameters_to_vector(weights)
         list_of_whole_weights.append(full_vector.numpy())
 
