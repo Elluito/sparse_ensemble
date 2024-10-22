@@ -2227,7 +2227,7 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
     bin_count = None
-    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
+    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
     for one_whole_vector in list_of_whole_models:
         whole_vector = one_whole_vector.flatten()
         absolut_of_vector = np.abs(whole_vector)
@@ -2261,7 +2261,7 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
     bin_count = None
-    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed")
+    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
     for i, (key, value) in enumerate(list_of_per_layer_weights.items()):
         list_of_whole_samples_for_this_layer = value
         for one_whole_vector in list_of_whole_samples_for_this_layer:

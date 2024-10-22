@@ -128,11 +128,11 @@ sol7rs50=/jmain02/home/J2AD014/mtc03/lla98-mtc03/original_paper_checkpoints/resn
 
 # Resnet25 with CIFAR10 resized to 224
 
-sol1=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
-sol2=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
-sol3=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
-sol4=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
-sol5=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
+sol1=/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation/resnet25_small_normal_cifar10_seed.0_rf_level_5_sgd_100_res_224_test_acc_91.79.pth
+sol2=/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation/resnet25_small_normal_cifar10_seed.0_rf_level_6_sgd_100_res_224_test_acc_91.49.pth
+sol3=/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation/resnet25_small_normal_cifar10_seed.0_rf_level_7_sgd_100_res_224_test_acc_90.31.pth
+sol4=/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation/resnet25_small_normal_cifar10_seed.0_rf_level_8_sgd_100_res_224_test_acc_90.39.pth
+sol5=/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_saturation/resnet25_small_normal_cifar10_seed.0_rf_level_10_sgd_100_res_224_test_acc_87.89.pth
 
 #sol7=/jmain02/home/J2AD014/mtc03/lla98-mtc03/
 
@@ -151,6 +151,6 @@ levels_max=${#rf_levels[@]}                                  # Take the length o
 
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
 
- run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 2 128 "${logs_folder}/${model}_${dataset}_${resolution}/" "${optimiser}" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+  run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 2 128 "${logs_folder}/${model}_${dataset}_${resolution}/" "${optimiser}" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 
 done
