@@ -2233,7 +2233,7 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
         absolut_of_vector = np.abs(whole_vector)
         count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
         pdf2 = count2 / np.sum(count2)
-        cdf2 = np.cumsum(pdf2, dim=0)
+        cdf2 = np.cumsum(pdf2, axis=0)
         all_cdfs.append(cdf2)
         if bin_count is None:
             bin_count = bin_counts2
@@ -2269,7 +2269,7 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
             absolut_of_vector = np.abs(whole_vector)
             count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
             pdf2 = count2 / np.sum(count2)
-            cdf2 = np.cumsum(pdf2, dim=0)
+            cdf2 = np.cumsum(pdf2,axis=0)
             all_cdfs.append(cdf2)
             if bin_count is None:
                 bin_count = bin_counts2
