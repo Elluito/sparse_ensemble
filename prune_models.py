@@ -2226,25 +2226,73 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
     bin_count = None
-    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
+
+    all_cdfs = []
+    all_histograms_abs = []
+    all_histograms = []
+    bin_count = None
+    bin_count_hist = None
+    bin_count_hist_abs = None
+
     for one_whole_vector in list_of_whole_models:
         whole_vector = one_whole_vector.flatten()
-        absolut_of_vector = np.abs(whole_vector)
-        count2, bin_counts2 = np.histogram(absolut_of_vector, bins=len(absolut_of_vector), range=range)
+        absolute_of_vector = np.abs(whole_vector)
+        count2, bin_counts2 = np.histogram(absolute_of_vector, bins=len(absolute_of_vector), range=range)
+        count_hist_abs, bin_count_hist_abs_ = np.histogram(absolute_of_vector, bins=1000, range=range)
+        count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000, range=(-0.1, 0.1))
         pdf2 = count2 / np.sum(count2)
         cdf2 = np.cumsum(pdf2, axis=0)
         all_cdfs.append(cdf2)
         if bin_count is None:
             bin_count = bin_counts2
+        if bin_count is None:
+            bin_count = bin_counts2
+        if bin_count_hist is None:
+            bin_count_hist = bin_count_hist_
+        if bin_count_hist_abs is None:
+            bin_count_hist_abs = bin_count_hist_abs_
 
     all_cdfs = np.array(all_cdfs)
-    mean = all_cdfs.mean(axis=0)
-    std = all_cdfs.std(axis=0)
-    with open(f"{save_folder}/{name}_whole_model_cdf_mean.pkl", "wb") as f:
-        pickle.dump(mean, f)
-    with open(f"{save_folder}/{name}_whole_model_cdf_std.pkl", "wb") as f:
-        pickle.dump(std, f)
 
+    all_histograms_abs = np.array(all_histograms_abs)
+    all_histograms = np.array(all_histograms)
+
+    mean_histograms_abs = all_histograms_abs.mean(axis=0)
+    std_histograms_abs = all_histograms_abs.std(axis=0)
+
+    mean_histograms = all_histograms.mean(axis=0)
+    std_histograms = all_histograms.std(axis=0)
+
+    mean_cdf = all_cdfs.mean(axis=0)
+    std_cdf = all_cdfs.std(axis=0)
+    with open(f"{save_folder}/{name}_whole_model_cdf_mean.pkl", "wb") as f:
+        pickle.dump(mean_cdf, f)
+    with open(f"{save_folder}/{name}_whole_model_cdf_std.pkl", "wb") as f:
+        pickle.dump(std_cdf, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_mean.pkl", "wb") as f:
+
+        pickle.dump(mean_histograms, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_std.pkl", "wb") as f:
+
+        pickle.dump(std_histograms, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_bin.pkl", "wb") as f:
+
+        pickle.dump(bin_count_hist_, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_abs_mean.pkl", "wb") as f:
+
+        pickle.dump(mean_histograms_abs, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_abs_std.pkl", "wb") as f:
+
+        pickle.dump(std_histograms_abs, f)
+
+    with open(f"{save_folder}/{name}_whole_model_histogram_abs_bin.pkl", "wb") as f:
+
+        pickle.dump(bin_count_hist_abs_, f)
     #
     # axs.plot(bin_count[1:], mean, label=f"Average cdf")
     # axs.fill_between(bin_count[1:], mean - std, mean + std)
@@ -2264,28 +2312,38 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
 
 def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save_folder, name, range=(0, 0.1)):
     colors = ["m", "g", "r", "c"]
-    all_cdfs = []
-    all_histograms_abs = []
-    all_histograms = []
-    bin_count = None
-    bin_count_hist = None
-    # fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
     mean_cdf_dict = {}
-    std_cdf_dict= {}
+    std_cdf_dict = {}
+    bin_cdf_dict = {}
 
     mean_histograms_abs_dict = {}
     std_histograms_abs_dict = {}
+    bins_histograms_abs_dict = {}
+
     mean_histograms_dict = {}
     std_histograms_dict = {}
+    bins_histograms_dict = {}
     for i, (key, value) in enumerate(list_of_per_layer_weights.items()):
+
         list_of_whole_samples_for_this_layer = value
+
         # layer_bas_hist
+
+        all_cdfs = []
+        all_histograms_abs = []
+        all_histograms = []
+        bin_count = None
+        bin_count_hist = None
+        bin_count_hist_abs = None
+        # fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
+
         for one_whole_vector in list_of_whole_samples_for_this_layer:
+
             whole_vector = one_whole_vector.flatten()
             absolute_of_vector = np.abs(whole_vector)
             count2, bin_counts2 = np.histogram(absolute_of_vector, bins=len(absolute_of_vector), range=range)
-            count_hist_abs, bin_count_hist_ = np.histogram(absolute_of_vector, bins=1000, range=range)
-            count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000)
+            count_hist_abs, bin_count_hist_abs_ = np.histogram(absolute_of_vector, bins=1000, range=range)
+            count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000, range=(-0.1, 0.1))
             pdf2 = count2 / np.sum(count2)
             cdf2 = np.cumsum(pdf2, axis=0)
             all_cdfs.append(cdf2)
@@ -2293,10 +2351,13 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
             all_histograms.append(count_hist)
             if bin_count is None:
                 bin_count = bin_counts2
-            if  bin_count_hist is None:
+            if bin_count_hist is None:
                 bin_count_hist = bin_count_hist_
+            if bin_count_hist_abs is None:
+                bin_count_hist_abs = bin_count_hist_abs_
+
         all_cdfs = np.array(all_cdfs)
-        all_histograms_abs =np.array(all_histograms_abs)
+        all_histograms_abs = np.array(all_histograms_abs)
         all_histograms = np.array(all_histograms)
 
         mean_histograms_abs = all_histograms_abs.mean(axis=0)
@@ -2310,11 +2371,17 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
 
         mean_cdf_dict[key] = mean_cdf
         std_cdf_dict[key] = std_cdf
-        mean_histograms_dict[key] =  mean_histograms
+        bin_cdf_dict[key] = bin_count
+
+        mean_histograms_dict[key] = mean_histograms
         std_histograms_dict[key] = std_histograms
+
+        bins_histograms_abs_dict[key] = bin_count_hist_abs_
+
         mean_histograms_abs_dict[key] = mean_histograms_abs
         std_histograms_dict[key] = std_histograms_abs
 
+        bins_histograms_dict[key] = bin_count_hist_
         # axs.plot(bin_count[1:], mean, label=f"average cdf")
         # axs.fill_between(bin_count[1:], mean - std, mean + std)
         # threshold_09 = find_nearest(mean, 0.9)
@@ -2331,468 +2398,481 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
         Path(f"{save_folder}/{name}/").mkdir(exist_ok=True, parents=True)
         # plt.savefig(f"{save_folder}/{name}/{key}_cdf.pdf")
 
-        with open(f"{save_folder}/{name}_layer_cdf_mean.pkl", "wb") as f:
-            pickle.dump(mean_cdf_dict, f)
-        with open(f"{save_folder}/{name}_layer_cdf_std.pkl", "wb") as f:
-            pickle.dump(std_cdf_dict,f)
+    with open(f"{save_folder}/{name}_layer_cdf_mean.pkl", "wb") as f:
+        pickle.dump(mean_cdf_dict, f)
+    with open(f"{save_folder}/{name}_layer_cdf_std.pkl", "wb") as f:
+        pickle.dump(std_cdf_dict, f)
 
-        with open(f"{save_folder}/{name}_layer_histogram_mean.pkl", "wb") as f:
-            pickle.dump(mean_histograms_dict, f)
-        with open(f"{save_folder}/{name}_layer_histogram_std.pkl", "wb") as f:
-            pickle.dump(std_histograms_dict,f)
+    with open(f"{save_folder}/{name}_layer_cdf_bin.pkl", "wb") as f:
+        pickle.dump(bin_cdf_dict, f)
 
-        with open(f"{save_folder}/{name}_layer_histogram_abs_mean.pkl", "wb") as f:
-            pickle.dump(mean_histograms_abs_dict, f)
-        with open(f"{save_folder}/{name}_layer_histogram_abs_std.pkl", "wb") as f:
-            pickle.dump(std_histograms_abs_dict,f)
+    with open(f"{save_folder}/{name}_layer_histogram_mean.pkl", "wb") as f:
+        pickle.dump(mean_histograms_dict, f)
+    with open(f"{save_folder}/{name}_layer_histogram_std.pkl", "wb") as f:
+        pickle.dump(std_histograms_dict, f)
+    with open(f"{save_folder}/{name}_layer_histogram_bin.pkl", "wb") as f:
+        pickle.dump(bin_count_hist_, f)
+
+    with open(f"{save_folder}/{name}_layer_histogram_abs_mean.pkl", "wb") as f:
+        pickle.dump(mean_histograms_abs_dict, f)
+    with open(f"{save_folder}/{name}_layer_histogram_abs_std.pkl", "wb") as f:
+        pickle.dump(std_histograms_abs_dict, f)
+    with open(f"{save_folder}/{name}_layer_histogram_abs_bin.pkl", "wb") as f:
+        pickle.dump(bin_count_hist_abs_, f)
+
+
+
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
-            count_fn = lambda w: w.nelement()
-            total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
-            total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
-            print("Total excluded: {}".format(total_excluded))
-            print("Total not excluded: {}".format(total_not_excluded))
-            if total_not_excluded != 0:
-                print("Total excluded/Total not excluded: {}".format(total_excluded / total_not_excluded))
-            if total_not_excluded == 0:
-                return -1
-            new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate
-            if new_pruning_rate > 0.98:
-                return 0.98
-            return new_pruning_rate
+    count_fn = lambda w: w.nelement()
+    total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
+    total_not_excluded = sum(list(map(count_fn, list_of_not_excluded_weight)))
+    print("Total excluded: {}".format(total_excluded))
+    print("Total not excluded: {}".format(total_not_excluded))
+    if total_not_excluded != 0:
+        print("Total excluded/Total not excluded: {}".format(total_excluded / total_not_excluded))
+    if total_not_excluded == 0:
+        return -1
+    new_pruning_rate = ((total_excluded / total_not_excluded) + 1) * global_pruning_rate
+    if new_pruning_rate > 0.98:
+        return 0.98
+    return new_pruning_rate
+
 
 def n_shallow_layer_experiment(args):
-            if args.model == "vgg19":
-                exclude_layers = ["features.0", "classifier"]
-            else:
-                exclude_layers = ["conv1", "linear"]
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
 
-            cfg = omegaconf.DictConfig(
-                {"architecture": "resnet50",
-                 "model_type": "alternative",
-                 # "model_type": "hub",
-                 "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-                 # "solution": "trained_m
-                 "dataset": args.dataset,
-                 "batch_size": 128,
-                 "num_workers": args.num_workers,
-                 "amount": args.pruning_rate,
-                 "noise": "gaussian",
-                 "sigma": 0.005,
-                 "pruner": "global",
-                 "exclude_layers": exclude_layers
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
 
-                 })
-            train, val, testloader = get_datasets(cfg)
+         })
+    train, val, testloader = get_datasets(cfg)
 
-            from torchvision.models import resnet18, resnet50
+    from torchvision.models import resnet18, resnet50
 
-            if args.model == "resnet18":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
-            if args.model == "resnet50":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "tiny_imagenet":
-                    net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
-                if args.type == "pytorch" and args.dataset == "cifar10":
-                    net = resnet50()
-                    in_features = net.fc.in_features
-                    net.fc = nn.Linear(in_features, 10)
-                if args.type == "pytorch" and args.dataset == "cifar100":
-                    net = resnet50()
-                    in_features = net.fc.in_features
-                    net.fc = nn.Linear(in_features, 100)
-            if args.model == "vgg19":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
-                if args.type == "normal" and args.dataset == "tiny_imagenet":
-                    net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
-            if args.model == "resnet24":
+    if args.model == "resnet24":
 
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "tiny_imagenet":
-                    net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
-                if args.type == "pytorch" and args.dataset == "cifar10":
-                    # # net = resnet50()
-                    # # in_features = net.fc.in_features
-                    # net.fc = nn.Linear(in_features, 10)
-                    raise NotImplementedError(
-                        " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
-                                                                                             args.dataset))
-            dense_accuracy_list = []
-            pruned_accuracy_list = []
-            files_names = []
-            search_string = "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
-                                                                              args.RF_level)
-            things = list(glob.glob(search_string))
-            if len(things) < 1:
-                search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
-                                                                        args.RF_level)
-            print("Glob text:{}".format(
-                "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
-                                                                  args.RF_level)))
-            print(things)
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet24_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet24_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet24_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            # # net = resnet50()
+            # # in_features = net.fc.in_features
+            # net.fc = nn.Linear(in_features, 10)
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+    dense_accuracy_list = []
+    pruned_accuracy_list = []
+    files_names = []
+    search_string = "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
+                                                                      args.RF_level)
+    things = list(glob.glob(search_string))
+    if len(things) < 1:
+        search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
+                                                                args.RF_level)
+    print("Glob text:{}".format(
+        "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset,
+                                                          args.RF_level)))
+    print(things)
 
-            weight_names_begining, weights = zip(*get_layer_dict(net))
+    weight_names_begining, weights = zip(*get_layer_dict(net))
 
-            name2index = dict(zip(weight_names_begining, range(len(weight_names_begining))))
-            help_dict = dict(zip(weight_names_begining, weights))
-            names_to_use = [i for i in weight_names_begining if i not in cfg.exclude_layers]
-            n_shallow_layer_index_list = []
-            n_shallow_layer_name_list = []
-            adjusted_prunig_rate = []
-            reset_exclude_layers = exclude_layers
-            # names_to_use = set(weight_names_begining).difference(cfg.exclude_layers)
+    name2index = dict(zip(weight_names_begining, range(len(weight_names_begining))))
+    help_dict = dict(zip(weight_names_begining, weights))
+    names_to_use = [i for i in weight_names_begining if i not in cfg.exclude_layers]
+    n_shallow_layer_index_list = []
+    n_shallow_layer_name_list = []
+    adjusted_prunig_rate = []
+    reset_exclude_layers = exclude_layers
+    # names_to_use = set(weight_names_begining).difference(cfg.exclude_layers)
 
-            for i, name in enumerate(
-                    glob.glob(search_string)):
-                if "width" in name and "width" not in args.name:
-                    continue
-                print("************************ {} ******************************".format(name))
-                temp_list = []
-                temp_list.extend(reset_exclude_layers)
-                file_name = os.path.basename(name)
-                print(file_name)
-                print(names_to_use)
-                print(cfg.exclude_layers)
+    for i, name in enumerate(
+            glob.glob(search_string)):
+        if "width" in name and "width" not in args.name:
+            continue
+        print("************************ {} ******************************".format(name))
+        temp_list = []
+        temp_list.extend(reset_exclude_layers)
+        file_name = os.path.basename(name)
+        print(file_name)
+        print(names_to_use)
+        print(cfg.exclude_layers)
 
-                best_layer_name = None
-                best_pruned_acc = 0
-                best_new_pr = 0.9
-                best_dense_accuracy = 0
-                for layer_name in names_to_use:
-                    temp_list.append(layer_name)
-                    cfg.exclude_layers = temp_list
+        best_layer_name = None
+        best_pruned_acc = 0
+        best_new_pr = 0.9
+        best_dense_accuracy = 0
+        for layer_name in names_to_use:
+            temp_list.append(layer_name)
+            cfg.exclude_layers = temp_list
 
-                    state_dict_raw = torch.load(name, map_location=device)
-                    dense_accuracy = state_dict_raw["acc"]
-                    print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-                    net.load_state_dict(state_dict_raw["net"])
+            state_dict_raw = torch.load(name, map_location=device)
+            dense_accuracy = state_dict_raw["acc"]
+            print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+            net.load_state_dict(state_dict_raw["net"])
 
-                    excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layers]
+            excluded_weights = [w for k, w in help_dict.items() if k in cfg.exclude_layers]
 
-                    not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layers]
+            not_excluded_weights = [w for k, w in help_dict.items() if k not in cfg.exclude_layers]
 
-                    new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
-                    if new_pr == -1 or new_pr > 0.95:
-                        # best_layer_name = layer_name
-                        # best_pruned_acc = pruned_accuracy
-                        # best_dense_accuracy = dense_accuracy
-                        # best_new_pr = new_pr
-                        break
-                    cfg.amount = new_pr
-                    print("Excluded layers: {}".format(cfg.exclude_layers))
+            new_pr = adjust_pruning_rate(excluded_weights, not_excluded_weights, args.pruning_rate)
+            if new_pr == -1 or new_pr > 0.95:
+                # best_layer_name = layer_name
+                # best_pruned_acc = pruned_accuracy
+                # best_dense_accuracy = dense_accuracy
+                # best_new_pr = new_pr
+                break
+            cfg.amount = new_pr
+            print("Excluded layers: {}".format(cfg.exclude_layers))
 
-                    prune_function(net, cfg)
-                    remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-                    pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
-                    print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name,
-                                                                                                             name2index[
-                                                                                                                 layer_name],
-                                                                                                             new_pr,
-                                                                                                             pruned_accuracy))
+            prune_function(net, cfg)
+            remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+            pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+            print("Pruned accuracy at layer {} with index {} and adjusted pruning rate {}:{}".format(layer_name,
+                                                                                                     name2index[
+                                                                                                         layer_name],
+                                                                                                     new_pr,
+                                                                                                     pruned_accuracy))
 
-                    if abs(dense_accuracy - pruned_accuracy) < 3:
-                        best_layer_name = layer_name
-                        best_pruned_acc = pruned_accuracy
-                        best_dense_accuracy = dense_accuracy
-                        best_new_pr = new_pr
-                        break
-                    if pruned_accuracy > best_pruned_acc:
-                        best_layer_name = layer_name
-                        best_pruned_acc = pruned_accuracy
-                        best_dense_accuracy = dense_accuracy
-                        best_new_pr = new_pr
+            if abs(dense_accuracy - pruned_accuracy) < 3:
+                best_layer_name = layer_name
+                best_pruned_acc = pruned_accuracy
+                best_dense_accuracy = dense_accuracy
+                best_new_pr = new_pr
+                break
+            if pruned_accuracy > best_pruned_acc:
+                best_layer_name = layer_name
+                best_pruned_acc = pruned_accuracy
+                best_dense_accuracy = dense_accuracy
+                best_new_pr = new_pr
 
-                    # pruning_rates_per_layer = list(map(zero_number, weights))
-                    #
-                    # seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
-                    # seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)[0].split("_")[2]
-                    # if seed_from_file2:
-                    #     seed_from_file = seed_from_file2
-                    # else:
-                    #     seed_from_file = seed_from_file1
-
-                    # df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-                    # df2.to_csv(
-                    #     "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
-                    #                                                                    args.dataset, args.pruning_rate),
-                    #     index=False)
-
-                n_shallow_layer_index_list.append(name2index[best_layer_name])
-                n_shallow_layer_name_list.append(best_layer_name)
-                dense_accuracy_list.append(best_dense_accuracy)
-                pruned_accuracy_list.append(best_pruned_acc)
-                files_names.append(file_name)
-                adjusted_prunig_rate.append(best_new_pr)
-                print("Done")
+            # pruning_rates_per_layer = list(map(zero_number, weights))
             #
-            df = pd.DataFrame({"Name": files_names,
-                               "N Shallow layer index": n_shallow_layer_index_list,
-                               "N Shallow layer name": n_shallow_layer_name_list,
-                               "Dense Accuracy": dense_accuracy_list,
-                               "Pruned Accuracy": pruned_accuracy_list
-                               })
-            df.to_csv(
-                "RF_{}_{}_{}_{}_N_shallow_summary.csv".format(args.model, args.RF_level, args.dataset,
-                                                              args.pruning_rate),
-                index=False)
+            # seed_from_file1 = re.findall("_[0-9]_", name)[0].replace("_", "")
+            # seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)[0].split("_")[2]
+            # if seed_from_file2:
+            #     seed_from_file = seed_from_file2
+            # else:
+            #     seed_from_file = seed_from_file1
+
+            # df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+            # df2.to_csv(
+            #     "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+            #                                                                    args.dataset, args.pruning_rate),
+            #     index=False)
+
+        n_shallow_layer_index_list.append(name2index[best_layer_name])
+        n_shallow_layer_name_list.append(best_layer_name)
+        dense_accuracy_list.append(best_dense_accuracy)
+        pruned_accuracy_list.append(best_pruned_acc)
+        files_names.append(file_name)
+        adjusted_prunig_rate.append(best_new_pr)
+        print("Done")
+    #
+    df = pd.DataFrame({"Name": files_names,
+                       "N Shallow layer index": n_shallow_layer_index_list,
+                       "N Shallow layer name": n_shallow_layer_name_list,
+                       "Dense Accuracy": dense_accuracy_list,
+                       "Pruned Accuracy": pruned_accuracy_list
+                       })
+    df.to_csv(
+        "RF_{}_{}_{}_{}_N_shallow_summary.csv".format(args.model, args.RF_level, args.dataset,
+                                                      args.pruning_rate),
+        index=False)
+
 
 def fine_tune_summary(args):
-            if args.model == "vgg19":
-                exclude_layers = ["features.0", "classifier"]
-            else:
-                exclude_layers = ["conv1", "linear"]
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
 
-            cfg = omegaconf.DictConfig(
-                {"architecture": "resnet50",
-                 "model_type": "alternative",
-                 # "model_type": "hub",
-                 "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-                 # "solution": "trained_m
-                 "dataset": args.dataset,
-                 "batch_size": 128,
-                 "num_workers": args.num_workers,
-                 "amount": args.pruning_rate,
-                 "noise": "gaussian",
-                 "sigma": 0.005,
-                 "pruner": "global",
-                 "exclude_layers": exclude_layers
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers
 
-                 })
-            train, val, testloader = get_datasets(cfg)
+         })
+    train, val, testloader = get_datasets(cfg)
 
-            from torchvision.models import resnet18, resnet50
-            if args.model == "resnet18":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
-            if args.model == "resnet50":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "tiny_imagenet":
-                    net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
-                if args.type == "pytorch" and args.dataset == "cifar10":
-                    net = resnet50()
-                    in_features = net.fc.in_features
-                    net.fc = nn.Linear(in_features, 10)
-                if args.type == "pytorch" and args.dataset == "cifar100":
-                    net = resnet50()
-                    in_features = net.fc.in_features
-                    net.fc = nn.Linear(in_features, 100)
-            if args.model == "vgg19":
-                if args.type == "normal" and args.dataset == "cifar10":
-                    net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
-                if args.type == "normal" and args.dataset == "cifar100":
-                    net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
-                if args.type == "normal" and args.dataset == "tiny_imagenet":
-                    net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
-            dense_accuracy_list = []
-            pruned_accuracy_list = []
-            fine_tuned_accuracy = []
-            files_names = []
-            fine_tuning_best_epoch = []
+    dense_accuracy_list = []
+    pruned_accuracy_list = []
+    fine_tuned_accuracy = []
+    files_names = []
+    fine_tuning_best_epoch = []
 
-            for i, name in enumerate(
-                    glob.glob("{}/{}_normal_{}_*_level_{}*".format(args.folder, args.model, args.dataset,
-                                                                   args.RF_level))):
-                print(name)
-                if "initial_weights" in name or "32_bs" in name:
-                    continue
-                state_dict_raw = torch.load(name)
+    for i, name in enumerate(
+            glob.glob("{}/{}_normal_{}_*_level_{}*".format(args.folder, args.model, args.dataset,
+                                                           args.RF_level))):
+        print(name)
+        if "initial_weights" in name or "32_bs" in name:
+            continue
+        state_dict_raw = torch.load(name)
 
-                dense_accuracy_list.append(state_dict_raw["acc"])
+        dense_accuracy_list.append(state_dict_raw["acc"])
 
-                print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+        print("Dense accuracy:{}".format(state_dict_raw["acc"]))
 
-                net.load_state_dict(state_dict_raw["net"])
+        net.load_state_dict(state_dict_raw["net"])
 
-                prune_function(net, cfg)
+        prune_function(net, cfg)
 
-                remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+        remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
 
-                pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+        pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
 
-                print("Pruned accuracy:{}".format(pruned_accuracy))
+        print("Pruned accuracy:{}".format(pruned_accuracy))
 
-                pruned_accuracy_list.append(pruned_accuracy)
+        pruned_accuracy_list.append(pruned_accuracy)
 
-                weight_names, weights = zip(*get_layer_dict(net))
+        weight_names, weights = zip(*get_layer_dict(net))
 
-                zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+        zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
 
-                pruning_rates_per_layer = list(map(zero_number, weights))
+        pruning_rates_per_layer = list(map(zero_number, weights))
 
-                seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+        seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
 
-                df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+        df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
 
-                df2.to_csv(
-                    "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level,
-                                                                                   seed_from_file,
-                                                                                   args.dataset, args.pruning_rate),
-                    index=False)
+        df2.to_csv(
+            "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level,
+                                                                           seed_from_file,
+                                                                           args.dataset, args.pruning_rate),
+            index=False)
 
-                # print(file_name)
-                file_name = os.path.basename(name)
-                if "test_acc" in file_name:
-                    index_until_test = file_name.index("test_acc")
-                    base_name = file_name[:index_until_test]
+        # print(file_name)
+        file_name = os.path.basename(name)
+        if "test_acc" in file_name:
+            index_until_test = file_name.index("test_acc")
+            base_name = file_name[:index_until_test]
 
-                else:
+        else:
 
-                    base_name = file_name
+            base_name = file_name
 
-                for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
-                    files_names.append(pruned_name)
-                    state_dict_raw = torch.load(pruned_name)
-                    fine_tuned_accuracy.append(state_dict_raw["acc"])
-                    fine_tuning_best_epoch.append(state_dict_raw["epoch"])
-            # for i, name in enumerate(
-            #         glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
-            #                                                                      args.RF_level))):
-            #     print(name)
-            #     state_dict_raw = torch.load(name)
-            #
-            #     dense_accuracy_list.append(state_dict_raw["acc"])
-            #
-            #     print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-            #
-            #     net.load_state_dict(state_dict_raw["net"])
-            #
-            #     prune_function(net, cfg)
-            #
-            #     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-            #
-            #     pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
-            #
-            #     print("Pruned accuracy:{}".format(pruned_accuracy))
-            #
-            #     pruned_accuracy_list.append(pruned_accuracy)
-            #
-            #     weight_names, weights = zip(*get_layer_dict(net))
-            #
-            #     zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
-            #
-            #     pruning_rates_per_layer = list(map(zero_number, weights))
-            #
-            #     seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
-            #
-            #     df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
-            #
-            #     df2.to_csv(
-            #         "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
-            #                                                                        args.dataset, args.pruning_rate),
-            #         index=False)
-            #
-            #     # print(file_name)
-            #     file_name = os.path.basename(name)
-            #     if "test_acc" in file_name:
-            #         index_until_test = file_name.index("test_acc")
-            #         base_name = file_name[:index_until_test]
-            #     else:
-            #
-            #         base_name = file_name
-            #     for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
-            #         files_names.append(pruned_name)
-            df = pd.DataFrame({"Name": files_names,
-                               "Dense Accuracy": dense_accuracy_list,
-                               "Pruned Fine Tuned Accuracy": fine_tuned_accuracy,
-                               "Fine-tuning Best Epoch": fine_tuning_best_epoch,
-                               })
-            df.to_csv(
-                "RF_{}_{}_{}_{}_fine_tuned_summary_100_epochs.csv".format(args.model, args.RF_level, args.dataset,
-                                                                          args.pruning_rate),
-                index=False)
+        for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
+            files_names.append(pruned_name)
+            state_dict_raw = torch.load(pruned_name)
+            fine_tuned_accuracy.append(state_dict_raw["acc"])
+            fine_tuning_best_epoch.append(state_dict_raw["epoch"])
+    # for i, name in enumerate(
+    #         glob.glob("{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset,
+    #                                                                      args.RF_level))):
+    #     print(name)
+    #     state_dict_raw = torch.load(name)
+    #
+    #     dense_accuracy_list.append(state_dict_raw["acc"])
+    #
+    #     print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+    #
+    #     net.load_state_dict(state_dict_raw["net"])
+    #
+    #     prune_function(net, cfg)
+    #
+    #     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+    #
+    #     pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    #
+    #     print("Pruned accuracy:{}".format(pruned_accuracy))
+    #
+    #     pruned_accuracy_list.append(pruned_accuracy)
+    #
+    #     weight_names, weights = zip(*get_layer_dict(net))
+    #
+    #     zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+    #
+    #     pruning_rates_per_layer = list(map(zero_number, weights))
+    #
+    #     seed_from_file = re.findall("_[0-9]_", name)[0].replace("_", "")
+    #
+    #     df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+    #
+    #     df2.to_csv(
+    #         "{}_level_{}_seed_{}_{}_pruning_rates_global_pr_{}.csv".format(args.model, args.RF_level, seed_from_file,
+    #                                                                        args.dataset, args.pruning_rate),
+    #         index=False)
+    #
+    #     # print(file_name)
+    #     file_name = os.path.basename(name)
+    #     if "test_acc" in file_name:
+    #         index_until_test = file_name.index("test_acc")
+    #         base_name = file_name[:index_until_test]
+    #     else:
+    #
+    #         base_name = file_name
+    #     for pruned_name in glob.glob("{}/pruned/{}/{}*.pth".format(args.folder, args.pruning_rate, base_name)):
+    #         files_names.append(pruned_name)
+    df = pd.DataFrame({"Name": files_names,
+                       "Dense Accuracy": dense_accuracy_list,
+                       "Pruned Fine Tuned Accuracy": fine_tuned_accuracy,
+                       "Fine-tuning Best Epoch": fine_tuning_best_epoch,
+                       })
+    df.to_csv(
+        "RF_{}_{}_{}_{}_fine_tuned_summary_100_epochs.csv".format(args.model, args.RF_level, args.dataset,
+                                                                  args.pruning_rate),
+        index=False)
+
 
 if __name__ == '__main__':
-            from delve.writers import plot_stat_level_from_results
+    from delve.writers import plot_stat_level_from_results
 
-            parser = argparse.ArgumentParser(description='One shot pruning statistics')
+    parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
-            parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
-            parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-            parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
-            parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
-            parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-            parser.add_argument('--dataset', default="cifar10", type=str,
-                                help='Dataset to use [cifar10,tiny_imagenet616gg]')
-            parser.add_argument('--model', default="resnet18", type=str,
-                                help='Architecture of model [resnet18,resnet50]')
-            parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
-                                help='Location where saved models are')
-            parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
-                                help='Output folder of the pruning results')
-            parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
-                                help='Location to save the models', required=True)
-            parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
-            parser.add_argument('--solution', default="", type=str, help='Solution to use')
-            parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
-            parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
-            parser.add_argument('--width', default=1, type=int, help='Width of the model')
-            parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
-            parser.add_argument('--pad', default=0, type=int,
-                                help='Pad the image to the input size ')
-            parser.add_argument('--input_resolution', default=224, type=int,
-                                help='Input Resolution for small ImageNet')
-            parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+    parser.add_argument('--experiment', default=1, type=int, help='Experiment to perform')
+    parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+    parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
+    parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--dataset', default="cifar10", type=str,
+                        help='Dataset to use [cifar10,tiny_imagenet616gg]')
+    parser.add_argument('--model', default="resnet18", type=str,
+                        help='Architecture of model [resnet18,resnet50]')
+    parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Location where saved models are')
+    parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
+                        help='Output folder of the pruning results')
+    parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+                        help='Location to save the models', required=True)
+    parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
+    parser.add_argument('--solution', default="", type=str, help='Solution to use')
+    parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
+    parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
+    parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
+    parser.add_argument('--pad', default=0, type=int,
+                        help='Pad the image to the input size ')
+    parser.add_argument('--input_resolution', default=224, type=int,
+                        help='Input Resolution for small ImageNet')
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
 
-            parser.add_argument('--ffcv_train',
-                                default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
-                                type=str, help='FFCV train dataset')
+    parser.add_argument('--ffcv_train',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv",
+                        type=str, help='FFCV train dataset')
 
-            parser.add_argument('--ffcv_val',
-                                default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
-                                type=str, help='FFCV val dataset')
+    parser.add_argument('--ffcv_val',
+                        default="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv",
+                        type=str, help='FFCV val dataset')
 
-            args = parser.parse_args()
+    args = parser.parse_args()
 
-            try:
+    try:
 
-                args.RF_level = int(args.RF_level)
+        args.RF_level = int(args.RF_level)
 
-            except Exception as e:
+    except Exception as e:
 
-                pass
+        pass
 
-            if args.experiment == 1:
-                print("Experiment 1")
-                print(args)
-                main(args)
-                # pruning_fine_tuning_experiment(args)
-            if args.experiment == 2:
-                print("Experiment 2")
-                print(args)
-                # main(args)
-                pruning_fine_tuning_experiment(args)
-            if args.experiment == 3:
-                # pruning_fine_tuning_experiment(args)
-                fine_tune_summary(args)
-            if args.experiment == 4:
-                n_shallow_layer_experiment(args)
-                # main(args)
-            if args.experiment == 5:
-                prune_selective_layers(args)
-            if args.experiment == 6:
-                calculate_saturation_models(args)
-            if args.experiment == 7:
-                model_statistics(args)
-            # gradient_flow_calculation(args)
-            # save_pruned_representations()
-            # similarity_comparisons()
+    if args.experiment == 1:
+        print("Experiment 1")
+        print(args)
+        main(args)
+        # pruning_fine_tuning_experiment(args)
+    if args.experiment == 2:
+        print("Experiment 2")
+        print(args)
+        # main(args)
+        pruning_fine_tuning_experiment(args)
+    if args.experiment == 3:
+        # pruning_fine_tuning_experiment(args)
+        fine_tune_summary(args)
+    if args.experiment == 4:
+        n_shallow_layer_experiment(args)
+        # main(args)
+    if args.experiment == 5:
+        prune_selective_layers(args)
+    if args.experiment == 6:
+        calculate_saturation_models(args)
+    if args.experiment == 7:
+        model_statistics(args)
+    # gradient_flow_calculation(args)
+    # save_pruned_representations()
+    # similarity_comparisons()
