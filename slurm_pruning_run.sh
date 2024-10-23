@@ -29,6 +29,8 @@
 #module load pytorch
 
 
+module load python/miniconda
+conda activate ffv
 
 
 
