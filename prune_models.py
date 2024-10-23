@@ -2265,12 +2265,18 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
 def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save_folder, name, range=(0, 0.1)):
     colors = ["m", "g", "r", "c"]
     all_cdfs = []
+    all_histograms_abs = []
+    all_histograms = []
     bin_count = None
+    bin_count_hist = None
     # fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="constrained")
-    mean_dict = {}
-    std_dict = {}
-    histograms_abs_dict = {}
-    histograms_dict = {}
+    mean_cdf_dict = {}
+    std_cdf_dict= {}
+
+    mean_histograms_abs_dict = {}
+    std_histograms_abs_dict = {}
+    mean_histograms_dict = {}
+    std_histograms_dict = {}
     for i, (key, value) in enumerate(list_of_per_layer_weights.items()):
         list_of_whole_samples_for_this_layer = value
         # layer_bas_hist
@@ -2278,18 +2284,37 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
             whole_vector = one_whole_vector.flatten()
             absolute_of_vector = np.abs(whole_vector)
             count2, bin_counts2 = np.histogram(absolute_of_vector, bins=len(absolute_of_vector), range=range)
-            # count_hist, bin_count_hist = np.histogram(absolute_of_vector, bins=100, range=range)
+            count_hist_abs, bin_count_hist_ = np.histogram(absolute_of_vector, bins=1000, range=range)
+            count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000)
             pdf2 = count2 / np.sum(count2)
             cdf2 = np.cumsum(pdf2, axis=0)
             all_cdfs.append(cdf2)
+            all_histograms_abs.append(count_hist_abs)
+            all_histograms.append(count_hist)
             if bin_count is None:
                 bin_count = bin_counts2
-
+            if  bin_count_hist is None:
+                bin_count_hist = bin_count_hist_
         all_cdfs = np.array(all_cdfs)
-        mean = all_cdfs.mean(axis=0)
-        std = all_cdfs.std(axis=0)
-        mean_dict[key] = mean
-        std_dict[key] = std
+        all_histograms_abs =np.array(all_histograms_abs)
+        all_histograms = np.array(all_histograms)
+
+        mean_histograms_abs = all_histograms_abs.mean(axis=0)
+        std_histograms_abs = all_histograms_abs.std(axis=0)
+
+        mean_histograms = all_histograms.mean(axis=0)
+        std_histograms = all_histograms.std(axis=0)
+
+        mean_cdf = all_cdfs.mean(axis=0)
+        std_cdf = all_cdfs.std(axis=0)
+
+        mean_cdf_dict[key] = mean_cdf
+        std_cdf_dict[key] = std_cdf
+        mean_histograms_dict[key] =  mean_histograms
+        std_histograms_dict[key] = std_histograms
+        mean_histograms_abs_dict[key] = mean_histograms_abs
+        std_histograms_dict[key] = std_histograms_abs
+
         # axs.plot(bin_count[1:], mean, label=f"average cdf")
         # axs.fill_between(bin_count[1:], mean - std, mean + std)
         # threshold_09 = find_nearest(mean, 0.9)
@@ -2307,10 +2332,19 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
         # plt.savefig(f"{save_folder}/{name}/{key}_cdf.pdf")
 
         with open(f"{save_folder}/{name}_layer_cdf_mean.pkl", "wb") as f:
-            pickle.dump(mean_dict, f)
+            pickle.dump(mean_cdf_dict, f)
         with open(f"{save_folder}/{name}_layer_cdf_std.pkl", "wb") as f:
-            pickle.dump(std_dict,f)
+            pickle.dump(std_cdf_dict,f)
 
+        with open(f"{save_folder}/{name}_layer_histogram_mean.pkl", "wb") as f:
+            pickle.dump(mean_histograms_dict, f)
+        with open(f"{save_folder}/{name}_layer_histogram_std.pkl", "wb") as f:
+            pickle.dump(std_histograms_dict,f)
+
+        with open(f"{save_folder}/{name}_layer_histogram_abs_mean.pkl", "wb") as f:
+            pickle.dump(mean_histograms_abs_dict, f)
+        with open(f"{save_folder}/{name}_layer_histogram_abs_std.pkl", "wb") as f:
+            pickle.dump(std_histograms_abs_dict,f)
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
             count_fn = lambda w: w.nelement()
             total_excluded = sum(list(map(count_fn, list_of_excluded_weight)))
