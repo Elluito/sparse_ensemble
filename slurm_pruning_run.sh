@@ -30,7 +30,7 @@
 
 
 module load python/miniconda
-conda activate ffv
+conda activate ffcv
 
 
 
