@@ -142,6 +142,9 @@ def load_cfg(args):
         "gradient_cliping": True,
         "use_wandb": False,
         "id": args["id"],
+        "pad":0,
+        "input_resolution":32,
+
     })
 
     cfg.exclude_layers = exclude_layers
@@ -199,12 +202,15 @@ def loss_cross_entropy(net, use_cuda, testloader, one_batch=False, verbose=2, co
             if count_flops:
                 sparse_flops += batch_flops
             test_loss += loss.data.item()
+
             if torch.all(outputs > 0):
                 _, predicted = torch.max(outputs.data, 1)
             else:
                 soft_max_outputs = F.softmax(outputs, dim=1)
                 _, predicted = torch.max(soft_max_outputs, 1)
+
             total += targets.size(0)
+
             correct += predicted.eq(targets.data).cpu().sum()
 
             # print(correct/total)
@@ -595,18 +601,19 @@ def left_pruning_experiments(cfg, eval_set="test", print_exclude_layers=True):
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("/nobackup/sclaam/smoothness/trainloss_left_line_{}_dense.npy".format(name), dense_loss_data_train)
-    np.save("/nobackup/sclaam/smoothness/trainloss_left_line_{}_sparse.npy".format(name), sparse_loss_data_train)
-    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_dense.npy".format(name), dense_loss_data_test)
-    np.save("/nobackup/sclaam/smoothness/testAccuracy_left_line_{}_sparse.npy".format(name), sparse_loss_data_test)
+    np.save("smoothness/trainloss_left_line_{}_dense.npy".format(name), dense_loss_data_train)
+    np.save("smoothness/trainloss_left_line_{}_sparse.npy".format(name), sparse_loss_data_train)
+    np.save("smoothness/testAccuracy_left_line_{}_dense.npy".format(name), dense_loss_data_test)
+    np.save("smoothness/testAccuracy_left_line_{}_sparse.npy".format(name), sparse_loss_data_test)
     # np.save("smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_left_stochastic_dense.pth".format(name))
+    torch.save(best_model.state_dict(), "smoothness/{}_left_stochastic_dense.pth".format(name))
     # torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
     torch.save(det_pruning_model.state_dict(),
-               "/nobackup/sclaam/smoothness/{}_left_deterministic_dense.pth".format(name))
+               "smoothness/{}_left_deterministic_dense.pth".format(name))
 
 
 def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=True):
+
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -732,12 +739,15 @@ def linear_interpolation_dense_GMP(cfg, eval_set="test", print_exclude_layers=Tr
     print("Done!")
     identifier = cfg.id
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    np.save("/nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
-    np.save("/nobackup/sclaam/smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
+    # np.save("/nobackup/sclaam/smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
+    np.save("smoothness/trainloss_line_{}_dense.npy".format(name), loss_data_train)
+    # np.save("/nobackup/sclaam/smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
+    np.save("testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
     # np.save("smoothness/testAccuracy_line_{}_dense.npy".format(name), loss_data_test)
-    torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_stochastic_dense.pth".format(name))
-    # torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
-    torch.save(det_pruning_model.state_dict(), "/nobackup/sclaam/smoothness/{}_deterministic_dense.pth".format(name))
+    # torch.save(best_model.state_dict(), "/nobackup/sclaam/smoothness/{}_stochastic_dense.pth".format(name))
+    torch.save(best_model.state_dict(), "smoothness/{}_stochastic_dense.pth".format(name))
+    # torch.save(det_pruning_model.state_dict(), "/nobackup/sclaam/smoothness/{}_deterministic_dense.pth".format(name))
+    torch.save(det_pruning_model.state_dict(), "smoothness/{}_deterministic_dense.pth".format(name))
 
 
 def plot_line_(cfg, type_="one_shot"):
@@ -850,6 +860,7 @@ def plot_line_(cfg, type_="one_shot"):
     plt.savefig("paper_plots/line_{}_{}.pdf".format(name, type_))
 
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+
     train_line = ax.plot(distance_vector[50:150], train_loss[50:150], color="cornflowerblue", label="Train Loss")
     ax.tick_params(axis="y", colors="cornflowerblue")
     ax.set_ylabel(r"$L(w)$", fontsize=fs)
@@ -927,8 +938,8 @@ def plot_left_line_(cfg, type_="one_shot"):
     identifier = cfg.id
     # name = "{}_{}_{}_{}_{}".format("test2", cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
-    dense_train_loss = np.load("smoothness/trainloss_left_line_{}_dense.npy".format(name, type_))
-    sparse_train_loss = np.load("smoothness/trainloss_left_line_{}_sparse.npy".format(name, type_))
+    dense_train_loss = -np.load("smoothness/trainloss_left_line_{}_dense.npy".format(name, type_))
+    sparse_train_loss = -np.load("smoothness/trainloss_left_line_{}_sparse.npy".format(name, type_))
     stochastic_state_dict = torch.load("smoothness/{}_left_stochastic_dense.pth".format(name, type_))
     # name = "{}_{}_{}_{}_{}".format(identifier, cfg.dataset, cfg.architecture, cfg.sigma, cfg.amount)
     dense_test_loss = np.load("smoothness/testAccuracy_left_line_{}_dense.npy".format(name, type_))
@@ -960,6 +971,10 @@ def plot_left_line_(cfg, type_="one_shot"):
         else:
             distance_vector.append(distance.detach().cpu().numpy())
 
+    ##################################################
+    #                       Train Loss fucntion
+    ##################################################
+
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     dense_train_line = ax.plot(distance_vector, dense_train_loss, color="cornflowerblue", label="Dense Train Loss")
     sparse_train_line = ax.plot(distance_vector, sparse_train_loss, color="limegreen", label="SparseTrain Loss")
@@ -967,7 +982,7 @@ def plot_left_line_(cfg, type_="one_shot"):
     ax.set_ylabel(r"$L(w)$", fontsize=fs)
     ax.set_xlabel("Distance", fontsize=fs)
     # ax.spines['right'].set_color('cornflowerblue')
-    ax.tick_params(axis="y", colors="cornflowerblue")
+    # ax.tick_params(axis="y", colors="cornflowerblue")
 
     # plt.legend()
     # plt.show()
@@ -1002,21 +1017,33 @@ def plot_left_line_(cfg, type_="one_shot"):
     det_handle = mlines.Line2D([0], [0], markerfacecolor='black', marker='s', ls="",
                                markersize=fs * 0.5, label=det_label)
     legend_list = plt.legend([tuple(dense_train_line), tuple(sparse_train_line), sto_handle, det_handle],
-                             ["Dense Landscape", "Sparse Landscape", sto_label, det_label], loc="upper left",
+                             ["Dense", "Sparse", sto_label, det_label], loc="lower right",
                              scatterpoints=1, numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)},
                              prop={"size": fs * 0.8})
     legend_list.legend_handles[2].set_color('black')
     # legend_list.legend_handles[2].set_facecolor('black')
     legend_list.legend_handles[3].set_color('black')
-    # ax2.set_ylim(np.min(test_loss) - 5, 100)
+    ax.set_ylim(np.min(dense_train_loss)-10, -90)
+    ax.set_xlim(-5, 20)
     # legend_list.legend_handles[3].set_facecolor('black')
     plt.grid(ls='--', alpha=0.5)
+
     plt.savefig("paper_plots/train_line_dense_sparse_{}_{}.pdf".format(name, type_))
+
+    ##################################################
+    #                       Test error
+    ##################################################
 
     fig, ax2 = plt.subplots(figsize=fig_size, layout="compressed")
 
     # ax2 = plt.twinx()
     dense_test_line = ax2.plot(distance_vector, dense_test_loss, c="cornflowerblue", label="Test Accuracy error")
+    # ax2.tick_params(axis="y", colors="cornflowerblue")
+    # ax2.set_ylabel(r"$L(w)$", fontsize=fs)
+    ax2.set_xlabel("Distance", fontsize=fs)
+    # ax2.spines['left'].set_color('cornflowerblue')
+    # ax2.yaxis.label.set_color('cornflowerblue')
+    # ax3= plt.twinx()
     sparse_test_line = ax2.plot(distance_vector, sparse_test_loss, color="limegreen", label="Test Accuracy error")
 
     sto_points.append(
@@ -1034,10 +1061,12 @@ def plot_left_line_(cfg, type_="one_shot"):
                     c="cornflowerblue",
                     marker="s", label="Deterministic"))
 
-    ax2.set_ylabel("Test error ", fontsize=fs)
+    # ax2.tick_params(axis="y", colors="limegreen")
+    ax2.set_ylabel("Test Error ", fontsize=fs)
+
     # ax2.spines['right'].set_color('limegreen')
-    ax2.tick_params(axis="y", colors="limegreen")
     # ax2.yaxis.label.set_color('limegreen')
+
     det_label = ""
     sto_label = ""
     if "one_shot" in type_:
@@ -1050,8 +1079,10 @@ def plot_left_line_(cfg, type_="one_shot"):
                                markersize=fs * 0.5, label=sto_label)
     det_handle = mlines.Line2D([0], [0], markerfacecolor='black', marker='s', ls="",
                                markersize=fs * 0.5, label=det_label)
+
+    ax2.legend(loc="lower left")
     legend_list = plt.legend([tuple(dense_test_line), tuple(sparse_test_line), sto_handle, det_handle],
-                             ["Dense Test error", "Sparse Test error", sto_label, det_label], loc="upper left",
+                             ["Dense Test error", "Sparse Test error", sto_label, det_label], loc="lower left",
                              scatterpoints=1, numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)},
                              prop={"size": fs * 0.8})
     legend_list.legend_handles[2].set_color('black')
@@ -1110,7 +1141,7 @@ def plot_left_line_(cfg, type_="one_shot"):
     det_handle = mlines.Line2D([0], [0], markerfacecolor='black', marker='s', ls="",
                                markersize=fs * 0.5, label=det_label)
     legend_list = plt.legend([tuple(dense_train_line), tuple(sparse_train_line), sto_handle, det_handle],
-                             ["Dense Landscape", "Sparse Landscape", sto_label, det_label], loc="upper left",
+                             ["Dense Landscape", "Sparse Landscape", sto_label, det_label], loc="upper right",
                              scatterpoints=1, numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)},
                              prop={"size": fs * 0.8})
     legend_list.legend_handles[2].set_color('black')
@@ -1144,7 +1175,7 @@ def plot_left_line_(cfg, type_="one_shot"):
 
     ax2.set_ylabel("Test error ", fontsize=fs)
     # ax2.spines['right'].set_color('limegreen')
-    ax2.tick_params(axis="y", colors="limegreen")
+    # ax2.tick_params(axis="y", colors="limegreen")
     # ax2.yaxis.label.set_color('limegreen')
     det_label = ""
     sto_label = ""
@@ -1172,6 +1203,7 @@ def plot_left_line_(cfg, type_="one_shot"):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
@@ -1208,5 +1240,5 @@ if __name__ == '__main__':
     cfg = load_cfg(args)
     # linear_interpolation_oneshot_GMP(cfg)
     # linear_interpolation_dense_GMP(cfg)
-    # left_pruning_experiments(cfg)
+    left_pruning_experiments(cfg)
     plot_left_line_(cfg, args["type"])

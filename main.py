@@ -3714,7 +3714,7 @@ def get_model(cfg: omegaconf.DictConfig):
 
             return net
 
-    if cfg.architecture == "vgg19":
+    if cfg.architecture == "vgg19" or cfg.architecture == "VGG19":
         if not cfg.solution:
             if "csgmcmc" == cfg.model_type:
                 net = VGG(cfg.architecture)

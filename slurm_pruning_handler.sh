@@ -99,10 +99,10 @@ else
 #done
 #done
 #done
-resolution=224
+resolution=32
 
 for model in "resnet25_small"; do
-for dataset in "small_imgenet"; do
+for dataset in "cifar10"; do
 for pruning_rate in "0.8"; do
 for rf_level in "5" "6" "7" "8" "10"; do
 
