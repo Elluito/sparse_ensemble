@@ -2245,8 +2245,6 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
         all_cdfs.append(cdf2)
         if bin_count is None:
             bin_count = bin_counts2
-        if bin_count is None:
-            bin_count = bin_counts2
         if bin_count_hist is None:
             bin_count_hist = bin_count_hist_
         if bin_count_hist_abs is None:
@@ -2269,6 +2267,8 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
         pickle.dump(mean_cdf, f)
     with open(f"{save_folder}/{name}_whole_model_cdf_std.pkl", "wb") as f:
         pickle.dump(std_cdf, f)
+    with open(f"{save_folder}/{name}_whole_model_cdf_bin.pkl", "wb") as f:
+        pickle.dump(bin_count, f)
 
     with open(f"{save_folder}/{name}_whole_model_histogram_mean.pkl", "wb") as f:
 
