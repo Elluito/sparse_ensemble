@@ -2243,6 +2243,8 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
         pdf2 = count2 / np.sum(count2)
         cdf2 = np.cumsum(pdf2, axis=0)
         all_cdfs.append(cdf2)
+        all_histograms.append(count_hist)
+        all_histograms_abs.append(count_hist_abs)
         if bin_count is None:
             bin_count = bin_counts2
         if bin_count_hist is None:
