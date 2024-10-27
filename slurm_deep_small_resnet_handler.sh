@@ -7,7 +7,7 @@ array=0
 for model in "resnet_50"; do
 for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-for lvl in 5 6 7 8 10; do                #
+for lvl in 1 2 3 4; do                #
 #for lvl in 5; do                # iterate idxA from 0 to length
 if [ "${array}" -eq 1 ]; then
 
