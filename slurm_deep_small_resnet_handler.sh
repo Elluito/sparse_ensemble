@@ -4,7 +4,7 @@ res=32
 epochs=200
 array=0
 #for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
-for model in "resnet_50"; do
+for model in "resnet50"; do
 for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 for lvl in 1 2 3 4; do                #
