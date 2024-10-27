@@ -41,12 +41,12 @@ grad_clip=0
 epochs=100
 resolution=224
 array=0
-for model in "resnet25_small"; do
+for model in "resnet50"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #  for lvl in 10; do
   for lvl in 5 6 7 8 10; do
     for optim in "ekfac" "sam"; do
-      for dataset in "small_imagenet"; do
+      for dataset in "cifar10"; do
 
 
         run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${dataset}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
