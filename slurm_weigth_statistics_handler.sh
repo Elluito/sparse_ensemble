@@ -119,7 +119,7 @@ resolution=32
 #done
 
 resolution=32
-for model in "vgg19"; do
+for model in "resnet50"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0"; do
 for rf_level in "1" "2" "3" "4"; do
