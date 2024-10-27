@@ -2224,7 +2224,6 @@ def find_nearest(array, value):
 
 def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, range=(0, 0.1)):
     colors = ["m", "g", "r", "c"]
-    all_cdfs = []
     bin_count = None
 
     all_cdfs = []
@@ -2261,6 +2260,7 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
     std_histograms_abs = all_histograms_abs.std(axis=0)
 
     mean_histograms = all_histograms.mean(axis=0)
+    print(mean_histograms)
     std_histograms = all_histograms.std(axis=0)
 
     mean_cdf = all_cdfs.mean(axis=0)

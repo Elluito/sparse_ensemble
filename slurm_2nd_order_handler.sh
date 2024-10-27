@@ -49,7 +49,7 @@ for model in "resnet50"; do
       for dataset in "cifar10"; do
 
 
-        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "${optim}_${dataset}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
+        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_changed_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
 
 done
 done
