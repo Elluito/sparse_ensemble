@@ -2282,7 +2282,7 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
 
     with open(f"{save_folder}/{name}_whole_model_histogram_bin.pkl", "wb") as f:
 
-        pickle.dump(bin_count_hist_, f)
+        pickle.dump(bin_count_hist, f)
 
     with open(f"{save_folder}/{name}_whole_model_histogram_abs_mean.pkl", "wb") as f:
 
