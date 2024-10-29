@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_rf_level_2_lr_changed_ekfac_200_res_32_gc_0_test_acc_93.85.pth,93.85,10.0

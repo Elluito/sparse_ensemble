@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_1730073136.3647728_rf_level_3_sgd_200_res_32_lr_0.01_test_acc_91.34.pth,91.34,37.14
