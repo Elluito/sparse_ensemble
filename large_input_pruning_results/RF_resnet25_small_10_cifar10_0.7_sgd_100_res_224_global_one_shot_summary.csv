@@ -1,2 +1,5 @@
 Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_cifar10_1729092910.4707565_rf_level_10_sgd_100_res_224_test_acc_88.21.pth,88.21,83.56
+resnet25_small_normal_cifar10_1729093089.8273861_rf_level_10_sgd_100_res_224_test_acc_88.32.pth,88.32,84.21
 resnet25_small_normal_cifar10_seed.0_rf_level_10_sgd_100_res_224_test_acc_87.89.pth,87.89,83.41
+resnet25_small_normal_cifar10_1729093089.2203698_rf_level_10_sgd_100_res_224_test_acc_88.0.pth,88.0,85.77
