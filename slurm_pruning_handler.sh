@@ -101,7 +101,7 @@ else
 #done
 resolution=224
 
-for model in "resnet25"; do
+for model in "resnet25_small"; do
 for dataset in "cifar10"; do
 for pruning_rate in "0.7"; do
 #for rf_level in "5" "6" "7" "8" "10"; do
