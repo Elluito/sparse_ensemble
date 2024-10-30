@@ -392,7 +392,22 @@ def calculate_saturation_models(args):
 
         calculate_train_eval_saturation_solution(net, trainloader, testloader, args.save_folder, sufix_name, i, device)
 
+def freeze_all_except_bn(model):
+    for name, child in (model.named_children()):
+        if name.find('BatchNorm') != -1:
+            for param in child.parameters():
+                param.requires_grad = True
+        else:
+            for param in child.parameters():
+                param.requires_grad = False
 
+def calculate_new_bn_running_stats(pruned_model,dataloader_train,max_iter=100):
+    pruned_model.train()
+    with torch.no_grad():
+        for iter_in_epoch, sample in enumerate(dataloader_train):
+            pruned_model.forward(sample)
+            if iter_in_epoch > max_iter:
+                break
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2 ** 32
     np.random.seed(worker_seed)
