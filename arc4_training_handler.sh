@@ -45,7 +45,8 @@ for dataset in "small_imagenet"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #for lvl in 1 2 3 4; do                #
 for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
-#for lvl in 5; do                # iterate idxA from 0 to length
+#for lvl in 5; do
+# iterate idxA from 0 to length
 if [ "${array}" -eq 1 ]; then
 
 qsub -l h_rt=44:00:00 -t 1-3 -l coproc_v100=1 -N "deep_${model}_lvl_${lvl}_${dataset}_res_${res}" arc4_training_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_lr_0.01" 1 0 "${res}"
