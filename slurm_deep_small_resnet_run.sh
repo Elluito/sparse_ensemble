@@ -82,14 +82,14 @@
 #unset KMP_AFFINITY
 
 module load python/miniconda
-conda activate ffcv
+conda activate ffcv2
 
 python -c "import os; print(os.environ)"
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 
 export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
-export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages":PYTHONPATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib"
+export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib/python3.9/site-packages":PYTHONPATH
 #############################################################
 #     Train  without FFCV
 #############################################################
