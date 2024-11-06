@@ -81,6 +81,9 @@
 #unset GOMP_CPU_AFFINITY
 #unset KMP_AFFINITY
 
+module load python/miniconda
+conda activate ffcv
+
 python -c "import os; print(os.environ)"
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
 
