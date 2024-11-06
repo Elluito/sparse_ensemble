@@ -51,14 +51,14 @@ for lvl in 11 12 13; do                # iterate idxA from 0 to length
 jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}"
 if [ "${array}" -eq 1 ]; then
 
-sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1 --array=1-4 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}"
+sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1 --array=1-4 --time=144:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}"
 
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 
 else
 
-sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1  --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}"
+sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1  --time=144:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}"
 
 
 fi
