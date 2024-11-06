@@ -30,12 +30,12 @@
 
 res=224
 epochs=100
-array=0
-ffcv=1
+array=1
+ffcv=0
 ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv"
 ffcv_test="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
-save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv"
-#save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_2"
+#save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv"
+save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_2"
 
 if [ "${ffcv}" -eq 1 ]; then
   ffcv_string="ffcv"
@@ -45,8 +45,8 @@ if [ "${ffcv}" -eq 1 ]; then
 for model in "resnet25_small"; do
 for dataset in "small_imagenet"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
-#for lvl in 11 12 13; do                # iterate idxA from 0 to length
-for lvl in 2 3; do                #
+for lvl in 11 12 13; do                # iterate idxA from 0 to length
+#for lvl in 2 3; do                #
 #for lvl in 5; do                iterate idxA from 0 to length
 jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}"
 if [ "${array}" -eq 1 ]; then
