@@ -92,9 +92,9 @@ l=$(which python)
 #echo "Ld library ${lib_path_of_current_enviroment}"
 #export LD_LIBRARY_PATH="${lib_path_of_current_enviroment}/lib":$LD_LIBRARY_PATH
 
-#export LD_LIBRARY_PATH=""
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib"
-#export PYTHONPATH="${lib_path_of_current_enviroment}/lib/python3.9/site-packages":PYTHONPATH
+export LD_LIBRARY_PATH=""
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib"
+export PYTHONPATH="${lib_path_of_current_enviroment}/lib/python3.9/site-packages":PYTHONPATH
 #############################################################
 #     Train  without FFCV
 #############################################################
