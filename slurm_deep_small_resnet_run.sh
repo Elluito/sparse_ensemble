@@ -86,10 +86,15 @@ conda activate ffcv2
 
 python -c "import os; print(os.environ)"
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
+l=$(which python)
 
-export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib"
-export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib/python3.9/site-packages":PYTHONPATH
+#lib_path_of_current_enviroment="${l%%"bin/python"}"
+#echo "Ld library ${lib_path_of_current_enviroment}"
+#export LD_LIBRARY_PATH="${lib_path_of_current_enviroment}/lib":$LD_LIBRARY_PATH
+
+#export LD_LIBRARY_PATH=""
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv2/lib"
+#export PYTHONPATH="${lib_path_of_current_enviroment}/lib/python3.9/site-packages":PYTHONPATH
 #############################################################
 #     Train  without FFCV
 #############################################################
@@ -104,7 +109,7 @@ if [ "${11}" -gt 0 ]
   echo "Use FFCV"
 #sbatch --nodes=1 --time=07:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv" slurm_confidence_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
 
-python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"  --ffcv_val "${12}" --ffcv_train "${13}" --record_saturation 0
+python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 128  --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --ffcv_train "${12}" --ffcv_val "${13}" --record_saturation 0
 
 #python3.9 ffcv_loaders.py
 
@@ -114,7 +119,7 @@ python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 128  --save_folder "/j
 else
   echo "Don't use FFCV"
 
-python3.9 train_CIFAR10.py --lr "0.1" --batch_size 128  --save_folder "/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
+python3.9 train_CIFAR10.py --lr "0.1" --batch_size 128  --save_folder "${12}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
 #python3.9 ffcv_loaders.py
 
   fi

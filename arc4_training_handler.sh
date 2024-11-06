@@ -37,23 +37,30 @@ fi
 #sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="ekfac_optim_rf_1_cifar10_resnet50_gc_${grad_clip}.err" --output="ekfac_optim_rf_1_cifar10_resnet50_gc_${grad_clip}.output"  --job-name="ekfac_optim_rf_3_cifar10_resnet50_gc_${grad_clip}" slurm_2nd_order_run.sh "cifar10" "resnet50" "1" "normal" "ekfac_optim_hyper_saturation_200_gc_${grad_clip}" "1" "${grad_clip}" 1
 #sbatch --nodes=1 --time=140:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="ekfac_optim_rf_2_cifar10_resnet50_gc_${grad_clip}.err" --output="ekfac_optim_rf_2_cifar10_resnet50_gc_${grad_clip}.output"  --job-name="ekfac_optim_rf_3_cifar10_resnet50_gc_${grad_clip}" slurm_2nd_order_run.sh "cifar10" "resnet50" "2" "normal" "ekfac_optim_hyper_saturation_200_gc_${grad_clip}" "1" "${grad_clip}" 1
 
-res=64
-epochs=200
+res=224
+epochs=100
 array=1
+ffcv=1
+
+if [ "${ffcv}" -eq 1 ]; then
+  ffcv_string="ffcv"
+  else
+  ffcv_string="no_ffcv"
+  fi
 for model in "resnet25_small"; do
 for dataset in "small_imagenet"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #for lvl in 1 2 3 4; do                #
-for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
-#for lvl in 5; do
+#for lvl in 5 6 7 8 10; do                # iterate idxA from 0 to length
+for lvl in 1; do
 # iterate idxA from 0 to length
 if [ "${array}" -eq 1 ]; then
 
-qsub -l h_rt=44:00:00 -t 1-3 -l coproc_v100=1 -N "deep_${model}_lvl_${lvl}_${dataset}_res_${res}" arc4_training_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_lr_0.01" 1 0 "${res}"
+qsub -l h_rt=44:00:00 -t 1-3 -l coproc_v100=1 -N "deep_${model}_lvl_${lvl}_${dataset}_res_${res}" arc4_training_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}"
 
 else
 
- qsub -l h_rt=36:00:00 -l coproc_v100=1 "deep_${model}_lvl_${lvl}_${dataset}_res_${res}"  arc4_training_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_lr_0.01" 1 0 "${res}"
+ qsub -l h_rt=36:00:00 -l coproc_v100=1 "deep_${model}_lvl_${lvl}_${dataset}_res_${res}"  arc4_training_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_sting}" 1 0 "${res}" "${ffcv}"
 fi
 
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="deep_{}_lvl_${lvl}_small_imagenet_res_${res}.err" --gres=gpu:1 --output="deep_small_resnet_lvl_${lvl}_small_imagenet_res_${res}.output"  --job-name="deep_small_resnet_lvl_${lvl}_small_imagenet_res_${res}" slurm_deep_small_resnet_run.sh "resnet25_small" "small_imagenet" 8 ${lvl}  "normal" "${epochs}" "recording_${epochs}" 1 1 "${res}"
