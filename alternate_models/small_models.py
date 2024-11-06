@@ -314,12 +314,19 @@ class Deep_small_ResNetRF(nn.Module):
                  fixed_points=None,
                  RF_level=1):
         super(Deep_small_ResNetRF, self).__init__()
+
         self.in_planes = 64 * multiplier
+
         self.fix_points = fixed_points
+
         self.rf_level = RF_level
+
         self.relu = nn.ReLU()
+
         self.width_multiplier = multiplier
+
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
         if self.rf_level == 1:
             self.maxpool = nn.MaxPool2d(kernel_size=2, stride=1)
         if self.rf_level == 2:
@@ -345,7 +352,13 @@ class Deep_small_ResNetRF(nn.Module):
             # self.maxpool = nn.MaxPool2d(kernel_size=55, stride=54, padding=1)
         if self.rf_level == 10:
             self.maxpool = nn.MaxPool2d(kernel_size=11, stride=10, padding=1)
-            # self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
+        if self.rf_level == 11:
+            self.maxpool = nn.MaxPool2d(kernel_size=44, stride=45, padding=1)
+        if self.rf_level == 12:
+            self.maxpool = nn.MaxPool2d(kernel_size=58, stride=57, padding=1)
+        if self.rf_level == 13:
+            self.maxpool = nn.MaxPool2d(kernel_size=94, stride=93, padding=1)
+        # self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
         # if self.fix_points is None:
         #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
         #                            stride=1, padding=1, bias=False)
@@ -694,73 +707,74 @@ def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     from sparse_ensemble_utils import count_parameters
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    blocks = [1, 2, 3]
     resnet_net = deep_small_ResNet_rf(10, RF_level=4)
 
-    resnet_net = deep_2_small_Resnet_rf(10, RF_level=1, number_layers=25)
-    print("parameter count resnet: {}".format(count_parameters(resnet_net)))
-    vgg_net = DeepSmallVGG_RF("deep_small_vgg_2", 10, RF_level=1)
-    print("parameter count vgg: {}".format(count_parameters(vgg_net)))
-    return
-    # for i in blocks:
-    #     # samples = []
-    #     # for j in range(10):
-    #     x = torch.randn(2, 3, 32, 32)
-    #     dummy_y = torch.zeros(3, 10)
-    #     dummy_y[:, 5] = 1
-    #     dummy_loss = nn.CrossEntropyLoss()
-    #     #
-    #     # if i < 5:
-    #     # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
-    #     # #     y_vgg = vgg_net(x)
-    #     # #     print(y_vgg)
-    #     # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
-    #     # vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
-    #     # print("Receptive field of Small Vgg Level {}".format(i))
-    #     # print(vgg_rf.rfsize)
-    #     #
-    #     #     print("Receptive field of VGG")
-    #     #     print(vgg_rf)
-    #     num_layers = 25
-    #     print("Deep resnet level {}".format(i))
-    #     try:
-    #         resnet_net = deep_2_small_Resnet_rf(10, RF_level=i, number_layers=num_layers)
-    #         resnet_net(x)
-    #         print(f"All good resnet with {num_layers}")
-    #         vgg_net = DeepSmallVGG_RF("deep_small_vgg", 10, RF_level=i)
-    #         vgg_net(x)
-    #         print(f"All good resnet with {num_layers}")
-    #
-    #     except Exception as e:
-    #         print(traceback.format_exc())
-    #         print(e)
-    #
-    #     # y_resnet = resnet_net(x)
-    #     # input_names = ['Image']
-    #     #
-    #     # output_names = ['y_hat']
-    #     #
-    #     # torch.onnx.export(resnet_net, x,
-    #     #                   f'onnx_model_small_resnet_small_imagenet.onnx',
-    #     #                   input_names=input_names,
-    #     #
-    #     # loss = dummy_loss(y_resnet, dummy_y)
-    #     # loss.backward()
-    #     # print(y_resnet)
-    #
-    #     get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
-    #     get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
-    #     if i <= 4:
-    #         image_size = (1, 3, 224, 224)
-    #     else:
-    #         image_size = (1, 3, 1200, 1200)
-    #
-    #     resnet_rf = receptivefield(resnet_net, image_size)
-    #     print("Receptive field of deep small ResNet Level {}".format(i))
-    #     print(resnet_rf.rfsize)
-    #     vgg_rf = receptivefield(vgg_net, image_size)
-    #     print("Receptive field of deep small vgg Level {}".format(i))
-    #     print(vgg_rf.rfsize)
+    # resnet_net = deep_2_small_Resnet_rf(10, RF_level=1, number_layers=25)
+    # print("parameter count resnet: {}".format(count_parameters(resnet_net)))
+    # vgg_net = DeepSmallVGG_RF("deep_small_vgg_2", 10, RF_level=1)
+    # print("parameter count vgg: {}".format(count_parameters(vgg_net)))
+    # return
+
+    for i in blocks:
+        # samples = []
+        # for j in range(10):
+        # x = torch.randn(2, 3, 32, 32)
+        # dummy_y = torch.zeros(3, 10)
+        # dummy_y[:, 5] = 1
+        # dummy_loss = nn.CrossEntropyLoss()
+        #
+        # if i < 5:
+        # vgg_net = small_VGG_RF('small_vgg', RF_level=i)
+        # #     y_vgg = vgg_net(x)
+        # #     print(y_vgg)
+        # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        # vgg_rf = receptivefield(vgg_net, (1, 3, 1500, 1500))
+        # print("Receptive field of Small Vgg Level {}".format(i))
+        # print(vgg_rf.rfsize)
+        #
+        #     print("Receptive field of VGG")
+        #     print(vgg_rf)
+        num_layers = 25
+        # print("Deep resnet level {}".format(i))
+        # try:
+        resnet_net = deep_2_small_Resnet_rf(10, RF_level=i, number_layers=num_layers)
+        #     resnet_net(x)
+        #     print(f"All good resnet with {num_layers}")
+        #     vgg_net = DeepSmallVGG_RF("deep_small_vgg", 10, RF_level=i)
+        #     vgg_net(x)
+        #     print(f"All good resnet with {num_layers}")
+        #
+        # except Exception as e:
+        #     print(traceback.format_exc())
+        #     print(e)
+
+        # y_resnet = resnet_net(x)
+        # input_names = ['Image']
+        #
+        # output_names = ['y_hat']
+        #
+        # torch.onnx.export(resnet_net, x,
+        #                   f'onnx_model_small_resnet_small_imagenet.onnx',
+        #                   input_names=input_names,
+        #
+        # loss = dummy_loss(y_resnet, dummy_y)
+        # loss.backward()
+        # print(y_resnet)
+
+        get_output_until_block_deep_small_resnet(resnet_net, block=4, net_type=1)
+        # get_output_until_block_small_vgg(vgg_net, block=4, net_type=1)
+        if i <= 4:
+            image_size = (1, 3, 224, 224)
+        else:
+            image_size = (1, 3, 2200, 2200)
+
+        resnet_rf = receptivefield(resnet_net, image_size)
+        print("Receptive field of deep small ResNet Level {}".format(i))
+        print(resnet_rf.rfsize)
+        # vgg_rf = receptivefield(vgg_net, image_size)
+        # print("Receptive field of deep small vgg Level {}".format(i))
+        # print(vgg_rf.rfsize)
 
 
 def models_info():

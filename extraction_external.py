@@ -29,7 +29,7 @@ if os.name == 'nt':  # running on windows:
 
 
 class Extract:
-    latent_representation_logs: str = './latent_datasets/'
+    latent_representation_logs: str = '/nobackup/sclaam/latent_representations/'
     downsampling: Optional[int] = 4
     save_feature_map_positions_individually: bool = False
 

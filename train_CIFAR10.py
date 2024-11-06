@@ -1309,7 +1309,7 @@ def main(args):
         solution_name = path.stem
         print("solution name: {}".format(solution_name))
     else:
-        seed = time.time()
+        seed = args.seed_name
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         solution_name = "{}_{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, seed, args.RF_level,
                                                             args.name)
@@ -1416,6 +1416,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', default="cifar10", type=str,
                         help='Dataset to use [cifar10,cifar100,tiny_imagenet]')
+    parser.add_argument('--seed_name', default="no.name", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for trainig')
     parser.add_argument('--model', default="resnet18", type=str, help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
@@ -1464,8 +1465,13 @@ if __name__ == '__main__':
     except Exception as e:
 
         pass
+    if args.seed_name == "no.name":
+        args.seed_name = time.time()
 
+    print("Resolution")
     print(args.resume_solution)
+    print("Seed name")
+    print(args.seed_name)
     # return 0
     if args.experiment == 1:
         main(args)
