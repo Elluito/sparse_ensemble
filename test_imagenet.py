@@ -313,7 +313,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
 
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
-    if args.resize:
+    if args["resize"]:
         first_resize = (int(args["resolution"] * ratio), int(args["resolution"] * ratio))
         target_resolution = (args["resolution"], args["resolution"])
         transform_test = transforms.Compose([transforms.Resize((32, 32)),
