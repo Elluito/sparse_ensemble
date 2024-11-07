@@ -407,7 +407,7 @@ def adjust_bn_running_stats(pruned_model, dataloader_train, max_iter=200):
     pruned_model.train()
     with torch.no_grad():
         for iter_in_epoch, (images, targets) in enumerate(dataloader_train):
-            pruned_model.forward(images)
+            pruned_model.forward(images.cuda())
             if iter_in_epoch > max_iter:
                 break
 
