@@ -392,6 +392,7 @@ def calculate_saturation_models(args):
 
         calculate_train_eval_saturation_solution(net, trainloader, testloader, args.save_folder, sufix_name, i, device)
 
+
 def freeze_all_except_bn(model):
     for name, child in (model.named_children()):
         if name.find('BatchNorm') != -1:
@@ -401,13 +402,16 @@ def freeze_all_except_bn(model):
             for param in child.parameters():
                 param.requires_grad = False
 
-def adjust_bn_running_stats(pruned_model,dataloader_train,max_iter=200):
+
+def adjust_bn_running_stats(pruned_model, dataloader_train, max_iter=200):
     pruned_model.train()
     with torch.no_grad():
-        for iter_in_epoch, sample in enumerate(dataloader_train):
-            pruned_model.forward(sample)
+        for iter_in_epoch, (images, targets) in enumerate(dataloader_train):
+            pruned_model.forward(images)
             if iter_in_epoch > max_iter:
                 break
+
+
 def seed_worker(worker_id):
     worker_seed = torch.initial_seed() % 2 ** 32
     np.random.seed(worker_seed)
@@ -1890,18 +1894,20 @@ def main(args):
             from test_imagenet import load_tiny_imagenet
             trainloader, valloader, testloader = load_tiny_imagenet(
                 {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size,"resolution":args.input_resolution})
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
         if args.dataset == "small_imagenet":
             if args.ffcv:
                 from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
                 trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
                                                                                           args.ffcv_val,
-                                                                                          batch_size, args.num_workers,resolution=args.input_resolution)
+                                                                                          batch_size, args.num_workers,
+                                                                                          resolution=args.input_resolution)
             else:
                 from test_imagenet import load_small_imagenet
                 trainloader, valloader, testloader = load_small_imagenet(
                     {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,"resize":args.resize})
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                     "resize": args.resize})
 
     from torchvision.models import resnet18, resnet50
     net = get_model(args)
@@ -2090,8 +2096,8 @@ def main(args):
 
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-        if  args.adjust_bn:
-            adjust_bn_running_stats(net,trainloader,max_iter=100)
+        if args.adjust_bn:
+            adjust_bn_running_stats(net, trainloader, max_iter=100)
 
         t0 = time.time()
         if args.ffcv:
@@ -2162,16 +2168,16 @@ def main(args):
     if args.adjust_bn:
         df.to_csv(
             "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_bn_adjusted_summary.csv".format(args.save_folder, args.model,
-                                                                  args.RF_level, args.dataset,
-                                                                  args.pruning_rate,
-                                                                  args.name, cfg.pruner), index=False)
+                                                                              args.RF_level, args.dataset,
+                                                                              args.pruning_rate,
+                                                                              args.name, cfg.pruner), index=False)
 
     else:
         df.to_csv(
-        "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
-                                                              args.RF_level, args.dataset,
-                                                              args.pruning_rate,
-                                                              args.name, cfg.pruner), index=False)
+            "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
+                                                                  args.RF_level, args.dataset,
+                                                                  args.pruning_rate,
+                                                                  args.name, cfg.pruner), index=False)
 
 
 def model_statistics(args):
@@ -2446,7 +2452,6 @@ def plot_per_layer_histograms(list_of_per_layer_weights: defaultdict[list], save
         pickle.dump(std_histograms_abs_dict, f)
     with open(f"{save_folder}/{name}_layer_histogram_abs_bin.pkl", "wb") as f:
         pickle.dump(bin_count_hist_abs_, f)
-
 
 
 def adjust_pruning_rate(list_of_excluded_weight, list_of_not_excluded_weight, global_pruning_rate):
@@ -2849,7 +2854,8 @@ if __name__ == '__main__':
                         help='Output folder of the pruning results')
     parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
                         help='Location to save the models', required=True)
-    parser.add_argument('--resize', default=0, type=int, help='Either resize the image to 32x32 and then back to input resolution')
+    parser.add_argument('--resize', default=0, type=int,
+                        help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
