@@ -303,29 +303,29 @@ def test_pin_and_num_workers(args):
 
 
 def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False,
-                        random_split_generator=None,seed_worker=None,resized=False):
+                        random_split_generator=None, seed_worker=None):
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
 
-
     ratio = 256 / 224
-
 
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
-    if  args.resize:
-        first_resize=(int(args["resolution"] * ratio),int(args["resolution"] * ratio))
-        target_resolution=(args["resolution"],args["resolution"])
-        transform_test = transforms.Compose([transforms.Resize()
-            transforms.Resize(int(args["resolution"] * ratio)),
-            transforms.CenterCrop(args["resolution"]),
-            transforms.ToTensor(),
-            transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
-        ])
+    if args.resize:
+        first_resize = (int(args["resolution"] * ratio), int(args["resolution"] * ratio))
+        target_resolution = (args["resolution"], args["resolution"])
+        transform_test = transforms.Compose([transforms.Resize((32, 32)),
+                                             transforms.Resize(first_resize),
+                                             transforms.CenterCrop(target_resolution),
+                                             transforms.ToTensor(),
+                                             transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
+                                             ])
         transform_train = transforms.Compose([
-            transforms.RandomResizedCrop(args["resolution"]),
+            transforms.RandomResizedCrop(target_resolution),
+            transforms.Resize((32, 32)),
+            transforms.Resize(target_resolution),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize_train,
@@ -354,7 +354,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
                                               shuffle=shuffle_test)
 
     whole_train_dataset = datasets.ImageFolder(
-        args["traindir"],transform=transform_train
+        args["traindir"], transform=transform_train
     )
     current_directory = Path(args["traindir"])
 
@@ -384,8 +384,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
     return train_loader, val_loader, test_loader
 
 
-
-def load_tiny_imagenet(args,seed_worker=None):
+def load_tiny_imagenet(args, seed_worker=None):
     normalize_train = transforms.Normalize(mean=[0.4802, 0.4481, 0.3975],
                                            std=[0.2302, 0.2265, 0.2262])
 
