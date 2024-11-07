@@ -28,15 +28,15 @@
 #done
 #done
 
-res=224
+res=1280
 epochs=100
-array=1
+array=0
 ffcv=0
 ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv"
 ffcv_test="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
 #save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv"
 save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_2"
-batch_size=128
+batch_size=16
 
 if [ "${ffcv}" -eq 1 ]; then
   ffcv_string="ffcv"
