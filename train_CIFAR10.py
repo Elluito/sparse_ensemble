@@ -1433,6 +1433,7 @@ if __name__ == '__main__':
                         help='Pad the image to the input size ')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for the dataset')
+    parser.add_argument('--resize', default=0, type=int, help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')

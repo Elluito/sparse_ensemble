@@ -109,7 +109,7 @@ if [ "${11}" -gt 0 ]
   echo "Use FFCV"
 #sbatch --nodes=1 --time=07:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv.err" --output="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv.out" --job-name="${model}_${rf_levels[$idxB]}_${dataset}_${pruning_rates[$idxA]}_confidence_ffcv" slurm_confidence_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=4  RFL="${rf_levels[$idxB]}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rates[$idxA]}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" OUTPUT_DIR="${output_dir}" TOPK=10
 
-python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 16  --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --ffcv_train "${12}" --ffcv_val "${13}" --record_saturation 0
+python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size "${15}"  --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --ffcv_train "${12}" --ffcv_val "${13}" --record_saturation 0
 
 #python3.9 ffcv_loaders.py
 
@@ -119,7 +119,7 @@ python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 16  --save_folder "${1
 else
   echo "Don't use FFCV"
 
-python3.9 train_CIFAR10.py --lr "0.1" --batch_size 16  --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
+python3.9 train_CIFAR10.py --lr "0.1" --batch_size "${15}" --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
 
 #python3.9 ffcv_loaders.py
 
