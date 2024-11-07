@@ -401,7 +401,7 @@ def freeze_all_except_bn(model):
             for param in child.parameters():
                 param.requires_grad = False
 
-def calculate_new_bn_running_stats(pruned_model,dataloader_train,max_iter=100):
+def adjust_bn_running_stats(pruned_model,dataloader_train,max_iter=200):
     pruned_model.train()
     with torch.no_grad():
         for iter_in_epoch, sample in enumerate(dataloader_train):
@@ -2090,6 +2090,8 @@ def main(args):
 
         prune_function(net, cfg)
         remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+        if  args.adjust_bn:
+            adjust_bn_running_stats(net,trainloader,max_iter=100)
 
         t0 = time.time()
         if args.ffcv:
@@ -2156,12 +2158,20 @@ def main(args):
                        "Dense Accuracy": dense_accuracy_list,
                        "Pruned Accuracy": pruned_accuracy_list,
                        })
-    df.to_csv(
+
+    if args.adjust_bn:
+        df.to_csv(
+            "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_bn_adjusted_summary.csv".format(args.save_folder, args.model,
+                                                                  args.RF_level, args.dataset,
+                                                                  args.pruning_rate,
+                                                                  args.name, cfg.pruner), index=False)
+
+    else:
+        df.to_csv(
         "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
                                                               args.RF_level, args.dataset,
                                                               args.pruning_rate,
-                                                              args.name, cfg.pruner),
-        index=False)
+                                                              args.name, cfg.pruner), index=False)
 
 
 def model_statistics(args):
@@ -2828,6 +2838,7 @@ if __name__ == '__main__':
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--adjust_bn', default=0, type=int, help='Use adjustment of BN parameters after pruning')
     parser.add_argument('--dataset', default="cifar10", type=str,
                         help='Dataset to use [cifar10,tiny_imagenet616gg]')
     parser.add_argument('--model', default="resnet18", type=str,
@@ -2889,6 +2900,8 @@ if __name__ == '__main__':
     if args.experiment == 6:
         calculate_saturation_models(args)
     if args.experiment == 7:
+        model_statistics(args)
+    if args.experiment == 8:
         model_statistics(args)
     # gradient_flow_calculation(args)
     # save_pruned_representations()
