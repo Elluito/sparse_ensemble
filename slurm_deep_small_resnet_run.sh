@@ -119,7 +119,7 @@ python3.9 train_CIFAR10.py --ffcv --lr "0.1" --batch_size 16  --save_folder "${1
 else
   echo "Don't use FFCV"
 
-python3.9 train_CIFAR10.py --lr "0.1" --batch_size 16  --save_folder "${12}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
+python3.9 train_CIFAR10.py --lr "0.1" --batch_size 16  --save_folder "${14}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}" --record_saturation 0
 
 #python3.9 ffcv_loaders.py
 
