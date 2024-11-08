@@ -353,7 +353,7 @@ class Deep_small_ResNetRF(nn.Module):
         if self.rf_level == 10:
             self.maxpool = nn.MaxPool2d(kernel_size=11, stride=10, padding=1)
         if self.rf_level == 11:
-            self.maxpool = nn.MaxPool2d(kernel_size=44, stride=45, padding=1)
+            self.maxpool = nn.MaxPool2d(kernel_size=44, stride=43, padding=1)
         if self.rf_level == 12:
             self.maxpool = nn.MaxPool2d(kernel_size=58, stride=57, padding=1)
         if self.rf_level == 13:
