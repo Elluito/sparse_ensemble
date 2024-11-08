@@ -707,7 +707,7 @@ def test_deep_RF_models():
     from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
     from sparse_ensemble_utils import count_parameters
     # blocks = [3, 4, 5, 6, 7, 8, 9, 10]
-    blocks = [1, 2, 3]
+    blocks = [11, 12, 13]
     resnet_net = deep_small_ResNet_rf(10, RF_level=4)
 
     # resnet_net = deep_2_small_Resnet_rf(10, RF_level=1, number_layers=25)
