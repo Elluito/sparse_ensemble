@@ -99,12 +99,12 @@ else
 #done
 #done
 #done
-resolution=224
-#resolution=32
+#resolution=224
+resolution=32
 
 for model in "resnet25_small"; do
-#for dataset in "cifar10"; do
-for dataset in "small_imagenet"; do
+for dataset in "cifar10"; do
+#for dataset in "small_imagenet"; do
 for pruning_rate in "0.8"; do
 for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
@@ -119,9 +119,8 @@ for rf_level in "5" "6" "7" "8" "10"; do
 #run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sam_100_res_224_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 
 run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sgd_100_res_224" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
-
-#run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "ekfac_cifar10_100_res_224_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
-#run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sam_cifar10_100_res_224_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
+run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "ekfac_cifar10_100_res_224_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
+run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sam_cifar10_100_res_224_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 
 
 #run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_2" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sgd_100_res_224_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
