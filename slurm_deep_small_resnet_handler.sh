@@ -28,7 +28,7 @@
 #done
 #done
 
-res=1280
+res=640
 epochs=10
 array=0
 ffcv=0
