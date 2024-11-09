@@ -28,15 +28,15 @@
 #done
 #done
 
-res=224
-epochs=100
-array=1
+res=1280
+epochs=10
+array=0
 ffcv=0
 ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv"
 ffcv_test="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
 #save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv"
 save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_2"
-batch_size=128
+batch_size=16
 
 if [ "${ffcv}" -eq 1 ]; then
   ffcv_string="ffcv"
@@ -48,10 +48,10 @@ for dataset in "small_imagenet"; do
 #for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #for lvl in 13; do                # iterate idxA from 0 to length
-for lvl in 5 6 7 8 10;do
+for lvl in 5;do
 #for lvl in 2 3; do                #
 #for lvl in 5; do                iterate idxA from 0 to length
-jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}_run"
+jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}_large_image"
 if [ "${array}" -eq 1 ]; then
 
 sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1 --array=1-2 --time=144:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}" "${batch_size}"
