@@ -61,7 +61,7 @@ sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1 --array=1-2 --time=144:0
 
 else
 
-sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1  --time=144:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}"
+sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1  --time=144:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${jname}.err" --gres=gpu:1 --output="${jname}.out"  --job-name="${jname}" slurm_deep_small_resnet_run.sh "${model}" "${dataset}" 16 ${lvl}  "normal" "${epochs}" "sgd_${epochs}_res_${res}_${ffcv_string}" 1 0 "${res}" "${ffcv}" "${ffcv_train}" "${ffcv_test}" "${save_folder}" "${batch_size}"
 
 
 fi
