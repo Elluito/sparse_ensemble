@@ -29,7 +29,7 @@
 #done
 
 res=1280
-epochs=50
+epochs=100
 array=1
 ffcv=0
 ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv"
