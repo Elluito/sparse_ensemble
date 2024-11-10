@@ -28,8 +28,8 @@
 #done
 #done
 
-res=224
-epochs=100
+res=1280
+epochs=50
 array=1
 ffcv=0
 ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv"
@@ -43,12 +43,13 @@ if [ "${ffcv}" -eq 1 ]; then
   else
   ffcv_string="no_ffcv"
   fi
+for res in 1280 640 426; do
 for model in "resnet25_small"; do
 for dataset in "small_imagenet"; do
 #for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #for lvl in 13; do                # iterate idxA from 0 to length
-for lvl in 5 6 7 8 10;do
+for lvl in 5;do
 #for lvl in 2 3; do                #
 #for lvl in 5; do                iterate idxA from 0 to length
 jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}_more_models"
@@ -66,7 +67,7 @@ sbatch --ntasks-per-node=1 --cpus-per-task=16 --nodes=1  --time=144:00:00 --part
 
 fi
 
-
+done
 done
 done
 done
