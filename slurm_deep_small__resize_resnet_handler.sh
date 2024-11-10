@@ -49,7 +49,7 @@ for dataset in "small_imagenet"; do
 #for dataset in "cifar10"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
 #for lvl in 13; do                # iterate idxA from 0 to length
-for lvl in 5 6 7 8 10 11 12 13;do
+for lvl in 7 12 13;do
 #for lvl in 2 3; do                #
 #for lvl in 5; do                iterate idxA from 0 to length
 jname="deep_${model}_lvl_${lvl}_${dataset}_res_${res}_${ffcv_string}_resized"
