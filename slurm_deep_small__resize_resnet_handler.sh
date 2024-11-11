@@ -36,6 +36,7 @@ ffcv_train="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_36
 ffcv_test="/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv"
 #save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_ffcv"
 save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_2"
+#save_folder="/jmain02/home/J2AD014/mtc03/lla98-mtc03/deep_small_models_resized"
 batch_size=128
 
 if [ "${ffcv}" -eq 1 ]; then

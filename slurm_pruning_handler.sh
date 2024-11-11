@@ -1,6 +1,7 @@
 #!/bin/bash
 
 
+
 run_pruning() {
 model=$1
 dataset=$2
