@@ -100,14 +100,14 @@ else
 #done
 #done
 #done
+resolution=224
 #resolution=224
-resolution=32
-
+save_folder="small_imagenet_resized_experiments_pruning"
 for model in "resnet25_small"; do
-for dataset in "cifar10"; do
-#for dataset in "small_imagenet"; do
-for pruning_rate in "0.99"; do
-for rf_level in  "8" "10"; do
+#for dataset in "cifar10"; do
+for dataset in "small_imagenet"; do
+for pruning_rate in "0.8" "0.9" "0.95"; do
+for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
 
