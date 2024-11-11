@@ -17,6 +17,7 @@ ffcv_val=$9
 pruning_rate="${10}"
 rf_level="${11}"
 resolution="${12}"
+resize="${13}"
 # For resnet18
 #
 #  if [ "${10}" -gt 0 ]
@@ -38,11 +39,11 @@ resolution="${12}"
 if [ "${ffcv}" -gt 0 ]
   then
   echo "Use FFCV"
-sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate]}_pruning_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=16  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}"
+sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate]}_pruning_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=16  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
 
 else
  echo "Don't use FFCV"
- sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv" slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=16  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}"
+ sbatch --nodes=1 --time=03:00:00 --partition=small --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv" slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=16  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
   fi
 #done
 #done
@@ -101,6 +102,7 @@ else
 #done
 #done
 resolution=224
+resize=1
 #resolution=224
 save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 #save_folder="${HOME}/sparse_ensemble/large_input_pruning_results"
@@ -130,7 +132,7 @@ for rf_level in "5" "6" "7" "8" "10" "11" "12" "13"; do
 #run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_2" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sam_cifar10_100_res_224_gc_0_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 
 
-run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_resized" "${HOME}/datasets" "${save_folder}" "sgd_100_res_224" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
+run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_resized" "${HOME}/datasets" "${save_folder}" "sgd_100_res_224" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
 
 
 
