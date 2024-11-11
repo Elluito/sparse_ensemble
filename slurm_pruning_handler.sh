@@ -109,7 +109,7 @@ save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 for model in "resnet25_small"; do
 #for dataset in "cifar10"; do
 for dataset in "small_imagenet"; do
-for pruning_rate in "0.8"; do
+for pruning_rate in "0.9"; do
 for rf_level in "5" "6" "7" "8" "10" "11" "12" "13"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
