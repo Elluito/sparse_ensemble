@@ -107,7 +107,7 @@ for model in "resnet25_small"; do
 for dataset in "cifar10"; do
 #for dataset in "small_imagenet"; do
 for pruning_rate in "0.99"; do
-for rf_level in "5" "6" "7" "8" "10"; do
+for rf_level in  "8" "10"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
 
