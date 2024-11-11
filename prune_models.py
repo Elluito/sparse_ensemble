@@ -2092,6 +2092,7 @@ def main(args):
         calculated_accuracy = test(net, testloader=testloader)
 
         dense_accuracy_list.append(calculated_accuracy)
+        # dense_accuracy_list.append(state_dict_raw["acc"])
 
         print("Calculated Dense accuracy:{}".format(calculated_accuracy))
 
