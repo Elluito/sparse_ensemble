@@ -2182,6 +2182,7 @@ def main(args):
 
 
 def model_statistics(args):
+
     if "vgg" in args.model:
         exclude_layers = ["features.0", "classifier"]
     if "resnet" in args.model:
@@ -2254,7 +2255,8 @@ def find_nearest(array, value):
     return array[idx]
 
 
-def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, range=(0, 0.1)):
+def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, range=(0, 0.4)):
+
     colors = ["m", "g", "r", "c"]
     bin_count = None
 
@@ -2270,7 +2272,7 @@ def plot_whole_histogram(list_of_whole_models: np.ndarray, save_folder, name, ra
         absolute_of_vector = np.abs(whole_vector)
         count2, bin_counts2 = np.histogram(absolute_of_vector, bins=len(absolute_of_vector), range=range)
         count_hist_abs, bin_count_hist_abs_ = np.histogram(absolute_of_vector, bins=1000, range=range)
-        count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000, range=(-0.1, 0.1))
+        count_hist, bin_count_hist_ = np.histogram(whole_vector, bins=1000, range=(-0.5, 0.5))
         pdf2 = count2 / np.sum(count2)
         cdf2 = np.cumsum(pdf2, axis=0)
         all_cdfs.append(cdf2)
