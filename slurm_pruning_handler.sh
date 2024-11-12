@@ -102,7 +102,7 @@ else
 #done
 #done
 #resolution=32
-resize=1
+resize=0
 resolution=224
 #save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 save_folder="${HOME}/sparse_ensemble/large_input_pruning_results"
