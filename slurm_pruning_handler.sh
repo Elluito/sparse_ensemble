@@ -106,7 +106,7 @@ resize=0
 resolution=224
 #save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 save_folder="${HOME}/sparse_ensemble/large_input_pruning_results"
-checkpoints_folder="${HOME}/sparse_ensemble/new_training_small_imagenet"
+checkpoints_folder="${HOME}/new_training_small_imagenet"
 for model in "resnet25_small"; do
 #for dataset in "cifar10"; do
 for dataset in "small_imagenet"; do
