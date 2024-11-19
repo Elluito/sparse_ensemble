@@ -40,11 +40,14 @@ model="resnet25_small"
 dataset="small_imagenet"
 resolution=224
 
-sol1rs24="/nobackup/sclaam/deep_small_models_saturation/"
-sol1rs24="/nobackup/sclaam/deep_small_models_saturation/"
-sol1rs24="/nobackup/sclaam/deep_small_models_saturation/"
-sol1rs24="/nobackup/sclaam/deep_small_models_saturation/"
-sol1rs24="/nobackup/sclaam/deep_small_models_saturation/"
+sol1rs25="/nobackup/sclaam/deep_small_models_2/"
+sol2rs25="/nobackup/sclaam/deep_small_models_2/"
+sol3rs25="/nobackup/sclaam/deep_small_models_2/"
+sol4rs25="/nobackup/sclaam/deep_small_models_2/"
+sol5rs25="/nobackup/sclaam/deep_small_models_2/"
+sol6rs25="/nobackup/sclaam/deep_small_models_2/"
+sol7rs25="/nobackup/sclaam/deep_small_models_2/"
+sol8rs25="/nobackup/sclaam/deep_small_models_2/"
 
 
 
