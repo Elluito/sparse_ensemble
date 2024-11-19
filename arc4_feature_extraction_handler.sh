@@ -62,6 +62,7 @@ sol8rs25="/nobackup/sclaam/resnet25_small_imagenet/resnet25_small_normal_small_i
 
 
 rf_levels=("5" "6" "7" "8" "10" "11" "12" "13")
+
 solutions=("${sol1rs25}" "${sol2rs25}" "${sol3rs25}" "${sol4rs25}" "${sol5rs25}" "${sol6rs25}" "${sol7rs25}" "${sol8rs25}")
 names=("sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test")
 
