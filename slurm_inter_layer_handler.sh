@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 run_pruning() {
 
 model=$1
@@ -92,7 +93,7 @@ else
 
 
 for model in "resnet50"; do
-for dataset in "cifar10"; do
+for dataset in ""; do
 for pruning_rate in "0.9"; do
 for rf_level in "3"; do
 
