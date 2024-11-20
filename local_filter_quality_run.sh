@@ -60,21 +60,22 @@ python3.9 prune_models.py --name "${name}" --model "${model}" --dataset "${datas
 
 }
 
-solutions_folder="/home/luisaam/Downloads/resnet_25_small_imagenet"
-#solutions_folder="/home/luisaam/Downloads/deep_small_models_resized"
+#solutions_folder="/home/luisaam/Downloads/resnet_25_small_imagenet"
+solutions_folder="/home/luisaam/Downloads/deep_small_models_resized"
 data_folder="/home/luisaam/Documents/PhD/data/"
 #save_folder="/home/luisaam/PycharmProjects/sparse_ensemble"
 #save_folder="/home/luisaam/PycharmProjects/sparse_ensemble/filter_quality_results/small_imagenet/"
-
 save_folder="/home/luisaam/PycharmProjects/sparse_ensemble/filter_quality_results/small_imagenet_resized/"
 
-resolution=224
-for model in "resnet50"; do
-for dataset in ""; do
+#resolution=224
+
+for model in "resnet25_small"; do
+for dataset in "small_imagenet"; do
 for pruning_rate in "0.9"; do
 for rf_level in "5" "6" "7" "8" "10" "11" "12" "13"; do
+#for rf_level in "6" ""; do
 
-run_pruning "${model}" "$dataset" "${solutions_folder}" "${data_folder}" "${save_folder}" "" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+run_pruning "${model}" "$dataset" "${solutions_folder}" "${data_folder}" "${save_folder}" "sgd_100_res_224_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 
 done
 done
