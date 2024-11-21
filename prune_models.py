@@ -101,8 +101,8 @@ files = [rf_level1_s1, rf_level1_s2, rf_level2_s1, rf_level2_s2, rf_level3_s1, r
 level = [1, 1, 2, 2, 3, 3, 4, 4]
 modelstypes = ["alternative"] * len(level)
 
-# device = 'cuda' if torch.cuda.is_available() else 'cpu'
-device = "cpu"
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# device = "cpu"
 
 use_cuda = True if device == "cuda" else False
 
