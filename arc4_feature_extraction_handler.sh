@@ -69,7 +69,7 @@ names=("sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_re
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 16 128 "${logs_folder}" "${names[$idxA]}" 7 "${latent_folder}"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 16 128 "${logs_folder}" "${names[$idxA]}" 4 "${latent_folder}"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
 
 

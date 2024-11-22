@@ -27,7 +27,7 @@
 
 
 
-conda activate work2
+conda activate work
 
 
 unset GOMP_CPU_AFFINITY
