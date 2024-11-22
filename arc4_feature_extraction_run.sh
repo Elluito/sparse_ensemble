@@ -29,7 +29,7 @@
 
 conda activate work
 
-
+which python
 unset GOMP_CPU_AFFINITY
 unset KMP_AFFINITY
 
