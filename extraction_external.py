@@ -571,6 +571,7 @@ if __name__ == '__main__':
     parser.add_argument('--pad', default=0, type=int,
                         help='Pad the image to the input size ')
 
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--downsampling', dest='downsampling', type=int, default=7,
