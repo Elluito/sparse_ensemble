@@ -28,7 +28,7 @@ latent_folder="${12}"
 
 
 
-qsub -l h_rt=40:00:00 -l coproc_v100=1  -N "extract_features_${model}_${dataset}_rf_level_${rf_level}" arc4_feature_extraction.sh "${data_folder}" "${model}" "normal" "${solution}" "${dataset}" "${rf_level}" "${resolution}" "${num_workers}" "${batch_size}" "${save_folder}" "${name}" "${latent_folder}" "${downsampling}"
+qsub -l h_rt=40:00:00 -l coproc_v100=1  -N "extract_features_${model}_${dataset}_rf_level_${rf_level}" arc4_feature_extraction_run.sh "${data_folder}" "${model}" "normal" "${solution}" "${dataset}" "${rf_level}" "${resolution}" "${num_workers}" "${batch_size}" "${save_folder}" "${name}" "${latent_folder}" "${downsampling}"
 
 }
 
