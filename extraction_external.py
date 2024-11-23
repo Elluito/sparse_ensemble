@@ -559,31 +559,31 @@ def run_local_test():
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
-    # parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
-    # parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
-    # parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
-    # parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
-    # parser.add_argument('--name', dest='name', type=str, default=None, help='Name of the files')
-    # parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
-    # parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
-    # parser.add_argument('--pad', default=0, type=int,
-    #                     help='Pad the image to the input size ')
-    #
-    # parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
-    # parser.add_argument('--resize', default=0, type=int,
-    #                     help='Either resize the image to 32x32 and then back to input resolution')
-    # parser.add_argument('--downsampling', dest='downsampling', type=int, default=7,
-    #                     help='Target resolution to downsample the intermediate representations')
-    # parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
-    # parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
-    # parser.add_argument('--width', default=1, type=int, help='Width of the Network')
-    # parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
-    # parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
-    # parser.add_argument('--latent_folder', default="/nobackup/sclaam/latent_representations/", type=str, help='Save path of representations')
-    # args = parser.parse_args()
-    #
-    # main(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', dest='folder', type=str, default="./latent_datasets", help='data folder')
+    parser.add_argument('-m', dest='model', type=str, default="vgg19", help='Model architecture')
+    parser.add_argument('-t', dest='type', type=str, default="normal", help='Type of model')
+    parser.add_argument('-s', dest='solution', type=str, default=None, help='Solution to use')
+    parser.add_argument('-d', dest='dataset', type=str, default=None, help='Dataset to use')
+    parser.add_argument('--name', dest='name', type=str, default=None, help='Name of the files')
+    parser.add_argument('--RF_level', dest='RF_level', type=int, default=2, help='Receptive field level')
+    parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
+    parser.add_argument('--pad', default=0, type=int,
+                        help='Pad the image to the input size ')
 
-    run_local_test()
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+    parser.add_argument('--resize', default=0, type=int,
+                        help='Either resize the image to 32x32 and then back to input resolution')
+    parser.add_argument('--downsampling', dest='downsampling', type=int, default=7,
+                        help='Target resolution to downsample the intermediate representations')
+    parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
+    parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
+    parser.add_argument('--latent_folder', default="/nobackup/sclaam/latent_representations/", type=str, help='Save path of representations')
+    args = parser.parse_args()
+
+    main(args)
+
+    # run_local_test()
