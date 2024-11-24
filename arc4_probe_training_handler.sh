@@ -20,7 +20,7 @@ name=$6
 
 
 
-sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --gres=gpu:1 --error="training_probes_${model}_${dataset}_rf_level_${rf_level}.err"  --output="training_probes_${model}_${dataset}_rf_level_${rf_level}.out"  --job-name="training_probes_${model}_${dataset}_rf_level_${rf_level}" slurm_training_probes_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
+#sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --gres=gpu:1 --error="training_probes_${model}_${dataset}_rf_level_${rf_level}.err"  --output="training_probes_${model}_${dataset}_rf_level_${rf_level}.out"  --job-name="training_probes_${model}_${dataset}_rf_level_${rf_level}" slurm_training_probes_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
 qsub -l h_rt=40:00:00 -N "training_probes_${model}_${dataset}_rf_level_${rf_level}_${name}"  arc4_probe_training_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
 
 }
@@ -32,19 +32,24 @@ logs_folder="./probes_logs/"
 
 
 
+#
+#
+#rf_levels=("1" "2" "3" "4")
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+# run_probe_training "vgg19" "cifar10" "${rf_levels[$idxA]}" "224" "${logs_folder}" "x" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+#done
+#
+#
+#
+#rf_levels=("1" "2" "3" "4" "9" "10" "11")
+#levels_max=${#rf_levels[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
+# run_probe_training "resnet50" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}" "x"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+#done
 
-
-rf_levels=("1" "2" "3" "4")
+rf_levels=("5" "6" "7" "8" "10" "11" "12" "13")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_probe_training "vgg19" "cifar10" "${rf_levels[$idxA]}" "224" "${logs_folder}" "x" # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_probe_training "resnet25_small" "small_imagenet" "${rf_levels[$idxA]}" "224" "${logs_folder}" "x"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
-
-
-
-rf_levels=("1" "2" "3" "4" "9" "10" "11")
-levels_max=${#rf_levels[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_probe_training "resnet50" "cifar10" "${rf_levels[$idxA]}" "32" "${logs_folder}" "x"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
-done
-
