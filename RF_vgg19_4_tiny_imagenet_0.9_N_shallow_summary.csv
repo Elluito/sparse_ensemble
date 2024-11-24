@@ -1,6 +1,0 @@
-Name,N Shallow layer index,N Shallow layer name,Dense Accuracy,Pruned Accuracy
-vgg19_normal_tiny_imagenet_seed_2_rf_level_4_test_acc_39.3.pth,14,features.46,39.3,35.19
-vgg19_normal_tiny_imagenet_seed_4_rf_level_4_test_acc_40.26.pth,14,features.46,40.26,37.91
-vgg19_normal_tiny_imagenet_seed_3_rf_level_4_test_acc_39.03.pth,14,features.46,39.03,34.58
-vgg19_normal_tiny_imagenet_seed_1_rf_level_4_test_acc_35.77.pth,14,features.46,35.77,32.01
-vgg19_normal_tiny_imagenet_seed_0_rf_level_4_test_acc_38.51.pth,14,features.46,38.51,35.25

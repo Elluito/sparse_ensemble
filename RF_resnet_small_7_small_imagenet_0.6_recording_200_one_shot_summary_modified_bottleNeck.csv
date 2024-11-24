@@ -1,5 +1,0 @@
-Name,Dense Accuracy,Pruned Accuracy
-resnet_small_normal_small_imagenet_seed.9_rf_level_7_recording_200_test_acc_51.51.pth,48.54,47.98
-resnet_small_normal_small_imagenet_seed.1_rf_level_7_recording_200_test_acc_51.82.pth,48.76,47.77
-resnet_small_normal_small_imagenet_seed.2_rf_level_7_recording_200_test_acc_51.77.pth,48.17,47.24
-resnet_small_normal_small_imagenet_seed.3_rf_level_7_recording_200_test_acc_51.66.pth,48.54,47.27

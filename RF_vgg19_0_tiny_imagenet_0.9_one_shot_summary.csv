@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Accuracy
-vgg19_normal_tiny_imagenet_1699823980.4586823_rf_level_0_test_acc_62.98.pth,62.98,0.97
-vgg19_normal_tiny_imagenet_1699823980.5146568_rf_level_0_test_acc_63.14.pth,63.14,1.41
-vgg19_normal_tiny_imagenet_1699823980.4341764_rf_level_0_test_acc_62.46.pth,62.46,0.47
-vgg19_normal_tiny_imagenet_1699823980.4892583_rf_level_0_test_acc_62.24.pth,62.24,0.54
-vgg19_normal_tiny_imagenet_1699823980.4912333_rf_level_0_test_acc_62.71.pth,62.71,0.67

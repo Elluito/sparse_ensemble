@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Fine Tuned Accuracy
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_0_rf_level_1__test_acc_31.13.pth,62.17,31.13
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_1_rf_level_1__test_acc_29.32.pth,61.36,29.32
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_4_rf_level_1__test_acc_26.47.pth,61.42,26.47
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_2_rf_level_1__test_acc_33.55.pth,61.44,33.55
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_3_rf_level_1__test_acc_30.6.pth,61.53,30.6

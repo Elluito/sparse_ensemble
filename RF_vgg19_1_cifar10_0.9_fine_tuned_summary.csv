@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Fine Tuned Accuracy
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_cifar10_seed_3_rf_level_1__test_acc_90.31.pth,93.65,90.31
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_cifar10_seed_4_rf_level_1__test_acc_92.83.pth,93.42,92.83
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_cifar10_seed_0_rf_level_1__test_acc_88.36.pth,93.61,88.36
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_cifar10_seed_2_rf_level_1__test_acc_92.97.pth,93.55,92.97
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_cifar10_seed_1_rf_level_1__test_acc_92.62.pth,93.39,92.62

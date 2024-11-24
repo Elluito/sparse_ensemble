@@ -1,7 +1,0 @@
-Name,N Shallow layer index,N Shallow layer name,Dense Accuracy,Pruned Accuracy
-resnet50_normal_tiny_imagenet_seed_2_rf_level_7__test_acc_22.7.pth,1,layer1.0.conv1,22.7,22.7
-resnet50_normal_tiny_imagenet_seed_1_rf_level_7__test_acc_23.42.pth,1,layer1.0.conv1,23.42,23.42
-resnet50_normal_tiny_imagenet_seed_0_rf_level_7__test_acc_22.6.pth,1,layer1.0.conv1,22.6,22.6
-resnet50_normal_tiny_imagenet_seed_4_rf_level_7__test_acc_22.5.pth,1,layer1.0.conv1,22.5,22.5
-resnet50_normal_tiny_imagenet_seed_3_rf_level_7__test_acc_22.98.pth,1,layer1.0.conv1,22.98,22.98
-resnet50_normal_tiny_imagenet_1702507287.6491537_rf_level_7_recording_test_acc_25.37.pth,1,layer1.0.conv1,25.37,25.05

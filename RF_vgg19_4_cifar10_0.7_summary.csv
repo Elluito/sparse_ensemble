@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Accuracy
-vgg19_normal_cifar10_seed_1_rf_level_4_test_acc_85.98.pth,85.98,85.98
-vgg19_normal_cifar10_seed_0_rf_level_4_test_acc_85.82.pth,85.82,85.82
-vgg19_normal_cifar10_seed_3_rf_level_4_test_acc_86.08.pth,86.08,86.08
-vgg19_normal_cifar10_seed_2_rf_level_4_test_acc_85.53.pth,85.53,85.53
-vgg19_normal_cifar10_seed_4_rf_level_4_test_acc_85.99.pth,85.99,85.99
