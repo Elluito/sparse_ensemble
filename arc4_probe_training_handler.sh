@@ -52,4 +52,5 @@ rf_levels=("5" "6" "7" "8" "10" "11" "12" "13")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
  run_probe_training "resnet25_small" "small_imagenet" "${rf_levels[$idxA]}" "224" "${logs_folder}" "x"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+
 done
