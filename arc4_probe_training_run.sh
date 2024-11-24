@@ -1,7 +1,9 @@
 #!/bin/bash
 #$ -cwd -V
 # -l h_rt=01:00:00
-#$ -pe smp 8
+#$ -pe smp 16
+# Send emails when job starts and ends
+#$ -m be
 
 
 #python3.9 -c "import os; print(os.environ)"
@@ -24,4 +26,4 @@
 
 unset GOMP_CPU_AFFINITY KMP_AFFINITY
 
-python train_probes.py -m $1 -d $2 --RF_level $3 --input_resolution $4 -mp 8 --save_path $5 --name $6
+python train_probes.py -m $1 -d $2 --RF_level $3 --input_resolution $4 -mp 16 --save_path $5 --name $6
