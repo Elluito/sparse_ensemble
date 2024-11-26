@@ -130,7 +130,7 @@ def get_data_annd_labels(data_path: str, label_path: str) -> Tuple[np.ndarray, n
 @memory.cache
 def fit_with_cache(data: np.ndarray, labels: np.ndarray, verbose: int = 100):
     model = LogisticRegressionModel(
-        multi_class='multinomial', n_jobs=12, solver='saga', verbose=verbose,max_iter=50
+        multi_class='multinomial', n_jobs=12, solver='saga', verbose=verbose,max_iter=2
     ).fit(data, labels)
     return model
 
