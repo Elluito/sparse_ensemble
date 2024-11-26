@@ -21,7 +21,7 @@ name=$6
 
 
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --gres=gpu:1 --error="training_probes_${model}_${dataset}_rf_level_${rf_level}.err"  --output="training_probes_${model}_${dataset}_rf_level_${rf_level}.out"  --job-name="training_probes_${model}_${dataset}_rf_level_${rf_level}" slurm_training_probes_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
-qsub -l h_rt=40:00:00 -N "training_probes_${model}_${dataset}_rf_level_${rf_level}_${name}"  arc4_probe_training_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
+qsub -l h_rt=48:00:00 -N "training_probes_${model}_${dataset}_rf_level_${rf_level}_${name}"  arc4_probe_training_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
 
 }
 
