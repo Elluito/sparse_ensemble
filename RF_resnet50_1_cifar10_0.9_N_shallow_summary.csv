@@ -1,4 +1,0 @@
-Name,N Shallow layer index,N Shallow layer name,Dense Accuracy,Pruned Accuracy
-resnet50_normal_cifar10_seed_0_4_rf_level_1.pth,44,layer4.0.conv2,94.92,93.19
-resnet50_normal_cifar10_seed_0_3_rf_level_1.pth,45,layer4.0.conv3,94.65,93.07
-resnet50_normal_cifar10_seed_0_5_rf_level_1.pth,45,layer4.0.conv3,94.5,92.89

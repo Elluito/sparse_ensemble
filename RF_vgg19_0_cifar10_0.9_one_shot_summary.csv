@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Accuracy
-vgg19_normal_cifar10_1705010761.3891203_rf_level_0_no_recording_test_acc_93.96.pth,93.96,10.04
-vgg19_normal_cifar10_1705010761.3061335_rf_level_0_no_recording_test_acc_93.9.pth,93.9,19.36
-vgg19_normal_cifar10_1705013551.0443985_rf_level_0_no_recording_test_acc_93.9.pth,93.9,10.0
-vgg19_normal_cifar10_1705010761.3280802_rf_level_0_no_recording_test_acc_94.04.pth,94.04,10.0
-vgg19_normal_cifar10_1705010761.4934812_rf_level_0_no_recording_test_acc_94.17.pth,94.17,10.0

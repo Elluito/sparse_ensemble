@@ -232,6 +232,7 @@ def format_time(seconds):
 
 
 def get_model(args):
+
     from torchvision.models import resnet50
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":

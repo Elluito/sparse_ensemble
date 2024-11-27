@@ -1,6 +1,0 @@
-Name,Dense Accuracy,Pruned Fine Tuned Accuracy,Fine-tuning Best Epoch
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_0_rf_level_1__test_acc_33.87.pth,62.17,33.87,34
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_1_rf_level_1__test_acc_34.37.pth,61.36,34.37,40
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_4_rf_level_1__test_acc_34.1.pth,61.42,34.1,80
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_2_rf_level_1__test_acc_33.75.pth,61.44,33.75,45
-/nobackup/sclaam/checkpoints/pruned/0.9/vgg19_normal_tiny_imagenet_seed_3_rf_level_1__test_acc_33.54.pth,61.53,33.54,43

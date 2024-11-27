@@ -1,4 +1,0 @@
-Name,Dense Accuracy,Pruned Fine Tuned Accuracy
-/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_cifar10_seed_0_4_rf_level_4.pth_test_acc_90.4.pth,90.37,90.4
-/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_cifar10_seed_0_5_rf_level_4.pth_test_acc_90.18.pth,90.27,90.18
-/nobackup/sclaam/checkpoints/pruned/0.9/resnet50_normal_cifar10_seed_0_3_rf_level_4.pth_test_acc_90.12.pth,90.04,90.12

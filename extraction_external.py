@@ -22,6 +22,7 @@ from alternate_models import *
 from typing import Optional
 from train_CIFAR10 import get_model
 from main import get_datasets
+
 if os.name == 'nt':  # running on windows:
     import win32file
 
@@ -362,6 +363,7 @@ def main(args):
     #     trainloader, valloader, testloader = load_tiny_imagenet(
     #         {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
     #          "num_workers": args.num_workers, "batch_size": batch_size})
+
     if args.dataset == "small_imagenet":
         if args.ffcv:
             from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
@@ -377,10 +379,11 @@ def main(args):
             from test_imagenet import load_small_imagenet
             trainloader, valloader, testloader = load_small_imagenet(
                 {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution},
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                 "resize": args.resize},
                 val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False)
     else:
-        trainloader,valloader,testloader = get_datasets(args)
+        trainloader, valloader, testloader = get_datasets(args)
 
     # from torchvision.models import resnet18, resnet50
 
@@ -455,7 +458,6 @@ def main(args):
     net = get_model(args)
     ###########################################################################
     if args.solution:
-
         temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
         if args.type == "normal" and args.RF_level != 0:
             net.load_state_dict(temp_dict, strict=False)
@@ -470,8 +472,10 @@ def main(args):
             print("Loaded solution!")
     extractor = Extract()
     net.to(args.device)
+    extractor.downsampling = args.downsampling
+    extractor.latent_representation_logs = args.latent_folder
     extractor(net, args.model, args.dataset, args.input_resolution, trainloader, testloader, args.device,
-              args.save_path, args.RF_level,args.name)
+              args.save_path, args.RF_level, args.name)
 
 
 def extract_from_dataset(logger: LatentRepresentationCollector,
@@ -512,22 +516,35 @@ def extract_from_dataset(logger: LatentRepresentationCollector,
 def run_local_test():
     cfg = omegaconf.DictConfig({
         # "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
-        "solution": "/home/luisaam/checkpoints/vgg19_normal_cifar10_1723720946.9104598_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth",
+        # "solution": "/home/luisaam/checkpoints/vgg19_normal_cifar10_1723720946.9104598_rf_level_1_recording_200_no_ffcv_test_acc_93.77.pth",
         # "solution": "/home/luisaam/checkpoints/resnet50_normal_cifar10_1723722961.8540442_rf_level_2_recording_200_no_ffcv_test_acc_94.24.pth",
+        # solutions for small imagenet
+        "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731451265.2229764_rf_level_5_sgd_100_res_224_no_ffcv_test_acc_70.3.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731451265.2231426_rf_level_6_sgd_100_res_224_no_ffcv_test_acc_68.76.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731451265.2230341_rf_level_7_sgd_100_res_224_no_ffcv_test_acc_67.62.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731451265.223035_rf_level_8_sgd_100_res_224_no_ffcv_test_acc_67.23.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731451265.2231302_rf_level_10_sgd_100_res_224_no_ffcv_test_acc_65.03.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002508.677377_rf_level_11_sgd_100_res_224_no_ffcv_test_acc_44.11.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002507.845115_rf_level_12_sgd_100_res_224_no_ffcv_test_acc_34.88.pth",
+        # "solution": "/home/luisaam/Downloads/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002508.0559256_rf_level_13_sgd_100_res_224_no_ffcv_test_acc_29.1.pth",
+        "downsampling": 4,
         "modeltype1": "normal",
         "seedname1": "_seed_8",
-        "RF_level": 2,
+        # "latent_folder": "/nobackup/sclaam/latent_representations/",
+        "latent_folder": "./latent_datasets",
+        "resize": 0,
+        "RF_level": 5,
         "epochs": 1,
         "ffcv": 0,
         "ffcv_val": "",
         "ffcv_train": "",
-        "batch_size": 64,
-        "model": "resnet50",
-        "dataset": "cifar10",
+        "batch_size": 128,
+        "model": "resnet25_small",
+        "dataset": "small_imagenet",
         "num_workers": 0,
         "input_resolution": 32,
         "width": 1,
-        "name": "no_name",
+        "name": "sgd_100_res_224_no_ffcv_test",
         "save_path": "./logs/",
         "folder": "/home/luisaam/Documents/PhD/data/",
         "lr": 0.1,
@@ -553,11 +570,18 @@ if __name__ == '__main__':
     parser.add_argument('--device', dest='device', type=str, default="cuda:0", help='Device to use')
     parser.add_argument('--pad', default=0, type=int,
                         help='Pad the image to the input size ')
+
+    parser.add_argument('--ffcv', action='store_true', help='Use FFCV loaders')
+    parser.add_argument('--resize', default=0, type=int,
+                        help='Either resize the image to 32x32 and then back to input resolution')
+    parser.add_argument('--downsampling', dest='downsampling', type=int, default=7,
+                        help='Target resolution to downsample the intermediate representations')
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
+    parser.add_argument('--latent_folder', default="/nobackup/sclaam/latent_representations/", type=str, help='Save path of representations')
     args = parser.parse_args()
 
     main(args)

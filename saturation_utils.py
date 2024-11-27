@@ -4,6 +4,7 @@ from sparse_ensemble_utils import test
 
 
 def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_folder, file_name_sufix, seed, device):
+    # print("{}/{}_seed_{}".format(save_folder, file_name_sufix, seed))
     csv_tracker = SaturationTracker("{}/{}_seed_{}".format(save_folder, file_name_sufix, seed), save_to="csv",
                                     modules=net,
                                     device=device, average_sat=True)
