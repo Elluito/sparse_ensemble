@@ -511,7 +511,6 @@ def extract_from_dataset(logger: LatentRepresentationCollector,
                 logger.logs[mode]['labels'] = labels.cpu().numpy()
             else:
                 logger.logs[mode]['labels'] = np.hstack((logger.logs[mode]['labels'], labels.cpu().numpy()))
-            break
     print('accuracy:', correct / total)
 
 
