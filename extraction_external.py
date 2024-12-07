@@ -21,7 +21,8 @@ import torch.nn as nn
 from alternate_models import *
 from typing import Optional
 from train_CIFAR10 import get_model
-from main import get_datasets
+from main import get_datasets,prune_function,remove_reparametrization
+from prune_models import adjust_bn_running_stats
 
 if os.name == 'nt':  # running on windows:
     import win32file
@@ -513,6 +514,118 @@ def extract_from_dataset(logger: LatentRepresentationCollector,
     print('accuracy:', correct / total)
 
 
+def main_pruned(args):
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear", "fc"]
+
+    print("Normal data loaders loaded!!!!")
+
+    cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+    # Data
+    print('==> Preparing data..')
+    # current_directory = args.folder
+    data_path = args.folder
+    # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+    #     data_path = "/nobackup/sclaam/data"
+    # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+    #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+    #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+    #     data_path = "/home/luisaam/Documents/PhD/data/"
+    print(data_path)
+    batch_size = args.batch_size
+    # if "32" in args.name:
+    #     batch_size = 32
+    # if "64" in args.name:
+    #     batch_size = 64
+
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(*stats_to_use),
+    ])
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+
+    if args.dataset == "small_imagenet":
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+            trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                      args.ffcv_val,
+                                                                                      batch_size, args.num_workers,
+                                                                                      valsize=5000,
+                                                                                      testsize=10000,
+                                                                                      shuffle_val=True,
+                                                                                      shuffle_test=False, )
+        else:
+
+            from test_imagenet import load_small_imagenet
+            trainloader, valloader, testloader = load_small_imagenet(
+                {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                 "resize": args.resize},
+                val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False)
+    else:
+        trainloader, valloader, testloader = get_datasets(args)
+
+    net = get_model(args)
+
+    ###########################################################################
+    if args.solution:
+        temp_dict = torch.load(args.solution, map_location=torch.device('cpu'))["net"]
+        if args.type == "normal" and args.RF_level != 0:
+            net.load_state_dict(temp_dict, strict=False)
+            print("Loaded solution!")
+        else:
+            real_dict = {}
+            for k, item in temp_dict.items():
+                if k.startswith('module'):
+                    new_key = k.replace("module.", "")
+                    real_dict[new_key] = item
+            net.load_state_dict(real_dict, strict=False)
+            print("Loaded solution!")
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": args.model,
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         # "pruner": "lamp",
+         "exclude_layers": exclude_layers,
+         "data_path": args.data_folder,
+         "input_resolution": args.input_resolution
+         })
+    prune_function(net, cfg)
+    remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+    net.to(args.device)
+    if args.adjust_bn:
+        adjust_bn_running_stats(net, trainloader, max_iter=100)
+    adjusted_string= "_adjusted_bn" if args.adjust_bn else ""
+    name=f"{args.name}_pr_{args.pruning_rate}{adjusted_string}"
+    extractor = Extract()
+    extractor.downsampling = args.downsampling
+    extractor.latent_representation_logs = args.latent_folder
+    extractor(net, args.model, args.dataset, args.input_resolution, trainloader, testloader, args.device,
+              args.save_path, args.RF_level, name=name)
+
+
 def run_local_test():
     cfg = omegaconf.DictConfig({
         # "solution": "/home/luisaam/checkpoints/resnet_small_normal_small_imagenet_seed.8_rf_level_5_recording_200_test_acc_62.13.pth",
@@ -547,15 +660,18 @@ def run_local_test():
         "name": "sgd_100_res_224_no_ffcv_test",
         "save_path": "./logs/",
         "folder": "/home/luisaam/Documents/PhD/data/",
+        "data_folder": "/home/luisaam/Documents/PhD/data/",
         "lr": 0.1,
-        "device": "cpu",
+        "device": "cuda",
         "type": "normal",
         "resume": False,
         "eval_size": 5000,
+        "adjust_bn":1,
+        "pruning_rate":0.95,
 
     })
 
-    main(cfg)
+    main_pruned(cfg)
 
 
 if __name__ == '__main__':
@@ -579,11 +695,18 @@ if __name__ == '__main__':
     parser.add_argument('--input_resolution', dest='input_resolution', type=int, default=32, help='Input resolution')
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('-pr', '--pruning_rate', default=0.95, type=float, help='Pruning rate to use')
+    parser.add_argument('--adjust_bn', default=1, type=int, help='Adjust the Batch normalisation of the models')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch size')
     parser.add_argument('--save_path', default="./probes_logs/", type=str, help='Save path of logs')
-    parser.add_argument('--latent_folder', default="/nobackup/sclaam/latent_representations/", type=str, help='Save path of representations')
-    args = parser.parse_args()
+    parser.add_argument('--latent_folder', default="/nobackup/sclaam/latent_representations/", type=str,
+                        help='Save path of representations')
+    parser.add_argument('--experiment', default=1, type=int, help='Adjust the Batch normalisation of the models')
 
-    main(args)
+    args = parser.parse_args()
+    if args.experiment == 1:
+        main(args)
+    if args.experiment == 2:
+        main_pruned(args)
 
     # run_local_test()

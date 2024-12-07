@@ -18,7 +18,8 @@ save_folder=$9
 name="${10}"
 downsampling="${11}"
 latent_folder="${12}"
-
+adjust_bn="${13}"
+pruning_rate="${14}"
 #pruning_rates=("0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9")
 #pruning_rates=("0.5")
 # For resnet18
@@ -28,7 +29,7 @@ latent_folder="${12}"
 
 
 
-qsub -l h_rt=40:00:00 -l coproc_v100=1  -N "extract_features_${model}_${dataset}_rf_level_${rf_level}" arc4_feature_extraction_run.sh "${data_folder}" "${model}" "normal" "${solution}" "${dataset}" "${rf_level}" "${resolution}" "${num_workers}" "${batch_size}" "${save_folder}" "${name}" "${latent_folder}" "${downsampling}"
+qsub -l h_rt=40:00:00 -l coproc_v100=1  -N "extract_features_${model}_${dataset}_rf_level_${rf_level}" arc4_feature_extraction_run.sh "${data_folder}" "${model}" "normal" "${solution}" "${dataset}" "${rf_level}" "${resolution}" "${num_workers}" "${batch_size}" "${save_folder}" "${name}" "${latent_folder}" "${downsampling}" "${adjust_bn}" "${pruning_rate}"
 
 }
 
@@ -70,7 +71,7 @@ names=("sgd_100_res_224_no_ffcv_test" "sgd_100_res_224_no_ffcv_test" "sgd_100_re
 #names=("seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0" "seed_0")
 levels_max=${#rf_levels[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<levels_max; idxA++));do              # iterate idxB from 0 to length
- run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 16 128 "${logs_folder}" "${names[$idxA]}" 4 "${latent_folder}"   # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
+ run_extraction "${model}" "${dataset}" "${data_folder}" "${solutions[$idxA]}" "${rf_levels[$idxA]}" "${resolution}" 16 128 "${logs_folder}" "${names[$idxA]}" 4 "${latent_folder}" 1 "0.95"  # "${names[$idxA]}"  "${save_folder}" "50" "0.001" "0"
 done
 
 
