@@ -36,4 +36,4 @@ unset KMP_AFFINITY
 
 
 
-python extraction_externa.py -f $1 -m $2 -t $3 -s $4 -d $5 --RF_level $6 --input_resolution $7 --num_workers $8  --batch_size $9 --save_path "${10}" --name "${11}" --latent_folder "${12}" --downsampling "${13}" --experiment 2 --adjust_bn "${14}" --pruning_rate "${15}"
+python extraction_external.py -f $1 -m $2 -t $3 -s $4 -d $5 --RF_level $6 --input_resolution $7 --num_workers $8  --batch_size $9 --save_path "${10}" --name "${11}" --latent_folder "${12}" --downsampling "${13}" --experiment 2 --adjust_bn "${14}" --pruning_rate "${15}"
