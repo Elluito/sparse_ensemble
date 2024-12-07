@@ -609,7 +609,7 @@ def main_pruned(args):
          "pruner": "global",
          # "pruner": "lamp",
          "exclude_layers": exclude_layers,
-         "data_path": args.data_folder,
+         "data_path": args.folder,
          "input_resolution": args.input_resolution
          })
     prune_function(net, cfg)
