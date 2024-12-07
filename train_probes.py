@@ -91,7 +91,6 @@ if __name__ == '__main__':
                                folder=os.path.join(args.folder,save_name),
                                mp=args.mp)
 
-        # print(pargs)
         logs_save = args.save_path
         args.save_path = save_folder
         args.folder = os.path.join(args.folder,save_name)
