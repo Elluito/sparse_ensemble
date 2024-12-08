@@ -87,6 +87,7 @@ if __name__ == '__main__':
         save_folder = os.path.join(args.save_path, save_name)
         if not os.path.isdir(save_folder):
             os.mkdir(save_folder)
+        print(f"Folder to look for is :{os.path.join(args.folder,save_name)}")
         pargs = PseudoArgs(model_name=args.model,
                                folder=os.path.join(args.folder,save_name),
                                mp=args.mp)
