@@ -65,7 +65,7 @@ if __name__ == '__main__':
         #                    folder=args.save_path,
         #                    mp=args.mp)
         if args.name is not None or args.name !="x":
-            save_name = '{}_{}_{}_{}'.format(
+            save_name = '{}_{}_{}_{}_{}'.format(
                 # model.module.name if isinstance(model, DataParallel) else model.name,
                 args.model,
                 # trainer.data_bundle.dataset_name,
@@ -75,7 +75,7 @@ if __name__ == '__main__':
                 args.RF_level,
                 args.name)
         else:
-            save_name = '{}_{}_{}'.format(
+            save_name = '{}_{}_{}_{}'.format(
                 # model.module.name if isinstance(model, DataParallel) else model.name,
                 args.model,
                 # trainer.data_bundle.dataset_name,
