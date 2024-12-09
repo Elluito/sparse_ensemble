@@ -7741,7 +7741,8 @@ def  compare_variance_models_batch(base_model,second_model,batch,batch_size):
 
         array_features_second=np.array(feature_maps_second_model[name])
 
-        variance_per_batch = np.var(array_features_base-array_features_second,axis=1)
+        # variance_per_batch = np.var(array_features_base-array_features_second,axis=1)
+        variance_per_batch = np.mean(np.abs(array_features_base-array_features_second),axis=1)
         variance_dict[name]=variance_per_batch
 
     return variance_dict
@@ -7804,7 +7805,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
     deter_original_variance = compare_variance_models_dataloader(net,pruned_original,evaluation_set,"cuda")
     deter_original_df = pd.DataFrame.from_dict(deter_original_variance)
 
-    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_original_deter.csv",sep="," )
+    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_original_deter_absolute_mean.csv",sep="," )
 
     del pruned_original
     # pop.append(pruned_original)
@@ -7850,7 +7851,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
         sto_noisy_variance = compare_variance_models_dataloader(dense_current_model,current_model,evaluation_set,"cuda")
         sto_noisy_df = pd.DataFrame.from_dict(sto_noisy_variance)
 
-        sto_noisy_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}.csv",sep=",")
+        sto_noisy_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}_absolute_mean.csv",sep=",")
         del current_model
         torch.cuda.empty_cache()
 
@@ -11615,7 +11616,7 @@ if __name__ == '__main__':
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution":"trained_models/cifar10/resnet50_cifar10.pth",
+        # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
         "solution": "trained_models/cifar100/resnet50_cifar100.pth",
         # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         "num_workers": 1,
