@@ -59,6 +59,10 @@ sol5rs25="/nobackup/sclaam/resnet_25_small_imagenet/resnet25_small_normal_small_
 sol6rs25="/nobackup/sclaam/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002508.677377_rf_level_11_sgd_100_res_224_no_ffcv_test_acc_44.11.pth"
 sol7rs25="/nobackup/sclaam/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002507.845115_rf_level_12_sgd_100_res_224_no_ffcv_test_acc_34.88.pth"
 sol8rs25="/nobackup/sclaam/resnet_25_small_imagenet/resnet25_small_normal_small_imagenet_1731002508.0559256_rf_level_13_sgd_100_res_224_no_ffcv_test_acc_29.1.pth"
+
+[0.6885, 0.6732, 0.6638, 0.6885, 0.6366, 0.4253, 0.3369, 0.3369]
+
+
 #resnet25_small_normal_small_imagenet_1731451265.2229764_rf_level_5_sgd_100_res_224_no_ffcv_test_acc_70.3.pth
 
 

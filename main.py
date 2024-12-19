@@ -7742,7 +7742,8 @@ def  compare_variance_models_batch(base_model,second_model,batch,batch_size):
         array_features_second=np.array(feature_maps_second_model[name])
 
         # variance_per_batch = np.var(array_features_base-array_features_second,axis=1)
-        variance_per_batch = np.mean(np.abs(array_features_base-array_features_second),axis=1)
+        # variance_per_batch = np.mean(np.abs(array_features_base-array_features_second),axis=1)
+        variance_per_batch = np.mean(np.power(array_features_base-array_features_second,2))
         variance_dict[name]=variance_per_batch
 
     return variance_dict
@@ -7805,7 +7806,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
     deter_original_variance = compare_variance_models_dataloader(net,pruned_original,evaluation_set,"cuda")
     deter_original_df = pd.DataFrame.from_dict(deter_original_variance)
 
-    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_original_deter_absolute_mean.csv",sep="," )
+    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_original_deter_l2_mean.csv",sep="," )
 
     del pruned_original
     # pop.append(pruned_original)
@@ -7851,7 +7852,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
         sto_noisy_variance = compare_variance_models_dataloader(dense_current_model,current_model,evaluation_set,"cuda")
         sto_noisy_df = pd.DataFrame.from_dict(sto_noisy_variance)
 
-        sto_noisy_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}_absolute_mean.csv",sep=",")
+        sto_noisy_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}_l2_mean.csv",sep=",")
         del current_model
         torch.cuda.empty_cache()
 
@@ -9719,6 +9720,123 @@ def flops_until_thresh(args):
         is_det = True
     get_statistics_on_FLOPS_until_threshold(df, args["threshold"], is_det)
 
+def plot_get_statistics_on_FLOPS_until_threshold(stodataFrame: pd.DataFrame,detdataFrame: pd.DataFrame,cfg:omegaconf.DictConfig,threshold: float,pruning_type="gmp"):
+    pruning_rate = cfg.amount
+    sigma = cfg.sigma
+    #
+    # fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed", sharey=True)
+    # type = ["Det."]*len(detdataFrame)
+    # detdataFrame["Type"] = type
+    # deter = sns.scatterplot(data=detdataFrame,x="sparse_flops",y="test_accuracy",ax=axs,hue="Type",marker="o")
+    # # deter.set_xscale("log")
+    # stodataFrame = stodataFrame[stodataFrame["sigma"]<=0.005]
+    # sto = sns.scatterplot(data=stodataFrame,x="sparse_flops",y="test_accuracy",hue="sigma",ax=axs,legend="full",marker="x",palette="magma")
+    # # sto.set_xscale("log")
+    # axs.tick_params(axis='both', which='major', labelsize=25)
+    # axs.set_xlabel("FLOPS",fontsize=25)
+    # axs.set_ylabel("Test Accuracy",fontsize=25)
+    #
+    # plt.savefig(f"Flops_vs_accuracy_{cfg.architecture}_{cfg.dataset}_pr{pruning_rate}_all_sigmas_{pruning_type}.pdf",)
+    # plt.close(fig)
+    ################ Now just one sigma #################################
+
+    fig, axs = plt.subplots(1, 1, figsize=(10, 10), layout="compressed", sharey=True)
+    type = ["Det."]*len(detdataFrame)
+    detdataFrame["Type"] = type
+    deter = sns.scatterplot(data=detdataFrame,x="sparse_flops",y="test_accuracy",ax=axs,hue="Type",marker="o")
+
+    # deter.set_xscale("log")
+
+    stodataFrame = stodataFrame[stodataFrame["sigma"]==sigma]
+    sto = sns.scatterplot(data=stodataFrame,x="sparse_flops",y="test_accuracy",hue="sigma",ax=axs,legend="full",marker="x",palette="magma")
+
+    # sto.set_xscale("log")
+    axs.tick_params(axis='both', which='major', labelsize=25)
+    axs.set_xlabel("FLOPS",fontsize=25)
+    axs.set_ylabel("Test Accuracy",fontsize=25)
+
+    plt.savefig(f"Flops_vs_accuracy_{cfg.architecture}_{cfg.dataset}_pr{pruning_rate}_sigma{sigma}_{pruning_type}.pdf",)
+    plt.close(fig)
+    #
+    # if not is_det:
+    #     all_df: pd.DataFrame = None
+    #     for sigma in dataFrame["sigma"].unique():
+    #         sigma_temp_df = dataFrame[dataFrame["sigma"] == sigma]
+    #         FLOPS_until_threshold = []
+    #         sigma_list = []
+    #
+    #         for elem in sigma_temp_df["individual"].unique():
+    #             # One-shot data
+    #             temp_df = sigma_temp_df[sigma_temp_df["individual"] == elem]
+    #             flops = temp_df['sparse_flops'][temp_df['test_accuracy'] >= threshold].min()
+    #
+    #             FLOPS_until_threshold.append(flops)
+    #             sigma_list.append(sigma)
+    #
+    #         d = pd.DataFrame(
+    #             {"FLOPS_until_threshold": FLOPS_until_threshold,
+    #              "Sigma": sigma
+    #
+    #              }
+    #         )
+    #
+    #         if all_df is None:
+    #             all_df = d
+    #         else:
+    #             all_df = pd.concat((all_df, d), ignore_index=True)
+    #
+    #     print('Here are the statistic for sparse flops until threshold {}'.format(threshold))
+    #     new_df = all_df.groupby('Sigma').agg(['mean', 'std', 'count'])
+    #
+    #     ci95_hi = []
+    #     ci95_lo = []
+    #
+    #     for i in new_df.index:
+    #         m, s, c = new_df.loc[i]
+    #         if not c:
+    #             ci95_hi.append(0)
+    #             ci95_lo.append(0)
+    #         else:
+    #             ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+    #             ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+    #
+    #     new_df['ci95_lo'] = ci95_lo
+    #     new_df['ci95_hi'] = ci95_hi
+    #     print(new_df)
+    # else:
+    #
+    #     all_df: pd.DataFrame = None
+    #     FLOPS_until_threshold = []
+    #
+    #     for elem in dataFrame["individual"].unique():
+    #         # One-shot data
+    #         temp_df = dataFrame[dataFrame["individual"] == elem]
+    #         flops = temp_df['sparse_flops'][temp_df['test_accuracy'] >= threshold].min()
+    #
+    #         FLOPS_until_threshold.append(flops)
+    #
+    #     d = pd.DataFrame(
+    #         {"FLOPS_until_threshold": FLOPS_until_threshold,
+    #
+    #          }
+    #     )
+    #
+    #     if all_df is None:
+    #         all_df = d
+    #     else:
+    #         all_df = pd.concat((all_df, d), ignore_index=True)
+    #
+    #     print('Here are the statistic for sparse flops until threshold {}'.format(threshold))
+    #     new_df = all_df.agg(['mean', 'std', 'count'])
+    #     ci95_hi = []
+    #     ci95_lo = []
+    #     m = float(new_df.T["mean"])
+    #     s = float(new_df.T["std"])
+    #     c = float(new_df.T["count"])
+    #     print(new_df)
+    #     ci95_hi = m + 1.96 * s / math.sqrt(c)
+    #     ci95_lo = m - 1.96 * s / math.sqrt(c)
+    #     print("[{:.3E},{:.3E}]".format(ci95_lo, ci95_hi))
 
 def get_statistics_on_FLOPS_until_threshold(dataFrame: pd.DataFrame, threshold: float, is_det=False):
     if not is_det:
@@ -11290,6 +11408,7 @@ def explore_models_shapes():
 
 
 def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "", version="dense"):
+
     print("Started stichastic function")
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
@@ -11593,15 +11712,20 @@ if __name__ == '__main__':
     # })
     # run_traditional_training(cfg_training)
 
+    solutions_list =["trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth","trained_models/cifar100/resnet18_cifar100_traditional_train.pth","trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth","trained_models/cifar100/vgg19_cifar100_traditional_train.pth","trained_models/cifar10/resnet50_cifar10.pth","trained_models/cifar100/resnet50_cifar100.pth"]
+    models_list= ["resnet18","resnet18","vgg19","vgg19","resnet50","resnet50"]
+    datasets_list=["cifar10","cifar100"]*3
+    pr_list = [0.9,0.9,0.95,0.8,0.95,0.85]
+    sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
         "population":1,
         "model": "resnet50",
         "architecture": "resnet50",
-        "dataset": "cifar10",
-        "sigma":0.003,
+        "dataset": "cifar100",
+        "sigma":0.001,
         "noise": "gaussian",
-        "amount": 0.95,
+        "amount": 0.85,
         "exclude_layers": ["conv1", "linear", "fc", "classifier"],
         "model_type": "alternative",
         "pruner": "global",
@@ -11616,8 +11740,8 @@ if __name__ == '__main__':
         # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
         # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
         # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-        # "solution": "trained_models/cifar100/resnet50_cifar100.pth",
+        # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+        "solution": "trained_models/cifar100/resnet50_cifar100.pth",
         # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
         "num_workers": 1,
         "cosine_schedule": False,
@@ -11627,10 +11751,17 @@ if __name__ == '__main__':
         "batch_size": 128,
         "resize":0
     })
+    # for i in range(len(solutions_list)):
 
-
-
+        # cfg.model =models_list[i]
+        # cfg.architecture = models_list[i]
+        # cfg.dataset = datasets_list[i]
+        # cfg.solution = solutions_list[i]
+        # cfg.amount = pr_list[i]
+        # cfg.sigma = sigma_list[i]
     measuring_feature_variance(cfg)
+
+
     # stochastic_pruning_against_deterministic_pruning(cfg)
 
 
@@ -11834,18 +11965,18 @@ if __name__ == '__main__':
     # #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
     # #     #
     # #
-#     cfg = omegaconf.DictConfig({
-#         "sigma":0.001,
-#         "amount":0.9,
-#         "architecture":"resnet18",
-#         "model_type": "alternative",
-#         "dataset": "cifar10",
-#         "set":"test",
-#         "solution":"",
-#         "batch_size": 512,
-#         # "batch_size": 128,
-#         "num_workers": 0,
-#     })
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.003,
+    #     "amount":0.95,
+    #     "architecture":"vgg19",
+    #     "model_type": "alternative",
+    #     "dataset": "cifar10",
+    #     "set":"test",
+    #     "solution":"",
+    #     "batch_size": 512,
+    #     # "batch_size": 128,
+    #     "num_workers": 0,
+    # })
 #     # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
 #     # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
 #     df = pd.read_csv(f"gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
@@ -11898,18 +12029,19 @@ if __name__ == '__main__':
 #     #
 #     # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
 #     #
-#     #     #########################  Last table  Flops count for GMP #######################################################
-#     #
-#     #     print("Global stochastic")
-#     #     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
-#     #     fp = f"gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     #     df = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
-#     #
-#     #     get_statistics_on_FLOPS_until_threshold(df,92)
-#     #     # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
-#     #     fp = f"gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv"
-#     #     df = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
-#     #
-#     #     print("Now global deterministic")
-#     #     get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
+    #########################  Last table  Flops count for GMP #######################################################
+###################### flops until threshold
+#     print("Global stochastic")
+#     # fp = "gradientflow_stochastic_global_all_sigmas_pr0.9.csv"
+#     model = "VGG19" if cfg.architecture=="vgg19" else cfg.architecture
+#     fp = f"stochastic_pruning_csv/gradientflow_stochastic_lamp_{model}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv"
+#     df_sto = pd.read_csv(fp ,sep = ",",header = 0, index_col = False)
+#
+#     # get_statistics_on_FLOPS_until_threshold(df,92)
+# # fp = "gradientflow_deterministic_lamp_pr0.9.csv"
+#     fp = f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{model}_{cfg.dataset}_pr{cfg.amount}.csv"
+#     df_det = pd.read_csv(fp,sep = ",",header = 0, index_col = False)
+#     plot_get_statistics_on_FLOPS_until_threshold(df_sto,df_det,cfg=cfg,threshold=90,pruning_type="lamp")
+    # print("Now global deterministic")
+# get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
 #     #

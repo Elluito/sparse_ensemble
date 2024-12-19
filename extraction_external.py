@@ -21,8 +21,9 @@ import torch.nn as nn
 from alternate_models import *
 from typing import Optional
 from train_CIFAR10 import get_model
-from main import get_datasets,prune_function,remove_reparametrization
+from main import get_datasets, prune_function, remove_reparametrization
 from prune_models import adjust_bn_running_stats
+from sparse_ensemble_utils import test
 
 if os.name == 'nt':  # running on windows:
     import win32file
@@ -617,8 +618,10 @@ def main_pruned(args):
     net.to(args.device)
     if args.adjust_bn:
         adjust_bn_running_stats(net, trainloader, max_iter=100)
-    adjusted_string= "_adjusted_bn" if args.adjust_bn else ""
-    name=f"{args.name}_pr_{args.pruning_rate}{adjusted_string}"
+    adjusted_string = "_adjusted_bn" if args.adjust_bn else ""
+    f = "Adjusted_bn" if adjusted_string else "no batch norm adjustment"
+    print(f"Pruned with pr {args.pruningrate} and {f}")
+    name = f"{args.name}_pr_{args.pruning_rate}{adjusted_string}"
     extractor = Extract()
     extractor.downsampling = args.downsampling
     extractor.latent_representation_logs = args.latent_folder
@@ -666,8 +669,8 @@ def run_local_test():
         "type": "normal",
         "resume": False,
         "eval_size": 5000,
-        "adjust_bn":1,
-        "pruning_rate":0.95,
+        "adjust_bn": 1,
+        "pruning_rate": 0.95,
 
     })
 
