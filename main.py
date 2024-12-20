@@ -7813,7 +7813,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
     # pruned_performance.append(pruned_original_performance)
     labels = []
     # stochastic_dense_performances.append(original_performance)
-
+    all_noisy_models = None
 
     for n in range(N):
         dense_current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -7851,10 +7851,14 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
 
         sto_noisy_variance = compare_variance_models_dataloader(dense_current_model,current_model,evaluation_set,"cuda")
         sto_noisy_df = pd.DataFrame.from_dict(sto_noisy_variance)
-
-        sto_noisy_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}_l2_mean.csv",sep=",")
         del current_model
         torch.cuda.empty_cache()
+        if all_noisy_models is None:
+            all_noisy_models = sto_noisy_df
+        else:
+            all_noisy_models =pd.concat((all_noisy_models,sto_noisy_df),ignore_index=True)
+
+    all_noisy_models.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_sigma_{cfg.sigma}_l2_mean.csv",sep=",")
 
 
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = ""):
@@ -11719,7 +11723,7 @@ if __name__ == '__main__':
     sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
-        "population":1,
+        "population":5,
         "model": "resnet50",
         "architecture": "resnet50",
         "dataset": "cifar100",
@@ -11759,7 +11763,14 @@ if __name__ == '__main__':
         # cfg.solution = solutions_list[i]
         # cfg.amount = pr_list[i]
         # cfg.sigma = sigma_list[i]
-    measuring_feature_variance(cfg)
+
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    measuring_feature_variance(cfg,eval_set="val")
 
 
     # stochastic_pruning_against_deterministic_pruning(cfg)
