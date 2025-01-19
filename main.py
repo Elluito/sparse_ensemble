@@ -12140,8 +12140,6 @@ if __name__ == '__main__':
         "resize":0
     })
     for i in range(len(solutions_list)):
-        if models_list[i]=="vgg19" and datasets_list[i]=="cifar100":
-
             cfg.model =models_list[i]
             cfg.architecture = models_list[i]
             cfg.dataset = datasets_list[i]
