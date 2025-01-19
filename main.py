@@ -8075,9 +8075,9 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
         else:
             all_noisy_models = pd.concat((all_noisy_models, sto_noisy_df), ignore_index=True)
 
-        sto_noisy_variance =calculate_variance_models_dataloader(dense_current_model, evaluation_set,
+        sto_noisy_variance_dense =calculate_variance_models_dataloader(dense_current_model, evaluation_set,
                                                                  "cuda")
-        sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_variance)
+        sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_variance_dense)
         if all_noisy_models_dense is None:
             all_noisy_models_dense = sto_noisy_df_dense
         else:
@@ -12107,7 +12107,7 @@ if __name__ == '__main__':
     sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
-        "population":1,
+        "population":5,
         "model": "resnet50",
         "architecture": "resnet50",
         "dataset": "cifar100",
@@ -12140,15 +12140,15 @@ if __name__ == '__main__':
         "resize":0
     })
     for i in range(len(solutions_list)):
-
-        cfg.model =models_list[i]
-        cfg.architecture = models_list[i]
-        cfg.dataset = datasets_list[i]
-        cfg.solution = solutions_list[i]
-        cfg.amount = pr_list[i]
-        cfg.sigma = sigma_list[i]
-    ## Measuring variance collapse
-        measuring_feature_sample_variance(cfg,eval_set="val")
+        if not models_list[i]=="vgg19" and not datasets_list[i]=="cifar100":
+            cfg.model =models_list[i]
+            cfg.architecture = models_list[i]
+            cfg.dataset = datasets_list[i]
+            cfg.solution = solutions_list[i]
+            cfg.amount = pr_list[i]
+            cfg.sigma = sigma_list[i]
+        ## Measuring variance collapse
+            measuring_feature_sample_variance(cfg,eval_set="val")
     #
     # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
