@@ -1552,10 +1552,16 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     p_more_than_0 = p[p["Difference with deterministic"] > 0]
     # sc_less_than_0 = plt.scatter(y=p_lees_than_0["Stochastic performance"], x=p_lees_than_0["Pruning rate"],
     #                              facecolors='none', edgecolors='k', s=15)
+
+    A=15000
+    sizes=p_more_than_0["Sigma"]*A
     color_values = p_more_than_0["Difference with deterministic"]
-    sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
-                     c=color_values, cmap=cmap,
-                     norm=matplotlib.colors.PowerNorm(gamma=1.2), s=100)
+    # sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
+    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
     # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
 
     # plt.ylabel("Stochastic performance on Val set")
@@ -1567,10 +1573,10 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
         plt.xlabel("")
     else:
         plt.xlabel("Pruning rate", fontsize=fs * 0.8)
-    plt.ylabel("Stochastic performance on Val set", fontsize=fs * 0.8)
+    plt.ylabel("$\sigma$", fontsize=fs * 0.8)
     # plt.legend()
     plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_{}_{}_{}_{}_{}.pdf".format(
+        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_sigma_{}_{}_{}_{}_{}.pdf".format(
             cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
@@ -7735,6 +7741,52 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
     return quantil_50_delta, pruned_original_performance, quantil_50
 
 
+def measure_variance_model_batch(base_model, batch, batch_size):
+    feature_maps_base_model = defaultdict(list)
+    feature_maps_second_model = defaultdict(list)
+    variance_dict = {}
+    hooks_base_model = []
+    hooks_second_model = []
+
+    def store_activations_base(module, input, output, module_name=""):
+        if batch_size == 1:
+            feature_maps_base_model[f"{module_name}"].append(torch.flatten(output).detach().cpu().numpy())
+        else:
+            # feature_maps_base_model[f"{module_name}"].append(output.reshape(batch_size, -1).detach().cpu().numpy())
+            if len(output.shape)==4:
+                var_neurons=torch.var(output,dim=[0,2,3])
+                var_layer= torch.sum(var_neurons)
+                feature_maps_base_model[f"{module_name}"].append(var_layer.detach().cpu().numpy())
+            else:
+                var_neurons=torch.var(output,dim=0)
+                var_layer= torch.sum(var_neurons)
+                feature_maps_base_model[f"{module_name}"].append(var_layer.detach().cpu().numpy())
+
+
+    # def store_activations_second(module, input, output, module_name=""):
+    #     if batch_size == 1:
+    #         feature_maps_second_model[f"{module_name}"].append(torch.flatten(output).detach().cpu().numpy())
+    #     else:
+    #         feature_maps_second_model[f"{module_name}"].append(output.reshape(batch_size, -1).detach().cpu().numpy())
+
+    for name, module in base_model.named_modules():
+        if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
+            hooks_base_model.append(module.register_forward_hook(partial(store_activations_base, module_name=name)))
+
+    with torch.no_grad():
+        base_model(batch)
+    for h in hooks_base_model:
+        h.remove()
+    for name, value in feature_maps_base_model.items():
+        array_features_base = np.array(feature_maps_base_model[name])
+        variance_per_batch = array_features_base
+
+
+        # variance_per_batch = np.var(array_features_base-array_features_second,axis=1)
+        # variance_per_batch = np.mean(np.power(array_features_base - array_features_second, 2))
+        variance_dict[name] = variance_per_batch
+
+    return variance_dict
 def compare_variance_models_batch(base_model, second_model, batch, batch_size):
     feature_maps_base_model = defaultdict(list)
     feature_maps_second_model = defaultdict(list)
@@ -7747,6 +7799,7 @@ def compare_variance_models_batch(base_model, second_model, batch, batch_size):
             feature_maps_base_model[f"{module_name}"].append(torch.flatten(output).detach().cpu().numpy())
         else:
             feature_maps_base_model[f"{module_name}"].append(output.reshape(batch_size, -1).detach().cpu().numpy())
+            # feature_maps_base_model[f"{module_name}"].append(output.detach().cpu().numpy())
 
     def store_activations_second(module, input, output, module_name=""):
         if batch_size == 1:
@@ -7775,12 +7828,32 @@ def compare_variance_models_batch(base_model, second_model, batch, batch_size):
         array_features_second = np.array(feature_maps_second_model[name])
 
         # variance_per_batch = np.var(array_features_base-array_features_second,axis=1)
-        variance_per_batch = np.mean(np.abs(array_features_base-array_features_second),axis=1)
+        variance_per_batch = np.mean(np.var(array_features_second),axis=1)
         # variance_per_batch = np.mean(np.power(array_features_base - array_features_second, 2))
         variance_dict[name] = variance_per_batch
 
     return variance_dict
 
+
+def calculate_variance_models_dataloader(base_model, dataloader, device):
+    base_model.to(device)
+    all_batch_variance_per_layer = defaultdict(list)
+    for images, targets in dataloader:
+        images = images.to(device)
+        targets = targets.to(device)
+        batch_size = targets.shape[0]
+        variance_batch_dict =measure_variance_model_batch(base_model, images, batch_size)
+        for key, value in variance_batch_dict.items():
+            all_batch_variance_per_layer[key].append(value)
+    # Now I will average all the variances accross batches
+    average_variance_per_layer_in_data_loader = {}
+    for key, values in all_batch_variance_per_layer.items():
+        list_of_list_layer = values
+        array_of_list = np.array(list_of_list_layer)
+        mean_variance_for_current_layer = array_of_list.var()
+        average_variance_per_layer_in_data_loader[key] = [mean_variance_for_current_layer]
+
+    return average_variance_per_layer_in_data_loader
 
 def compare_variance_models_dataloader(base_model, second_model, dataloader, device):
     base_model.to(device)
@@ -7845,7 +7918,7 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
     # deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_deter_l2_mean.csv",
     #                          sep=",")
 
-    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_deter_absolute_mean.csv",
+    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_deter_var_mean.csv",
                              sep=",")
 
     del pruned_original
@@ -7902,8 +7975,121 @@ def measuring_feature_variance(cfg: omegaconf.DictConfig, eval_set: str = "test"
     #     f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_l2_mean.csv", sep=",")
 
     all_noisy_models.to_csv(
-        f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_mean_mean.csv", sep=",")
+        f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_var_mean.csv", sep=",")
+def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = ""):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
 
+    t0 = time.time()
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+    pruned_original = copy.deepcopy(net)
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+    remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+
+    print("pruned_performance of pruned original")
+    t0 = time.time()
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    print("Det_performance in function: {}".format(pruned_original_performance))
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+
+    deter_original_variance =calculate_variance_models_dataloader(net,evaluation_set, "cuda")
+    deter_original_df = pd.DataFrame.from_dict(deter_original_variance)
+
+    # deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_deter_l2_mean.csv",
+    #                          sep=",")
+
+    deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_dense_deter_var_mean.csv",
+                             sep=",")
+    deter_original_variance =calculate_variance_models_dataloader(pruned_original,evaluation_set, "cuda")
+    deter_original_pruned_df = pd.DataFrame.from_dict(deter_original_variance)
+    deter_original_pruned_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_pruned_deter_var_mean.csv",
+                             sep=",")
+
+    del pruned_original
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+    labels = []
+    # stochastic_dense_performances.append(original_performance)
+    all_noisy_models = None
+    all_noisy_models_dense = None
+
+    for n in range(N):
+        dense_current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        t0 = time.time()
+        StoDense_performance = test(dense_current_model, use_cuda, evaluation_set, verbose=1)
+        t1 = time.time()
+        print("Time for test: {}".format(t1 - t0))
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+
+        current_model = copy.deepcopy(dense_current_model)
+
+        if cfg.pruner == "global":
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        # record_predictions(current_model, evaluation_set,
+        #                    "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        torch.cuda.empty_cache()
+        print("Stocastic pruning performance")
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        print("Time for test: {}".format(t1 - t0))
+
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+
+        sto_noisy_variance =calculate_variance_models_dataloader(current_model, evaluation_set,
+                                                                "cuda")
+        sto_noisy_df = pd.DataFrame.from_dict(sto_noisy_variance)
+        del current_model
+        torch.cuda.empty_cache()
+        if all_noisy_models is None:
+            all_noisy_models = sto_noisy_df
+        else:
+            all_noisy_models = pd.concat((all_noisy_models, sto_noisy_df), ignore_index=True)
+
+        sto_noisy_variance =calculate_variance_models_dataloader(dense_current_model, evaluation_set,
+                                                                 "cuda")
+        sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_variance)
+        if all_noisy_models_dense is None:
+            all_noisy_models_dense = sto_noisy_df_dense
+        else:
+            all_noisy_models_dense = pd.concat((all_noisy_models_dense, sto_noisy_df_dense), ignore_index=True)
+    # all_noisy_models.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_l2_mean.csv", sep=",")
+
+    all_noisy_models.to_csv(
+        f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_pruned_var_mean.csv", sep=",")
+
+    all_noisy_models_dense.to_csv(
+        f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_dense_var_mean.csv", sep=",")
 
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "",show_legend=True):
 
@@ -10150,16 +10336,16 @@ def LeMain(args):
     # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
     # print("Deterministic pruning outside function: {}".format(det_performance))
 
-    solution1 = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-    solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
-    solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
-
-    cfg.solution = solution1
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed1",show_legend=True)
-    cfg.solution = solution2
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed2",show_legend=False)
-    cfg.solution = solution3
-    stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3",show_legend=False)
+    # solution1 = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
+    # solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
+    # solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+    #
+    # cfg.solution = solution1
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed1",show_legend=True)
+    # cfg.solution = solution2
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed2",show_legend=False)
+    # cfg.solution = solution3
+    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3",show_legend=False)
 
 
 
@@ -10172,7 +10358,7 @@ def LeMain(args):
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     # features_similarity_comparison_experiments(cfg.architecture)
 
-    # experiment_selector(cfg, args, args["experiment"])
+    experiment_selector(cfg, args, args["experiment"])
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # plot_histograms_predictions("normal_seed2")
@@ -11921,7 +12107,7 @@ if __name__ == '__main__':
     sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
     cfg = omegaconf.DictConfig({
         # "architecture": "vgg19",
-        "population":5,
+        "population":1,
         "model": "resnet50",
         "architecture": "resnet50",
         "dataset": "cifar100",
@@ -11930,7 +12116,7 @@ if __name__ == '__main__':
         "amount": 0.85,
         "exclude_layers": ["conv1", "linear", "fc", "classifier"],
         "model_type": "alternative",
-        "pruner": "lamp",
+        "pruner": "global",
         "batch_size": 512,
         "lr": 0.001,
         "momentum": 0.9,
@@ -11961,6 +12147,8 @@ if __name__ == '__main__':
         cfg.solution = solutions_list[i]
         cfg.amount = pr_list[i]
         cfg.sigma = sigma_list[i]
+    ## Measuring variance collapse
+        measuring_feature_sample_variance(cfg,eval_set="val")
     #
     # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
@@ -11969,8 +12157,6 @@ if __name__ == '__main__':
     # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
     # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
 
-    ## Measuring variance collapse
-        measuring_feature_variance(cfg,eval_set="val")
 
     # stochastic_pruning_against_deterministic_pruning(cfg)
 
@@ -12120,6 +12306,10 @@ if __name__ == '__main__':
     #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
     #         "batch_size": 128}
     #
+    # models = ["resnet18","resnet50","VGG19"]
+    # datasets = ["cifar10","cifar100"]
+    # sampler = ["tpe","nsga"]
+    #
     # models = ["resnet18"]
     # datasets = ["cifar10"]
     # sampler = ["tpe"]
@@ -12128,8 +12318,7 @@ if __name__ == '__main__':
     #     args["architecture"] = combination[0]
     #     args["dataset"] = combination[1]
     #     args["sampler"] = combination[2]
-
-    # LeMain(args)
+    #     LeMain(args)
     #
     # MDS_projection_plot()
 
