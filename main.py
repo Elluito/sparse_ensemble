@@ -7742,6 +7742,7 @@ def stochastic_pruning_against_deterministic_pruning_mean_diference(cfg: omegaco
 
 
 def measure_variance_model_batch(base_model, batch, batch_size):
+
     feature_maps_base_model = defaultdict(list)
     feature_maps_second_model = defaultdict(list)
     variance_dict = {}
@@ -7842,15 +7843,16 @@ def calculate_variance_models_dataloader(base_model, dataloader, device):
         images = images.to(device)
         targets = targets.to(device)
         batch_size = targets.shape[0]
-        variance_batch_dict =measure_variance_model_batch(base_model, images, batch_size)
+        variance_batch_dict = measure_variance_model_batch(base_model, images, batch_size)
         for key, value in variance_batch_dict.items():
             all_batch_variance_per_layer[key].append(value)
+
     # Now I will average all the variances accross batches
     average_variance_per_layer_in_data_loader = {}
     for key, values in all_batch_variance_per_layer.items():
         list_of_list_layer = values
         array_of_list = np.array(list_of_list_layer)
-        mean_variance_for_current_layer = array_of_list.var()
+        mean_variance_for_current_layer = array_of_list.mean()
         average_variance_per_layer_in_data_loader[key] = [mean_variance_for_current_layer]
 
     return average_variance_per_layer_in_data_loader
