@@ -1353,7 +1353,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         performance_of_models_val = []
         GF_of_models_val = []
 
-    det_test_GF_dict, det_val_GF_dict = measure_gradient_flow_only(pruned_model, val, test, cfg)
+    det_test_GF_dict, det_val_GF_dict = measure_gradient_flow_only(pruned_model, val, testloader, cfg)
 
     for individual_index in range(11):
         ############### Here I ask for pr and for sigma ###################################
@@ -1365,7 +1365,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         stochastic_performance = test(current_model, use_cuda=True, testloader=testloader, verbose=0)
 
-        stochastic_test_GF_dict, det_val_GF_dict = measure_gradient_flow_only(pruned_model, val, test, cfg)
+        stochastic_test_GF_dict, det_val_GF_dict = measure_gradient_flow_only(pruned_model, val, testloader, cfg)
 
         GF_of_models.append(stochastic_test_GF_dict["test_set_gradient_magnitude"][0])
 
@@ -8145,6 +8145,161 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
         sep=",")
 
 
+def obtain_N_models(cfg,base_model,sigma_per_layer,evaluation_set,use_cuda):
+    stochastic_performances=[]
+    for n in range(N):
+        current_model = get_noisy_sample_sigma_per_layer(base_model, cfg, sigma_per_layer=sigma_per_layer)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        t0 = time.time()
+        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        t1 = time.time()
+        print("Time for test: {}".format(t1 - t0))
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+
+        if cfg.pruner == "global":
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        # record_predictions(current_model, evaluation_set,
+        #                    "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        torch.cuda.empty_cache()
+        print("Stocastic pruning performance")
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        print("Time for test: {}".format(t1 - t0))
+
+        stochastic_performances.append(stochastic_pruned_performance)
+        del current_model
+        torch.cuda.empty_cache()
+    return stochastic_performances
+def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omegaconf.DictConfig,solution1,solution2, eval_set: str = "test", name: str = "",
+                                                     show_legend=True):
+
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    cfg.solution=solution2
+    net2 = get_model(cfg)
+    cfg.solution=solution3
+    net3 = get_model(cfg)
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
+
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+
+
+    pruned_original = copy.deepcopy(net)
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+    remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+    # record_predictions(pruned_original, evaluation_set,
+    #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+    print("pruned_performance of pruned original")
+    t0 = time.time()
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    print("Det_performance in function: {}".format(pruned_original_performance))
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+    del pruned_original
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+    labels = []
+    # stochastic_dense_performances.append(original_performance)
+
+    pruned_performance= obtain_N_models(cfg,net,sigma_per_layer,evaluation_set,use_cuda)
+    pruned_performance1= obtain_N_models(cfg,net2,sigma_per_layer,evaluation_set,use_cuda)
+    pruned_performance2= obtain_N_models(cfg,net3,sigma_per_layer,evaluation_set,use_cuda)
+    # len(pruned performance)-1 because the first one is the pruned original
+    labels.extend(["stochastic pruned"] * (len(pruned_performance)))
+
+    # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
+    # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
+    # index 0 of pruned_performance.
+    assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
+                                                   f"{len(labels)}!={len(pruned_performance)}"
+
+    ranked_index = np.flip(np.argsort(pruned_performance))
+    index_of_pruned_original = list(ranked_index).index(0)
+    all_index = np.ones(len(ranked_index), dtype=bool)
+    all_index[index_of_pruned_original] = False
+    ranked_index = ranked_index[all_index]
+
+    pruned_performance = np.array(pruned_performance)
+    stochastic_dense_performances = np.array(stochastic_dense_performances)
+    result = time.localtime(time.time())
+
+    del pop
+    cutoff = original_performance - 2
+    ################################# plotting the comparison #########################################################
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+
+    original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
+
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    plt.tick_params(axis='both', which='major', labelsize=fs)
+    # plt.tick_params(axis='x', which='major')
+    plt.xlabel("Ranking Index", fontsize=fs)
+    plt.ylabel("Accuracy", fontsize=fs)
+    stochastic_models_points_dense = []
+    stochastic_models_points_pruned = []
+    transfer_mask_models_points = []
+    stochastic_with_deterministic_mask_models_points = []
+
+    for i, element in enumerate(pruned_performance[ranked_index]):
+        if labels[ranked_index[i]] == "sto mask transfer":
+            sto_transfer_point = ax.scatter(i, element, c="tab:orange", marker="P")
+            transfer_mask_models_points.append(sto_transfer_point)
+        elif labels[ranked_index[i]] == "det mask transfer":
+            det_transfer_point = ax.scatter(i, element, c="tab:olive", marker="X")
+            stochastic_with_deterministic_mask_models_points.append(det_transfer_point)
+        else:
+            pruned_point = ax.scatter(i, element, c="steelblue", marker="x", s=100)
+            stochastic_models_points_pruned.append(pruned_point)
+    for i, element in enumerate(stochastic_dense_performances[ranked_index]):
+        if i == index_of_pruned_original or element == 1:
+            # ax.scatter(i, element, c="y", marker="o", label="original model performance")
+            dense_point = ax.scatter(i, element, c="c", marker="1", s=100)
+            # continue
+        else:
+            dense_point = ax.scatter(i, element, c="c", marker="1", s=100)
+            stochastic_models_points_dense.append(dense_point)
+    if show_legend:
+        plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
+                    deterministic_pruning_line],
+                   ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
+                   scatterpoints=1,
+                   numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+
+    plt.grid(ls='--', alpha=0.5)
+    plt.savefig(
+        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}_{eval_set}_{name}.pdf")
+
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "",
                                                      show_legend=True):
     use_cuda = torch.cuda.is_available()
@@ -12156,40 +12311,40 @@ if __name__ == '__main__':
     # datasets_list=["cifar10","cifar100"]*3
     # pr_list = [0.9,0.9,0.95,0.8,0.95,0.85]
     # sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
-    # cfg = omegaconf.DictConfig({
-    #     # "architecture": "vgg19",
-    #     "population":5,
-    #     "model": "resnet50",
-    #     "architecture": "resnet50",
-    #     "dataset": "cifar100",
-    #     "sigma":0.001,
-    #     "noise": "gaussian",
-    #     "amount": 0.85,
-    #     "exclude_layers": ["conv1", "linear", "fc", "classifier"],
-    #     "model_type": "alternative",
-    #     "pruner": "global",
-    #     "batch_size": 512,
-    #     "lr": 0.001,
-    #     "momentum": 0.9,
-    #     "weight_decay": 1e-4, \
-    #     "cyclic_lr": True,
-    #     "lr_peak_epoch": 5,
-    #     "optim": "adam",
-    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-    #     # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #     # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-    #     # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-    #     "solution": "trained_models/cifar100/resnet50_cifar100.pth",
-    #     # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-    #     "num_workers": 1,
-    #     "cosine_schedule": False,
-    #     "epochs": 24,
-    #     "pad":0,
-    #     "input_resolution":32,
-    #     "batch_size": 128,
-    #     "resize":0
-    # })
+    cfg = omegaconf.DictConfig({
+        # "architecture": "vgg19",
+        "population":5,
+        "model": "resnet50",
+        "architecture": "resnet50",
+        "dataset": "cifar100",
+        "sigma":0.001,
+        "noise": "gaussian",
+        "amount": 0.85,
+        "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+        "model_type": "alternative",
+        "pruner": "global",
+        "batch_size": 512,
+        "lr": 0.001,
+        "momentum": 0.9,
+        "weight_decay": 1e-4, \
+        "cyclic_lr": True,
+        "lr_peak_epoch": 5,
+        "optim": "adam",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+        "solution": "trained_models/cifar100/resnet50_cifar100.pth",
+        # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        "num_workers": 1,
+        "cosine_schedule": False,
+        "epochs": 24,
+        "pad":0,
+        "input_resolution":32,
+        "batch_size": 128,
+        "resize":0
+    })
     # for i in range(len(solutions_list)):
     #         cfg.model =models_list[i]
     #         cfg.architecture = models_list[i]
@@ -12207,7 +12362,7 @@ if __name__ == '__main__':
     # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
     # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
 
-    # stochastic_pruning_against_deterministic_pruning(cfg)
+    stochastic_pruning_against_deterministic_pruning(cfg)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
