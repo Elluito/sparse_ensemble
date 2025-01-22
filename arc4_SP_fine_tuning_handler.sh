@@ -51,8 +51,8 @@ pruning_rate="${pruning_rate_list[$idxA]}"
 #for sigma in sigma_list; do
 
 run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "global" "32" "tpe" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
 done
+
 ############## NSGA-II side of the table#######################
 model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
