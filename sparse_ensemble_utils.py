@@ -1361,8 +1361,7 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     else:
         return val_dict,test_dict
 
-def measure_gradient_flow_only(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
-                                     mask_dict, use_wandb=False,record=True):
+def measure_gradient_flow_only(model: nn.Module, dataLoader, testLoader, cfg):
     model = copy.deepcopy(model)
     disable_bn(model)
     if not cfg.fine_tune_exclude_layers:
