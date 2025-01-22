@@ -13,7 +13,7 @@ from torch import nn
 from shrinkbench.metrics.flops import flops
 import torch.nn.functional as F
 from sklearn.manifold import MDS
-# from torchmetrics import Accuracy
+from torchmetrics import Accuracy
 import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
@@ -759,10 +759,13 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
                                 momentum=0.9, weight_decay=5e-4)
     if "cifar" in cfg.dataset:
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) ===> original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs) #===> code after 21/01/2025
+
     else:
 
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs) # code after 21/01/2025
 
     grad_clip = 0
     if cfg.gradient_cliping:
@@ -790,6 +793,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
     file_path = None
     weights_path = ""
     if gradient_flow_file_prefix != "":
+
         file_path = gradient_flow_file_prefix
         file_path += "recordings.csv"
 
@@ -802,9 +806,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         weights_path.mkdir(parents=True)
         measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
                                          mask_dict=mask_dict, use_wandb=use_wandb)
-        state_dict = pruned_model.state_dict()
-        temp_name = weights_path / "epoch_{}.pth".format(-1)
-        torch.save(state_dict,temp_name)
+        # state_dict = pruned_model.state_dict()
+        # temp_name = weights_path / "epoch_{}.pth".format(-1)
+        # torch.save(state_dict,temp_name)
 
     pruned_model.cuda()
     pruned_model.train()
