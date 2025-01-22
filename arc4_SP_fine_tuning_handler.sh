@@ -1,5 +1,5 @@
 #!/bin/bash
-run_sp_finetuning() {
+run_sp_fine_tuning() {
 model=$1
 
 dataset=$2
