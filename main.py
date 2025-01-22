@@ -8199,11 +8199,13 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     # evaluation_set, net = accelerator.prepare(evaluation_set, net)
 
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
+    original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
 
 
     pruned_original = copy.deepcopy(net)
+    pruned_original2 = copy.deepcopy(net2)
+    pruned_original3 = copy.deepcopy(net3)
 
     names, weights = zip(*get_layer_dict(net))
     number_of_layers = len(names)
@@ -8211,29 +8213,40 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
 
     if cfg.pruner == "global":
         prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
     else:
         prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner=cfg.pruner)
+        prune_with_rate(pruned_original2, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+        prune_with_rate(pruned_original3, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
 
     remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+    remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
+    remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
+
     # record_predictions(pruned_original, evaluation_set,
     #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
-    print("pruned_performance of pruned original")
-    t0 = time.time()
     pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    print("Det_performance in function: {}".format(pruned_original_performance))
-    t1 = time.time()
-    print("Time for test: {}".format(t1 - t0))
+    pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
+    pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
+
     del pruned_original
     # pop.append(pruned_original)
     # pruned_performance.append(pruned_original_performance)
     labels = []
+    labels2 = []
+    labels3 = []
     # stochastic_dense_performances.append(original_performance)
 
     pruned_performance= obtain_N_models(cfg,net,sigma_per_layer,evaluation_set,use_cuda)
     pruned_performance1= obtain_N_models(cfg,net2,sigma_per_layer,evaluation_set,use_cuda)
     pruned_performance2= obtain_N_models(cfg,net3,sigma_per_layer,evaluation_set,use_cuda)
     # len(pruned performance)-1 because the first one is the pruned original
+    labels.extend(["stochastic pruned"] * (len(pruned_performance)))
+    labels.extend(["stochastic pruned"] * (len(pruned_performance)))
     labels.extend(["stochastic pruned"] * (len(pruned_performance)))
 
     # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
@@ -8253,13 +8266,17 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     result = time.localtime(time.time())
 
     del pop
-    cutoff = original_performance - 2
     ################################# plotting the comparison #########################################################
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
+    original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
+    original_line = ax.axhline(y=original_performance, color="k", linestyle="-", label="Original Performance")
 
     deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, c="purple", label="Deterministic Pruning")
+
     plt.tick_params(axis='both', which='major', labelsize=fs)
     # plt.tick_params(axis='x', which='major')
     plt.xlabel("Ranking Index", fontsize=fs)
@@ -12311,40 +12328,42 @@ if __name__ == '__main__':
     # datasets_list=["cifar10","cifar100"]*3
     # pr_list = [0.9,0.9,0.95,0.8,0.95,0.85]
     # sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
-    cfg = omegaconf.DictConfig({
-        # "architecture": "vgg19",
-        "population":5,
-        "model": "resnet50",
-        "architecture": "resnet50",
-        "dataset": "cifar100",
-        "sigma":0.001,
-        "noise": "gaussian",
-        "amount": 0.85,
-        "exclude_layers": ["conv1", "linear", "fc", "classifier"],
-        "model_type": "alternative",
-        "pruner": "global",
-        "batch_size": 512,
-        "lr": 0.001,
-        "momentum": 0.9,
-        "weight_decay": 1e-4, \
-        "cyclic_lr": True,
-        "lr_peak_epoch": 5,
-        "optim": "adam",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
-        "solution": "trained_models/cifar100/resnet50_cifar100.pth",
-        # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        "num_workers": 1,
-        "cosine_schedule": False,
-        "epochs": 24,
-        "pad":0,
-        "input_resolution":32,
-        "batch_size": 128,
-        "resize":0
-    })
+
+    # cfg = omegaconf.DictConfig({
+    #     # "architecture": "vgg19",
+    #     "population":5,
+    #     "model": "resnet50",
+    #     "architecture": "resnet50",
+    #     "dataset": "cifar100",
+    #     "sigma":0.001,
+    #     "noise": "gaussian",
+    #     "amount": 0.85,
+    #     "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+    #     "model_type": "alternative",
+    #     "pruner": "global",
+    #     "batch_size": 512,
+    #     "lr": 0.001,
+    #     "momentum": 0.9,
+    #     "weight_decay": 1e-4, \
+    #     "cyclic_lr": True,
+    #     "lr_peak_epoch": 5,
+    #     "optim": "adam",
+    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+    #     # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+    #     # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+    #     "solution": "trained_models/cifar100/resnet50_cifar100.pth",
+    #     # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+    #     "num_workers": 1,
+    #     "cosine_schedule": False,
+    #     "epochs": 24,
+    #     "pad":0,
+    #     "input_resolution":32,
+    #     "batch_size": 128,
+    #     "resize":0
+    # })
+
     # for i in range(len(solutions_list)):
     #         cfg.model =models_list[i]
     #         cfg.architecture = models_list[i]
@@ -12362,7 +12381,7 @@ if __name__ == '__main__':
     # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
     # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
 
-    stochastic_pruning_against_deterministic_pruning(cfg)
+    # stochastic_pruning_against_deterministic_pruning(cfg)
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
@@ -12506,31 +12525,35 @@ if __name__ == '__main__':
     #
     # parser.add_argument('--name', type=str, default="",
     #                     help='Name for the file', required=False)
-    # args = vars(parser.parse_args())
+    args_out = vars(parser.parse_args())
 
     args = {"experiment": 19, "population": 10, "functions": 2, "trials": 600, "sampler": "tpe", "log_sigma": False,
-            "one_batch": False, "num_workers": 0, "architecture": "resnet18", "dataset": "cifar10",
+            "one_batch": False, "num_workers": 8, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
             "batch_size": 128}
-
-    models = ["resnet18","resnet50","VGG19"]
-
-    datasets = ["cifar10","cifar100"]
-
-    sampler = ["tpe","nsga"]
+    args["architecture"] = args_out["architecture"]
+    args["dataset"] = args_out["dataset"]
+    args["sampler"] = args_out["sampler"]
+    args["pruner"] = args_out["pruner"]
+    #
+    # models = ["resnet18","resnet50","VGG19"]
+    #
+    # datasets = ["cifar10","cifar100"]
+    #
+    # sampler = ["tpe","nsga"]
 
     # models = ["resnet18"]
     # datasets = ["cifar10"]
     # sampler = ["tpe"]
 
-    for combination in itertools.product(models, datasets, sampler):
+    # for combination in itertools.product(models, datasets, sampler):
+    #
+    #     args["architecture"] = combination[0]
+    #     args["dataset"] = combination[1]
+    #     args["sampler"] = combination[2]
+    #     LeMain(args)
 
-        args["architecture"] = combination[0]
-        args["dataset"] = combination[1]
-        args["sampler"] = combination[2]
-        LeMain(args)
-
-    # LeMain(args)
+    LeMain(args)
 
     #
     # MDS_projection_plot()
