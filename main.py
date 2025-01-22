@@ -1522,7 +1522,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
                       "Fitness": fitness_list, "Sigma": sigmas_list,"Gradient Flow On Val":GF_list,
                       "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
 
-    p.to_csv("pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
                                                       one_batch_string), index=False)
 
     #############################################################
@@ -12319,29 +12319,29 @@ if __name__ == '__main__':
 
     #
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
     parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
     parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
     parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
                         required=True)
     # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
     ############# this is for pr and sigma optim ###############################
     # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
     # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
     #                     required=False)
     #
-    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
     #                     help='Use log scale for sigma in pr,sigma optim', required=False)
     # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
@@ -12359,7 +12359,9 @@ if __name__ == '__main__':
             "batch_size": 128}
 
     models = ["resnet18","resnet50","VGG19"]
+
     datasets = ["cifar10","cifar100"]
+
     sampler = ["tpe","nsga"]
 
     # models = ["resnet18"]
@@ -12367,6 +12369,7 @@ if __name__ == '__main__':
     # sampler = ["tpe"]
 
     for combination in itertools.product(models, datasets, sampler):
+
         args["architecture"] = combination[0]
         args["dataset"] = combination[1]
         args["sampler"] = combination[2]

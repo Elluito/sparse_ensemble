@@ -26,11 +26,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/nobackup/sclaam/.conda/envs/work/lib"
 
 unset GOMP_CPU_AFFINITY KMP_AFFINITY
 
+python main.py --model $1 --dataset $2 --pruner $3 --sampler $4
 
-
-
-
-
-
-#python main.py -exp $1 -bs 128 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --name $9 -pop 10
-python main.py
