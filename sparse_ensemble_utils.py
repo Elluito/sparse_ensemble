@@ -1226,7 +1226,7 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
 
 
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
-                                     mask_dict, use_wandb=False):
+                                     mask_dict, use_wandb=False,record=True):
     model = copy.deepcopy(model)
     t_begining = time.time()
     disable_bn(model)
@@ -1236,7 +1236,10 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         disable_all_except(model, cfg.exclude_layers)
     model.to(device=device)
 
+    ###################################################
     # Calculate everything with respect to the validation set
+    ###################################################
+
     val_dict = {}
     print("just before cal_grad")
     t0 = time.time()
@@ -1263,8 +1266,10 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #                            criterion,
     #                            dataloader=dataLoader,
     #                            cuda=True if device == "cuda" else False)
+
     accuracy = test(model, True if device == "cuda" else False, dataLoader, verbose=0)
     model.to(device)
+
     # print("Calculating eigenvalues on validation set for epoch:{}".format(epoch))
     # top_eigenvalues, _ = hessian_comp.eigenvalues(top_n=5,maxIter=20)
     # print("Calculating hessian trace on validation set for epoch:{}".format(epoch))
@@ -1273,9 +1278,11 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     #     val_dict["val_set_EV{}".format(i)] = [value]
     # val_dict["val_set_trace"] = [trace]
     # # density_eigen, density_weight = hessian_comp.density()
-    val_dict["val_accuracy"] = [accuracy]
 
+    val_dict["val_accuracy"] = [accuracy]
+    ###################################################
     # Calculate everything with respect to the test set
+    ###################################################
     test_dict = {}
     t0 = time.time()
     grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
@@ -1324,20 +1331,20 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     print("Test dictionary :\n {}".format(test_dict))
 
     # print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
-
-    if Path(filepath).is_file():
-        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        log_dict.update(val_dict)
-        log_dict.update(test_dict)
-        df = pd.DataFrame(log_dict)
-        df.to_csv(filepath, mode="a", header=False, index=False)
-    else:
-        # Try to read the file to see if it is
-        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-        log_dict.update(val_dict)
-        log_dict.update(test_dict)
-        df = pd.DataFrame(log_dict)
-        df.to_csv(filepath, sep=",", index=False)
+    if record:
+        if Path(filepath).is_file():
+                                        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+                                        log_dict.update(val_dict)
+                                        log_dict.update(test_dict)
+                                        df = pd.DataFrame(log_dict)
+                                        df.to_csv(filepath, mode="a", header=False, index=False)
+        else:
+                 # Try to read the file to see if it is
+                 log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+                 log_dict.update(val_dict)
+                 log_dict.update(test_dict)
+                 df = pd.DataFrame(log_dict)
+                 df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         log_dict = {"Epoch": epoch, "sparse_flops": total_flops}
         for n, v in val_dict.items():
@@ -1349,7 +1356,53 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
         wandb.log(log_dict)
     t_end = time.time()
     print("Measure total time: {} s".format(t_end - t_begining))
-    return accuracy, val_dict["val_accuracy"][0]
+    if record:
+        return accuracy, val_dict["val_accuracy"][0]
+    else:
+        return val_dict,test_dict
+
+def measure_gradient_flow_only(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
+                                     mask_dict, use_wandb=False,record=True):
+    model = copy.deepcopy(model)
+    disable_bn(model)
+    if not cfg.fine_tune_exclude_layers:
+        disable_exclude_layers(model, cfg.exclude_layers)
+    if not cfg.fine_tune_non_zero_weights:
+        disable_all_except(model, cfg.exclude_layers)
+    model.to(device=device)
+
+    ###################################################
+    # Calculate everything with respect to the validation set
+    ###################################################
+
+    val_dict = {}
+    print("just before cal_grad")
+    t0 = time.time()
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=dataLoader)
+    print("Just finished cal_grad")
+    t1 = time.time()
+    print("Time in cal_grad valset: {} s".format(t1 - t0))
+
+    grad_vect = parameters_to_vector(grad)
+    norm_grad = torch.norm(grad_vect)
+    val_dict["val_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+
+    ###################################################
+    # Calculate everything with respect to the test set
+    ###################################################
+
+    test_dict = {}
+    t0 = time.time()
+    grad: typing.List[torch.Tensor] = cal_grad(model, trainloader=testLoader)
+    # t0 = time.time()
+    t1 = time.time()
+    print("Time in cal_grad test_set: {} s".format(t1 - t0))
+
+    grad_vect = parameters_to_vector(grad)
+    norm_grad = torch.norm(grad_vect)
+    test_dict["test_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
+
+    return  test_dict,val_dict
 
 
 def get_erdos_renyi_dist(

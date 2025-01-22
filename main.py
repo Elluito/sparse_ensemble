@@ -95,11 +95,10 @@ import seaborn.objects as so
 from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
-from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
     count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse, get_mask, \
-    apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator
+    apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator,measure_gradient_flow_only
 from feature_maps_utils import load_layer_features
 import re
 from itertools import cycle
@@ -1345,12 +1344,12 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
     # print("Deterministic performance on test set = {}".format(det_performance))
     if cal_val:
         print("Deterministic performance on val set = {}".format(det_performance_val))
-    stochastic_performance = []
 
+    stochastic_performance = []
     performance_of_models = []
     if cal_val:
         performance_of_models_val = []
-
+    det_test_GF_dict,det_val_GF_dict=measure_gradient_flow_only()
     for individual_index in range(10):
         ############### Here I ask for pr and for sigma ###################################
 
@@ -1360,8 +1359,11 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
 
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         stochastic_performance = test(current_model, use_cuda=True, testloader=testloader, verbose=0)
+
         if cal_val:
             stochastic_performance_val = test(current_model, use_cuda=True, testloader=val, verbose=0)
+
+
 
         performance_of_models.append(stochastic_performance)
         if cal_val:
@@ -12304,7 +12306,7 @@ if __name__ == '__main__':
     # # ##############################################################################
 
     #
-    parser = argparse.ArgumentParserr(description='Stochastic pruning experiments')
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
     parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
