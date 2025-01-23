@@ -1440,23 +1440,24 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
                                                                               use_log_sigma=log_sigma,Fx=functions),
                                                                               n_trials=args["trials"])
     # Save the sampler with pickle to be loaded later.
-    with open("find_pr_sigma_database_MOO_{}_{}_{}_{}_{}.dep".format(
+    with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
                                     cfg.architecture,
                                     cfg.dataset,
                                     sampler,
                                     one_batch, function_string), "wb") as fout:
-        pickle.dump(study.sampler, fout)
+        pickle.dump(study, fout)
+
     print("MOO for : {} {} {} {} {}".format(
                                     cfg.architecture,
                                     cfg.dataset,
                                     sampler,
                                     one_batch, function_string))
 
-    print("Number of finished trials: {}".format(len(study.trials)))
+    # print("Number of finished trials: {}".format(len(study.trials)))
 
     print("\n Best trial:")
     trials = study.best_trials
-    print("Size of the pareto front: {}".format(len(trials)))
+    # print("Size of the pareto front: {}".format(len(trials)))
 
     sigmas_list = []
     pruning_rate_list = []

@@ -4,7 +4,7 @@
 #$ -pe smp 8
 # Send emails when job starts and ends
 #$ -m be
-#$ -l h_vmem=16G
+#$ -l h_vmem=321455ggG
 
 #python3.9 -c "import os; print(os.environ)"
 ##python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
