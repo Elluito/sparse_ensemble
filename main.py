@@ -1285,7 +1285,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.
     # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
     if use_population:
         performance_of_models = []
-        for individual_index in range(10):
+        for individual_index in range(5):
             ############### Here I ask for pr and for sigma ###################################
 
             current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
@@ -1404,7 +1404,8 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
 
 
 def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
-    one_batch = False  # arg["one_batch"]
+    # one_batch = False  # arg["one_batch"]
+    one_batch = arg["one_batch"]
     one_batch_string = "whole_batch" if not one_batch else "one_batch"
     sampler = arg["sampler"]
     log_sigma = arg["log_sigma"]
@@ -1434,10 +1435,17 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
                                     one_batch, function_string),
                                 load_if_exists=True)
 
-    # study.optimize(
-    #     lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
-    #                                                                           use_log_sigma=log_sigma,Fx=functions),
-    #     n_trials=args["trials"])
+    study.optimize(
+        lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
+                                                                              use_log_sigma=log_sigma,Fx=functions),
+                                                                              n_trials=args["trials"])
+    # Save the sampler with pickle to be loaded later.
+    with open("find_pr_sigma_database_MOO_{}_{}_{}_{}_{}.dep".format(
+                                    cfg.architecture,
+                                    cfg.dataset,
+                                    sampler,
+                                    one_batch, function_string), "wb") as fout:
+        pickle.dump(study.sampler, fout)
     print("MOO for : {} {} {} {} {}".format(
                                     cfg.architecture,
                                     cfg.dataset,
@@ -10629,7 +10637,7 @@ def LeMain(args):
         "fine_tune_non_zero_weights": True,
         "sampler": "tpe",
         "flop_limit": 0,
-        "one_batch": False,
+        "one_batch": args["one_batch"],
         "measure_gradient_flow": True,
         "full_fine_tune": False,
         "use_stochastic": True,
@@ -12645,10 +12653,10 @@ if __name__ == '__main__':
     #                     help='Name for the file', required=False)
     args_out = vars(parser.parse_args())
 
-    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 600, "sampler": "nsga", "log_sigma": False,
+    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
             "one_batch": False, "num_workers": 8, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-            "batch_size": 128}
+            "batch_size": 512}
     args["architecture"] = args_out["architecture"]
     args["dataset"] = args_out["dataset"]
     args["sampler"] = args_out["sampler"]
