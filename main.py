@@ -12645,7 +12645,7 @@ if __name__ == '__main__':
     #                     help='Name for the file', required=False)
     args_out = vars(parser.parse_args())
 
-    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 600, "sampler": "tpe", "log_sigma": False,
+    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 600, "sampler": "nsga", "log_sigma": False,
             "one_batch": False, "num_workers": 8, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
             "batch_size": 128}
