@@ -12655,7 +12655,7 @@ if __name__ == '__main__':
     args_out = vars(parser.parse_args())
 
     args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
-            "one_batch": False, "num_workers": 8, "architecture": "resnet18", "dataset": "cifar10",
+            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
             "batch_size": 512}
     args["architecture"] = args_out["architecture"]
