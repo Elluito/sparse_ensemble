@@ -1452,7 +1452,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
             cfg.dataset,
             sampler,
             one_batch, function_string), "rb") as fout:
-        study=pickle.laod(fout)
+        study=pickle.load(fout)
     print("MOO for : {} {} {} {} {}".format(
         cfg.architecture,
         cfg.dataset,
@@ -8439,7 +8439,6 @@ def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(
     # df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list, "Pruned Det. seed 2": det2_list,
     #                    "Pruned Det. seed 3": det3_list, "Pruned Sto. seed 1": mean_sto1,
     #                    "Pruned Sto. seed 2": mean_sto2, "Pruned Sto. seed 3": mean_sto3})
-
     df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list,
                        "Pruned Sto. seed 1": mean_sto1})
 
