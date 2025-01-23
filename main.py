@@ -69,6 +69,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+
 # - interactive backends:
 #           GTK3Agg, GTK3Cairo, MacOSX, nbAgg,
 #           Qt4Agg, Qt4Cairo, Qt5Agg, Qt5Cairo,
@@ -1366,12 +1367,11 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         stochastic_performance = test(current_model, use_cuda=True, testloader=testloader, verbose=0)
 
-        stochastic_test_GF_dict,stochastic_val_GF_dict = measure_gradient_flow_only(pruned_model, val, testloader, cfg)
+        stochastic_test_GF_dict, stochastic_val_GF_dict = measure_gradient_flow_only(pruned_model, val, testloader, cfg)
 
         GF_of_models.append(stochastic_test_GF_dict["test_set_gradient_magnitude"][0])
 
         if cal_val:
-
             stochastic_performance_val = test(current_model, use_cuda=True, testloader=val, verbose=0)
 
             GF_of_models_val.append(stochastic_val_GF_dict["val_set_gradient_magnitude"][0])
@@ -1424,34 +1424,40 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
     # vj
     # sampler = optuna.samplers.TPESampler()
-    study = optuna.create_study(directions=["maximize", "maximize"], sampler=sampler,
-                                study_name="stochastic-global-pr-and-sigma-optimisation-MOO-{}-{}-{}-{}".format(
-                                    cfg.architecture,
-                                    cfg.dataset, sampler, function_string),
-                                storage="sqlite:///find_pr_sigma_database_MOO_{}_{}_{}_{}_{}.dep".format(
-                                    cfg.architecture,
-                                    cfg.dataset,
-                                    sampler,
-                                    one_batch, function_string),
-                                load_if_exists=True)
-
-    study.optimize(
-        lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
-                                                                              use_log_sigma=log_sigma,Fx=functions),
-                                                                              n_trials=args["trials"])
+    # study = optuna.create_study(directions=["maximize", "maximize"], sampler=sampler,
+    #                             study_name="stochastic-global-pr-and-sigma-optimisation-MOO-{}-{}-{}-{}".format(
+    #                                 cfg.architecture,
+    #                                 cfg.dataset, sampler, function_string),
+    #                             storage="sqlite:///find_pr_sigma_database_MOO_{}_{}_{}_{}_{}.dep".format(
+    #                                 cfg.architecture,
+    #                                 cfg.dataset,
+    #                                 sampler,
+    #                                 one_batch, function_string),
+    #                             load_if_exists=True)
+    #
+    # study.optimize(
+    #     lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
+    #                                                                           use_log_sigma=log_sigma, Fx=functions),
+    #     n_trials=args["trials"])
     # Save the sampler with pickle to be loaded later.
-    with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
-                                    cfg.architecture,
-                                    cfg.dataset,
-                                    sampler,
-                                    one_batch, function_string), "wb") as fout:
-        pickle.dump(study, fout)
+    # with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
+    #         cfg.architecture,
+    #         cfg.dataset,
+    #         sampler,
+    #         one_batch, function_string), "wb") as fout:
+    #     pickle.dump(study, fout)
 
+    with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
+            cfg.architecture,
+            cfg.dataset,
+            sampler,
+            one_batch, function_string), "rb") as fout:
+        study=pickle.laod(fout)
     print("MOO for : {} {} {} {} {}".format(
-                                    cfg.architecture,
-                                    cfg.dataset,
-                                    sampler,
-                                    one_batch, function_string))
+        cfg.architecture,
+        cfg.dataset,
+        sampler,
+        one_batch, function_string))
 
     # print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -1465,7 +1471,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     f2_list = []
     difference_with_deterministic_list = []
     fitness_list = []
-    GF_list =[]
+    GF_list = []
 
     # if functions == 1:
     #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
@@ -1514,8 +1520,12 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
         print("  Params: ")
         for key, value in trial.params.items():
             print("    {}: {}".format(key, value))
-        val_median_stochastic_performance, difference_in_test_set, GF_median_val = test_pr_sigma_combination(cfg, trial.params[
-            "pruning_rate"], trial.params["sigma"], cal_val=True )
+        val_median_stochastic_performance, difference_in_test_set, GF_median_val = test_pr_sigma_combination(cfg,
+                                                                                                             trial.params[
+                                                                                                                 "pruning_rate"],
+                                                                                                             trial.params[
+                                                                                                                 "sigma"],
+                                                                                                             cal_val=True)
         f1_list.append(val_median_stochastic_performance)
         difference_with_deterministic_list.append(difference_in_test_set)
         fitness_list.append(fitness_function_on_test_set)
@@ -1536,11 +1546,12 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # p["Sigma"] = sigmas_list
 
     p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic Performance": f1_list,
-                      "Fitness": fitness_list, "Sigma": sigmas_list,"Gradient Flow On Val":GF_list,
+                       "Sigma": sigmas_list, "Gradient Flow On Val": GF_list,
                       "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
 
-    p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-                                                      one_batch_string), index=False)
+    p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
+                                                                                function_string,
+                                                                                one_batch_string), index=False)
 
     #############################################################
     #                   plotting pareto front
@@ -8162,19 +8173,21 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
         sep=",")
 
 
-def obtain_N_models(cfg,base_model,sigma_per_layer,evaluation_set,use_cuda):
-    stochastic_performances=[]
-    stochastic_dense_performances=[]
+def obtain_N_models(cfg, base_model, sigma_per_layer, evaluation_set, use_cuda,save_dense=True):
+    stochastic_performances = []
+    if save_dense:
+        stochastic_dense_performances = []
     for n in range(cfg.population):
         current_model = get_noisy_sample_sigma_per_layer(base_model, cfg, sigma_per_layer=sigma_per_layer)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        print("Stochastic dense performance")
-        t0 = time.time()
-        StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        t1 = time.time()
-        print("Time for test: {}".format(t1 - t0))
-        # Dense stochastic performance
-        stochastic_dense_performances.append(StoDense_performance)
+        if save_dense:
+            print("Stochastic dense performance")
+            t0 = time.time()
+            StoDense_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+            t1 = time.time()
+            print("Time for test: {}".format(t1 - t0))
+            # Dense stochastic performance
+            stochastic_dense_performances.append(StoDense_performance)
 
         if cfg.pruner == "global":
             prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
@@ -8196,15 +8209,295 @@ def obtain_N_models(cfg,base_model,sigma_per_layer,evaluation_set,use_cuda):
         stochastic_performances.append(stochastic_pruned_performance)
         del current_model
         torch.cuda.empty_cache()
-    return stochastic_performances,stochastic_dense_performances
-def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omegaconf.DictConfig,solution2,solution3, eval_set: str = "test", name: str = "",
-                                                     show_legend=True):
+    if save_dense:
+        return stochastic_performances, stochastic_dense_performances
+    else:
+        return stochastic_performances
 
+def stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg: omegaconf.DictConfig, solution2,
+                                                                                solution3, eval_set: str = "test",
+                                                                                name: str = "",
+                                                                                show_legend=True, sigma_list=[]):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
-    cfg.solution=solution2
+    cfg.solution = solution2
     net2 = get_model(cfg)
-    cfg.solution=solution3
+    cfg.solution = solution3
+    net3 = get_model(cfg)
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
+
+    # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
+    # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
+    # del original_performance
+    # del original_performance
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    mean_sto1_list = []
+    mean_sto2_list = []
+    mean_sto3_list = []
+    det1_list = []
+    det2_list = []
+    det3_list = []
+    for pr in pr_list:
+        pruned_original = copy.deepcopy(net)
+        # pruned_original2 = copy.deepcopy(net2)
+        # pruned_original3 = copy.deepcopy(net3)
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
+            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="global")
+            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            #                 pruner=cfg.pruner)
+            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            #                 pruner=cfg.pruner)
+
+        # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
+
+        # record_predictions(pruned_original, evaluation_set,
+        #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+        # det1_list.append(pruned_original)
+        # pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
+        # det2_list.append(pruned_original2)
+        # pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
+        # det3_list.append(pruned_original3)
+
+        # del pruned_original
+        # del pruned_original2
+        # del pruned_original3
+
+        # N stochasticly pruned models
+        pruned_performance, stochastic_dense_performances = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
+                                                                            use_cuda)
+        # pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
+        #
+        # pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
+
+        mean_sto1 = np.mean(pruned_performance)
+        mean_sto1_list.append(mean_sto1)
+        # mean_sto2 = pruned_performance2
+        # mean_sto2_list.append(mean_sto2)
+        # mean_sto3 = pruned_performance3
+        # mean_sto3_list.append(mean_sto3)
+        torch.cuda.empty_cache()
+    # df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list, "Pruned Det. seed 2": det2_list,
+    #                    "Pruned Det. seed 3": det3_list, "Pruned Sto. seed 1": mean_sto1,
+    #                    "Pruned Sto. seed 2": mean_sto2, "Pruned Sto. seed 3": mean_sto3})
+
+    df = pd.DataFrame({"Sigma":sigma_list, "Pruned Det. seed 1": det1_list,
+                       "Pruned Sto. seed 1": mean_sto1})
+
+    df.to_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv",sep=",",index=False)
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="red")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="orange")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="blue")
+
+    ax.plot(pr_list, mean_sto1_list, linestyle="--", marker="o", color="red")
+    # ax.plot(pr_list, mean_sto2_list, linestyle="--", marker="o", color="orange")
+    # ax.plot(pr_list, mean_sto3_list, linestyle="--", marker="o", color="blue")
+
+    handles = [
+        # Patch(facecolor="red", label="Seed 1"),
+        # Patch(facecolor="orange", label="Seed 2"),
+        # Patch(facecolor="blue", label="Seed 3"),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='red', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='orange', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 3',
+        #        markerfacecolor='blue', alpha=0.6, markersize=10),
+
+        Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
+               markerfacecolor='k', alpha=0.6, markersize=10),
+        # Line2D([0], [0], linestyle=":", label='Pruned Det.'
+        #        , alpha=0.6, markersize=10),
+
+        # Line2D([0], [0],linestyle="-", color='k', label='Dense Det.'),
+        # Line2D([0], [0],linestyle=":", color='k', label='Pruned Det.'),
+        # Line2D([0], [0],linestyle=(0,(5,5)), color='k',alpha=0.5, label='Mean Pruned Sto.'),
+    ]
+    # plt.legend(bbox_to_anchor=(1.005, 1),handles=handles,prop={"size":8})
+    plt.legend(handles=handles, prop={"size": 8})
+
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+
+    plt.grid(ls='--', alpha=0.5)
+    # plt.savefig(
+    #     f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+    #     f"_{cfg.population}_{eval_set}_{name}.pdf")
+    plt.savefig(
+        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_sigma_seed_1_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}_{eval_set}_{name}.pdf")
+def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg: omegaconf.DictConfig, solution2,
+                                                                                solution3, eval_set: str = "test",
+                                                                                name: str = "",
+                                                                                show_legend=True, pr_list=[]):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    cfg.solution = solution2
+    net2 = get_model(cfg)
+    cfg.solution = solution3
+    net3 = get_model(cfg)
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
+
+    # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
+    # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
+    # del original_performance
+    # del original_performance
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    mean_sto1_list = []
+    mean_sto2_list = []
+    mean_sto3_list = []
+    det1_list = []
+    det2_list = []
+    det3_list = []
+    for pr in pr_list:
+        pruned_original = copy.deepcopy(net)
+        # pruned_original2 = copy.deepcopy(net2)
+        # pruned_original3 = copy.deepcopy(net3)
+        if cfg.pruner == "global":
+            prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
+            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="global")
+            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            #                 pruner=cfg.pruner)
+            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+            #                 pruner=cfg.pruner)
+
+        remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
+
+        # record_predictions(pruned_original, evaluation_set,
+        #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+        det1_list.append(pruned_original)
+        # pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
+        # det2_list.append(pruned_original2)
+        # pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
+        # det3_list.append(pruned_original3)
+
+        del pruned_original
+        # del pruned_original2
+        # del pruned_original3
+
+        # N stochasticly pruned models
+        pruned_performance, stochastic_dense_performances = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
+                                                                            use_cuda)
+        # pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
+        #
+        # pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
+
+        mean_sto1 = np.mean(pruned_performance)
+        mean_sto1_list.append(mean_sto1)
+        # mean_sto2 = pruned_performance2
+        # mean_sto2_list.append(mean_sto2)
+        # mean_sto3 = pruned_performance3
+        # mean_sto3_list.append(mean_sto3)
+        torch.cuda.empty_cache()
+    # df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list, "Pruned Det. seed 2": det2_list,
+    #                    "Pruned Det. seed 3": det3_list, "Pruned Sto. seed 1": mean_sto1,
+    #                    "Pruned Sto. seed 2": mean_sto2, "Pruned Sto. seed 3": mean_sto3})
+
+    df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list,
+                       "Pruned Sto. seed 1": mean_sto1})
+
+    df.to_csv(f"seed1_multiple_pr_{cfg.architecture}_{cfg.dataset}.csv",sep=",",index=False)
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    ax.plot(pr_list, det1_list, linestyle=":", color="red")
+    ax.plot(pr_list, det1_list, linestyle=":", color="orange")
+    ax.plot(pr_list, det1_list, linestyle=":", color="blue")
+
+    ax.plot(pr_list, mean_sto1_list, linestyle="--", marker="o", color="red")
+    ax.plot(pr_list, mean_sto2_list, linestyle="--", marker="o", color="orange")
+    ax.plot(pr_list, mean_sto3_list, linestyle="--", marker="o", color="blue")
+
+    handles = [
+        Patch(facecolor="red", label="Seed 1"),
+        Patch(facecolor="orange", label="Seed 2"),
+        Patch(facecolor="blue", label="Seed 3"),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='red', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='orange', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 3',
+        #        markerfacecolor='blue', alpha=0.6, markersize=10),
+
+        Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
+               markerfacecolor='k', alpha=0.6, markersize=10),
+        Line2D([0], [0], linestyle=":", label='Pruned Det.'
+               , alpha=0.6, markersize=10),
+
+        # Line2D([0], [0],linestyle="-", color='k', label='Dense Det.'),
+        # Line2D([0], [0],linestyle=":", color='k', label='Pruned Det.'),
+        # Line2D([0], [0],linestyle=(0,(5,5)), color='k',alpha=0.5, label='Mean Pruned Sto.'),
+    ]
+    # plt.legend(bbox_to_anchor=(1.005, 1),handles=handles,prop={"size":8})
+    plt.legend(handles=handles, prop={"size": 8})
+
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+
+    plt.grid(ls='--', alpha=0.5)
+    # plt.savefig(
+    #     f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+    #     f"_{cfg.population}_{eval_set}_{name}.pdf")
+    plt.savefig(
+        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_pr_seed_1_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}_{eval_set}_{name}.pdf")
+
+
+def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omegaconf.DictConfig, solution2, solution3,
+                                                                       eval_set: str = "test", name: str = "",
+                                                                       show_legend=True):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    cfg.solution = solution2
+    net2 = get_model(cfg)
+    cfg.solution = solution3
     net3 = get_model(cfg)
 
     evaluation_set = select_eval_set(cfg, eval_set)
@@ -8219,7 +8512,6 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     original_performance = test(net, use_cuda, evaluation_set, verbose=1)
     original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
     original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
-
 
     pruned_original = copy.deepcopy(net)
     pruned_original2 = copy.deepcopy(net2)
@@ -8259,9 +8551,12 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     labels3 = []
     # stochastic_dense_performances.append(original_performance)
 
-    pruned_performance,stochastic_dense_performances  = obtain_N_models(cfg,net,sigma_per_layer,evaluation_set,use_cuda)
-    pruned_performance2,stochastic_dense_performances2   = obtain_N_models(cfg,net2,sigma_per_layer,evaluation_set,use_cuda)
-    pruned_performance3,stochastic_dense_performances3  = obtain_N_models(cfg,net3,sigma_per_layer,evaluation_set,use_cuda)
+    pruned_performance, stochastic_dense_performances = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
+                                                                        use_cuda)
+    pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer, evaluation_set,
+                                                                          use_cuda)
+    pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer, evaluation_set,
+                                                                          use_cuda)
     # len(pruned performance)-1 because the first one is the pruned original
     labels.extend(["stochastic pruned"] * (len(pruned_performance)))
     labels.extend(["stochastic pruned"] * (len(pruned_performance2)))
@@ -8279,15 +8574,11 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     all_index[index_of_pruned_original] = False
     ranked_index = ranked_index[all_index]
 
-
-
     ranked_index2 = np.flip(np.argsort(pruned_performance2))
     index_of_pruned_original2 = list(ranked_index2).index(0)
     all_index2 = np.ones(len(ranked_index2), dtype=bool)
     all_index2[index_of_pruned_original2] = False
     ranked_index2 = ranked_index2[all_index2]
-
-
 
     ranked_index3 = np.flip(np.argsort(pruned_performance3))
     index_of_pruned_original3 = list(ranked_index3).index(0)
@@ -8295,21 +8586,19 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     all_index3[index_of_pruned_original3] = False
     ranked_index3 = ranked_index3[all_index3]
 
-
-
     pruned_performance = np.array(pruned_performance)
-    mean_pruned_sto1=np.mean(pruned_performance)
+    mean_pruned_sto1 = np.mean(pruned_performance)
     pruned_performance2 = np.array(pruned_performance2)
-    mean_pruned_sto2=np.mean(pruned_performance2)
+    mean_pruned_sto2 = np.mean(pruned_performance2)
     pruned_performance3 = np.array(pruned_performance3)
-    mean_pruned_sto3=np.mean(pruned_performance3)
+    mean_pruned_sto3 = np.mean(pruned_performance3)
 
     stochastic_dense_performances = np.array(stochastic_dense_performances)
-    mean_dense_sto1=np.mean(stochastic_dense_performances)
+    mean_dense_sto1 = np.mean(stochastic_dense_performances)
     stochastic_dense_performances2 = np.array(stochastic_dense_performances2)
-    mean_dense_sto2=np.mean(stochastic_dense_performances2)
+    mean_dense_sto2 = np.mean(stochastic_dense_performances2)
     stochastic_dense_performances3 = np.array(stochastic_dense_performances3)
-    mean_dense_sto3=np.mean(stochastic_dense_performances3)
+    mean_dense_sto3 = np.mean(stochastic_dense_performances3)
 
     result = time.localtime(time.time())
 
@@ -8323,14 +8612,15 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     original_line2 = ax.axhline(y=original_performance2, color="orange", linestyle="-", label="Seed 2")
     original_line3 = ax.axhline(y=original_performance3, color="blue", linestyle="-", label="Seed 3")
 
-    deterministic_pruning_line = ax.axhline(y=pruned_original_performance,linestyle=":"  ,color="r", label="Seed 1")
-    deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2,linestyle=":" ,color="orange", label="Seed 2")
-    deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3,linestyle=":" ,color="blue", label="Seed 3")
+    deterministic_pruning_line = ax.axhline(y=pruned_original_performance, linestyle=":", color="r", label="Seed 1")
+    deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2, linestyle=":", color="orange",
+                                             label="Seed 2")
+    deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3, linestyle=":", color="blue",
+                                             label="Seed 3")
 
-    stochastic_mean = ax.axhline(y=mean_pruned_sto1,linestyle=(0,(5,5))  ,color="r", label="Seed 1",alpha=0.5)
-    stochastic_mean2 = ax.axhline(y=mean_pruned_sto2,linestyle=(0,(5,5))  ,color="orange", label="Seed 2",alpha=0.5)
-    stochastic_mean3 = ax.axhline(y=mean_pruned_sto3,linestyle=(0,(5,5))  ,color="blue", label="Seed 3",alpha=0.5)
-
+    stochastic_mean = ax.axhline(y=mean_pruned_sto1, linestyle=(0, (5, 5)), color="r", label="Seed 1", alpha=0.5)
+    stochastic_mean2 = ax.axhline(y=mean_pruned_sto2, linestyle=(0, (5, 5)), color="orange", label="Seed 2", alpha=0.5)
+    stochastic_mean3 = ax.axhline(y=mean_pruned_sto3, linestyle=(0, (5, 5)), color="blue", label="Seed 3", alpha=0.5)
 
     plt.tick_params(axis='both', which='major', labelsize=fs)
     # plt.tick_params(axis='x', which='major')
@@ -8358,13 +8648,12 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             stochastic_models_points_pruned.append(pruned_point)
 
     for i, element in enumerate(pruned_performance2[ranked_index2]):
-        pruned_point2 = ax.scatter(i+1/3, element, c="orange", marker="o", s=50)
+        pruned_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="o", s=50)
         stochastic_models_points_pruned2.append(pruned_point2)
 
     for i, element in enumerate(pruned_performance3[ranked_index3]):
-        pruned_point3 = ax.scatter(i+2/3, element, c="blue", marker="o", s=50)
+        pruned_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="o", s=50)
         stochastic_models_points_pruned3.append(pruned_point3)
-
 
     for i, element in enumerate(stochastic_dense_performances[ranked_index]):
         if i == index_of_pruned_original or element == 1:
@@ -8378,25 +8667,22 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     for i, element in enumerate(stochastic_dense_performances2[ranked_index2]):
         if i == index_of_pruned_original or element == 1:
             # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-            dense_point2 = ax.scatter(i+1/3, element, c="orange", marker="s", s=50)
+            dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
             # continue
         else:
-            dense_point2 = ax.scatter(i+1/3, element, c="orange", marker="s", s=50)
+            dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
             stochastic_models_points_dense2.append(dense_point2)
 
     for i, element in enumerate(stochastic_dense_performances3[ranked_index3]):
         if i == index_of_pruned_original or element == 1:
             # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-            dense_point3 = ax.scatter(i+2/3, element, c="blue", marker="s", s=50)
+            dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
             # continue
         else:
-            dense_point3 = ax.scatter(i+2/3, element, c="blue", marker="s", s=50)
+            dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
             stochastic_models_points_dense3.append(dense_point3)
 
-
-
     if show_legend:
-
         handles = [
             Patch(facecolor="red", label="Seed 1"),
             Patch(facecolor="orange", label="Seed 2"),
@@ -8413,13 +8699,11 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             Line2D([0], [0], marker='s', color='w', label='Dense Sto.',
                    markerfacecolor='k', alpha=0.6, markersize=10),
 
-
-
-            Line2D([0], [0],linestyle="-", color='k', label='Dense Det.'),
-            Line2D([0], [0],linestyle=":", color='k', label='Pruned Det.'),
-            Line2D([0], [0],linestyle=(0,(5,5)), color='k',alpha=0.5, label='Mean Pruned Sto.'),
+            Line2D([0], [0], linestyle="-", color='k', label='Dense Det.'),
+            Line2D([0], [0], linestyle=":", color='k', label='Pruned Det.'),
+            Line2D([0], [0], linestyle=(0, (5, 5)), color='k', alpha=0.5, label='Mean Pruned Sto.'),
         ]
-        plt.legend(bbox_to_anchor=(1.005, 1),handles=handles,prop={"size":8})
+        plt.legend(bbox_to_anchor=(1.005, 1), handles=handles, prop={"size": 8})
         # plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
         #             deterministic_pruning_line],
         #            ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
@@ -8431,6 +8715,7 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
         f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_fused_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}_{name}.pdf")
+
 
 def stochastic_pruning_against_deterministic_pruning(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "",
                                                      show_legend=True):
@@ -12446,13 +12731,14 @@ if __name__ == '__main__':
     ########################################################
     # para plotear la imagen the det vs sto para varias semillas
     ########################################################
+
     # cfg = omegaconf.DictConfig({
     #     # "architecture": "vgg19",
-    #     "population":5,
+    #     "population": 3,
     #     "model": "renset18",
     #     "architecture": "resnet18",
     #     "dataset": "cifar10",
-    #     "sigma":0.005,
+    #     "sigma": 0.005,
     #     "noise": "gaussian",
     #     "amount": 0.9,
     #     "exclude_layers": ["conv1", "linear", "fc", "classifier"],
@@ -12475,10 +12761,10 @@ if __name__ == '__main__':
     #     "num_workers": 1,
     #     "cosine_schedule": False,
     #     "epochs": 24,
-    #     "pad":0,
-    #     "input_resolution":32,
+    #     "pad": 0,
+    #     "input_resolution": 32,
     #     "batch_size": 128,
-    #     "resize":0
+    #     "resize": 0
     # })
     #
     # # for i in range(len(solutions_list)):
@@ -12502,9 +12788,16 @@ if __name__ == '__main__':
     #
     # solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
     # solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
-    # stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg,solution2=solution2,solution3=solution3)
+    # # stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg,solution2=solution2,solution3=solution3)
+    # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
+    #                                                                             solution3=solution3,
+    #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+    #                                                                                      0.7, 0.8, 0.9, 0.95, 0.99])
+    # stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
+    #                                                                             solution3=solution3,
+    #                                                                             sigma_list=[0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
+    #                                                                                      0.007, 0.008, 0.009, 0.01, 0.011])
     #################################################################################################################
-
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
 
