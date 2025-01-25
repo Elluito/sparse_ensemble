@@ -13430,68 +13430,68 @@ if __name__ == '__main__':
     # Para la imagen the MOO
     # ####################################
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    # # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    # # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    # # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    # # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
     #                     required=True)
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    # #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    # #                     required=True)
-    # # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-    # #                     required=False)
-    # ############# this is for pr and sigma optim ###############################
-    # # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    # # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-    # #                     required=False)
-    # #
-    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    # # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-    # #                     help='Use log scale for sigma in pr,sigma optim', required=False)
-    # # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-    # #                     required=False)
-    # # parser.add_argument('-fnc', '--functions', type=int, default=1,
-    # #                     help='Type of functions for MOO optim of sigma and pr', required=False)
-    # #
-    # # parser.add_argument('--name', type=str, default="",
-    # #                     help='Name for the file', required=False)
-    # args_out = vars(parser.parse_args())
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    ############# this is for pr and sigma optim ###############################
+    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
     #
-    # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
-    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-    #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-    #         "batch_size": 512}
-    # args["architecture"] = args_out["architecture"]
-    # args["dataset"] = args_out["dataset"]
-    # args["sampler"] = args_out["sampler"]
-    # args["pruner"] = args_out["pruner"]
-    # #
-    # # models = ["resnet18","resnet50","VGG19"]
-    # #
-    # # datasets = ["cifar10","cifar100"]
-    # #
-    # # sampler = ["tpe","nsga"]
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
+    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+    #                     required=False)
+    # parser.add_argument('-fnc', '--functions', type=int, default=1,
+    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
     #
-    # # models = ["resnet18"]
-    # # datasets = ["cifar10"]
-    # # sampler = ["tpe"]
+    # parser.add_argument('--name', type=str, default="",
+    #                     help='Name for the file', required=False)
+    args_out = vars(parser.parse_args())
+
+    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
+            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+            "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+            "batch_size": 512}
+    args["architecture"] = args_out["architecture"]
+    args["dataset"] = args_out["dataset"]
+    args["sampler"] = args_out["sampler"]
+    args["pruner"] = args_out["pruner"]
     #
-    # # for combination in itertools.product(models, datasets, sampler):
-    # #
-    # #     args["architecture"] = combination[0]
-    # #     args["dataset"] = combination[1]
-    # #     args["sampler"] = combination[2]
-    # #     LeMain(args)
+    # models = ["resnet18","resnet50","VGG19"]
     #
-    # LeMain(args)
+    # datasets = ["cifar10","cifar100"]
+    #
+    # sampler = ["tpe","nsga"]
+
+    # models = ["resnet18"]
+    # datasets = ["cifar10"]
+    # sampler = ["tpe"]
+
+    # for combination in itertools.product(models, datasets, sampler):
+    #
+    #     args["architecture"] = combination[0]
+    #     args["dataset"] = combination[1]
+    #     args["sampler"] = combination[2]
+    #     LeMain(args)
+
+    LeMain(args)
 
     #######################################################################################
 
@@ -13582,59 +13582,59 @@ if __name__ == '__main__':
     # #     #
     # #
 
-    cfg = omegaconf.DictConfig({
-        "sigma":0.003,
-        "amount":0.9,
-        "architecture":"resnet18",
-        "model_type": "alternative",
-        "dataset": "cifar100",
-        "set":"test",
-        "solution":"",
-        "batch_size": 512,
-        # "batch_size": 128,
-        "num_workers": 0,
-    })
-
-    # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
-    models =["resnet18","resnet18","resnet50","resnet50","VGG19","VGG19"]
-    dataset=["cifar10","cifar100","cifar10","cifar100","cifar10","cifar100"]
-    pr_list =[0.9,0.9,0.9528,0.9528,0.94,0.94]
-
-    # models= ["resnet18"]
-    # dataset= ["cifar10"]
-    # pr_list= [0.9]
-    for i in range(len(models)):
-        cfg.architecture=models[i]
-        cfg.amount=pr_list[i]
-        cfg.dataset= dataset[i]
-
-        print("{} {}".format(models[i],dataset[i]))
-        df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-        df2 = pd.read_csv(f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-        deterministic_lamp_df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-        deterministic_global_df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
-    #     sigmas = [0.005]
-    #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
-        sigmas = [0.001,0.005]
-
-        # directory = "gradient_flow_results_test_set/"
-        directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
-        print("##################################")
-        print("\t LAMP")
-        print("##################################")
-        if cfg.dataset =="cifar10":
-            scatter_plot_sigmas_V2(df,df2, deterministic_dataframe1=deterministic_lamp_df,
-                                deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
-                                det_label2='Deter. GMP', file=f"{directory}join_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas,
-                                show_legend=False,legend_inside=True
-                                )
-        else:
-            scatter_plot_sigmas_V2(df,df2, deterministic_dataframe1=deterministic_lamp_df,
-                                   deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
-                                   det_label2='Deter. GMP', file=f"{directory}join_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas,
-                                   show_legend=True,legend_inside=True
-                                   )
+    # cfg = omegaconf.DictConfig({
+    #     "sigma":0.003,
+    #     "amount":0.9,
+    #     "architecture":"resnet18",
+    #     "model_type": "alternative",
+    #     "dataset": "cifar100",
+    #     "set":"test",
+    #     "solution":"",
+    #     "batch_size": 512,
+    #     # "batch_size": 128,
+    #     "num_workers": 0,
+    # })
+    #
+    # # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+    # models =["resnet18","resnet18","resnet50","resnet50","VGG19","VGG19"]
+    # dataset=["cifar10","cifar100","cifar10","cifar100","cifar10","cifar100"]
+    # pr_list =[0.9,0.9,0.9528,0.9528,0.94,0.94]
+    #
+    # # models= ["resnet18"]
+    # # dataset= ["cifar10"]
+    # # pr_list= [0.9]
+    # for i in range(len(models)):
+    #     cfg.architecture=models[i]
+    #     cfg.amount=pr_list[i]
+    #     cfg.dataset= dataset[i]
+    #
+    #     print("{} {}".format(models[i],dataset[i]))
+    #     df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    #     df2 = pd.read_csv(f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    #     deterministic_lamp_df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    #     deterministic_global_df = pd.read_csv(f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",sep = ",",header = 0, index_col = False)
+    # #     sigmas = [0.005]
+    # #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
+    #     sigmas = [0.001,0.005]
+    #
+    #     # directory = "gradient_flow_results_test_set/"
+    #     directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
+    #     print("##################################")
+    #     print("\t LAMP")
+    #     print("##################################")
+    #     if cfg.dataset =="cifar10":
+    #         scatter_plot_sigmas_V2(df,df2, deterministic_dataframe1=deterministic_lamp_df,
+    #                             deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
+    #                             det_label2='Deter. GMP', file=f"{directory}join_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas,
+    #                             show_legend=False,legend_inside=True
+    #                             )
+    #     else:
+    #         scatter_plot_sigmas_V2(df,df2, deterministic_dataframe1=deterministic_lamp_df,
+    #                                deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
+    #                                det_label2='Deter. GMP', file=f"{directory}join_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf", use_set=cfg.set,sigmas_to_show=sigmas,
+    #                                show_legend=True,legend_inside=True
+    #                                )
 
         # print("##################################")
         # print("\tGMP")
