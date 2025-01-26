@@ -122,7 +122,7 @@ sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
 fs = 15
-fig_size = (3.5,3.5)
+fig_size = (3.5, 3.5)
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
@@ -1421,6 +1421,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
         sampler = optuna.samplers.TPESampler()
     else:
         raise Exception("Sampler {} is not suported for this experiment".format(sampler))
+
     # # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
     # vj
     # sampler = optuna.samplers.TPESampler()
@@ -1447,171 +1448,247 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #         one_batch, function_string), "wb") as fout:
     #     pickle.dump(study, fout)
 
-    with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
-            cfg.architecture,
-            cfg.dataset,
-            sampler,
-            one_batch, function_string), "rb") as fout:
-        study = pickle.load(fout)
-    print("MOO for : {} {} {} {} {}".format(
-        cfg.architecture,
-        cfg.dataset,
-        sampler,
-        one_batch, function_string))
-
-    # print("Number of finished trials: {}".format(len(study.trials)))
-
-    print("\n Best trial:")
-    trials = study.best_trials
-    # print("Size of the pareto front: {}".format(len(trials)))
-
-    sigmas_list = []
-    pruning_rate_list = []
-    f1_list = []
-    f2_list = []
-    difference_with_deterministic_list = []
-    fitness_list = []
-    GF_list = []
-
-    # if functions == 1:
-    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
-    #     f1, f2 = trial_with_highest_difference.values
-    #     print("  Values: {},{}".format(f1, f2))
-    #     print("  Params: ")
-    #     for key, value in trial_with_highest_difference.params.items():
-    #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_se, t
-    #     test_median_stochastic_performanci = test_pr_sigma_combination(cfg,
-    #                                                                    trial_with_highest_difference.params[
-    #                                                                        "pruning_rate"],
-    #                                                                    trial_with_highest_difference.params[
-    #                                                                        "sigma"])
-    #     print(
-    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-    #             fitness_function_on_test_set, test_median_stochastic_performance,
-    #             fitness_function_on_test_set / trial_with_highest_difference.params[
-    #                 "pruning_rate"]))
-    # else:
-    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    # with open("find_pr_sigma_database_pickle_MOO_{}_{}_{}_{}_{}.pkl".format(
+    #         cfg.architecture,
+    #         cfg.dataset,
+    #         sampler,
+    #         one_batch, function_string), "rb") as fout:
+    #     study = pickle.load(fout)
+    # print("MOO for : {} {} {} {} {}".format(
+    #     cfg.architecture,
+    #     cfg.dataset,
+    #     sampler,
+    #     one_batch, function_string))
     #
-    #     f1, f2 = trial_with_highest_difference.values
+    # # print("Number of finished trials: {}".format(len(study.trials)))
+    #
+    # print("\n Best trial:")
+    # trials = study.best_trials
+    # # print("Size of the pareto front: {}".format(len(trials)))
+    #
+    # sigmas_list = []
+    # pruning_rate_list = []
+    # f1_list = []
+    # calculated_SP_performance_list=[]
+    # f2_list = []
+    # difference_with_deterministic_list = []
+    # fitness_list = []
+    # GF_list = []
+    #
+    # # if functions == 1:
+    # #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    # #     f1, f2 = trial_with_highest_difference.values
+    # #     print("  Values: {},{}".format(f1, f2))
+    # #     print("  Params: ")
+    # #     for key, value in trial_with_highest_difference.params.items():
+    # #         print("    {}: {}".format(key, value))
+    # #     fitness_function_on_test_se, t
+    # #     test_median_stochastic_performanci = test_pr_sigma_combination(cfg,
+    # #                                                                    trial_with_highest_difference.params[
+    # #                                                                        "pruning_rate"],
+    # #                                                                    trial_with_highest_difference.params[
+    # #                                                                        "sigma"])
+    # #     print(
+    # #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    # #             fitness_function_on_test_set, test_median_stochastic_performance,
+    # #             fitness_function_on_test_set / trial_with_highest_difference.params[
+    # #                 "pruning_rate"]))
+    # # else:
+    # #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    # #
+    # #     f1, f2 = trial_with_highest_difference.values
+    # #     print("  Values: {},{}".format(f1, f2))
+    # #     print("  Params: ")
+    # #     for key, value in trial_with_highest_difference.params.items():
+    # #         print("    {}: {}".format(key, value))
+    # #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg,
+    # #                                                                                                  trial_with_highest_difference.params[
+    # #                                                                                                      "pruning_rate"],
+    # #                                                                                                  trial_with_highest_difference.params[
+    # #                                                                                                      "sigma"])
+    # #     print(
+    # #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    # #             fitness_function_on_test_set, test_median_stochastic_performance,
+    # #             fitness_function_on_test_set / trial_with_highest_difference.params[
+    # #                 "pruning_rate"]))
+    #
+    # for trial in trials:
+    #     f1, f2 = trial.values
+    #     pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
+    #     f1_list.append(f1)
+    #     f2_list.append(f2)
     #     print("  Values: {},{}".format(f1, f2))
+    #
     #     print("  Params: ")
-    #     for key, value in trial_with_highest_difference.params.items():
+    #     for key, value in trial.params.items():
     #         print("    {}: {}".format(key, value))
-    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg,
-    #                                                                                                  trial_with_highest_difference.params[
-    #                                                                                                      "pruning_rate"],
-    #                                                                                                  trial_with_highest_difference.params[
-    #                                                                                                      "sigma"])
-    #     print(
-    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-    #             fitness_function_on_test_set, test_median_stochastic_performance,
-    #             fitness_function_on_test_set / trial_with_highest_difference.params[
-    #                 "pruning_rate"]))
-
-    for trial in trials:
-        f1, f2 = trial.values
-        pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
-        # f1_list.append(f1)
-        f2_list.append(f2)
-        print("  Values: {},{}".format(f1, f2))
-
-        print("  Params: ")
-        for key, value in trial.params.items():
-            print("    {}: {}".format(key, value))
-        val_median_stochastic_performance, difference_in_test_set, GF_median_val = test_pr_sigma_combination(cfg,
-                                                                                                             trial.params[
-                                                                                                                 "pruning_rate"],
-                                                                                                             trial.params[
-                                                                                                                 "sigma"],
-                                                                                                             cal_val=True)
-        f1_list.append(val_median_stochastic_performance)
-        difference_with_deterministic_list.append(difference_in_test_set)
-        # fitness_list.append(fitness_function_on_test_set)
-        GF_list.append(GF_median_val)
-
-        # print(
-        #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
-        #         fitness_function_on_test_set, test_median_stochastic_performance,
-        #         fitness_function_on_test_set / trial.params[
-        #             "pruning_rate"]))
-
-        sigmas_list.append(sigma)
-        pruning_rate_list.append(pr)
-
-    # p = pd.read_csv("pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-    #                                                          one_batch_string))
-
-    # p["Sigma"] = sigmas_list
-
-    p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic Performance": f1_list,
-                      "Sigma": sigmas_list, "Gradient Flow On Val": GF_list,
-                      "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
-
-    p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
-                                                                                function_string,
-                                                                                one_batch_string), index=False)
+    #     val_median_stochastic_performance, difference_in_test_set, GF_median_val = test_pr_sigma_combination(cfg,
+    #                                                                                                          trial.params[
+    #                                                                                                              "pruning_rate"],
+    #                                                                                                          trial.params[
+    #                                                                                                              "sigma"],
+    #                                                                                                          cal_val=True)
+    #     calculated_SP_performance_list.append(val_median_stochastic_performance)
+    #     difference_with_deterministic_list.append(difference_in_test_set)
+    #     # fitness_list.append(fitness_function_on_test_set)
+    #     GF_list.append(GF_median_val)
+    #
+    #     # print(
+    #     #     "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    #     #         fitness_function_on_test_set, test_median_stochastic_performance,
+    #     #         fitness_function_on_test_set / trial.params[
+    #     #             "pruning_rate"]))
+    #
+    #     sigmas_list.append(sigma)
+    #     pruning_rate_list.append(pr)
+    #
+    # # p = pd.read_csv("pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    # #                                                          one_batch_string))
+    #
+    # # p["Sigma"] = sigmas_list
+    #
+    # p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic Performance": f1_list, "Stochastic Performance calculated": f1_list,,
+    #                   "Sigma": sigmas_list, "Gradient Flow On Val": GF_list,
+    #                   "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
+    #
+    # p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
+    #                                                                             function_string,
+    #                                                                             one_batch_string), index=False)
 
     #############################################################
     #                   plotting pareto front
     #############################################################
     #
-    # p = pd.read_csv("pareto_front_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
-    #                                                          one_batch_string))
-    # # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
-    # # plt.figure()
-    # # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    # # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
-    # fig, axs = plt.subplots(1, 1,figsize=(6,5), layout="compressed")
-    # plt.title("{}".format(cfg.dataset.upper()))
-    # cmap = plt.cm.get_cmap('magma')
-    # # cmap = mpl.cm.viridis
-    # # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
-    # # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
-    # # diff = p["Difference with deterministic"]
-    # # min_val = diff.min()
-    # # q25 = diff.quantile(q=0.25)
-    # # q50 = diff.quantile(q=0.50)
-    # # q75 = diff.quantile(q=0.75)
-    # # max_val = diff.max()
-    # # bounds =[min_val,q25,0,q50,q75]
-    # # bounds.sort()
+    p = pd.read_csv("MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+                                                             one_batch_string))
+    # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
+    # plt.figure()
+    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
+    fig, axs = plt.subplots(1, 1,figsize=(6,5), layout="compressed")
+    plt.title("{}".format(cfg.dataset.upper()))
+    cmap = plt.cm.get_cmap('magma')
+    # cmap = mpl.cm.viridis
+    # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
+    # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
+    # diff = p["Difference with deterministic"]
+    # min_val = diff.min()
+    # q25 = diff.quantile(q=0.25)
+    # q50 = diff.quantile(q=0.50)
+    # q75 = diff.quantile(q=0.75)
+    # max_val = diff.max()
+    # bounds =[min_val,q25,0,q50,q75]
+    # bounds.sort()
+
+    # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
+    # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    # # fig.colorbar(
+    # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+    # #     cax=ax,
+    # #     extend='both',
+    # #     ticks=bounds,
+    # #     spacing='proportional',
+    # #     orientation='horizontal',
+    # #     label='Discrete intervals, some other units',
+    # # )
     #
-    # # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
-    # # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
-    # # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-    # # # fig.colorbar(
-    # # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
-    # # #     cax=ax,
-    # # #     extend='both',
-    # # #     ticks=bounds,
-    # # #     spacing='proportional',
-    # # #     orientation='horizontal',
-    # # #     label='Discrete intervals, some other units',
-    # # # )
-    # #
-    #
-    # # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
-    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
-    # p_more_than_0 = p[p["Difference with deterministic"] > 0]
-    # # sc_less_than_0 = plt.scatter(y=p_lees_than_0["Stochastic performance"], x=p_lees_than_0["Pruning rate"],
-    # #                              facecolors='none', edgecolors='k', s=15)
-    #
-    # A=15000
-    # sizes=p_more_than_0["Sigma"]*A
-    # color_values = p_more_than_0["Difference with deterministic"]
-    #
-    # sc = plt.scatter(y=p_more_than_0["Stochastic performance"], x=p_more_than_0["Pruning rate"],
+
+    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    p_more_than_0 = p[p["Difference with deterministic"] >= 0]
+    sc_less_than_0 = axs.scatter(y=p_lees_than_0["Stochastic Performance"], x=p_lees_than_0["Pruning rate"],
+                                 facecolors='none', edgecolors='k', s=20)
+
+    A=15000
+    sizes=p_more_than_0["Sigma"]*A
+    color_values = p_more_than_0["Difference with deterministic"]
+
+    sc = axs.scatter(y=p_more_than_0["Stochastic Performance"], x=p_more_than_0["Pruning rate"],
+                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+                     norm=matplotlib.colors.PowerNorm(gamma=1),s=20)
+    # axs_y = axs.twinx()
+    # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Pruning rate"],
     #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
     #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    #
-    # # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    #
-    # # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
-    #
+    # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Pruning rate"],
+    #                              facecolors='none', edgecolors='k', s=15)
+
+    # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+
+    # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+
+    axins = axs.inset_axes([0.13, 0.15, 0.35, 0.5])
+
+    axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
+
+    # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
+
+    scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+                     norm=matplotlib.colors.PowerNorm(gamma=1))
+    scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
+                          facecolors="none",edgecolors="k",) #s=sizes*np.log(sizes),)
+    axins.tick_params(axis='both', which='major', labelsize=fs)
+    for axis in ['top', 'bottom', 'left', 'right']:
+        axins.spines[axis].set_linewidth(1)
+        axins.spines[axis].set_color('gray')
+
+    axins.set_ylabel("$\sigma$",fontsize=20)
+    axins.set_xlabel("$\gamma$",fontsize=20)
+    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # fig.colorbar(scins,cax=axins_cbar)
+    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+
+    plt.ylabel("Stochastic performance on Val set")
+
+    cbar=plt.colorbar(sc, label="Difference with deterministic on test set")
+    cbar.ax.tick_params(labelsize=fs)
+    plt.tick_params(axis="y", labelsize=fs)
+    plt.tick_params(axis="x", labelsize=fs)
+    if cfg.dataset == "cifar10":
+        plt.xlabel("")
+    else:
+        plt.xlabel("Pruning rate", fontsize=fs)
+    # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # plt.legend()
+    plt.savefig(
+        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v2_{}_{}_{}_{}_{}.pdf".format(
+            cfg.architecture, cfg.dataset, sampler, function_string,
+            one_batch_string), bbox_inches="tight")
+    plt.close()
+
+    fig, axs = plt.subplots(1, 1,figsize=(6,5), layout="compressed")
+    plt.title("{}".format(cfg.dataset.upper()))
+    cmap = plt.cm.get_cmap('magma')
+    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    p_more_than_0 = p[p["Difference with deterministic"] > 0]
+
+    sc_less_than_0 = axs.scatter(x=p_lees_than_0["Gradient Flow On Val"], y=p_lees_than_0["Stochastic Performance"],
+                                 facecolors='none', edgecolors='k', s=15)
+
+    A=15000
+    sizes=p_more_than_0["Sigma"]*A
+    color_values = p_more_than_0["Difference with deterministic"]
+
+    sc = axs.scatter(x=p_more_than_0["Gradient Flow On Val"], y=p_more_than_0["Stochastic Performance"],
+                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # axs_y = axs.twinx()
+    # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Stochastic performance"],
+    #                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    #                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Stochastic performance"],
+    #                                  facecolors='none', edgecolors='k', s=15)
+
+    # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+
+    # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+
     # axins = axs.inset_axes([0.13, 0.12, 0.35, 0.5])
     #
     # axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
@@ -1619,35 +1696,43 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
     #
     # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    #                       c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    #                       norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
+    #                       facecolors="none",edgocolor="k",) #s=sizes*np.log(sizes),)
     # axins.tick_params(axis='both', which='major', labelsize=fs*0.8)
     # for axis in ['top', 'bottom', 'left', 'right']:
     #     axins.spines[axis].set_linewidth(1)
     #     axins.spines[axis].set_color('gray')
     #
-    # axins.set_title("$\sigma$",fontsize=14)
-    # # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # axins.set_ylabel("$\sigma$",fontsize=20)
+    # axins.set_xlabel("$\sigma$",fontsize=20)
+
+    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
     # fig.colorbar(scins,cax=axins_cbar)
-    # # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
-    #
-    # plt.ylabel("Stochastic performance on Val set")
-    #
-    # cbar=plt.colorbar(sc, label="Difference with deterministic on test set")
-    # cbar.ax.tick_params(labelsize=fs*0.8)
-    # plt.tick_params(axis="y", labelsize=fs * 0.8)
-    # plt.tick_params(axis="x", labelsize=fs * 0.8)
-    # if cfg.dataset == "cifar10":
-    #     plt.xlabel("")
-    # else:
-    #     plt.xlabel("Pruning rate", fontsize=fs * 0.8)
-    # # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
-    # # plt.legend()
-    # plt.savefig(
-    #     "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_{}_{}_{}_{}_{}.pdf".format(
-    #         cfg.architecture, cfg.dataset, sampler, function_string,
-    #         one_batch_string), bbox_inches="tight")
-    # plt.close()
+    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+
+    plt.ylabel("Stochastic performance on Val set")
+
+    cbar=plt.colorbar(sc, label="Difference with deterministic on test set")
+
+    cbar.ax.tick_params(labelsize=fs*0.8)
+
+    plt.tick_params(axis="y", labelsize=fs * 0.8)
+
+    plt.tick_params(axis="x", labelsize=fs * 0.8)
+
+    if cfg.dataset == "cifar10":
+        plt.xlabel("")
+    else:
+        plt.xlabel("Gradient Flow on Val set", fontsize=fs * 0.8)
+    # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # plt.legend()
+    plt.savefig(
+        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.pdf".format(
+            cfg.architecture, cfg.dataset, sampler, function_string,
+            one_batch_string), bbox_inches="tight")
+    plt.close()
 
     ##################### NOw we compare wit the deteminstic for the test set ##############################################
 
@@ -6117,7 +6202,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataseta, f"_{cfg.name}" if cfg.name else "",
+                cfg.dataset, f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -8214,58 +8299,56 @@ def obtain_N_models(cfg, base_model, sigma_per_layer, evaluation_set, use_cuda, 
         return stochastic_performances
 
 
-def plot_variable_pr_sigma(cfg: omegaconf.DictConfig, name: str = "",eval_set: str = "test"):
-
+def plot_variable_pr_sigma(cfg: omegaconf.DictConfig, name: str = "", eval_set: str = "test"):
     sigma_df = pd.read_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
 
     pr_df = pd.read_csv(f"seed1_multiple_pr_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
 
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
-    pr_list=pr_df["Pruning Rate"]
-    det1_list=pr_df["Pruned Det. seed 1"]
+    pr_list = pr_df["Pruning Rate"]
+    det1_list = pr_df["Pruned Det. seed 1"]
     mean_sto1_list = pr_df["Pruned Sto. seed 1"]
-    sigma_list= sigma_df["Sigma"]
-    mean_sto2_list=sigma_df["Pruned Sto. seed 1"]
-
+    sigma_list = sigma_df["Sigma"]
+    mean_sto2_list = sigma_df["Pruned Sto. seed 1"]
 
     ax.plot(pr_list, det1_list, linestyle=":", color="cornflowerblue")
     ax.plot(pr_list, mean_sto1_list, linestyle="--", marker="o", color="cornflowerblue")
 
-    ax.set_xlabel("$\gamma$",color="cornflowerblue",fontsize=fs*0.8)
-    ax.set_ylabel("Accuracy in test set",fontsize=fs*0.8)
+    ax.set_xlabel("$\gamma$", color="cornflowerblue", fontsize=fs * 0.8)
+    ax.set_ylabel("Accuracy in test set", fontsize=fs * 0.8)
     ax.spines["bottom"].set_color("cornflowerblue")
-    ax.tick_params(axis="x",colors="cornflowerblue")
+    ax.tick_params(axis="x", colors="cornflowerblue")
 
-    twiny_ax= ax.twiny()
+    twiny_ax = ax.twiny()
     twiny_ax.plot(sigma_list, mean_sto2_list, linestyle="--", marker="o", color="red")
     twiny_ax.spines['top'].set_color('red')
     twiny_ax.tick_params(axis="x", colors="red")
-    twiny_ax.set_xlabel("$\sigma$",color="red",fontsize=fs)
+    twiny_ax.set_xlabel("$\sigma$", color="red", fontsize=fs)
 
     handles = [
-            # Patch(facecolor="red", label=""),
-            # Patch(facecolor="orange", label="Seed 2"),
-            # Patch(facecolor="blue", label="Seed 3"),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 1',
-            #        markerfacecolor='red', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 1',
-            #        markerfacecolor='orange', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 3',
-            #        markerfacecolor='blue', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
-            #        markerfacecolor='k', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
-            #    markerfacecolor='k', alpha=0.6, markersize=10),
-            # Line2D([0], [0], linestyle=":", label='Pruned Det.'
-            #        , alpha=0.6, markersize=10),
+        # Patch(facecolor="red", label=""),
+        # Patch(facecolor="orange", label="Seed 2"),
+        # Patch(facecolor="blue", label="Seed 3"),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='red', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='orange', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 3',
+        #        markerfacecolor='blue', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
+        #        markerfacecolor='k', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
+        #    markerfacecolor='k', alpha=0.6, markersize=10),
+        # Line2D([0], [0], linestyle=":", label='Pruned Det.'
+        #        , alpha=0.6, markersize=10),
 
-            Line2D([0], [0],linestyle="-",marker="o", color='cornflowerblue', label='Mean pruned Sto. $\sigma=0.003$ '),
-            Line2D([0], [0],linestyle=":", color='cornflowerblue', label='Pruned Det.'),
-            Line2D([0], [0],linestyle="-",marker="o", color='red', label='Mean Pruned Sto. $\gamma=0.9$'),
-        ]
+        Line2D([0], [0], linestyle="-", marker="o", color='cornflowerblue', label='Mean pruned Sto. $\sigma=0.003$ '),
+        Line2D([0], [0], linestyle=":", color='cornflowerblue', label='Pruned Det.'),
+        Line2D([0], [0], linestyle="-", marker="o", color='red', label='Mean Pruned Sto. $\gamma=0.9$'),
+    ]
 
-    plt.legend(handles=handles,prop={"size":8},loc="center")
+    plt.legend(handles=handles, prop={"size": 8}, loc="center")
 
     plt.grid(ls='--', alpha=0.5)
     plt.savefig(
@@ -8275,145 +8358,145 @@ def plot_variable_pr_sigma(cfg: omegaconf.DictConfig, name: str = "",eval_set: s
 
 
 def stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg: omegaconf.DictConfig, solution2,
-                                                                                  solution3, eval_set: str = "test",
-                                                                                  name: str = "",
-                                                                                  show_legend=True, sigma_list=[]):
-        use_cuda = torch.cuda.is_available()
-        net = get_model(cfg)
-        # cfg.solution = solution2
-        # net2 = get_model(cfg)
-        # cfg.solution = solution3
-        # net3 = get_model(cfg)
+                                                                              solution3, eval_set: str = "test",
+                                                                              name: str = "",
+                                                                              show_legend=True, sigma_list=[]):
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    # cfg.solution = solution2
+    # net2 = get_model(cfg)
+    # cfg.solution = solution3
+    # net3 = get_model(cfg)
 
-        evaluation_set = select_eval_set(cfg, eval_set)
-        N = cfg.population
-        pop = []
-        pruned_performance = []
-        stochastic_dense_performances = []
-        stochastic_deltas = []
-        # accelerator = accelerate.Accelerator(mixed_precision="fp16")
-        # evaluation_set, net = accelerator.prepare(evaluation_set, net)
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
 
-        # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-        # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
-        # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
-        # del original_performance
-        # del original_performance
+    # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
+    # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
+    # del original_performance
+    # del original_performance
 
-        names, weights = zip(*get_layer_dict(net))
-        number_of_layers = len(names)
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
 
-        mean_sto1_list = []
-        mean_sto2_list = []
-        mean_sto3_list = []
-        det1_list = []
-        det2_list = []
-        det3_list = []
-        for sigma in sigma_list:
-            sigma_per_layer = dict(zip(names, [sigma] * number_of_layers))
-            pruned_original = copy.deepcopy(net)
-            # pruned_original2 = copy.deepcopy(net2)
-            # pruned_original3 = copy.deepcopy(net3)
-            # if cfg.pruner == "global":
-            #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
-            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="global")
-            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="global")
-            # else:
-            #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
-            #                     pruner=cfg.pruner)
-            # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
-            #                 pruner=cfg.pruner)
-            # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
-            #                 pruner=cfg.pruner)
+    mean_sto1_list = []
+    mean_sto2_list = []
+    mean_sto3_list = []
+    det1_list = []
+    det2_list = []
+    det3_list = []
+    for sigma in sigma_list:
+        sigma_per_layer = dict(zip(names, [sigma] * number_of_layers))
+        pruned_original = copy.deepcopy(net)
+        # pruned_original2 = copy.deepcopy(net2)
+        # pruned_original3 = copy.deepcopy(net3)
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+        # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
+        # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
 
-            # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
-            # remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
-            # remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
+        # remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
 
-            # record_predictions(pruned_original, evaluation_set,
-            #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
-            # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-            # det1_list.append(pruned_original)
-            # pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
-            # det2_list.append(pruned_original2)
-            # pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
-            # det3_list.append(pruned_original3)
+        # record_predictions(pruned_original, evaluation_set,
+        #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+        # det1_list.append(pruned_original)
+        # pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
+        # det2_list.append(pruned_original2)
+        # pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
+        # det3_list.append(pruned_original3)
 
-            # del pruned_original
-            # del pruned_original2
-            # del pruned_original3
+        # del pruned_original
+        # del pruned_original2
+        # del pruned_original3
 
-            # N stochasticly pruned models
-            pruned_performance = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
-                                                 use_cuda, save_dense=False)
-            # pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer,
-            #                                                                       evaluation_set, use_cuda)
-            #
-            # pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer,
-            #                                                                       evaluation_set, use_cuda)
+        # N stochasticly pruned models
+        pruned_performance = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
+                                             use_cuda, save_dense=False)
+        # pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
+        #
+        # pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer,
+        #                                                                       evaluation_set, use_cuda)
 
-            mean_sto1 = np.mean(pruned_performance)
-            mean_sto1_list.append(mean_sto1)
+        mean_sto1 = np.mean(pruned_performance)
+        mean_sto1_list.append(mean_sto1)
 
-            # mean_sto2 = pruned_performance2
-            # mean_sto2_list.append(mean_sto2)
-            # mean_sto3 = pruned_performance3
-            # mean_sto3_list.append(mean_sto3)
-            torch.cuda.empty_cache()
-        # df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list, "Pruned Det. seed 2": det2_list,
-        #                    "Pruned Det. seed 3": det3_list, "Pruned Sto. seed 1": mean_sto1,
-        #                    "Pruned Sto. seed 2": mean_sto2, "Pruned Sto. seed 3": mean_sto3})
+        # mean_sto2 = pruned_performance2
+        # mean_sto2_list.append(mean_sto2)
+        # mean_sto3 = pruned_performance3
+        # mean_sto3_list.append(mean_sto3)
+        torch.cuda.empty_cache()
+    # df = pd.DataFrame({"Pruning Rate": pr_list, "Pruned Det. seed 1": det1_list, "Pruned Det. seed 2": det2_list,
+    #                    "Pruned Det. seed 3": det3_list, "Pruned Sto. seed 1": mean_sto1,
+    #                    "Pruned Sto. seed 2": mean_sto2, "Pruned Sto. seed 3": mean_sto3})
 
-        df = pd.DataFrame({"Sigma": sigma_list, "Pruned Sto. seed 1": mean_sto1_list})
+    df = pd.DataFrame({"Sigma": sigma_list, "Pruned Sto. seed 1": mean_sto1_list})
 
-        df.to_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",", index=False)
+    df.to_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",", index=False)
 
-        df = pd.read_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
+    df = pd.read_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
 
-        fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
-        # ax.plot(pr_list, det1_list, linestyle=":", color="red")
-        # ax.plot(pr_list, det1_list, linestyle=":", color="orange")
-        # ax.plot(pr_list, det1_list, linestyle=":", color="blue")
+    fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="red")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="orange")
+    # ax.plot(pr_list, det1_list, linestyle=":", color="blue")
 
-        ax.plot(sigma_list, mean_sto1_list, linestyle="--", marker="o", color="red")
-        # ax.plot(pr_list, mean_sto2_list, linestyle="--", marker="o", color="orange")
-        # ax.plot(pr_list, mean_sto3_list, linestyle="--", marker="o", color="blue")
+    ax.plot(sigma_list, mean_sto1_list, linestyle="--", marker="o", color="red")
+    # ax.plot(pr_list, mean_sto2_list, linestyle="--", marker="o", color="orange")
+    # ax.plot(pr_list, mean_sto3_list, linestyle="--", marker="o", color="blue")
 
-        handles = [
-            # Patch(facecolor="red", label="Seed 1"),
-            # Patch(facecolor="orange", label="Seed 2"),
-            # Patch(facecolor="blue", label="Seed 3"),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 1',
-            #        markerfacecolor='red', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 1',
-            #        markerfacecolor='orange', alpha=0.6, markersize=10),
-            # Line2D([0], [0], marker='o', color='w', label='Seed 3',
-            #        markerfacecolor='blue', alpha=0.6, markersize=10),
+    handles = [
+        # Patch(facecolor="red", label="Seed 1"),
+        # Patch(facecolor="orange", label="Seed 2"),
+        # Patch(facecolor="blue", label="Seed 3"),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='red', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 1',
+        #        markerfacecolor='orange', alpha=0.6, markersize=10),
+        # Line2D([0], [0], marker='o', color='w', label='Seed 3',
+        #        markerfacecolor='blue', alpha=0.6, markersize=10),
 
-            Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
-                   markerfacecolor='k', alpha=0.6, markersize=10),
-            # Line2D([0], [0], linestyle=":", label='Pruned Det.'
-            #        , alpha=0.6, markersize=10),
+        Line2D([0], [0], marker='o', color='k', label='Mean Pruned Sto.',
+               markerfacecolor='k', alpha=0.6, markersize=10),
+        # Line2D([0], [0], linestyle=":", label='Pruned Det.'
+        #        , alpha=0.6, markersize=10),
 
-            # Line2D([0], [0],linestyle="-", color='k', label='Dense Det.'),
-            # Line2D([0], [0],linestyle=":", color='k', label='Pruned Det.'),
-            # Line2D([0], [0],linestyle=(0,(5,5)), color='k',alpha=0.5, label='Mean Pruned Sto.'),
-        ]
-        # plt.legend(bbox_to_anchor=(1.005, 1),handles=handles,prop={"size":8})
-        plt.legend(handles=handles, prop={"size": 8})
+        # Line2D([0], [0],linestyle="-", color='k', label='Dense Det.'),
+        # Line2D([0], [0],linestyle=":", color='k', label='Pruned Det.'),
+        # Line2D([0], [0],linestyle=(0,(5,5)), color='k',alpha=0.5, label='Mean Pruned Sto.'),
+    ]
+    # plt.legend(bbox_to_anchor=(1.005, 1),handles=handles,prop={"size":8})
+    plt.legend(handles=handles, prop={"size": 8})
 
-        # pop.append(pruned_original)
-        # pruned_performance.append(pruned_original_performance)
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
 
-        plt.grid(ls='--', alpha=0.5)
-        # plt.savefig(
-        #     f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
-        #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-        #     f"_{cfg.population}_{eval_set}_{name}.pdf")
-        plt.savefig(
-            f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_sigma_seed_1_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
-            f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
-            f"_{cfg.population}_{eval_set}_{name}.pdf")
+    plt.grid(ls='--', alpha=0.5)
+    # plt.savefig(
+    #     f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+    #     f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+    #     f"_{cfg.population}_{eval_set}_{name}.pdf")
+    plt.savefig(
+        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_sigma_seed_1_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
+        f"_{cfg.population}_{eval_set}_{name}.pdf")
 
 
 def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg: omegaconf.DictConfig, solution2,
@@ -9116,6 +9199,47 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
 
 ############################# Scatter plots #############################################################
+def calculate_stats(df):
+    one_shot_gradient_fow = df['test_set_gradient_magnitude'][df["Epoch"] == -1]
+    fine_tune_final_gradient_fow = df.iloc[len(df) - 1]["test_set_gradient_magnitude"]
+    one_shot_accuracy = df["test_accuracy"][df["Epoch"] == -1]
+    fine_tuned_accuracy = df["test_accuracy"][df["Epoch"] == df["Epoch"].max()]
+
+    print("Fine-Tuned Accuracy")
+    stats = df.groupby(['Epoch'])['test_accuracy'].agg(['mean', 'count', 'std', "median"])
+    # print(stats.iloc[0])
+    print('-' * 30)
+
+    ci95_hi = []
+    ci95_lo = []
+
+    for i in stats.index:
+        m, c, s, me = stats.loc[i]
+        ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+        ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+
+    stats['ci95_hi'] = ci95_hi
+    stats['ci95_lo'] = ci95_lo
+    print(stats.iloc[-1])
+
+    print("\n")
+    print("One-shotGradient Flow")
+    print("\n")
+    stats = df.groupby(['Epoch'])['test_set_gradient_magnitude'].agg(['mean', 'count', 'std', "median"])
+    # print(stats)
+    print('-' * 30)
+
+    ci95_hi = []
+    ci95_lo = []
+
+    for i in stats.index:
+        m, c, s, me = stats.loc[i]
+        ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+        ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+
+    stats['ci95_hi'] = ci95_hi
+    stats['ci95_lo'] = ci95_lo
+    print(stats.iloc[0])
 
 
 def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, deterministic_dataframe1: pd.DataFrame,
@@ -9215,7 +9339,8 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
 
     if not sigmas_to_show:
         all_df1["Scaled Sigma"] = all_df1 = ["Sigma"] * 100
-        g = sns.scatterplot(ax=ax, data=all_df1, x="Gradient Magnitude", y="Accuracy", alpha="Scaled Sigma", style="Type",
+        g = sns.scatterplot(ax=ax, data=all_df1, x="Gradient Magnitude", y="Accuracy", alpha="Scaled Sigma",
+                            style="Type",
                             color="red", legend="full" if show_legend else False, edgecolor=None, linewidth=0, s=300)
     else:
         # bool_index_vector = all_df1["Sigma"] == sigmas_to_show.pop()
@@ -9234,7 +9359,6 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
         for s in sigmas_to_show:
             bool_index_vector2 = np.logical_or(bool_index_vector2, all_df2["Sigma"] == s)
         sigma_df2 = all_df2[bool_index_vector2]
-
 
         print("Sigma: {}".format(s))
         print('-' * 30)
@@ -9274,33 +9398,33 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
         stats['ci95_lo'] = ci95_lo
         print(stats)
         # sigma_df["Scaled sigma"]=sigma_df["Sigma"]*100
-        alpha=[0.1,0.4]
+        alpha = [0.1, 0.4]
         # colors1=["pink","palevioletred"]
-        colors1=["gold","yellowgreen"]
-        fill_style=["left","top"]
-        for i,s in enumerate(sigmas_to_show):
-            temp1= sigma_df[sigma_df["Sigma"]==s]
-        # scaled_sigmas=sigma_df["Sigma"]*2000*np.log(sigma_df["Sigma"]*2000)
-        #     scaled_sigmas=5*np.exp(sigma_df["Sigma"]*500)
-            one_shot = temp1[temp1["Type"]=="One-Shot"]
-            fine_tuning =temp1[temp1["Type"]=="Fine-tuned"]
+        colors1 = ["gold", "yellowgreen"]
+        fill_style = ["left", "top"]
+        for i, s in enumerate(sigmas_to_show):
+            temp1 = sigma_df[sigma_df["Sigma"] == s]
+            # scaled_sigmas=sigma_df["Sigma"]*2000*np.log(sigma_df["Sigma"]*2000)
+            #     scaled_sigmas=5*np.exp(sigma_df["Sigma"]*500)
+            one_shot = temp1[temp1["Type"] == "One-Shot"]
+            fine_tuning = temp1[temp1["Type"] == "Fine-tuned"]
 
-            ax.plot(one_shot["Gradient Magnitude"],one_shot["Accuracy"],
-                        # fillstyle=fill_style[i],
-                        markerfacecolor=colors1[i],
-                        markerfacecoloralt='magenta',
-                        marker="o",
-                        markeredgecolor="crimson",
-                        # alpha=0.4,
-                        linewidth=0,
-                        markeredgewidth=0.6,
+            ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                    # fillstyle=fill_style[i],
+                    markerfacecolor=colors1[i],
+                    markerfacecoloralt='magenta',
+                    marker="o",
+                    markeredgecolor="crimson",
+                    # alpha=0.4,
+                    linewidth=0,
+                    markeredgewidth=0.6,
                     ms=10
                     )
-            ax.plot(fine_tuning["Gradient Magnitude"],fine_tuning["Accuracy"],
-                       # fillstyle=fill_style[i],
-                       markerfacecolor=colors1[i],
-                       markerfacecoloralt='magenta',
-                       marker="P",
+            ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                    # fillstyle=fill_style[i],
+                    markerfacecolor=colors1[i],
+                    markerfacecoloralt='magenta',
+                    marker="P",
                     markeredgecolor="crimson",
                     # alpha=0.4,
                     linewidth=0,
@@ -9317,39 +9441,39 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
             #             # s=scaled_sigmas
             #                 )
 
-        colors2=["gold","yellowgreen"]
-        fill_style=["left","top"]
-        for i,s in enumerate(sigmas_to_show):
-            temp2 = sigma_df2[sigma_df2["Sigma"]==s]
-        # scaled_sigmas=sigma_df2["Sigma"]*1000*np.log(sigma_df2["Sigma"]*1000)
-        #     scaled_sigmas=5*np.exp(sigma_df2["Sigma"]*500)
-            one_shot = temp2[temp2["Type"]=="One-Shot"]
-            fine_tuning =temp2[temp2["Type"]=="Fine-tuned"]
+        colors2 = ["gold", "yellowgreen"]
+        fill_style = ["left", "top"]
+        for i, s in enumerate(sigmas_to_show):
+            temp2 = sigma_df2[sigma_df2["Sigma"] == s]
+            # scaled_sigmas=sigma_df2["Sigma"]*1000*np.log(sigma_df2["Sigma"]*1000)
+            #     scaled_sigmas=5*np.exp(sigma_df2["Sigma"]*500)
+            one_shot = temp2[temp2["Type"] == "One-Shot"]
+            fine_tuning = temp2[temp2["Type"] == "Fine-tuned"]
 
-            ax.plot(one_shot["Gradient Magnitude"],one_shot["Accuracy"],
-                        # fillstyle=fill_style[i],
-                        markerfacecolor=colors2[i],
-                        # markerfacecoloralt='aquamarine',
-                        # markeredgecolor="w",
-                        markeredgecolor="dodgerblue",
-                        marker="o",
-                        # alpha=0.4,
-                        linewidth=0,
-                        markeredgewidth=0.6,
-                        ms=10
+            ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                    # fillstyle=fill_style[i],
+                    markerfacecolor=colors2[i],
+                    # markerfacecoloralt='aquamarine',
+                    # markeredgecolor="w",
+                    markeredgecolor="dodgerblue",
+                    marker="o",
+                    # alpha=0.4,
+                    linewidth=0,
+                    markeredgewidth=0.6,
+                    ms=10
 
                     )
-            ax.plot(fine_tuning["Gradient Magnitude"],fine_tuning["Accuracy"],
-                        # fillstyle=fill_style[i],
-                        markerfacecolor=colors2[i],
-                        # markerfacecoloralt='aquamarine',
-                        marker="P",
-                        # alpha=0.4,
-                        linewidth=0,
-                        markeredgecolor ="dodgerblue",
-                        markeredgewidth=0.4,
-                       ms=10
-                       )
+            ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                    # fillstyle=fill_style[i],
+                    markerfacecolor=colors2[i],
+                    # markerfacecoloralt='aquamarine',
+                    marker="P",
+                    # alpha=0.4,
+                    linewidth=0,
+                    markeredgecolor="dodgerblue",
+                    markeredgewidth=0.4,
+                    ms=10
+                    )
 
             # g2 = sns.scatterplot(ax=g, data=sigma_df2, x="Gradient Magnitude", y="Accuracy", style="Type",
             #                     # c=colors2[i],
@@ -9360,7 +9484,6 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
             #                      fillstyle=fill_style[i],
             #                     # s=scaled_sigmas
             #                      )
-
 
     # plt.xlabel(fontsize=20)
     # plt.ylabel(fontsize=20)
@@ -9396,25 +9519,25 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
                                                  deterministic_dataframe["Epoch"] == deterministic_dataframe[
                                                      "Epoch"].max()].iloc[0])
 
-    ax.plot(deterministic_final_gradient_fow,deterministic_final_accuracy,
-                # fillstyle=fill_style[i],
-                markerfacecolor="crimson",
-                # markerfacecoloralt='aquamarine',
-                marker="x",
-                # alpha=0.4,
-                linewidth=0,
-                markeredgecolor ="crimson",
-                markeredgewidth=3,
-                ms=10
-                )
-    ax.plot(deterministic_initial_gradient_fow,deterministic_initial_accuracy,
+    ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
+            # fillstyle=fill_style[i],
+            markerfacecolor="crimson",
+            # markerfacecoloralt='aquamarine',
+            marker="x",
+            # alpha=0.4,
+            linewidth=0,
+            markeredgecolor="crimson",
+            markeredgewidth=3,
+            ms=10
+            )
+    ax.plot(deterministic_initial_gradient_fow, deterministic_initial_accuracy,
             # fillstyle=fill_style[i],
             markerfacecolor="crimson",
             # markerfacecoloralt='aquamarine',
             marker="^",
             # alpha=0.4,
             linewidth=0,
-            markeredgecolor ="crimson",
+            markeredgecolor="crimson",
             markeredgewidth=1,
             ms=10
             )
@@ -9448,25 +9571,25 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
                                                  deterministic_dataframe["Epoch"] == deterministic_dataframe[
                                                      "Epoch"].max()].iloc[0])
 
-    ax.plot(deterministic_final_gradient_fow,deterministic_final_accuracy,
+    ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
             # fillstyle=fill_style[i],
             markerfacecolor="dodgerblue",
             # markerfacecoloralt='aquamarine',
             marker="x",
             # alpha=0.4,
             linewidth=0,
-            markeredgecolor ="dodgerblue",
+            markeredgecolor="dodgerblue",
             markeredgewidth=4,
             ms=10
             )
-    ax.plot(deterministic_initial_gradient_fow,deterministic_initial_accuracy,
+    ax.plot(deterministic_initial_gradient_fow, deterministic_initial_accuracy,
             # fillstyle=fill_style[i],
             markerfacecolor="dodgerblue",
             # markerfacecoloralt='aquamarine',
             marker="^",
             # alpha=0.4,
             linewidth=0,
-            markeredgecolor ="dodgerblue",
+            markeredgecolor="dodgerblue",
             markeredgewidth=1,
             ms=10
             )
@@ -9481,7 +9604,7 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
             handles = [
                 Patch(facecolor="crimson", label="LAMP"),
                 Patch(facecolor="dodgerblue", label="GMP"),
-                Line2D([0], [0], marker='o',# fillstyle="left",
+                Line2D([0], [0], marker='o',  # fillstyle="left",
                        color='w',
                        label='$\sigma$=0.001 ',
                        markerfacecolor='gold',
@@ -9501,10 +9624,11 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
                        markerfacecolor='k', markersize=10),
                 Line2D([0], [0], marker='o', color='w', label='One-shot Sto.',
                        markerfacecolor='k', alpha=0.6, markersize=10),
-                Line2D([0], [0],marker="x", linewidth=0,markerfacecolor="k",markeredgecolor="k",markeredgewidth=4,label='Fine-Tuned Det.',markersize=10),
-                Line2D([0], [0],marker="^", color='w',markerfacecolor="k", label='One-Shot Det.',markersize=10),
+                Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+                       label='Fine-Tuned Det.', markersize=10),
+                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot Det.', markersize=10),
             ]
-            lgd = plt.legend(handles=handles,loc='upper right', prop={"size": fs * 0.5})
+            lgd = plt.legend(handles=handles, loc='upper right', prop={"size": fs * 0.5})
             # plt.xlim([0, 1.58])
 
         else:
@@ -9512,7 +9636,7 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
                 Patch(facecolor="crimson", label="LAMP"),
                 Patch(facecolor="dodgerblue", label="GMP"),
 
-                Line2D([0], [0], marker='o',# fillstyle="left",
+                Line2D([0], [0], marker='o',  # fillstyle="left",
                        color='w',
                        label='$\sigma$=0.001 ',
                        markerfacecolor='gold',
@@ -9533,13 +9657,13 @@ def scatter_plot_sigmas_V2(dataFrame1: pd.DataFrame, dataFrame2: pd.DataFrame, d
                        markerfacecolor='k', markersize=10),
                 Line2D([0], [0], marker='o', color='w', label='One-shot Sto.',
                        markerfacecolor='k', alpha=0.6, markersize=10),
-                Line2D([0], [0],marker="*", color="w",markerfacecolor="k",label='Fine-Tuned Det.',markersize=10),
-                Line2D([0], [0],marker="^", color='w',markerfacecolor="k", label='One-Shot Det.',markersize=10),
+                Line2D([0], [0], marker="*", color="w", markerfacecolor="k", label='Fine-Tuned Det.', markersize=10),
+                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot Det.', markersize=10),
             ]
-            lgd = plt.legend(handles=handles,bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1, prop={"size": fs*0.6})
+            lgd = plt.legend(handles=handles, bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1,
+                             prop={"size": fs * 0.6})
 
         for handle_leg in lgd.legend_handles:
-
             handle_leg._sizes = [150]
 
         # lgd.legend_handles[0]._sizes = [300]
@@ -9778,8 +9902,8 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
 
     assert cfg.dataset in prefix, "Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset, prefix)
     # If I want to unify the mask transfer.
-    stochastic_global_root = prefix + "stochastic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
-    stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL_tpe/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    # stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
     combine_stochastic_GLOBAL_DF: pd.DataFrame = None
     combine_stochastic_LAMP_DF: pd.DataFrame = None
@@ -9803,30 +9927,31 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
         else:
             combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF, individual_df), ignore_index=True)
 
+    print(stochastic_global_root)
     combine_stochastic_GLOBAL_DF.to_csv(
         f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",
         header=True, index=False)
     ########################## Second LAMP stochatic #######################################
 
-    for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
-        individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
-        len_df = individual_df.shape[0]
-        if len_df < min_epochs:
-            continue
-        individual_df["individual"] = [index] * len_df
-        individual_df["sigma"] = [cfg.sigma] * len_df
-        individual_df["Pruner"] = ["LAMP"] * len_df
-        individual_df["Architecture"] = [cfg.architecture] * len_df
-        individual_df["Dataset"] = [cfg.dataset] * len_df
-        individual_df["Pruning Rate"] = [cfg.amount] * len_df
-        if combine_stochastic_LAMP_DF is None:
-            combine_stochastic_LAMP_DF = individual_df
-        else:
-            combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF, individual_df), ignore_index=True)
-
-    combine_stochastic_LAMP_DF.to_csv(
-        f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",
-        header=True, index=False)
+    # for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
+    #     individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
+    #     len_df = individual_df.shape[0]
+    #     if len_df < min_epochs:
+    #         continue
+    #     individual_df["individual"] = [index] * len_df
+    #     individual_df["sigma"] = [cfg.sigma] * len_df
+    #     individual_df["Pruner"] = ["LAMP"] * len_df
+    #     individual_df["Architecture"] = [cfg.architecture] * len_df
+    #     individual_df["Dataset"] = [cfg.dataset] * len_df
+    #     individual_df["Pruning Rate"] = [cfg.amount] * len_df
+    #     if combine_stochastic_LAMP_DF is None:
+    #         combine_stochastic_LAMP_DF = individual_df
+    #     else:
+    #         combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF, individual_df), ignore_index=True)
+    #
+    # combine_stochastic_LAMP_DF.to_csv(
+    #     f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",
+    #     header=True, index=False)
 
 
 def gradient_flow_especific_combination_dataframe_generation(prefix: str, cfg, min_epochs=11, is_mask_transfer=False):
@@ -9948,27 +10073,27 @@ def unify_sigma_datasets(sigmas: list, cfg: omegaconf.DictConfig, surname=""):
     combine_stochastic_LAMP_DF: pd.DataFrame = None
     first_sigma = sigmas.pop()
 
-    combine_stochastic_LAMP_DF = pd.read_csv(
-        f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",
-        sep=",", header=0, index_col=False)
+    # combine_stochastic_LAMP_DF = pd.read_csv(
+    #     f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",
+    #     sep=",", header=0, index_col=False)
     combine_stochastic_GLOBAL_DF = pd.read_csv(
         f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{first_sigma}_pr{cfg.amount}.csv",
         sep=",", header=0, index_col=False)
     for sigma in sigmas:
-        lamp_tem_df = pd.read_csv(
-            f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv", sep=",",
-            header=0, index_col=False)
+        # lamp_tem_df = pd.read_csv(
+        #     f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv", sep=",",
+        #     header=0, index_col=False)
 
         global_tem_df = pd.read_csv(
-            f"gradientflow_stochastic_global_{cfg.architecture}_{cfg.dataset}_sigma{_sigma}_pr{cfg.amount}.csv",
+            f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma{sigma}_pr{cfg.amount}.csv",
             sep=",", header=0, index_col=False)
 
         combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF, lamp_tem_df), ignore_index=True)
         combine_stochastic_GLOBAL_DF = pd.concat((combine_stochastic_GLOBAL_DF, global_tem_df), ignore_index=True)
 
-    combine_stochastic_LAMP_DF.to_csv(
-        f"gradientflow_stochastic_lamp_all_sigmas_{surname}{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-        header=True, index=False)
+    # combine_stochastic_LAMP_DF.to_csv(
+    #     f"gradientflow_stochastic_lamp_all_sigmas_{surname}{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+    #     header=True, index=False)
     combine_stochastic_GLOBAL_DF.to_csv(
         f"gradientflow_stochastic_global_all_sigmas_{surname}{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
         header=True, index=False)
@@ -13314,7 +13439,6 @@ if __name__ == '__main__':
     #
     # plot_variable_pr_sigma(cfg)
 
-
     #################################################################################################################
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
@@ -13431,29 +13555,29 @@ if __name__ == '__main__':
     # ####################################
 
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
     # # parser.add_argument('-mod', '--model_type',type=str,default=alternative, help = 'Type of model to use', required=False)
-    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
     parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
     parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
     parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
                         required=True)
     # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    #                     required=True)
-    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-    #                     required=False)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
     ############# this is for pr and sigma optim ###############################
     # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
     # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
     #                     required=False)
     #
-    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
     #                     help='Use log scale for sigma in pr,sigma optim', required=False)
     # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
@@ -13461,29 +13585,31 @@ if __name__ == '__main__':
     # parser.add_argument('-fnc', '--functions', type=int, default=1,
     #                     help='Type of functions for MOO optim of sigma and pr', required=False)
     #
-    # parser.add_argument('--name', type=str, default="",
-    #                     help='Name for the file', required=False)
-    args_out = vars(parser.parse_args())
+    ################################################################
+    parser.add_argument('--name', type=str, default="",
+                        help='Name for the file', required=False)
+    # args_out = vars(parser.parse_args())
+    args = vars(parser.parse_args())
 
-    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
-            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-            "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-            "batch_size": 512}
-    args["architecture"] = args_out["architecture"]
-    args["dataset"] = args_out["dataset"]
-    args["sampler"] = args_out["sampler"]
-    args["pruner"] = args_out["pruner"]
-    #
-    # models = ["resnet18","resnet50","VGG19"]
+    # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
+    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+    #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+    #         "batch_size": 512}
+    # # args["architecture"] = args_out["architecture"]
+    # # args["dataset"] = args_out["dataset"]
+    # # args["sampler"] = args_out["sampler"]
+    # # args["pruner"] = args_out["pruner"]
+    # #
+    # models = ["resnet18","resnet50","vgg19"]
     #
     # datasets = ["cifar10","cifar100"]
     #
-    # sampler = ["tpe","nsga"]
-
-    # models = ["resnet18"]
-    # datasets = ["cifar10"]
-    # sampler = ["tpe"]
-
+    # sampler = ["nsga"]
+    #
+    # # models = ["resnet18"]
+    # # datasets = ["cifar10"]
+    # # sampler = ["tpe"]
+    #
     # for combination in itertools.product(models, datasets, sampler):
     #
     #     args["architecture"] = combination[0]
@@ -13507,37 +13633,55 @@ if __name__ == '__main__':
     #     ################# Unify sigma experiments results for gradient flow measurement ####################################
     #
 
+    # # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
+    # architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
+    # dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
+    # # pruning_rate_values = [0.915, 0.83, 0.948, 0.76, 0.8742, 0.92]
+    # # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
     #
-    # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # sigma_values = [0.001,0.003,0.005]
-    # pruning_rate_values = [0.8,0.85,0.9,0.95]
-    # architecture_values = ["VGG19","resnet50","resnet18"]
-    # dataset_values = ["cifar10","cifar100"]
+    # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
+    # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
+    # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]
+    # # sigma_values =        [0.0013,  0.003, 0.0028     ,0.0012   ,0.00256    ,0.00456]
     #
-    #
-    # sigma_values = [0.005]
-    # dataset_values = ["cifar10"]
-    # pruning_rate_values = [0.9]
-    # architecture_values = ["resnet18"]
+    # # sigma_values = [0.005]
+    # # dataset_values = ["cifar10"]
+    # # pruning_rate_values = [0.9]
+    # # architecture_values = ["resnet18"]
     # cfg = omegaconf.DictConfig({
-    #     "sigma":0.005,
-    #     "amount":0.9,
-    #     "architecture":"resnet18",
+    #     "sigma": 0.005,
+    #     "amount": 0.9,
+    #     "architecture": "resnet18",
     #     "model_type": "alternative",
     #     "dataset": "cifar10",
-    #     "set":"test"
+    #     "set": "test",
+    #     "algo": "nsga"
     # })
     #
-    #
-    # for dataset in dataset_values:
-    #     cfg.dataset = dataset
-    #     for pruning_rate in pruning_rate_values:
-    #         cfg.amount = pruning_rate
-    #         for arch in architecture_values:
-    #             cfg.architecture = arch
-    #             for sig in sigma_values:
-    # gradient_flow_especific_combination_dataframe_generation_stochastic_only("gradient_flow_data/mask_transfer_det_sto/cifar10/",cfg,2,surname="mask_transfer_")
-    # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg)
+    # for i in range(len(architecture_values)):
+    #     cfg.dataset = dataset_values[i]
+    #     cfg.architecture = architecture_values[i]
+    #     cfg.amount = pruning_rate_values[i]
+    #     cfg.sigma = sigma_values[i]
+    #     #
+    #     # for dataset in dataset_values:
+    #     #     cfg.dataset = dataset
+    #     #     for pruning_rate in pruning_rate_values:
+    #     #         cfg.amount = pruning_rate
+    #     #         for arch in architecture_values:
+    #     #             cfg.architecture = arch
+    #     #             for sig in sigma_values:
+    #     #                 cfg.sigma=sig
+    #     #                 "gradient_flow_data/cifar10/ stochastic_GLOBAL_nsga/vgg19/alternative/sigma0.0013/pr0.915"
+    #     gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname="MOO_F1_TPE_")
+    #     unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="MOO_F1_TPE_")
+    #     df = pd.read_csv(
+    #         f"gradientflow_stochastic_global_all_sigmas_MOO_F1_TPE_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
+    #         sep=",", index_col=False)
+    #     print("\n####################################")
+    #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]}")
+    #     print("####################################\n")
+    #     calculate_stats(df)
 
     ################################################# Ensemble predictions ############################################
     # sigma_values = [0.001,0.003,0.005]
@@ -13636,14 +13780,17 @@ if __name__ == '__main__':
     #                                show_legend=True,legend_inside=True
     #                                )
 
-        # print("##################################")
-        # print("\tGMP")
-        # print("##################################")
-        # scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
-        #                     deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
-        #                     det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas,
-        #                     legend_inside=True
-        #                     )
+
+
+
+    # print("##################################")
+    # print("\tGMP")
+    # print("##################################")
+    # scatter_plot_sigmas(df2,None, deterministic_dataframe1=deterministic_lamp_df,
+    #                     deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
+    #                     det_label2='Deter. GMP', file=f"{directory}global_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",use_set=cfg.set, sigmas_to_show=sigmas,
+    #                     legend_inside=True
+    #                     )
 
     # ################################## Barplot with all results #######################################################################
     #
