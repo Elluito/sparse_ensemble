@@ -11574,7 +11574,7 @@ def LeMain(args):
         "input_resolution": 32,
         "resize": False,
         "use_wandb": False,
-        # "name": args["name"]
+        "name": args["name"]
     })
 
     cfg.exclude_layers = exclude_layers
