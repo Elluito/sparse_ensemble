@@ -13599,7 +13599,7 @@ if __name__ == '__main__':
     args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
             "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-            "batch_size": 512}
+            "batch_size": 512,"name":"no_name"}
     args["architecture"] = args_out["architecture"]
     args["dataset"] = args_out["dataset"]
     args["sampler"] = args_out["sampler"]
