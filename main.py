@@ -13578,7 +13578,7 @@ if __name__ == '__main__':
 
     ############# this is for pr and sigma optim ###############################
 
-    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
     parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
                         required=False)
     #
@@ -13591,8 +13591,8 @@ if __name__ == '__main__':
     #                     help='Type of functions for MOO optim of sigma and pr', required=False)
 
     ################################################################
-    # args_out = vars(parser.parse_args())
-    args = vars(parser.parse_args())
+    args_out = vars(parser.parse_args())
+    # args = vars(parser.parse_args())
 
     # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
     #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
