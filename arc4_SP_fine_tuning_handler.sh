@@ -22,9 +22,9 @@ name=$7
 
 
 #sbatch --nodes=1 --time=140:00:00 --partition=small  --mail-type=all --mail-user=sclaam@leeds.ac.uk --gres=gpu:1 --error="training_probes_${model}_${dataset}_rf_level_${rf_level}.err"  --output="training_probes_${model}_${dataset}_rf_level_${rf_level}.out"  --job-name="training_probes_${model}_${dataset}_rf_level_${rf_level}" slurm_training_probes_run.sh "${model}" "${dataset}" "${rf_level}" "${resolution}" "${save_folder}" "${name}"
-#qsub -l h_rt=48:00:00 -t 1-5 -l coproc_v100=1 -N "SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" arc4_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+qsub -l h_rt=48:00:00 -t 1-5 -l coproc_v100=1 -N "SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" arc4_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 
-qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" arc4_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"  "alternative" 100 "${name}" #"${save_folder}" "${name}"
+#qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" arc4_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"  "alternative" 100 "${name}" #"${save_folder}" "${name}"
 
 }
 

@@ -13572,9 +13572,9 @@ if __name__ == '__main__':
     parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
     parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
                         required=True)
-    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    #                     required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
     parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
                         required=False)
     parser.add_argument('--name', type=str, default="",
