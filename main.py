@@ -9907,7 +9907,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
 
     assert cfg.dataset in prefix, "Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset, prefix)
     # If I want to unify the mask transfer.
-    stochastic_global_root = prefix + "deterministic_GLOBAL_nsga/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    stochastic_global_root = prefix + "stochastic_GLOBAL_FT/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # stochastic_global_root = prefix + "stochastic_GLOBAL_tpe/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
     # stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
 
@@ -10089,9 +10089,13 @@ def unify_sigma_datasets(sigmas: list, cfg: omegaconf.DictConfig, surname=""):
         # lamp_tem_df = pd.read_csv(
         #     f"gradientflow_stochastic_lamp_{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv", sep=",",
         #     header=0, index_col=False)
-
-        global_tem_df = pd.read_csv(
+        try:
+            global_tem_df = pd.read_csv(
             f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma{sigma}_pr{cfg.amount}.csv",
+            sep=",", header=0, index_col=False)
+        except Exception as e:
+            global_tem_df = pd.read_csv(
+            f"gradientflow_stochastic_global_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{sigma}_pr{cfg.amount}.csv",
             sep=",", header=0, index_col=False)
 
         combine_stochastic_LAMP_DF = pd.concat((combine_stochastic_LAMP_DF, lamp_tem_df), ignore_index=True)
@@ -13601,7 +13605,7 @@ if __name__ == '__main__':
     ################################################################
     # args_out = vars(parser.parse_args())
 
-    args = vars(parser.parse_args())
+    # args = vars(parser.parse_args())
 
     # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
     #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
@@ -13648,15 +13652,16 @@ if __name__ == '__main__':
     # # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
     # architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
     # dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
-    # pruning_rate_values = [0.915, 0.83, 0.948, 0.76, 0.8742, 0.92]
-    # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
+    # # pruning_rate_values = [0.915, 0.83, 0.948, 0.76, 0.8742, 0.92]
+    # pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
+    # # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
     #
     # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
     # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
     # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]
     # # # sigma_values =        [0.0013,  0.003, 0.0028     ,0.0012   ,0.00256    ,0.00456]
     # #
-    # # sigma_values = [0.005]
+    # sigma_values = [0.001,0.005]
     # # dataset_values = ["cifar10"]
     # # pruning_rate_values = [0.9]
     # # architecture_values = ["resnet18"]
@@ -13674,7 +13679,8 @@ if __name__ == '__main__':
     #     cfg.dataset = dataset_values[i]
     #     cfg.architecture = architecture_values[i]
     #     cfg.amount = pruning_rate_values[i]
-    #     cfg.sigma = sigma_values[i]
+    #     for s in sigma_values:
+    #         cfg.sigma = s
     #     #
     #     # for dataset in dataset_values:
     #     #     cfg.dataset = dataset
@@ -13685,8 +13691,8 @@ if __name__ == '__main__':
     #     #             for sig in sigma_values:
     #     #                 cfg.sigma=sig
     #     #                 "gradient_flow_data/cifar10/ stochastic_GLOBAL_nsga/vgg19/alternative/sigma0.0013/pr0.915"
-    #     gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname="MOO_F1_DET_NSGA_")
-    #     unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="MOO_F1_DET_NSGA_")
+    #         gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname="OPTIM_PARAM_STO_")
+    # unify_sigma_datasets(sigmas=sigma_values,cfg=cfg,surname="OPTIM_PARAM_STO_")
     #     df = pd.read_csv(
     #         f"gradientflow_stochastic_global_all_sigmas_MOO_F1_DET_NSGA_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
     #         sep=",", index_col=False)
