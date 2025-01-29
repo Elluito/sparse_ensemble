@@ -77,8 +77,8 @@ qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "SP_FT_${model}_${dataset}_sig_${sigm
 #sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
 #pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
 
-model_list=("vgg19 vgg19")
-dataset_list=("cifar100 cifar10")
+model_list=("vgg19" "vgg19")
+dataset_list=("cifar100" "cifar10")
 sigma_list=("0.001" "0.003")
 pruning_rate_list=("0.8" "0.95")
 max=${#model_list[@]}                                  # Take the length of that array
