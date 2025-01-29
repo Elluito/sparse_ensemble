@@ -79,8 +79,8 @@ qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "SP_FT_${model}_${dataset}_sig_${sigm
 
 model_list=("vgg19 vgg19")
 dataset_list=("cifar100 cifar10")
-sigma_list=("0.001 0.003")
-pruning_rate_list=("0.8 0.95")
+sigma_list=("0.001" "0.003")
+pruning_rate_list=("0.8" "0.95")
 max=${#model_list[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 model="${model_list[$idxA]}"
