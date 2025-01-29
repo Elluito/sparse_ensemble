@@ -13605,7 +13605,7 @@ if __name__ == '__main__':
     ################################################################
     # args_out = vars(parser.parse_args())
 
-    # args = vars(parser.parse_args())
+    args = vars(parser.parse_args())
 
     # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
     #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
