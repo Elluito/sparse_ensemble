@@ -14416,8 +14416,8 @@ if __name__ == '__main__':
                         required=False)
 
     #   ############ additional parameters #################################
-    parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
 
     args = vars(parser.parse_args())
     LeMain(args)
