@@ -18,7 +18,7 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
-from plot_stochastic_pruning import calculate_single_value_from_variance_df
+# from plot_stochastic_pruning import calculate_single_value_from_variance_df
 import os
 import sys
 

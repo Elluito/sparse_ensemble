@@ -1254,6 +1254,82 @@ def conver_fitness_to_difference(fitness, pruning_rate):
         fitnes / pruning_rate
 
 
+def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
+                                                            use_population=True, use_log_sigma=False, Fx=1):
+    # in theory cfg is available everywhere because it is define on the if name ==__main__ section
+    net = get_model(cfg)
+    train, val_loader, test_loader = get_datasets(cfg)
+
+    # dense_performance = test(net, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+    if use_log_sigma:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01, log=True)
+    else:
+        sample_sigma = trial.suggest_float("sigma", 0.0001, 0.01)
+    sample_pruning_rate = trial.suggest_float("pruning_rate", 0.01, 0.99)
+
+    # def objective_function(stochastic_performance,deter_performance, pruning_rate):
+    #     return ((stochastic_performance - deter_performance)) * pruning_rate
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [sample_sigma] * number_of_layers))
+    cfg_copy = copy.deepcopy(cfg)
+    cfg_copy.amount = sample_pruning_rate
+
+    pruned_model = copy.deepcopy(net)
+    prune_function(pruned_model, cfg_copy)
+    remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+
+    # Add small noise just to get tiny variations of the deterministic case
+    det_performance = test(pruned_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
+    print("Det performance: {}".format(det_performance))
+
+    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
+    #                                  names=["layer", "q25", "q50", "q75"])
+    # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
+    if use_population:
+        performance_of_models = []
+        for individual_index in range(5):
+            ############### Here I ask for pr and for sigma ###################################
+
+            current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+            # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+            prune_function(current_model, cfg_copy)
+
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+            # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+            stochastic_performance = test(current_model, use_cuda=True, testloader=val_loader, verbose=0,
+                                          one_batch=one_batch)
+            # Dense stochastic performance
+            performance_of_models.append(stochastic_performance)
+        performance_of_models = np.array(performance_of_models)
+        median = np.median(performance_of_models)
+        print("Median of population performance: {}".format(median))
+        average_difference_performance = det_performance - performance_of_models
+        fitness_function_median = objective_function(median, det_performance, sample_pruning_rate)
+        # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
+        # average_fitness_function = fitness_function_vector.mean()
+        if Fx == 1:
+            return median, fitness_function_median
+        else:
+            return median, sample_pruning_rate
+    else:
+
+        stochastic_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
+        prune_function(stochastic_model, cfg_copy)
+
+        remove_reparametrization(stochastic_model, exclude_layer_list=cfg.exclude_layers)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        stochastic_performance = test(stochastic_model, use_cuda=True, testloader=val_loader, verbose=0,
+                                      one_batch=one_batch)
+        fitness_function_median = objective_function(stochastic_performance, det_performance, sample_pruning_rate)
+        print("Stochastic performance: {}".format(stochastic_performance))
+        if Fx == 1:
+            return stochastic_performance, fitness_function_median
+        else:
+            return stochastic_performance, sample_pruning_rate
+
 def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
                                                             use_population=True, use_log_sigma=False, Fx=1):
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
@@ -1404,6 +1480,346 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
         return median_val, median - det_performance, GF_median_val
 
     return fitness_function_median_test, median, median - det_performance, GF_median_test
+
+
+def run_pr_sigma_fine_tuned_search_MOO_for_cfg(cfg, arg):
+    # one_batch = False  # arg["one_batch"]
+    one_batch = arg["one_batch"]
+    one_batch_string = "whole_batch" if not one_batch else "one_batch"
+    sampler = arg["sampler"]
+    log_sigma = arg["log_sigma"]
+    number_of_trials = arg["trials"]
+    functions = arg["functions"]
+
+    use_population = True if cfg["population"] > 1 else False
+    function_string = "F1" if functions == 1 else "F2"
+    if sampler == "nsga":
+        # sampler = optuna.samplers.CmaEsSampler(restart_strategy="ipop",n_startup_trials=10,inc_popsize=2)
+        sampler = optuna.samplers.NSGAIISampler()
+    elif sampler == "tpe":
+        sampler = optuna.samplers.TPESampler()
+    else:
+        raise Exception("Sampler {} is not suported for this experiment".format(sampler))
+
+    # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
+    vj
+    sampler = optuna.samplers.TPESampler()
+    study = optuna.create_study(directions=["maximize", "maximize"], sampler=sampler,
+                                study_name="stochastic-global-pr-and-sigma-optimisation-MOO-{}-{}-{}-{}".format(
+                                    cfg.architecture,
+                                    cfg.dataset, sampler, function_string),
+                                storage="sqlite:///find_pr_sigma_database_MOO_{}_{}_{}_{}_{}.dep".format(
+                                    cfg.architecture,
+                                    cfg.dataset,
+                                    sampler,
+                                    one_batch, function_string),
+                                load_if_exists=True)
+
+    study.optimize(
+        lambda trial: find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial, cfg, one_batch, use_population,
+                                                                              use_log_sigma=log_sigma, Fx=functions),
+        n_trials=args["trials"])
+    ##Save the sampler with pickle to be loaded later.
+    with open("find_pr_sigma_database_pickle_MOO_fine_tuned_{}_{}_{}_{}_{}.pkl".format(
+            cfg.architecture,
+            cfg.dataset,
+            sampler,
+            one_batch, function_string), "wb") as fout:
+        pickle.dump(study, fout)
+
+    ################################
+    ## Read the  MOO study from memory
+    ################################
+
+    with open("find_pr_sigma_database_pickle_MOO__fine_tuned_{}_{}_{}_{}_{}.pkl".format(
+            cfg.architecture,
+            cfg.dataset,
+            sampler,
+            one_batch, function_string), "rb") as fout:
+        study = pickle.load(fout)
+    print("MOO for : {} {} {} {} {}".format(
+        cfg.architecture,
+        cfg.dataset,
+        sampler,
+        one_batch, function_string))
+
+    # print("Number of finished trials: {}".format(len(study.trials)))
+
+    print("\n Best trial:")
+    trials = study.best_trials
+    # print("Size of the pareto front: {}".format(len(trials)))
+
+    sigmas_list = []
+    pruning_rate_list = []
+    f1_list = []
+    calculated_SP_performance_list=[]
+    f2_list = []
+    difference_with_deterministic_list = []
+    fitness_list = []
+    GF_list = []
+
+    # if functions == 1:
+    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    #     f1, f2 = trial_with_highest_difference.values
+    #     print("  Values: {},{}".format(f1, f2))
+    #     print("  Params: ")
+    #     for key, value in trial_with_highest_difference.params.items():
+    #         print("    {}: {}".format(key, value))
+    #     fitness_function_on_test_se, t
+    #     test_median_stochastic_performanci = test_pr_sigma_combination(cfg,
+    #                                                                    trial_with_highest_difference.params[
+    #                                                                        "pruning_rate"],
+    #                                                                    trial_with_highest_difference.params[
+    #                                                                        "sigma"])
+    #     print(
+    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    #             fitness_function_on_test_set, test_median_stochastic_performance,
+    #             fitness_function_on_test_set / trial_with_highest_difference.params[
+    #                 "pruning_rate"]))
+    # else:
+    #     trial_with_highest_difference = max(study.best_trials, key=lambda t: t.values[0])
+    #
+    #     f1, f2 = trial_with_highest_difference.values
+    #     print("  Values: {},{}".format(f1, f2))
+    #     print("  Params: ")
+    #     for key, value in trial_with_highest_difference.params.items():
+    #         print("    {}: {}".format(key, value))
+    #     fitness_function_on_test_set, test_median_stochastic_performance = test_pr_sigma_combination(cfg,
+    #                                                                                                  trial_with_highest_difference.params[
+    #                                                                                                      "pruning_rate"],
+    #                                                                                                  trial_with_highest_difference.params[
+    #                                                                                                      "sigma"])
+    #     print(
+    #         "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+    #             fitness_function_on_test_set, test_median_stochastic_performance,
+    #             fitness_function_on_test_set / trial_with_highest_difference.params[
+    #                 "pruning_rate"]))
+
+    for trial in trials:
+        f1, f2 = trial.values
+        pr, sigma = trial.params["pruning_rate"], trial.params["sigma"]
+        f1_list.append(f1)
+        f2_list.append(f2)
+        print("  Values: {},{}".format(f1, f2))
+
+        print("  Params: ")
+        for key, value in trial.params.items():
+            print("    {}: {}".format(key, value))
+        val_median_stochastic_performance, difference_in_test_set, GF_median_val = test_pr_sigma_combination(cfg,
+                                                                                                             trial.params[
+                                                                                                                 "pruning_rate"],
+                                                                                                             trial.params[
+                                                                                                                 "sigma"],
+                                                                                                             cal_val=True)
+        calculated_SP_performance_list.append(val_median_stochastic_performance)
+        difference_with_deterministic_list.append(difference_in_test_set)
+        # fitness_list.append(fitness_function_on_test_set)
+        GF_list.append(GF_median_val)
+
+        print(
+            "Fitness function on Test {} , Median stochastic performance {} , Difference with deterministic {}".format(
+                fitness_function_on_test_set, test_median_stochastic_performance,
+                fitness_function_on_test_set / trial.params[
+                    "pruning_rate"]))
+
+        sigmas_list.append(sigma)
+        pruning_rate_list.append(pr)
+
+    # p = pd.read_csv("pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler, function_string,
+    #                                                          one_batch_string))
+
+    # p["Sigma"] = sigmas_list
+
+    p = pd.DataFrame({"Pruning rate": pruning_rate_list, "Stochastic Performance": f1_list, "Stochastic Performance calculated":calculated_SP_performance_list,
+                      "Sigma": sigmas_list, "Gradient Flow On Val post": GF_list,
+                      "Difference with deterministic": difference_with_deterministic_list, "F2": f2_list})
+
+    p.to_csv("MOO_pareto_fronts/pareto_front_with_GF_fine_tuned_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
+                                                                                function_string,
+                                                                                one_batch_string), index=False)
+
+    #############################################################
+    #                   plotting pareto front
+    #############################################################
+
+    # p = pd.read_csv(
+    #     "MOO_pareto_fronts/pareto_front_with_GF_fine_tuned{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
+    #                                                                        function_string,
+    #                                                                        one_batch_string))
+    # # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
+    # # plt.figure()
+    # # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
+    # fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    # plt.title("{}".format(cfg.dataset.upper()))
+    # cmap = plt.cm.get_cmap('magma')
+    # # cmap = mpl.cm.viridis
+    # # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
+    # # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
+    # # diff = p["Difference with deterministic"]
+    # # min_val = diff.min()
+    # # q25 = diff.quantile(q=0.25)
+    # # q50 = diff.quantile(q=0.50)
+    # # q75 = diff.quantile(q=0.75)
+    # # max_val = diff.max()
+    # # bounds =[min_val,q25,0,q50,q75]
+    # # bounds.sort()
+    #
+    # # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
+    # # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    # # # fig.colorbar(
+    # # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+    # # #     cax=ax,
+    # # #     extend='both',
+    # # #     ticks=bounds,
+    # # #     spacing='proportional',
+    # # #     orientation='horizontal',
+    # # #     label='Discrete intervals, some other units',
+    # # # )
+    # #
+    #
+    # # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    # p_more_than_0 = p[p["Difference with deterministic"] >= 0]
+    # sc_less_than_0 = axs.scatter(y=p_lees_than_0["Stochastic Performance"], x=p_lees_than_0["Pruning rate"],
+    #                              facecolors='none', edgecolors='k', s=100)
+    #
+    # A = 15000
+    # sizes = p_more_than_0["Sigma"] * A
+    # color_values = p_more_than_0["Difference with deterministic"]
+    #
+    # sc = axs.scatter(y=p_more_than_0["Stochastic Performance"], x=p_more_than_0["Pruning rate"],
+    #                  c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                  norm=matplotlib.colors.PowerNorm(gamma=0.8), s=100)
+    # # axs_y = axs.twinx()
+    # # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Pruning rate"],
+    # #                              facecolors='none', edgecolors='k', s=15)
+    #
+    # # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    #
+    # # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+    #
+    # axins = axs.inset_axes([0.13, 0.15, 0.35, 0.5])
+    #
+    # axins.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    #
+    # # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
+    #
+    # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    #                       c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                       norm=matplotlib.colors.PowerNorm(gamma=1))
+    # scins = axins.scatter(y=p_lees_than_0["Sigma"], x=p_lees_than_0["Pruning rate"],
+    #                       facecolors="none", edgecolors="k", )  # s=sizes*np.log(sizes),)
+    # axins.tick_params(axis='both', which='major', labelsize=fs)
+    # for axis in ['top', 'bottom', 'left', 'right']:
+    #     axins.spines[axis].set_linewidth(1)
+    #     axins.spines[axis].set_color('gray')
+    #
+    # axins.set_ylabel("$\sigma$", fontsize=20)
+    # axins.set_xlabel("$\gamma$", fontsize=20)
+    # # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # # fig.colorbar(scins,cax=axins_cbar)
+    # # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+    #
+    # plt.ylabel("Stochastic performance on Val set")
+    #
+    # cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
+    # cbar.ax.tick_params(labelsize=fs)
+    # plt.tick_params(axis="y", labelsize=fs)
+    # plt.tick_params(axis="x", labelsize=fs)
+    # if cfg.dataset == "cifar10":
+    #     plt.xlabel("")
+    # else:
+    #     plt.xlabel("Pruning rate", fontsize=fs)
+    # # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # # plt.legend()
+    # plt.savefig(
+    #     "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
+    #         cfg.architecture, cfg.dataset, sampler, function_string,
+    #         one_batch_string), bbox_inches="tight")
+    # plt.close()
+    #
+    # fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    # plt.title("{}".format(cfg.dataset.upper()))
+    # cmap = plt.cm.get_cmap('magma')
+    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    # p_more_than_0 = p[p["Difference with deterministic"] > 0]
+    #
+    # sc_less_than_0 = axs.scatter(x=p_lees_than_0["Gradient Flow On Val post"],
+    #                              y=p_lees_than_0["Stochastic Performance"],
+    #                              facecolors='none', edgecolors='k', s=100)
+    #
+    # A = 15000
+    # sizes = p_more_than_0["Sigma"] * A
+    # color_values = p_more_than_0["Difference with deterministic"]
+    #
+    # sc = axs.scatter(x=p_more_than_0["Gradient Flow On Val post"], y=p_more_than_0["Stochastic Performance"],
+    #                  c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                  s=100,
+    #                  norm=matplotlib.colors.PowerNorm(gamma=0.8))
+    # # axs_y = axs.twinx()
+    # # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Stochastic performance"],
+    # #                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Stochastic performance"],
+    # #                                  facecolors='none', edgecolors='k', s=15)
+    #
+    # # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    #
+    # # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+    #
+    # # axins = axs.inset_axes([0.13, 0.12, 0.35, 0.5])
+    # #
+    # # axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
+    # #
+    # # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
+    # #
+    # # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                       c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                       norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
+    # #                       facecolors="none",edgocolor="k",) #s=sizes*np.log(sizes),)
+    # # axins.tick_params(axis='both', which='major', labelsize=fs*0.8)
+    # # for axis in ['top', 'bottom', 'left', 'right']:
+    # #     axins.spines[axis].set_linewidth(1)
+    # #     axins.spines[axis].set_color('gray')
+    # #
+    # # axins.set_ylabel("$\sigma$",fontsize=20)
+    # # axins.set_xlabel("$\sigma$",fontsize=20)
+    #
+    # # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # # fig.colorbar(scins,cax=axins_cbar)
+    # # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+    #
+    # plt.ylabel("Stochastic performance on Val set")
+    #
+    # cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
+    #
+    # cbar.ax.tick_params(labelsize=fs)
+    #
+    # plt.tick_params(axis="y", labelsize=fs)
+    #
+    # plt.tick_params(axis="x", labelsize=fs)
+    #
+    # if cfg.dataset == "cifar10":
+    #     plt.xlabel("")
+    # else:
+    #     plt.xlabel("Gradient Flow on Val set", fontsize=fs)
+    # # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # # plt.legend()
+    # plt.savefig(
+    #     "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.pdf".format(
+    #         cfg.architecture, cfg.dataset, sampler, function_string,
+    #         one_batch_string), bbox_inches="tight")
+    # plt.close()
 
 
 def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
@@ -1566,184 +1982,184 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     #                   plotting pareto front
     #############################################################
 
-    p = pd.read_csv(
-        "MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
-                                                                           function_string,
-                                                                           one_batch_string))
-    # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
-    # plt.figure()
-    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-    plt.title("{}".format(cfg.dataset.upper()))
-    cmap = plt.cm.get_cmap('magma')
-    # cmap = mpl.cm.viridis
-    # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
-    # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
-    # diff = p["Difference with deterministic"]
-    # min_val = diff.min()
-    # q25 = diff.quantile(q=0.25)
-    # q50 = diff.quantile(q=0.50)
-    # q75 = diff.quantile(q=0.75)
-    # max_val = diff.max()
-    # bounds =[min_val,q25,0,q50,q75]
-    # bounds.sort()
-
-    # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
-    # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
-    # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-    # # fig.colorbar(
-    # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
-    # #     cax=ax,
-    # #     extend='both',
-    # #     ticks=bounds,
-    # #     spacing='proportional',
-    # #     orientation='horizontal',
-    # #     label='Discrete intervals, some other units',
-    # # )
+    # p = pd.read_csv(
+    #     "MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
+    #                                                                        function_string,
+    #                                                                        one_batch_string))
+    # # p["Difference with deterministic"] = p["Fitness"]/p["Pruning rate"]
+    # # plt.figure()
+    # # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # # # g = sns.scatterplot(data=p, x="Stochastic performance", y="Pruning rate", hue="Fitness",palette="deep")
+    # fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    # plt.title("{}".format(cfg.dataset.upper()))
+    # cmap = plt.cm.get_cmap('magma')
+    # # cmap = mpl.cm.viridis
+    # # # cmap = (matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'orange', 'red']))
+    # # cmap = matplotlib.colors.ListedColormap(['royalblue', 'cyan', 'yellow', 'orange'])
+    # # diff = p["Difference with deterministic"]
+    # # min_val = diff.min()
+    # # q25 = diff.quantile(q=0.25)
+    # # q50 = diff.quantile(q=0.50)
+    # # q75 = diff.quantile(q=0.75)
+    # # max_val = diff.max()
+    # # bounds =[min_val,q25,0,q50,q75]
+    # # bounds.sort()
     #
-
-    # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
-    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
-    p_more_than_0 = p[p["Difference with deterministic"] >= 0]
-    sc_less_than_0 = axs.scatter(y=p_lees_than_0["Stochastic Performance"], x=p_lees_than_0["Pruning rate"],
-                                 facecolors='none', edgecolors='k', s=100)
-
-    A = 15000
-    sizes = p_more_than_0["Sigma"] * A
-    color_values = p_more_than_0["Difference with deterministic"]
-
-    sc = axs.scatter(y=p_more_than_0["Stochastic Performance"], x=p_more_than_0["Pruning rate"],
-                     c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
-                     norm=matplotlib.colors.PowerNorm(gamma=0.8), s=100)
-    # axs_y = axs.twinx()
-    # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Pruning rate"],
-    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Pruning rate"],
-    #                              facecolors='none', edgecolors='k', s=15)
-
-    # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-
-    # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
-
-    axins = axs.inset_axes([0.13, 0.15, 0.35, 0.5])
-
-    axins.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
-
-    # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
-
-    scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-                          c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
-                          norm=matplotlib.colors.PowerNorm(gamma=1))
-    scins = axins.scatter(y=p_lees_than_0["Sigma"], x=p_lees_than_0["Pruning rate"],
-                          facecolors="none", edgecolors="k", )  # s=sizes*np.log(sizes),)
-    axins.tick_params(axis='both', which='major', labelsize=fs)
-    for axis in ['top', 'bottom', 'left', 'right']:
-        axins.spines[axis].set_linewidth(1)
-        axins.spines[axis].set_color('gray')
-
-    axins.set_ylabel("$\sigma$", fontsize=20)
-    axins.set_xlabel("$\gamma$", fontsize=20)
-    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
-    # fig.colorbar(scins,cax=axins_cbar)
-    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
-
-    plt.ylabel("Stochastic performance on Val set")
-
-    cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
-    cbar.ax.tick_params(labelsize=fs)
-    plt.tick_params(axis="y", labelsize=fs)
-    plt.tick_params(axis="x", labelsize=fs)
-    if cfg.dataset == "cifar10":
-        plt.xlabel("")
-    else:
-        plt.xlabel("Pruning rate", fontsize=fs)
-    # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
-    # plt.legend()
-    plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
-            cfg.architecture, cfg.dataset, sampler, function_string,
-            one_batch_string), bbox_inches="tight")
-    plt.close()
-
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-    plt.title("{}".format(cfg.dataset.upper()))
-    cmap = plt.cm.get_cmap('magma')
-    p_lees_than_0 = p[p["Difference with deterministic"] < 0]
-    p_more_than_0 = p[p["Difference with deterministic"] > 0]
-
-    sc_less_than_0 = axs.scatter(x=p_lees_than_0["Gradient Flow On Val post"],
-                                 y=p_lees_than_0["Stochastic Performance"],
-                                 facecolors='none', edgecolors='k', s=100)
-
-    A = 15000
-    sizes = p_more_than_0["Sigma"] * A
-    color_values = p_more_than_0["Difference with deterministic"]
-
-    sc = axs.scatter(x=p_more_than_0["Gradient Flow On Val post"], y=p_more_than_0["Stochastic Performance"],
-                     c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
-                     s=100,
-                     norm=matplotlib.colors.PowerNorm(gamma=0.8))
-    # axs_y = axs.twinx()
-    # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Stochastic performance"],
-    #                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Stochastic performance"],
-    #                                  facecolors='none', edgecolors='k', s=15)
-
-    # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-
-    # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
-
-    # axins = axs.inset_axes([0.13, 0.12, 0.35, 0.5])
+    # # bounds = [p["Difference with deterministic"].min(), -0.5,0,0.1 ,p["Difference with deterministic"].max()]
+    # # bounds = np.linspace(p["Difference with deterministic"].min(),p["Difference with deterministic"].max(),6)
+    # # norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    # # # fig.colorbar(
+    # # #     mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+    # # #     cax=ax,
+    # # #     extend='both',
+    # # #     ticks=bounds,
+    # # #     spacing='proportional',
+    # # #     orientation='horizontal',
+    # # #     label='Discrete intervals, some other units',
+    # # # )
+    # #
     #
-    # axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
+    # # sc = ax.scatter(xs=p["Stochastic performance"], ys=p["Pruning rate"], c=p["Difference with deterministic"], s=15, cmap=cmap,norm=norm)
+    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    # p_more_than_0 = p[p["Difference with deterministic"] >= 0]
+    # sc_less_than_0 = axs.scatter(y=p_lees_than_0["Stochastic Performance"], x=p_lees_than_0["Pruning rate"],
+    #                              facecolors='none', edgecolors='k', s=100)
     #
-    # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
+    # A = 15000
+    # sizes = p_more_than_0["Sigma"] * A
+    # color_values = p_more_than_0["Difference with deterministic"]
+    #
+    # sc = axs.scatter(y=p_more_than_0["Stochastic Performance"], x=p_more_than_0["Pruning rate"],
+    #                  c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                  norm=matplotlib.colors.PowerNorm(gamma=0.8), s=100)
+    # # axs_y = axs.twinx()
+    # # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Pruning rate"],
+    # #                              facecolors='none', edgecolors='k', s=15)
+    #
+    # # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    #
+    # # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+    #
+    # axins = axs.inset_axes([0.13, 0.15, 0.35, 0.5])
+    #
+    # axins.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    #
+    # # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
     #
     # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                       c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                       norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    # scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
-    #                       facecolors="none",edgocolor="k",) #s=sizes*np.log(sizes),)
-    # axins.tick_params(axis='both', which='major', labelsize=fs*0.8)
+    #                       c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                       norm=matplotlib.colors.PowerNorm(gamma=1))
+    # scins = axins.scatter(y=p_lees_than_0["Sigma"], x=p_lees_than_0["Pruning rate"],
+    #                       facecolors="none", edgecolors="k", )  # s=sizes*np.log(sizes),)
+    # axins.tick_params(axis='both', which='major', labelsize=fs)
     # for axis in ['top', 'bottom', 'left', 'right']:
     #     axins.spines[axis].set_linewidth(1)
     #     axins.spines[axis].set_color('gray')
     #
-    # axins.set_ylabel("$\sigma$",fontsize=20)
-    # axins.set_xlabel("$\sigma$",fontsize=20)
-
-    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
-    # fig.colorbar(scins,cax=axins_cbar)
-    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
-
-    plt.ylabel("Stochastic performance on Val set")
-
-    cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
-
-    cbar.ax.tick_params(labelsize=fs)
-
-    plt.tick_params(axis="y", labelsize=fs)
-
-    plt.tick_params(axis="x", labelsize=fs)
-
-    if cfg.dataset == "cifar10":
-        plt.xlabel("")
-    else:
-        plt.xlabel("Gradient Flow on Val set", fontsize=fs)
-    # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
-    # plt.legend()
-    plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.pdf".format(
-            cfg.architecture, cfg.dataset, sampler, function_string,
-            one_batch_string), bbox_inches="tight")
-    plt.close()
+    # axins.set_ylabel("$\sigma$", fontsize=20)
+    # axins.set_xlabel("$\gamma$", fontsize=20)
+    # # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # # fig.colorbar(scins,cax=axins_cbar)
+    # # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+    #
+    # plt.ylabel("Stochastic performance on Val set")
+    #
+    # cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
+    # cbar.ax.tick_params(labelsize=fs)
+    # plt.tick_params(axis="y", labelsize=fs)
+    # plt.tick_params(axis="x", labelsize=fs)
+    # if cfg.dataset == "cifar10":
+    #     plt.xlabel("")
+    # else:
+    #     plt.xlabel("Pruning rate", fontsize=fs)
+    # # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # # plt.legend()
+    # plt.savefig(
+    #     "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
+    #         cfg.architecture, cfg.dataset, sampler, function_string,
+    #         one_batch_string), bbox_inches="tight")
+    # plt.close()
+    #
+    # fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    # plt.title("{}".format(cfg.dataset.upper()))
+    # cmap = plt.cm.get_cmap('magma')
+    # p_lees_than_0 = p[p["Difference with deterministic"] < 0]
+    # p_more_than_0 = p[p["Difference with deterministic"] > 0]
+    #
+    # sc_less_than_0 = axs.scatter(x=p_lees_than_0["Gradient Flow On Val post"],
+    #                              y=p_lees_than_0["Stochastic Performance"],
+    #                              facecolors='none', edgecolors='k', s=100)
+    #
+    # A = 15000
+    # sizes = p_more_than_0["Sigma"] * A
+    # color_values = p_more_than_0["Difference with deterministic"]
+    #
+    # sc = axs.scatter(x=p_more_than_0["Gradient Flow On Val post"], y=p_more_than_0["Stochastic Performance"],
+    #                  c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
+    #                  s=100,
+    #                  norm=matplotlib.colors.PowerNorm(gamma=0.8))
+    # # axs_y = axs.twinx()
+    # # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Stochastic performance"],
+    # #                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Stochastic performance"],
+    # #                                  facecolors='none', edgecolors='k', s=15)
+    #
+    # # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    #
+    # # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
+    #
+    # # axins = axs.inset_axes([0.13, 0.12, 0.35, 0.5])
+    # #
+    # # axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
+    # #
+    # # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
+    # #
+    # # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
+    # #                       c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
+    # #                       norm=matplotlib.colors.PowerNorm(gamma=1.2))
+    # # scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
+    # #                       facecolors="none",edgocolor="k",) #s=sizes*np.log(sizes),)
+    # # axins.tick_params(axis='both', which='major', labelsize=fs*0.8)
+    # # for axis in ['top', 'bottom', 'left', 'right']:
+    # #     axins.spines[axis].set_linewidth(1)
+    # #     axins.spines[axis].set_color('gray')
+    # #
+    # # axins.set_ylabel("$\sigma$",fontsize=20)
+    # # axins.set_xlabel("$\sigma$",fontsize=20)
+    #
+    # # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
+    # # fig.colorbar(scins,cax=axins_cbar)
+    # # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
+    #
+    # plt.ylabel("Stochastic performance on Val set")
+    #
+    # cbar = plt.colorbar(sc, label="Difference with deterministic on test set")
+    #
+    # cbar.ax.tick_params(labelsize=fs)
+    #
+    # plt.tick_params(axis="y", labelsize=fs)
+    #
+    # plt.tick_params(axis="x", labelsize=fs)
+    #
+    # if cfg.dataset == "cifar10":
+    #     plt.xlabel("")
+    # else:
+    #     plt.xlabel("Gradient Flow on Val set", fontsize=fs)
+    # # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
+    # # plt.legend()
+    # plt.savefig(
+    #     "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.pdf".format(
+    #         cfg.architecture, cfg.dataset, sampler, function_string,
+    #         one_batch_string), bbox_inches="tight")
+    # plt.close()
 
     #################### NOw we compare wit the deteminstic for the test set ##############################################
 
@@ -14003,47 +14419,49 @@ if __name__ == '__main__':
     parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
     parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
 
-    ############# this is for pr and sigma optim ###############################
-
-    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
-    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-    #                     required=False)
-    # parser.add_argument('-fnc', '--functions', type=int, default=1,
-    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
-
-    ################################################################
-    # args_out = vars(parser.parse_args())
-
     args = vars(parser.parse_args())
+    LeMain(args)
 
-    # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga", "log_sigma": True,
-    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-    #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-    #         "batch_size": 512, "name": "no_name"}
-    # # args["architecture"] = args_out["architecture"]
-    # # args["dataset"] = args_out["dataset"]
-    # # args["sampler"] = args_out["sampler"]
-    # # args["pruner"] = args_out["pruner"]
-    # # #
-    # models = ["resnet18", "resnet50", "vgg19"]
-    #
-    # datasets = ["cifar10", "cifar100"]
-    #
-    # sampler = ["nsga"]
-    #
-    # models = ["resnet18"]
-    # datasets = ["cifar10"]
-    # sampler = ["tpe"]
-    #
+
+    ############# MOO this is for pr and sigma optim ###############################
+
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+                        help='Use log scale for sigma in pr,sigma optim', required=False)
+    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+                        required=False)
+    parser.add_argument('-fnc', '--functions', type=int, default=1,
+                        help='Type of functions for MOO optim of sigma and pr', required=False)
+
+    args_out = vars(parser.parse_args())
+
+
+    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 200, "sampler": "nsga", "log_sigma": True,
+            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+            "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+            "batch_size": 512, "name": "no_name"}
+    # args["architecture"] = args_out["architecture"]
+    # args["dataset"] = args_out["dataset"]
+    # args["sampler"] = args_out["sampler"]
+    # args["pruner"] = args_out["pruner"]
+    # #
+    models = ["resnet18", "resnet50", "vgg19"]
+
+    datasets = ["cifar10", "cifar100"]
+
+    sampler = ["nsga"]
+
+    models = ["resnet18"]
+    datasets = ["cifar10"]
+    sampler = ["tpe"]
+
     # for combination in itertools.product(models, datasets, sampler):
     #     args["architecture"] = combination[0]
     #     args["dataset"] = combination[1]
     #     args["sampler"] = combination[2]
-    #     LeMain(args)
-
     LeMain(args)
+
 
     #######################################################################################
 
