@@ -74,8 +74,7 @@ model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
-sigma_list=("0.005" "0.005" "0.005" "0.005" "0.005" "0.005")
-
+sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
 pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
 
 max=${#model_list[@]}                                  # Take the length of that array
@@ -88,20 +87,19 @@ pruning_rate="${pruning_rate_list[$idxA]}"
 run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "lamp" "32" "FT" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 done
 
-############## NSGA-II side of the table#######################
-model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
-sigma_list=("0.001" "0.001" "0.001" "0.001" "0.001" "0.001")
-
-pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
-
-max=${#model_list[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-model="${model_list[$idxA]}"
-dataset="${dataset_list[$idxA]}"
-sigma="${sigma_list[$idxA]}"
-pruning_rate="${pruning_rate_list[$idxA]}"
-
-run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "lamp" "32" "FT" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-done
+############### NSGA-II side of the table#######################
+#model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+#dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+#sigma_list=("0.001" "0.001" "0.001" "0.001" "0.001" "0.001")
+#pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+#
+#max=${#model_list[@]}                                  # Take the length of that array
+#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+#model="${model_list[$idxA]}"
+#dataset="${dataset_list[$idxA]}"
+#sigma="${sigma_list[$idxA]}"
+#pruning_rate="${pruning_rate_list[$idxA]}"
+#
+#run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "global" "32" "FT" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#done
