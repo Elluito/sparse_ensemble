@@ -14249,6 +14249,10 @@ if __name__ == '__main__':
     ############# MOO this is for pr and sigma optim ###############################
 
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
     parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
     parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
                         help='Use log scale for sigma in pr,sigma optim', required=False)

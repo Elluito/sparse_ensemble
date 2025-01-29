@@ -14010,10 +14010,10 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         # print(f"Time in minutes: {(t1 - t0) / 60} min")
         optimal_params = {"cifar10": {"sigma": 0.005, "pr": 0.9}, "cifar100": {"sigma": 0.003, "pr": 0.9}}
         datasets=["cifar100"]
-        for dataset in datasets:
+        # for dataset in datasets:
             # cfg.amount = optimal_params[dataset]["pr"]
             # cfg.sigma = optimal_params[dataset]["sigma"]
-            cfg.dataset = dataset
+            # cfg.dataset = dataset
             # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
             #                                                                             solution3=solution3,
             #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
@@ -14025,40 +14025,40 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
             #                                                                                       0.005, 0.006,
             #                                                                                       0.007, 0.008, 0.009, 0.01,
             #                                                                                       0.011])
-            print("\n\tVariance sigma sweep\n")
-            t0 = time.time()
-            cfg.amount = optimal_params[dataset]["pr"]
-            cfg.sigma = optimal_params[dataset]["sigma"]
-            stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
-                                                                                               solution3=solution3,
-                                                                                               eval_set="val",
-                                                                                               sigma_list=[0.001, 0.002,
-                                                                                                           0.003, 0.004,
-                                                                                                           0.005, 0.006,
-                                                                                                           0.007, 0.008,
-                                                                                                           0.009, 0.01,
-                                                                                                           0.011])
-            t1 = time.time()
-            print(f"Time in seconds: {(t1 - t0)} s")
-            print(f"Time in minutes: {(t1 - t0) / 60} min")
+            # print("\n\tVariance sigma sweep\n")
+            # t0 = time.time()
+            # cfg.amount = optimal_params[dataset]["pr"]
+            # cfg.sigma = optimal_params[dataset]["sigma"]
+            # stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
+            #                                                                                    solution3=solution3,
+            #                                                                                    eval_set="val",
+            #                                                                                    sigma_list=[0.001, 0.002,
+            #                                                                                                0.003, 0.004,
+            #                                                                                                0.005, 0.006,
+            #                                                                                                0.007, 0.008,
+            #                                                                                                0.009, 0.01,
+            #                                                                                                0.011])
+            # t1 = time.time()
+            # print(f"Time in seconds: {(t1 - t0)} s")
+            # print(f"Time in minutes: {(t1 - t0) / 60} min")
 
-            print("\n\tVariance pr sweep")
-            t0 = time.time()
-            cfg.amount = optimal_params[dataset]["pr"]
-            cfg.sigma = optimal_params[dataset]["sigma"]
-            stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2=solution2,
-                                                                                            solution3=solution3,
-                                                                                            eval_set="val",
-                                                                                            pr_list=[0.1, 0.2, 0.3, 0.4,
-                                                                                                     0.5, 0.6,
-                                                                                                     0.7, 0.8, 0.82,
-                                                                                                     0.84,
-                                                                                                     0.88, 0.9, 0.91,
-                                                                                                     0.92,
-                                                                                                     0.93, 0.95, 0.99])
-            t1 = time.time()
-            print(f"Time in seconds: {(t1 - t0)} s")
-            print(f"Time in minutes: {(t1 - t0) / 60} min")
+            # print("\n\tVariance pr sweep")
+            # t0 = time.time()
+            # cfg.amount = optimal_params[dataset]["pr"]
+            # cfg.sigma = optimal_params[dataset]["sigma"]
+            # stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2=solution2,
+            #                                                                                 solution3=solution3,
+            #                                                                                 eval_set="val",
+            #                                                                                 pr_list=[0.1, 0.2, 0.3, 0.4,
+            #                                                                                          0.5, 0.6,
+            #                                                                                          0.7, 0.8, 0.82,
+            #                                                                                          0.84,
+            #                                                                                          0.88, 0.9, 0.91,
+            #                                                                                          0.92,
+            #                                                                                          0.93, 0.95, 0.99])
+            # t1 = time.time()
+            # print(f"Time in seconds: {(t1 - t0)} s")
+            # print(f"Time in minutes: {(t1 - t0) / 60} min")
 
         solutions = ["trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
                      "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"]
@@ -14067,8 +14067,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         for i in range(len(datasets)):
             cfg.dataset = datasets[i]
             cfg.solution = solutions[i]
-            cfg.amount = optimal_params[dataset]["pr"]
-            cfg.sigma = optimal_params[dataset]["sigma"]
+            cfg.amount = optimal_params[datasets[i]]["pr"]
+            cfg.sigma = optimal_params[datasets[i]]["sigma"]
             plot_variable_pr_sigma_variance(cfg)
 
         #################################################################################################################
