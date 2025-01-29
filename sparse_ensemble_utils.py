@@ -18,12 +18,16 @@ import wandb
 from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
+from plot_stochastic_pruning import calculate_single_value_from_variance_df
 import os
 import sys
+
 # from accelerate import Accelerator
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print("Device: {}".format(device))
+
+
 ########################################################################################################################
 ######################### PROGRESS BAR FUNCTION ########################################################################
 # _, term_width = os.popen('stty size', 'r').read().split()
@@ -36,7 +40,7 @@ def progress_bar(current, total, msg=None):
     if current == 0:
         begin_time = time.time()  # Reset for new bar.
 
-    cur_len = int(TOTAL_BAR_LENGTH*current/total)
+    cur_len = int(TOTAL_BAR_LENGTH * current / total)
     rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
 
     sys.stdout.write(' [')
@@ -60,30 +64,31 @@ def progress_bar(current, total, msg=None):
 
     msg = ''.join(L)
     sys.stdout.write(msg)
-    for i in range(term_width-int(TOTAL_BAR_LENGTH)-len(msg)-3):
+    for i in range(term_width - int(TOTAL_BAR_LENGTH) - len(msg) - 3):
         sys.stdout.write(' ')
 
     # Go back to the center of the bar.
-    for i in range(term_width-int(TOTAL_BAR_LENGTH/2)+2):
+    for i in range(term_width - int(TOTAL_BAR_LENGTH / 2) + 2):
         sys.stdout.write('\b')
-    sys.stdout.write(' %d/%d ' % (current+1, total))
+    sys.stdout.write(' %d/%d ' % (current + 1, total))
 
-    if current < total-1:
+    if current < total - 1:
         sys.stdout.write('\r')
     else:
         sys.stdout.write('\n')
     sys.stdout.flush()
 
+
 def format_time(seconds):
-    days = int(seconds / 3600/24)
-    seconds = seconds - days*3600*24
+    days = int(seconds / 3600 / 24)
+    seconds = seconds - days * 3600 * 24
     hours = int(seconds / 3600)
-    seconds = seconds - hours*3600
+    seconds = seconds - hours * 3600
     minutes = int(seconds / 60)
-    seconds = seconds - minutes*60
+    seconds = seconds - minutes * 60
     secondsf = int(seconds)
     seconds = seconds - secondsf
-    millis = int(seconds*1000)
+    millis = int(seconds * 1000)
 
     f = ''
     i = 1
@@ -224,7 +229,7 @@ def test_with_accelerator(net, testloader, one_batch=False, verbose=2, count_flo
         return 100. * correct.item() / total
 
 
-def train(epoch,net,trainloader,optimizer,criterion):
+def train(epoch, net, trainloader, optimizer, criterion):
     print('\nEpoch: %d' % epoch)
     net.to(device)
     net.train()
@@ -246,10 +251,10 @@ def train(epoch,net,trainloader,optimizer,criterion):
 
         # progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
-        print("Batch accuracy: {}".format(100.*correct/total, correct, total))
+        print("Batch accuracy: {}".format(100. * correct / total, correct, total))
+
 
 def test(net, use_cuda, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
-
     if use_cuda:
         net.cuda()
     criterion = nn.CrossEntropyLoss()
@@ -760,12 +765,177 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
                                 momentum=0.9, weight_decay=5e-4)
     if "cifar" in cfg.dataset:
         # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) ===> original code before 21/01/2025
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs) #===> code after 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # ===> code after 21/01/2025
 
     else:
 
         # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) original code before 21/01/2025
-        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs) # code after 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # code after 21/01/2025
+
+    grad_clip = 0
+    if cfg.gradient_cliping:
+        grad_clip = 0.1
+    names, weights = zip(*get_layer_dict(pruned_model))
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar100":
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+    if cfg.dataset == "imagenet":
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
+
+    mask_dict = get_mask(model=pruned_model)
+    for name in exclude_layers:
+        if name in list(mask_dict.keys()):
+            mask_dict.pop(name)
+    total_FLOPS = 0
+    total_sparse_FLOPS = initial_flops
+    # first_time = 1
+
+    data, y = next(iter(dataLoader))
+    data = data.cuda()
+    forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+
+    file_path = None
+    weights_path = ""
+    if gradient_flow_file_prefix != "":
+
+        file_path = gradient_flow_file_prefix
+        file_path += "recordings.csv"
+
+        if Path(gradient_flow_file_prefix).owner() == "sclaam":
+            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+        if Path(gradient_flow_file_prefix).owner() == "luisaam":
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
+
+        weights_path = Path(weights_file_path)
+        weights_path.mkdir(parents=True)
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
+                                         mask_dict=mask_dict, use_wandb=use_wandb)
+        state_dict = pruned_model.state_dict()
+        temp_name = weights_path / "epoch_OS.pth"
+        torch.save(state_dict,temp_name)
+
+    pruned_model.cuda()
+    pruned_model.train()
+    disable_bn(pruned_model)
+    if not fine_tune_exclude_layers:
+        disable_exclude_layers(pruned_model, exclude_layers)
+    if not fine_tune_non_zero_weights:
+        disable_all_except(pruned_model, exclude_layers)
+
+    criterion = nn.CrossEntropyLoss()
+    for epoch in range(epochs):
+        for batch_idx, (data, target) in enumerate(dataLoader):
+            data, target = data.cuda(), target.cuda()
+            optimizer.zero_grad()
+            # first forward-backward step
+            predictions = pruned_model(data)
+            # enable_bn(model)
+            loss = criterion(predictions, target)
+            loss.backward()
+            backward_flops_sparse = 2 * forward_pass_sparse_flops
+            backward_flops_dense = 2 * forward_pass_dense_flops
+            batch_dense_flops = forward_pass_dense_flops + backward_flops_dense
+            batch_sparse_flops = forward_pass_sparse_flops + backward_flops_sparse
+            total_FLOPS += batch_dense_flops
+            total_sparse_FLOPS += batch_sparse_flops
+            accuracy.update(preds=predictions.cuda(), target=target.cuda())
+            # Mask the grad_
+            mask_gradient(pruned_model, mask_dict=mask_dict)
+
+            if grad_clip:
+                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+
+            optimizer.step()
+            lr_scheduler.step()
+
+            # W&B Logging
+            if use_wandb:
+                acc = accuracy.compute()
+                test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
+                                     one_batch=True)
+                wandb.log({
+                    "val_set_accuracy": acc * 100,
+                    "sparse_flops": total_sparse_FLOPS,
+                    "test_set_accuracy": test_accuracy,
+                    "sparsity": sparsity(pruned_model)
+                })
+            if batch_idx % 10 == 0 or FLOP_limit != 0:
+                acc = accuracy.compute()
+                flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
+                print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                      f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
+
+                if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
+                    break
+        # if gradient_flow_file_prefix != "":
+
+        if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+            measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                             epoch,
+                                             mask_dict=mask_dict
+                                             , use_wandb=use_wandb)
+
+            # state_dict = pruned_model.state_dict()
+            # temp_name = weights_path / "epoch_{}.pth".format(epoch)
+            # torch.save(state_dict,temp_name)
+
+        if FLOP_limit != 0:
+            if total_sparse_FLOPS > FLOP_limit:
+                break
+    if gradient_flow_file_prefix != "":
+        measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+                                         epochs,
+                                         mask_dict=mask_dict
+                                         , use_wandb=use_wandb)
+        state_dict = pruned_model.state_dict()
+        temp_name = weights_path / "epoch_{}.pth".format(epochs - 1)
+        torch.save(state_dict, temp_name)
+
+    test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+
+    # if not os.path.isdir(save_folder):
+    #     os.mkdir(save_folder)
+    # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+    #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    # torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+    # best_acc = acc
+
+    if use_wandb:
+        if gradient_flow_file_prefix != "":
+            df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
+            table = wandb.Table(data=df)
+            wandb.log({"Gradient Flow results": table})
+        wandb.log({
+            "test_set_accuracy": test_set_performance,
+            "sparse_flops": total_sparse_FLOPS,
+            "final_accuracy": test_set_performance
+        })
+
+    return total_sparse_FLOPS
+
+
+def restricted_fine_tune_measure_flops_calc_variance(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+                                                     testLoader: torch.utils.data.DataLoader,
+                                                     epochs=1,
+                                                     FLOP_limit: float = 0, initial_flops=0, use_wandb=False,
+                                                     exclude_layers=[],
+                                                     fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                                     gradient_flow_file_prefix="", cfg=None):
+    # optimizer = torch.optim.SGD()
+    #################### Best accuracy yet ################################
+
+    ####################
+    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+    if "cifar" in cfg.dataset:
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) ===> original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # ===> code after 21/01/2025
+
+    else:
+
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # code after 21/01/2025
 
     grad_clip = 0
     if cfg.gradient_cliping:
@@ -907,19 +1077,9 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             "final_accuracy": test_set_performance
         })
 
-
     return total_sparse_FLOPS
 
 
-#
-# from .counting.ops import get_inference_FLOPs
-#
-# # Sparse learning funcs
-# from .funcs.grow import registry as grow_registry
-# from .funcs.init_scheme import registry as init_registry
-# from .funcs.prune import registry as prune_registry
-# from .funcs.redistribute import registry as redistribute_registry
-# from .sparse_ensemble_utils.smoothen_value import AverageValue
 def is_prunable_module(m: torch.nn.Module):
     return (isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d))
 
@@ -1225,8 +1385,128 @@ def measure_and_record_gradient_flow_with_ACCELERATOR(wrapped_model: nn.Module, 
     return accuracy
 
 
+def measuring_feature_sample_variance_from_model(net, evaluation_set, cfg, name: str = ""):
+    use_cuda = torch.cuda.is_available()
+    N = 5
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+
+    t0 = time.time()
+    original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+    pruned_original = copy.deepcopy(net)
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+    else:
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+    remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+
+    print("pruned_performance of pruned original")
+    t0 = time.time()
+    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    print("Det_performance in function: {}".format(pruned_original_performance))
+    t1 = time.time()
+    print("Time for test: {}".format(t1 - t0))
+
+    deter_original_variance = calculate_variance_models_dataloader(net, evaluation_set, "cuda")
+    deter_original_df = pd.DataFrame.from_dict(deter_original_variance)
+
+    # deter_original_df.to_csv(f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_deter_l2_mean.csv",
+    #                          sep=",")
+
+    # deter_original_df.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_dense_deter_var_mean.csv",
+    #     sep=",")
+    deter_original_variance = calculate_variance_models_dataloader(pruned_original, evaluation_set, "cuda")
+    deter_original_pruned_df = pd.DataFrame.from_dict(deter_original_variance)
+    # deter_original_pruned_df.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_pr_{cfg.amount}_{cfg.pruner}_original_pruned_deter_var_mean.csv",
+    #     sep=",")
+
+    del pruned_original
+    # pop.append(pruned_original)
+    # pruned_performance.append(pruned_original_performance)
+    labels = []
+    # stochastic_dense_performances.append(original_performance)
+    all_noisy_models = None
+    all_noisy_models_dense = None
+
+    for n in range(N):
+        dense_current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+        # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
+        print("Stochastic dense performance")
+        t0 = time.time()
+        StoDense_performance = test(dense_current_model, use_cuda, evaluation_set, verbose=1)
+        t1 = time.time()
+        print("Time for test: {}".format(t1 - t0))
+        # Dense stochastic performance
+        stochastic_dense_performances.append(StoDense_performance)
+
+        current_model = copy.deepcopy(dense_current_model)
+
+        if cfg.pruner == "global":
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(current_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+        # Here is where I transfer the mask from the pruned stochastic model to the
+        # original weights and put it in the ranking
+        # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
+        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        # record_predictions(current_model, evaluation_set,
+        #                    "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
+        torch.cuda.empty_cache()
+        print("Stocastic pruning performance")
+        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        print("Time for test: {}".format(t1 - t0))
+
+        pruned_performance.append(stochastic_pruned_performance)
+        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+
+        sto_noisy_variance = calculate_variance_models_dataloader(current_model, evaluation_set,
+                                                                  "cuda")
+        sto_noisy_df = pd.DataFrame.from_dict(sto_noisy_variance)
+        del current_model
+        torch.cuda.empty_cache()
+        if all_noisy_models is None:
+            all_noisy_models = sto_noisy_df
+        else:
+            all_noisy_models = pd.concat((all_noisy_models, sto_noisy_df), ignore_index=True)
+
+        sto_noisy_variance_dense = calculate_variance_models_dataloader(dense_current_model, evaluation_set,
+                                                                        "cuda")
+        sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_variance_dense)
+        if all_noisy_models_dense is None:
+            all_noisy_models_dense = sto_noisy_df_dense
+        else:
+            all_noisy_models_dense = pd.concat((all_noisy_models_dense, sto_noisy_df_dense), ignore_index=True)
+    # all_noisy_models.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_l2_mean.csv", sep=",")
+
+    # all_noisy_models.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_pruned_var_mean.csv",
+    #     sep=",")
+    #
+    # all_noisy_models_dense.to_csv(
+    #     f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_dense_var_mean.csv",
+    #     sep=",")
+
+    return deter_original_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense
+
+
 def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, cfg, filepath, total_flops, epoch,
-                                     mask_dict, use_wandb=False,record=True):
+                                     mask_dict, use_wandb=False, record=True, record_variance=False):
     model = copy.deepcopy(model)
     t_begining = time.time()
     disable_bn(model)
@@ -1330,21 +1610,31 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     test_dict["test_accuracy"] = [accuracy]
     print("Test dictionary :\n {}".format(test_dict))
 
-    # print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
+    # if record_variance:
+    #     deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance_from_model(
+    #         model, cfg, evaluation_set=dataLoader, name="")
+    #     clean_variance, noisy_variance = calculate_single_value_from_variance_df(
+    #         noisy_variance_dense=all_noisy_models_dense
+    #         , clean_variance_dense=deter_original_dense_df,
+    #         noisy_variance=all_noisy_models,
+    #         clean_variance=deter_original_pruned_df)
+    #     val_dict["Feature Variance sto Val"]
+
+# print("accuracy:{}, gradient norm: {},Hg norm {}".format(accuracy,norm_grad,norm_hg))
     if record:
         if Path(filepath).is_file():
-                                        log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-                                        log_dict.update(val_dict)
-                                        log_dict.update(test_dict)
-                                        df = pd.DataFrame(log_dict)
-                                        df.to_csv(filepath, mode="a", header=False, index=False)
+            log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+            log_dict.update(val_dict)
+            log_dict.update(test_dict)
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, mode="a", header=False, index=False)
         else:
-                 # Try to read the file to see if it is
-                 log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
-                 log_dict.update(val_dict)
-                 log_dict.update(test_dict)
-                 df = pd.DataFrame(log_dict)
-                 df.to_csv(filepath, sep=",", index=False)
+            # Try to read the file to see if it is
+            log_dict = {"Epoch": [epoch], "sparse_flops": [total_flops]}
+            log_dict.update(val_dict)
+            log_dict.update(test_dict)
+            df = pd.DataFrame(log_dict)
+            df.to_csv(filepath, sep=",", index=False)
     if use_wandb:
         log_dict = {"Epoch": epoch, "sparse_flops": total_flops}
         for n, v in val_dict.items():
@@ -1359,7 +1649,8 @@ def measure_and_record_gradient_flow(model: nn.Module, dataLoader, testLoader, c
     if record:
         return accuracy, val_dict["val_accuracy"][0]
     else:
-        return val_dict,test_dict
+        return val_dict, test_dict
+
 
 def measure_gradient_flow_only(model: nn.Module, dataLoader, testLoader, cfg):
     model = copy.deepcopy(model)
@@ -1401,7 +1692,7 @@ def measure_gradient_flow_only(model: nn.Module, dataLoader, testLoader, cfg):
     norm_grad = torch.norm(grad_vect)
     test_dict["test_set_gradient_magnitude"] = [float(norm_grad.cpu().detach().numpy())]
 
-    return  test_dict,val_dict
+    return test_dict, val_dict
 
 
 def get_erdos_renyi_dist(
