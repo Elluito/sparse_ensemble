@@ -8351,12 +8351,12 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
 
     remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
 
-    print("pruned_performance of pruned original")
-    t0 = time.time()
-    pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    print("Det_performance in function: {}".format(pruned_original_performance))
-    t1 = time.time()
-    print("Time for test: {}".format(t1 - t0))
+    # print("pruned_performance of pruned original")
+    # t0 = time.time()
+    # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    # print("Det_performance in function: {}".format(pruned_original_performance))
+    # t1 = time.time()
+    # print("Time for test: {}".format(t1 - t0))
 
     deter_original_variance = calculate_variance_models_dataloader(net, evaluation_set, "cuda")
     deter_original_df = pd.DataFrame.from_dict(deter_original_variance)
@@ -8384,13 +8384,13 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
     for n in range(N):
         dense_current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
         # stochastic_with_deterministic_mask_performance.append(det_mask_transfer_model_performance)
-        print("Stochastic dense performance")
-        t0 = time.time()
-        StoDense_performance = test(dense_current_model, use_cuda, evaluation_set, verbose=1)
-        t1 = time.time()
-        print("Time for test: {}".format(t1 - t0))
+        # print("Stochastic dense performance")
+        # t0 = time.time()
+        # StoDense_performance = test(dense_current_model, use_cuda, evaluation_set, verbose=1)
+        # t1 = time.time()
+        # print("Time for test: {}".format(t1 - t0))
         # Dense stochastic performance
-        stochastic_dense_performances.append(StoDense_performance)
+        # stochastic_dense_performances.append(StoDense_performance)
 
         current_model = copy.deepcopy(dense_current_model)
 
@@ -8407,12 +8407,12 @@ def measuring_feature_sample_variance(cfg: omegaconf.DictConfig, eval_set: str =
         # record_predictions(current_model, evaluation_set,
         #                    "{}_one_shot_sto_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
         torch.cuda.empty_cache()
-        print("Stocastic pruning performance")
-        stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
-        print("Time for test: {}".format(t1 - t0))
+        # print("Stocastic pruning performance")
+        # stochastic_pruned_performance = test(current_model, use_cuda, evaluation_set, verbose=1)
+        # print("Time for test: {}".format(t1 - t0))
 
-        pruned_performance.append(stochastic_pruned_performance)
-        stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
+        # pruned_performance.append(stochastic_pruned_performance)
+        # stochastic_deltas.append(StoDense_performance - stochastic_pruned_performance)
 
         sto_noisy_variance = calculate_variance_models_dataloader(current_model, evaluation_set,
                                                                   "cuda")
@@ -13747,56 +13747,61 @@ def stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_c
 
 def stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2, solution3,
                                                                                     pr_list, eval_set="test"):
-    # use_cuda = torch.cuda.is_available()
-    # net = get_model(cfg)
-    #
-    # evaluation_set = select_eval_set(cfg, eval_set)
-    # N = cfg.population
-    # pop = []
-    # pruned_performance = []
-    # stochastic_dense_performances = []
-    # stochastic_deltas = []
-    #
-    # names, weights = zip(*get_layer_dict(net))
-    # number_of_layers = len(names)
-    # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
-    #
-    # var_sto_list = []
-    # var_det_list = []
-    # for pr in pr_list:
-    #     # pruned_original = copy.deepcopy(net)
-    #     # if cfg.pruner == "global":
-    #     #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
-    #     # else:
-    #     #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
-    #     #                     pruner=cfg.pruner)
-    #     #
-    #     # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
-    #     # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    #     # det1_list.append(pruned_original_performance)
-    #     #
-    #     # del pruned_original
-    #
-    #     # N stochasticly pruned models
-    #
-    #     cfg.amount = pr
-    #
-    #     deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance(
-    #         cfg, eval_set=eval_set, name=cfg.name)
-    #     clean_variance, noisy_variance = calculate_single_value_from_variance_df(
-    #         noisy_variance_dense=all_noisy_models_dense
-    #         , clean_variance_dense=deter_original_dense_df,
-    #         noisy_variance=all_noisy_models,
-    #         clean_variance=deter_original_pruned_df)
-    #     # mean_sto1 = np.mean(pruned_performance)
-    #     var_sto_list.append(noisy_variance)
-    #     var_det_list.append(clean_variance)
-    #
-    #     torch.cuda.empty_cache()
-    # df = pd.DataFrame({"Pruning Rate": pr_list, "Feature variance det": var_det_list,
-    #                    "Feature variance sto": var_sto_list})
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    var_sto_list = []
+    var_det_list = []
+    for pr in pr_list:
+        # pruned_original = copy.deepcopy(net)
+        # if cfg.pruner == "global":
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # else:
+        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                     pruner=cfg.pruner)
+        #
+        # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+        # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+        # det1_list.append(pruned_original_performance)
+        #
+        # del pruned_original
+
+        # N stochasticly pruned models
+
+        cfg.amount = pr
+
+        deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance(
+            cfg, eval_set=eval_set, name=cfg.name)
+        clean_variance, noisy_variance = calculate_single_value_from_variance_df(
+            noisy_variance_dense=all_noisy_models_dense
+            , clean_variance_dense=deter_original_dense_df,
+            noisy_variance=all_noisy_models,
+            clean_variance=deter_original_pruned_df)
+        # mean_sto1 = np.mean(pruned_performance)
+        var_sto_list.append(noisy_variance)
+        var_det_list.append(clean_variance)
+
+        torch.cuda.empty_cache()
+    df = pd.DataFrame({"Pruning Rate": pr_list, "Feature variance det": var_det_list,
+                       "Feature variance sto": var_sto_list})
 
     df.to_csv(f"seed1_multiple_pr_variance_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}.csv", sep=",", index=False)
+    df = pd.read_csv(f"seed1_multiple_pr_variance_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}.csv",
+                     index_col=False)
+    pr_list = df["Pruning Rate"]
+    var_det_list = df["Feature variance det"]
+    var_sto_list = df["Feature variance sto"]
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     ax.plot(pr_list, var_det_list, linestyle=":", color="yellowgreen")
     # ax.plot(pr_list, det1_list, linestyle=":", color="orange")
@@ -13866,6 +13871,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
     index_best_sto2 = np.argmax(mean_sto2_list)
     best_sigma = sigma_list.iloc[index_best_sto2]
     best_sto2 = mean_sto2_list.iloc[index_best_sto2]
+
     ax.plot(sigma_list, mean_sto2_list, linestyle="--", marker="o", color="red")
     ax.plot(sigma_list, mean_sto2_list, linestyle="--", marker="o", color="red")
     ax.plot(best_sigma, best_sto2, marker="*", markersize=13, markerfacecolor="red", markeredgecolor="k", linewidth=0)
@@ -13974,7 +13980,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
             "input_resolution": 32,
             "batch_size": 128,
             "resize": 0,
-            "name":"",
+            "name": "",
         })
         solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
         solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
@@ -14002,53 +14008,66 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         #
         # print(f"Time in seconds: {(t1 - t0)} s")
         # print(f"Time in minutes: {(t1 - t0) / 60} min")
+        optimal_params = {"cifar10": {"sigma": 0.005, "pr": 0.9}, "cifar100": {"sigma": 0.003, "pr": 0.9}}
+        datasets=["cifar100"]
+        for dataset in datasets:
+            cfg.amount = optimal_params[dataset]["pr"]
+            cfg.sigma = optimal_params[dataset]["sigma"]
+            # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
+            #                                                                             solution3=solution3,
+            #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+            #                                                                                      0.7, 0.8,0.82,0.84,0.88, 0.9,0.91,0.92,0.93, 0.95, 0.99])
 
-        # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
-        #                                                                             solution3=solution3,
-        #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
-        #                                                                                      0.7, 0.8,0.82,0.84,0.88, 0.9,0.91,0.92,0.93, 0.95, 0.99])
+            # stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
+            #                                                                           solution3=solution3,
+            #                                                                           sigma_list=[0.001, 0.002, 0.003, 0.004,
+            #                                                                                       0.005, 0.006,
+            #                                                                                       0.007, 0.008, 0.009, 0.01,
+            #                                                                                       0.011])
+            print("\n\tVariance sigma sweep\n")
+            t0 = time.time()
+            cfg.amount = optimal_params[dataset]["pr"]
+            cfg.sigma = optimal_params[dataset]["sigma"]
+            stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
+                                                                                               solution3=solution3,
+                                                                                               eval_set="val",
+                                                                                               sigma_list=[0.001, 0.002,
+                                                                                                           0.003, 0.004,
+                                                                                                           0.005, 0.006,
+                                                                                                           0.007, 0.008,
+                                                                                                           0.009, 0.01,
+                                                                                                           0.011])
+            t1 = time.time()
+            print(f"Time in seconds: {(t1 - t0)} s")
+            print(f"Time in minutes: {(t1 - t0) / 60} min")
 
-        # stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
-        #                                                                           solution3=solution3,
-        #                                                                           sigma_list=[0.001, 0.002, 0.003, 0.004,
-        #                                                                                       0.005, 0.006,
-        #                                                                                       0.007, 0.008, 0.009, 0.01,
-        #                                                                                       0.011])
-        print("\n\tVariance sigma sweep\n")
-        t0 = time.time()
-        stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
-                                                                                           solution3=solution3,
-                                                                                           eval_set="val",
-                                                                                           sigma_list=[0.001, 0.002,
-                                                                                                       0.003, 0.004,
-                                                                                                       0.005, 0.006,
-                                                                                                       0.007, 0.008,
-                                                                                                       0.009, 0.01,
-                                                                                                       0.011])
-        t1 = time.time()
-        print(f"Time in seconds: {(t1 - t0)} s")
-        print(f"Time in minutes: {(t1 - t0) / 60} min")
+            print("\n\tVariance pr sweep")
+            t0 = time.time()
+            cfg.amount = optimal_params[dataset]["pr"]
+            cfg.sigma = optimal_params[dataset]["sigma"]
+            stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2=solution2,
+                                                                                            solution3=solution3,
+                                                                                            eval_set="val",
+                                                                                            pr_list=[0.1, 0.2, 0.3, 0.4,
+                                                                                                     0.5, 0.6,
+                                                                                                     0.7, 0.8, 0.82,
+                                                                                                     0.84,
+                                                                                                     0.88, 0.9, 0.91,
+                                                                                                     0.92,
+                                                                                                     0.93, 0.95, 0.99])
+            t1 = time.time()
+            print(f"Time in seconds: {(t1 - t0)} s")
+            print(f"Time in minutes: {(t1 - t0) / 60} min")
 
-        print("\n\tVariance pr sweep")
-        t0 = time.time()
-        stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2=solution2,
-                                                                                        solution3=solution3,
-                                                                                        eval_set="val",
-                                                                                        pr_list=[0.1, 0.2, 0.3, 0.4,
-                                                                                                 0.5, 0.6,
-                                                                                                 0.7, 0.8, 0.82, 0.84,
-                                                                                                 0.88, 0.9, 0.91, 0.92,
-                                                                                                 0.93, 0.95, 0.99])
-        t1 = time.time()
-        print(f"Time in seconds: {(t1 - t0)} s")
-        print(f"Time in minutes: {(t1 - t0) / 60} min")
         solutions = ["trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-                   "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"]
+                     "trained_models/cifar100/resnet18_cifar100_traditional_train.pth"]
         datasets = ["cifar10", "cifar100"]
 
-        for i in range(datasets):
+        for i in range(len(datasets)):
             cfg.dataset = datasets[i]
             cfg.solution = solutions[i]
+            cfg.amount = optimal_params[dataset]["pr"]
+            cfg.sigma = optimal_params[dataset]["sigma"]
             plot_variable_pr_sigma_variance(cfg)
 
         #################################################################################################################
@@ -14074,34 +14093,34 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         # o=[0.72, 0.88, 0.94]
     if fig23:
         cfg = omegaconf.DictConfig({
-                "architecture": "vgg19",
-                # "architecture": "resnet18",
-                # "dataset": "mnist",
-                "dataset": "cifar10",
-                # "dataset": "cifar100",
-                "exclude_layers": ["conv1", "linear", "fc", "classifier"],
-                "model_type": "alternative",
-                "pruner": "global",
-                "amount": 0.9,
-                "batch_size": 512,
-                "lr": 0.001,
-                "momentum": 0.9,
-                "weight_decay": 1e-4,
-                "cyclic_lr": True,
-                "lr_peak_epoch": 5,
-                "optim": "adam",
-                # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-                # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-                "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-                # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-                # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-                "num_workers": 1,
-                "cosine_schedule": False,
-                "pad": False,
-                "resize": False,
-                "input_resolution": 32,
-                "epochs": 24
-            })
+            "architecture": "vgg19",
+            # "architecture": "resnet18",
+            # "dataset": "mnist",
+            "dataset": "cifar10",
+            # "dataset": "cifar100",
+            "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+            "model_type": "alternative",
+            "pruner": "global",
+            "amount": 0.9,
+            "batch_size": 512,
+            "lr": 0.001,
+            "momentum": 0.9,
+            "weight_decay": 1e-4,
+            "cyclic_lr": True,
+            "lr_peak_epoch": 5,
+            "optim": "adam",
+            # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+            # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+            "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+            # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+            # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+            "num_workers": 1,
+            "cosine_schedule": False,
+            "pad": False,
+            "resize": False,
+            "input_resolution": 32,
+            "epochs": 24
+        })
         print(cfg)
         models = ["resnet18", "vgg19"]
         df_files = ["data/epsilon_experiments_t_1-33_full.csv",
@@ -14342,17 +14361,17 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         # #
     if fig57:
         cfg = omegaconf.DictConfig({
-                "sigma": 0.003,
-                "amount": 0.9,
-                "architecture": "resnet18",
-                "model_type": "alternative",
-                "dataset": "cifar100",
-                "set": "test",
-                "solution": "",
-                "batch_size": 512,
-                # "batch_size": 128,
-                "num_workers": 0,
-            })
+            "sigma": 0.003,
+            "amount": 0.9,
+            "architecture": "resnet18",
+            "model_type": "alternative",
+            "dataset": "cifar100",
+            "set": "test",
+            "solution": "",
+            "batch_size": 512,
+            # "batch_size": 128,
+            "num_workers": 0,
+        })
 
         # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
         # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
@@ -14409,10 +14428,10 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
 
     if fig89:
         args = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
-                    "log_sigma": True,
-                    "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-                    "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-                    "batch_size": 512, "name": "no_name"}
+                "log_sigma": True,
+                "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+                "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+                "batch_size": 512, "name": "no_name"}
         # args["architecture"] = args_out["architecture"]
         # args["dataset"] = args_out["dataset"]
         # args["sampler"] = args_out["sampler"]
@@ -14504,6 +14523,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         # #     print("Now global deterministic")
         # # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
         #
+
 
 if __name__ == '__main__':
     plot_stochastic_graphics(fig1=1, fig57=0, fig23=1, fig89=0)
