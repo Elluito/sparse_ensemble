@@ -14425,42 +14425,42 @@ if __name__ == '__main__':
 
     ############# MOO this is for pr and sigma optim ###############################
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-                        help='Use log scale for sigma in pr,sigma optim', required=False)
-    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-                        required=False)
-    parser.add_argument('-fnc', '--functions', type=int, default=1,
-                        help='Type of functions for MOO optim of sigma and pr', required=False)
-
-    args_out = vars(parser.parse_args())
-
-
-    args = {"experiment": 19, "population": 10, "functions": 2, "trials": 200, "sampler": "nsga", "log_sigma": True,
-            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-            "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-            "batch_size": 512, "name": "no_name"}
-    # args["architecture"] = args_out["architecture"]
-    # args["dataset"] = args_out["dataset"]
-    # args["sampler"] = args_out["sampler"]
-    # args["pruner"] = args_out["pruner"]
-    # #
-    models = ["resnet18", "resnet50", "vgg19"]
-
-    datasets = ["cifar10", "cifar100"]
-
-    sampler = ["nsga"]
-
-    models = ["resnet18"]
-    datasets = ["cifar10"]
-    sampler = ["tpe"]
-
-    # for combination in itertools.product(models, datasets, sampler):
-    #     args["architecture"] = combination[0]
-    #     args["dataset"] = combination[1]
-    #     args["sampler"] = combination[2]
-    LeMain(args)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
+    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+    #                     required=False)
+    # parser.add_argument('-fnc', '--functions', type=int, default=1,
+    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
+    #
+    # args_out = vars(parser.parse_args())
+    #
+    #
+    # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 200, "sampler": "nsga", "log_sigma": True,
+    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+    #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+    #         "batch_size": 512, "name": "no_name"}
+    # # args["architecture"] = args_out["architecture"]
+    # # args["dataset"] = args_out["dataset"]
+    # # args["sampler"] = args_out["sampler"]
+    # # args["pruner"] = args_out["pruner"]
+    # # #
+    # models = ["resnet18", "resnet50", "vgg19"]
+    #
+    # datasets = ["cifar10", "cifar100"]
+    #
+    # sampler = ["nsga"]
+    #
+    # models = ["resnet18"]
+    # datasets = ["cifar10"]
+    # sampler = ["tpe"]
+    #
+    # # for combination in itertools.product(models, datasets, sampler):
+    # #     args["architecture"] = combination[0]
+    # #     args["dataset"] = combination[1]
+    # #     args["sampler"] = combination[2]
+    # LeMain(args)
 
 
     #######################################################################################

@@ -13747,58 +13747,58 @@ def stochastic_feature_variance_against_deterministic_variable_sigma_all_seeds_c
 
 def stochastic_feature_variance_against_deterministic_variable_pr_all_seeds_compare(cfg, solution2, solution3,
                                                                                     pr_list, eval_set="test"):
-    use_cuda = torch.cuda.is_available()
-    net = get_model(cfg)
-
-    evaluation_set = select_eval_set(cfg, eval_set)
-    N = cfg.population
-    pop = []
-    pruned_performance = []
-    stochastic_dense_performances = []
-    stochastic_deltas = []
-
-    names, weights = zip(*get_layer_dict(net))
-    number_of_layers = len(names)
-    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
-
-    var_sto_list = []
-    var_det_list = []
-    for pr in pr_list:
-        # pruned_original = copy.deepcopy(net)
-        # if cfg.pruner == "global":
-        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
-        # else:
-        #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
-        #                     pruner=cfg.pruner)
-        #
-        # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
-        # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-        # det1_list.append(pruned_original_performance)
-        #
-        # del pruned_original
-
-        # N stochasticly pruned models
-
-        cfg.amount = pr
-
-        deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance(
-            cfg, eval_set=eval_set, name=cfg.name)
-        clean_variance, noisy_variance = calculate_single_value_from_variance_df(
-            noisy_variance_dense=all_noisy_models_dense
-            , clean_variance_dense=deter_original_dense_df,
-            noisy_variance=all_noisy_models,
-            clean_variance=deter_original_pruned_df)
-        # mean_sto1 = np.mean(pruned_performance)
-        var_sto_list.append(noisy_variance)
-        var_det_list.append(clean_variance)
-
-        torch.cuda.empty_cache()
-    df = pd.DataFrame({"Pruning Rate": pr_list, "Feature variance det": var_det_list,
-                       "Feature variance sto": var_sto_list})
+    # use_cuda = torch.cuda.is_available()
+    # net = get_model(cfg)
+    #
+    # evaluation_set = select_eval_set(cfg, eval_set)
+    # N = cfg.population
+    # pop = []
+    # pruned_performance = []
+    # stochastic_dense_performances = []
+    # stochastic_deltas = []
+    #
+    # names, weights = zip(*get_layer_dict(net))
+    # number_of_layers = len(names)
+    # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+    #
+    # var_sto_list = []
+    # var_det_list = []
+    # for pr in pr_list:
+    #     # pruned_original = copy.deepcopy(net)
+    #     # if cfg.pruner == "global":
+    #     #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="global")
+    #     # else:
+    #     #     prune_with_rate(pruned_original, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+    #     #                     pruner=cfg.pruner)
+    #     #
+    #     # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+    #     # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
+    #     # det1_list.append(pruned_original_performance)
+    #     #
+    #     # del pruned_original
+    #
+    #     # N stochasticly pruned models
+    #
+    #     cfg.amount = pr
+    #
+    #     deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance(
+    #         cfg, eval_set=eval_set, name=cfg.name)
+    #     clean_variance, noisy_variance = calculate_single_value_from_variance_df(
+    #         noisy_variance_dense=all_noisy_models_dense
+    #         , clean_variance_dense=deter_original_dense_df,
+    #         noisy_variance=all_noisy_models,
+    #         clean_variance=deter_original_pruned_df)
+    #     # mean_sto1 = np.mean(pruned_performance)
+    #     var_sto_list.append(noisy_variance)
+    #     var_det_list.append(clean_variance)
+    #
+    #     torch.cuda.empty_cache()
+    # df = pd.DataFrame({"Pruning Rate": pr_list, "Feature variance det": var_det_list,
+    #                    "Feature variance sto": var_sto_list})
 
     df.to_csv(f"seed1_multiple_pr_variance_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}.csv", sep=",", index=False)
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
-    ax.plot(pr_list, var_det_list, linestyle=":", color="")
+    ax.plot(pr_list, var_det_list, linestyle=":", color="yellowgreen")
     # ax.plot(pr_list, det1_list, linestyle=":", color="orange")
     # ax.plot(pr_list, det1_list, linestyle=":", color="blue")
 
