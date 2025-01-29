@@ -751,6 +751,200 @@ def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Mod
     return total_sparse_FLOPS
 
 
+def restricted_fine_tune_measure_flops_sto_and_deterministic(pruned_model: nn.Module,deterministic_pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
+                                       testLoader: torch.utils.data.DataLoader,
+                                       epochs=1,
+                                       FLOP_limit: float = 0, initial_flops=0, use_wandb=False, exclude_layers=[],
+                                       fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
+                                       gradient_flow_file_prefix="", cfg=None):
+    # optimizer = torch.optim.SGD()
+    #################### Best accuracy yet ################################
+
+    ####################
+    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+    optimizer2 = torch.optim.SGD(deterministic_pruned_model.parameters(), lr=0.0001,
+                                momentum=0.9, weight_decay=5e-4)
+
+    if "cifar" in cfg.dataset:
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) ===> original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # ===> code after 21/01/2025
+        lr_scheduler2 = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer2, T_max=epochs)  # ===> code after 21/01/2025
+
+    else:
+
+        # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200) original code before 21/01/2025
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)  # code after 21/01/2025
+        lr_scheduler2 = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer2, T_max=epochs)  # code after 21/01/2025
+
+    grad_clip = 0
+    if cfg.gradient_cliping:
+        grad_clip = 0.1
+    names, weights = zip(*get_layer_dict(pruned_model))
+    if cfg.dataset == "cifar10" or cfg.dataset == "mnist":
+        accuracy = Accuracy(task="multiclass", num_classes=10).to("cuda")
+        accuracy2 = Accuracy(task="multiclass", num_classes=10).to("cuda")
+    if cfg.dataset == "cifar100":
+        accuracy = Accuracy(task="multiclass", num_classes=100).to("cuda")
+        accuracy2 = Accuracy(task="multiclass", num_classes=100).to("cuda")
+    if cfg.dataset == "imagenet":
+        accuracy = Accuracy(task="multiclass", num_classes=1000).to("cuda")
+
+    mask_dict = get_mask(model=pruned_model)
+    mask_dict2 = get_mask(model=deterministic_pruned_model)
+    for name in exclude_layers:
+        if name in list(mask_dict.keys()):
+            mask_dict.pop(name)
+            mask_dict2.pop(name)
+    total_FLOPS = 0
+    total_sparse_FLOPS = initial_flops
+    # first_time = 1
+
+    data, y = next(iter(dataLoader))
+    data = data.cuda()
+    # forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+    #
+    # file_path = None
+    # weights_path = ""
+    # if gradient_flow_file_prefix != "":
+    #
+    #     file_path = gradient_flow_file_prefix
+    #     file_path += "recordings.csv"
+    #
+    #     if Path(gradient_flow_file_prefix).owner() == "sclaam":
+    #         weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+    #     if Path(gradient_flow_file_prefix).owner() == "luisaam":
+    #         weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
+    #
+    #     weights_path = Path(weights_file_path)
+    #     weights_path.mkdir(parents=True)
+    #     measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
+    #                                      mask_dict=mask_dict, use_wandb=use_wandb)
+    #     state_dict = pruned_model.state_dict()
+    #     temp_name = weights_path / "epoch_OS.pth"
+    #     torch.save(state_dict,temp_name)
+
+    deterministic_pruned_model.cuda()
+    deterministic_pruned_model.train()
+    pruned_model.cuda()
+    pruned_model.train()
+    disable_bn(pruned_model)
+    if not fine_tune_exclude_layers:
+        disable_exclude_layers(pruned_model, exclude_layers)
+        disable_exclude_layers(deterministic_pruned_model, exclude_layers)
+    if not fine_tune_non_zero_weights:
+        disable_all_except(pruned_model, exclude_layers)
+        disable_all_except(deterministic_pruned_model, exclude_layers)
+
+    criterion = nn.CrossEntropyLoss()
+    for epoch in range(epochs):
+        for batch_idx, (data, target) in enumerate(dataLoader):
+            data, target = data.cuda(), target.cuda()
+            optimizer.zero_grad()
+            optimizer2.zero_grad()
+            # first forward-backward step
+            predictions = pruned_model(data)
+            predictions2 =deterministic_pruned_model(data)
+            # enable_bn(model)
+            loss = criterion(predictions, target)
+            loss2 = criterion(predictions2, target)
+
+            loss.backward()
+            loss2.backward()
+            # backward_flops_sparse = 2 * forward_pass_sparse_flops
+            # backward_flops_dense = 2 * forward_pass_dense_flops
+            # batch_dense_flops = forward_pass_dense_flops + backward_flops_dense
+            # batch_sparse_flops = forward_pass_sparse_flops + backward_flops_sparse
+            # total_FLOPS += batch_dense_flops
+            # total_sparse_FLOPS += batch_sparse_flops
+
+            accuracy.update(preds=predictions.cuda(), target=target.cuda())
+            accuracy.update(preds=predictions2.cuda(), target=target.cuda())
+
+            # Mask the grad_
+            mask_gradient(pruned_model, mask_dict=mask_dict)
+            mask_gradient(deterministic_pruned_model, mask_dict=mask_dict2)
+
+            if grad_clip:
+                nn.utils.clip_grad_value_(pruned_model.parameters(), grad_clip)
+                nn.utils.clip_grad_value_(deterministic_pruned_model.parameters(), grad_clip)
+
+            optimizer.step()
+            optimizer2.step()
+
+            lr_scheduler.step()
+            lr_scheduler2.step()
+
+            # W&B Logging
+            if use_wandb:
+                acc = accuracy.compute()
+                test_accuracy = test(pruned_model, use_cuda=True, testloader=[get_random_batch(testLoader)],
+                                     one_batch=True)
+                wandb.log({
+                    "val_set_accuracy": acc * 100,
+                    "sparse_flops": total_sparse_FLOPS,
+                    "test_set_accuracy": test_accuracy,
+                    "sparsity": sparsity(pruned_model)
+                })
+            if batch_idx % 10 == 0 or FLOP_limit != 0:
+                # acc = accuracy.compute()
+                # flops_sparse = '%.3E' % Decimal(total_sparse_FLOPS)
+                # print(f"Fine-tune sotch Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                #       f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
+                # acc2 = accuracy2.compute()
+                # print(f"Fine-tune Results - Epoch: {epoch}  Avg accuracy: {acc:.2f} Avg loss:"
+                #       f" {loss.item():.2f} FLOPS:{flops_sparse} sparsity {sparsity(pruned_model) :.3f}")
+                pass
+
+                if FLOP_limit != 0 and FLOP_limit > total_sparse_FLOPS:
+                    break
+        # if gradient_flow_file_prefix != "":
+
+        # if epoch % 10 == 0 and gradient_flow_file_prefix != "":
+        #     measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+        #                                      epoch,
+        #                                      mask_dict=mask_dict
+        #                                      , use_wandb=use_wandb)
+
+            # state_dict = pruned_model.state_dict()
+            # temp_name = weights_path / "epoch_{}.pth".format(epoch)
+            # torch.save(state_dict,temp_name)
+        #
+        # if FLOP_limit != 0:
+        #     if total_sparse_FLOPS > FLOP_limit:
+        #         break
+    # if gradient_flow_file_prefix != "":
+    #     measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS,
+    #                                      epochs,
+    #                                      mask_dict=mask_dict
+    #                                      , use_wandb=use_wandb)
+    #     state_dict = pruned_model.state_dict()
+    #     temp_name = weights_path / "epoch_{}.pth".format(epochs - 1)
+    #     torch.save(state_dict, temp_name)
+
+    test_set_performance = test(pruned_model, use_cuda=True, testloader=testLoader)
+    test_set_performance2 = test(deterministic_pruned_model, use_cuda=True, testloader=testLoader)
+    difference_in_performance =test_set_performance-test_set_performance2
+
+    # if not os.path.isdir(save_folder):
+    #     os.mkdir(save_folder)
+    # if os.path.isfile('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc)):
+    #     os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
+    # torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
+    # best_acc = acc
+
+    # if use_wandb:
+    #     if gradient_flow_file_prefix != "":
+    #         df = pd.read_csv(file_path, sep=",", header=0, index_col=False)
+    #         table = wandb.Table(data=df)
+    #         wandb.log({"Gradient Flow results": table})
+    #     wandb.log({
+    #         "test_set_accuracy": test_set_performance,
+    #         "sparse_flops": total_sparse_FLOPS,
+    #         "final_accuracy": test_set_performance
+    #     })
+
+    return test_set_performance,difference_in_performance
 def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,
                                        testLoader: torch.utils.data.DataLoader,
                                        epochs=1,
@@ -912,7 +1106,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             "final_accuracy": test_set_performance
         })
 
-    return total_sparse_FLOPS
+    return total_sparse_FLOPS,pruned_model
 
 
 def restricted_fine_tune_measure_flops_calc_variance(pruned_model: nn.Module, dataLoader: torch.utils.data.DataLoader,

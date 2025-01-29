@@ -98,7 +98,7 @@ from torch.nn.utils import parameters_to_vector, vector_to_parameters
 from plot_utils import plot_ridge_plot, plot_double_barplot, plot_histograms_per_group, stacked_barplot, \
     stacked_barplot_with_third_subplot, plot_double_barplot
 from sparse_ensemble_utils import erdos_renyi_per_layer_pruning_rate, get_layer_dict, is_prunable_module, \
-    count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops, \
+    count_parameters, sparsity, get_percentile_per_layer, get_sampler, test, restricted_fine_tune_measure_flops,restricted_fine_tune_measure_flops_sto_and_deterministic, \
     get_random_batch, efficient_population_evaluation, get_random_image_label, check_for_layers_collapse, get_mask, \
     apply_mask, restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops, test_with_accelerator, \
     measure_gradient_flow_only
@@ -1258,7 +1258,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.tria
                                                             use_population=True, use_log_sigma=False, Fx=1):
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = get_model(cfg)
-    train, val_loader, test_loader = get_datasets(cfg)
+    train_loader, val_loader, test_loader = get_datasets(cfg)
 
     # dense_performance = test(net, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
     if use_log_sigma:
@@ -1280,19 +1280,19 @@ def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.tria
     prune_function(pruned_model, cfg_copy)
     remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
 
+    models=[]
+
     # Add small noise just to get tiny variations of the deterministic case
     det_performance = test(pruned_model, use_cuda=True, testloader=val_loader, verbose=0, one_batch=one_batch)
     print("Det performance: {}".format(det_performance))
 
-    # quantile_per_layer = pd.read_csv("data/quantiles_of_weights_magnitude_per_layer.csv", sep=",", header=1, skiprows=1,
-    #                                  names=["layer", "q25", "q50", "q75"])
-    # sigma_upper_bound_per_layer = quantile_per_layer.set_index('layer')["q25"].T.to_dict()
     if use_population:
         performance_of_models = []
         for individual_index in range(5):
             ############### Here I ask for pr and for sigma ###################################
 
             current_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer=sigma_per_layer)
+            models.append(current_model)
             # Here it needs to be the copy just in case the other trials make reference to the same object so it does not interfere
             prune_function(current_model, cfg_copy)
 
@@ -1303,14 +1303,19 @@ def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.tria
             # Dense stochastic performance
             performance_of_models.append(stochastic_performance)
         performance_of_models = np.array(performance_of_models)
-        median = np.median(performance_of_models)
-        print("Median of population performance: {}".format(median))
-        average_difference_performance = det_performance - performance_of_models
-        fitness_function_median = objective_function(median, det_performance, sample_pruning_rate)
+        best_model= models[np.argmax(performance_of_models)]
+        #
+        # median = np.median(performance_of_models)
+        # print("Median of population performance: {}".format(median))
+        # average_difference_performance = det_performance - performance_of_models
+        # fitness_function_median = objective_function(median, det_performance, sample_pruning_rate)
         # fitness_function_vector = np.array(list(map()))objective_function(performance_of_models, det_performance,sample_pruning_rate)
         # average_fitness_function = fitness_function_vector.mean()
+        stochastic_fine_tuned_performance, diference = restricted_fine_tune_measure_flops_sto_and_deterministic(best_model,pruned_model,train_loader,test_loader,epochs=100,cfg=cfg)
         if Fx == 1:
             return median, fitness_function_median
+        if Fx == 3:
+            return stochastic_fine_tuned_performance, diference
         else:
             return median, sample_pruning_rate
     else:
@@ -14211,74 +14216,74 @@ if __name__ == '__main__':
     # ####################################
     ######  Para fine-tuning the modelos en general
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    parser.add_argument('--name', type=str, default="",
-                        help='Name for the file', required=False)
-    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
-
-    #   ############ additional parameters #################################
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-
-    args = vars(parser.parse_args())
-    LeMain(args)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    #
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # parser.add_argument('--name', type=str, default="",
+    #                     help='Name for the file', required=False)
+    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # #   ############ additional parameters #################################
+    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
 
     ############# MOO this is for pr and sigma optim ###############################
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
-    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
-    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
-    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
-    #                     required=False)
-    # parser.add_argument('-fnc', '--functions', type=int, default=1,
-    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
-    #
-    # args_out = vars(parser.parse_args())
-    #
-    #
-    # args = {"experiment": 19, "population": 10, "functions": 2, "trials": 200, "sampler": "nsga", "log_sigma": True,
-    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-    #         "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-    #         "batch_size": 512, "name": "no_name"}
-    # # args["architecture"] = args_out["architecture"]
-    # # args["dataset"] = args_out["dataset"]
-    # # args["sampler"] = args_out["sampler"]
-    # # args["pruner"] = args_out["pruner"]
-    # # #
-    # models = ["resnet18", "resnet50", "vgg19"]
-    #
-    # datasets = ["cifar10", "cifar100"]
-    #
-    # sampler = ["nsga"]
-    #
-    # models = ["resnet18"]
-    # datasets = ["cifar10"]
-    # sampler = ["tpe"]
-    #
-    # # for combination in itertools.product(models, datasets, sampler):
-    # #     args["architecture"] = combination[0]
-    # #     args["dataset"] = combination[1]
-    # #     args["sampler"] = combination[2]
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+                        help='Use log scale for sigma in pr,sigma optim', required=False)
+    parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+                        required=False)
+    parser.add_argument('-fnc', '--functions', type=int, default=1,
+                        help='Type of functions for MOO optim of sigma and pr', required=False)
+
+    args_out = vars(parser.parse_args())
+
+
+    args = {"experiment": 21, "population": 5, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
+            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+            "modeltype": "alternative", "epochs": 100, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+            "batch_size": 512, "name": "fine_tuned"}
+    # args["architecture"] = args_out["architecture"]
+    # args["dataset"] = args_out["dataset"]
+    # args["sampler"] = args_out["sampler"]
+    # args["pruner"] = args_out["pruner"]
+    # #
+    models = ["resnet18", "resnet50", "vgg19"]
+
+    datasets = ["cifar10", "cifar100"]
+
+    sampler = ["nsga"]
+
+    models = ["resnet18"]
+    datasets = ["cifar10"]
+    sampler = ["tpe"]
+
+    # for combination in itertools.product(models, datasets, sampler):
+    #     args["architecture"] = combination[0]
+    #     args["dataset"] = combination[1]
+    #     args["sampler"] = combination[2]
+    LeMain(args)
 
 
     #######################################################################################

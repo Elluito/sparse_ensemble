@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #o=$a({resnet18,resnet50,vgg19}" "{cifar10,cifar100}" "{tpe,nsga})
-for string in {resnet18,resnet50,vgg19}" "{cifar10,cifar100}" "{tpe,nsga};do
+for string in {resnet18,resnet50,vgg19}" "{cifar10,cifar100}" "{nsga};do
   echo "${string}"
 done
 

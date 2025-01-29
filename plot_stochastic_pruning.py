@@ -13852,7 +13852,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
     sigma_df = pd.read_csv(f"seed1_multiple_sigma_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
 
     pr_df = pd.read_csv(f"seed1_multiple_pr_{cfg.architecture}_{cfg.dataset}.csv", sep=",")
-    var_sigma_df = pd.read_csv(f"seed1_multiple_sigma_variance_{cfg.architecture}_{cfg.dataset}_pr_{cfg.amount}.csv",
+    var_sigma_df = pd.read_csv(f"seed1_multiple_sigma_variance_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
                                sep=",")
     var_pr_df = pd.read_csv(f"seed1_multiple_pr_variance_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}.csv",
                             sep=",")
@@ -13966,8 +13966,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
             "cyclic_lr": True,
             "lr_peak_epoch": 5,
             "optim": "adam",
-            "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-            # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+            # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+            "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
             # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
             # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
             # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -14011,8 +14011,9 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True):
         optimal_params = {"cifar10": {"sigma": 0.005, "pr": 0.9}, "cifar100": {"sigma": 0.003, "pr": 0.9}}
         datasets=["cifar100"]
         for dataset in datasets:
-            cfg.amount = optimal_params[dataset]["pr"]
-            cfg.sigma = optimal_params[dataset]["sigma"]
+            # cfg.amount = optimal_params[dataset]["pr"]
+            # cfg.sigma = optimal_params[dataset]["sigma"]
+            cfg.dataset = dataset
             # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
             #                                                                             solution3=solution3,
             #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
