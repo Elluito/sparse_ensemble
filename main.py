@@ -14386,34 +14386,34 @@ if __name__ == '__main__':
     # ####################################
     ######  Para fine-tuning the modelos en general
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    #
-    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-    #                     required=True)
-    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    #                     required=True)
-    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-    #                     required=False)
-    # parser.add_argument('--name', type=str, default="",
-    #                     help='Name for the file', required=False)
-    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-    #                     required=False)
-    #
-    # #   ############ additional parameters #################################
-    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    #
-    # args = vars(parser.parse_args())
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
+    parser.add_argument('--name', type=str, default="",
+                        help='Name for the file', required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+                        required=False)
+
+    #   ############ additional parameters #################################
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+
+    args = vars(parser.parse_args())
+    LeMain(args)
 
 
     ############# MOO this is for pr and sigma optim ###############################
@@ -14475,47 +14475,47 @@ if __name__ == '__main__':
     #
 
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
-    architecture_values.reverse()
-    dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
-    dataset_values.reverse()
-    # pruning_rate_values = [0.9, 0.83, 0.948, 0.76, 0.8742, 0.92]
-    pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
-    pruning_rate_values.reverse()
-    # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
-    sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
-    sigma_values.reverse()
-
-    # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
-    # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
-    # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]
-    # # # sigma_values =        [0.0013,  0.003, 0.0028     ,0.0012   ,0.00256    ,0.00456]
-    # #
-    # # sigma_values = [0.001, 0.005]
-    # # dataset_values = ["cifar10"]
-    # # pruning_rate_values = [0.9]
-    # # architecture_values = ["resnet18"]
+    # architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
+    # architecture_values.reverse()
+    # dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
+    # dataset_values.reverse()
+    # # pruning_rate_values = [0.9, 0.83, 0.948, 0.76, 0.8742, 0.92]
+    # pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
+    # pruning_rate_values.reverse()
+    # # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
+    # sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
+    # sigma_values.reverse()
     #
-    cfg = omegaconf.DictConfig({
-        "sigma": 0.005,
-        "amount": 0.9,
-        "architecture": "resnet18",
-        "model_type": "alternative",
-        "dataset": "cifar10",
-        "set": "test",
-        "algo": "nsga",
-        "type":"det"
-    })
-    tipos=["OPTIM_PARAM_STO_FT","OPTIM_PARAM_DET_FT"]
-    for i in range(len(architecture_values)):
-        cfg.dataset = dataset_values[i]
-        cfg.architecture = architecture_values[i]
-        cfg.amount = pruning_rate_values[i]
-        for tipo in tipos:
-            cfg.type=tipo
-            # for s in sigma_values:
-            #     cfg.sigma = s
-
+    # # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
+    # # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
+    # # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]
+    # # # # sigma_values =        [0.0013,  0.003, 0.0028     ,0.0012   ,0.00256    ,0.00456]
+    # # #
+    # # # sigma_values = [0.001, 0.005]
+    # # # dataset_values = ["cifar10"]
+    # # # pruning_rate_values = [0.9]
+    # # # architecture_values = ["resnet18"]
+    # #
+    # cfg = omegaconf.DictConfig({
+    #     "sigma": 0.005,
+    #     "amount": 0.9,
+    #     "architecture": "resnet18",
+    #     "model_type": "alternative",
+    #     "dataset": "cifar10",
+    #     "set": "test",
+    #     "algo": "nsga",
+    #     "type":"det"
+    # })
+    # tipos=["OPTIM_PARAM_STO_FT","OPTIM_PARAM_DET_FT"]
+    # for i in range(len(architecture_values)):
+    #     cfg.dataset = dataset_values[i]
+    #     cfg.architecture = architecture_values[i]
+    #     cfg.amount = pruning_rate_values[i]
+    #     for tipo in tipos:
+    #         cfg.type=tipo
+    #         # for s in sigma_values:
+    #         #     cfg.sigma = s
+    #
         # for dataset in dataset_values:
         #     cfg.dataset = dataset
         #     for pruning_rate in pruning_rate_values:
@@ -14524,33 +14524,33 @@ if __name__ == '__main__':
         #             cfg.architecture = arch
         #             for sig in sigma_values:
         #                 cfg.sigma=sig
-            cfg.sigma=sigma_values[i]
-            gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname=f"{cfg.type}_")
-        unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_STO_FT_")
-        unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_DET_FT_")
+        #     cfg.sigma=sigma_values[i]
+        #     gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname=f"{cfg.type}_")
+        # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_STO_FT_")
+        # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_DET_FT_")
 
-        type_string=""
-        if cfg.type == "det":
-            type_string=""
-        else:
-            type_string="MOO_F1"
+        # type_string=""
+        # if cfg.type == "det":
+        #     type_string=""
+        # else:
+        #     type_string="MOO_F1"
+        # # for tipo in tipos:
+        # #     df = pd.read_csv(
+        # #             f"gradientflow_stochastic_global_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
+        # #             sep=",", index_col=False)
+        # #     type_variable = "DET" if "DET" in tipo else "STO"
+        # #     print("\n####################################")
+        # #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
+        # #     print("####################################\n")
         # for tipo in tipos:
         #     df = pd.read_csv(
-        #             f"gradientflow_stochastic_global_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
+        #             f"gradientflow_stochastic_lamp_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
         #             sep=",", index_col=False)
         #     type_variable = "DET" if "DET" in tipo else "STO"
         #     print("\n####################################")
         #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
         #     print("####################################\n")
-        for tipo in tipos:
-            df = pd.read_csv(
-                    f"gradientflow_stochastic_lamp_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
-                    sep=",", index_col=False)
-            type_variable = "DET" if "DET" in tipo else "STO"
-            print("\n####################################")
-            print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
-            print("####################################\n")
-            calculate_stats(df)
+        #     calculate_stats(df)
 
     ################################################# Ensemble predictions ############################################
     # sigma_values = [0.001,0.003,0.005]
