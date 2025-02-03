@@ -99,7 +99,6 @@ def main(args):
     print("Glob text:{}".format(
         "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     print(things)
-
     for i, name in enumerate(
             glob.glob(search_string)):
         print(name)
