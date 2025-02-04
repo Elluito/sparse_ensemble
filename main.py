@@ -6561,6 +6561,19 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
+    file_path = None
+    weights_path = ""
+    gradient_flow_file_prefix=filepath_GF_measure
+    if gradient_flow_file_prefix != "":
+        if Path(gradient_flow_file_prefix).owner() == "sclaam":
+            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+        if Path(gradient_flow_file_prefix).owner() == "luisaam":
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
+        weights_path = Path(weights_file_path)
+        weights_path.mkdir(parents=True)
+        state_dict = best_dense_model.state_dict()
+        temp_name = weights_path / "dense.pth"
+        torch.save(state_dict,temp_name)
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
@@ -14009,11 +14022,10 @@ def plot_all_pr_sigma_search_MOO_for_cfg(cfg, arg, models, datasets, sampler="ns
 def feature_variance_fine_tuned(cfg, models_list, datasets_list, sigmas_list, pr_list, weights_path,
                                     eval_set="val"):
         use_cuda = torch.cuda.is_available()
-        net = get_model(cfg)
-        dense_net = get_model(cfg)
-        names, weights = zip(*get_layer_dict(dense_net))
-        number_of_layers = len(names)
-        sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+        # net = get_model(cfg)
+        # names, weights = zip(*get_layer_dict(dense_net))
+        # number_of_layers = len(names)
+        # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
         # cfg.solution = solution2
         # net2 = get_model(cfg)
         # cfg.solution = solution3
@@ -14031,97 +14043,163 @@ def feature_variance_fine_tuned(cfg, models_list, datasets_list, sigmas_list, pr
         det_one_shot_variance_list = []
 
         for i in range(len(models_list)):
-            models = models_list[i]
+            model = models_list[i]
             dataset = datasets_list[i]
             pr = pr_list[i]
             sigma = sigmas_list[i]
 
-            path_for_sto = weights_path + f"/{dataset}/stochastic_GLOBAL_FT/{model}/alternative/sigma{sigma}/pr{pr}/"
-            path_for_deter = weights_path + f"/{dataset}/deterministic_GLOBAL_FT/{model}/alternative/sigma{sigma}/pr{pr}/"
-            path_fine_tuned_sto = glob.glob(f'{path_for_sto}/**/*99.pth', recursive=True)
-            path_one_shot_sto = glob.glob(f'{path_for_sto}/**/*OS.pth', recursive=True)
-            path_fine_tuned_det = glob.glob(f'{path_for_deter}/**/*99.pth', recursive=True)
-            path_one_shot_det = glob.glob(f'{path_for_deter}/**/*OS.pth', recursive=True)
-            # First, all stochastic fine_tuned models
-            all_noisy_FT_models_dense= None
-            get_noisy_sample_sigma_per_layer()
-            N = cfg.population
-            for i, name in enumerate(glob.glob(path_fine_tuned_sto)):
-                print(name)
-                noisy_dense_model = get_noisy_sample_sigma_per_layer(dense_net, cfg, sigma_per_layer=sigma_per_layer)
-                state_dict_raw = torch.load(name, map_location=device)
-                dense_accuracy_list.append(state_dict_raw["acc"])
-                print("Dense accuracy:{}".format(state_dict_raw["acc"]))
-                net.load_state_dict(state_dict_raw["net"])
+            cfg.architecture=model
+            cfg.dataset = dataset
 
-                sto_noisy_df_dense = calculate_variance_models_dataloader(net, evaluation_set, "cuda")
+            vessel_model = get_model(cfg)
+
+
+            path_for_sto = weights_path + f"/{dataset}/stochastic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
+            path_for_deter = weights_path + f"/{dataset}/deterministic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
+            path_dense_sto = list(glob.glob(f'{path_for_sto}/**/dense.pth', recursive=True))
+            path_fine_tuned_sto = list(glob.glob(f'{path_for_sto}/**/*99.pth', recursive=True))
+            path_one_shot_sto = list(glob.glob(f'{path_for_sto}/**/*OS.pth', recursive=True))
+
+            path_dense_det = list(glob.glob(f'{path_for_deter}/**/dense.pth', recursive=True))
+            path_fine_tuned_det = list(glob.glob(f'{path_for_deter}/**/*99.pth', recursive=True))
+            path_one_shot_det = list(glob.glob(f'{path_for_deter}/**/*OS.pth', recursive=True))
+            # First, all stochastic fine_tuned models
+            all_noisy_models_dense = None
+            all_noisy_models_OS = None
+            all_noisy_models_FT = None
+            # determinsitic models
+            all_clean_models_dense = None
+            all_clean_models_OS = None
+            all_clean_models_FT = None
+            # get_noisy_sample_sigma_per_layer()
+            N = cfg.population
+
+            #  STO first
+
+            for i, name in enumerate(path_dense_sto):
+                # noisy_dense_model = get_noisy_sample_sigma_per_layer(dense_net, cfg, sigma_per_layer=sigma_per_layer)
+
+                # dense_accuracy_list.append(state_dict_raw["acc"])
+
+                # print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+
+
+                # Dense stochastic Weights
+                print("\n\tDense Stochastic\n")
+                print(name)
+                print("###################\n")
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_noisy_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
                 sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_df_dense)
 
-
-
-
-                if all_noisy_FT_models_dense is None:
-                    all_noisy_FT_models_dense = sto_noisy_df_dense
+                if all_noisy_models_dense is None:
+                   all_noisy_models_dense  = sto_noisy_df_dense
                 else:
-                    all_noisy_FT_models_dense = pd.concat((all_noisy_FT_models_dense, sto_noisy_df_dense), ignore_index=True)
+                    all_noisy_models_dense  = pd.concat((all_noisy_models_dense  , sto_noisy_df_dense), ignore_index=True)
 
-                sto_noisy_FT_variance = calculate_variance_models_dataloader(current_model, evaluation_set,
-                                                                          "cuda")
-                sto_noisy_FT_df = pd.DataFrame.from_dict(sto_noisy_variance)
+                # Stochastic OS Weights
+                print("\n\OS Stochastic\n")
+                name =path_one_shot_sto[i]
+                print(name)
+                print("###################\n")
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_noisy_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+                sto_noisy_df_OS = pd.DataFrame.from_dict(sto_noisy_df_OS)
 
-                del current_model
-
-                torch.cuda.empty_cache()
-
-                if all_noisy_FT_models is None:
-                    all_noisy_FT_models = sto_noisy_df
+                if all_noisy_models_OS is None:
+                    all_noisy_models_OS  = sto_noisy_df_OS
                 else:
-                    all_noisy_FT_models = pd.concat((all_noisy_FT_models, sto_noisy_FT_df), ignore_index=True)
+                    all_noisy_models_OS  = pd.concat((all_noisy_models_OS  , sto_noisy_df_OS), ignore_index=True)
+
+                # Stochastic FT Weights
+
+                print("\n\FT Stochastic\n")
+                name = path_fine_tuned_sto[i]
+                print(name)
+                print("###################\n")
+
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_noisy_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+                sto_noisy_df_FT = pd.DataFrame.from_dict(sto_noisy_df_FT)
+
+                if all_noisy_models_FT is None:
+                    all_noisy_models_FT  = sto_noisy_df_FT
+                else:
+                    all_noisy_models_FT  = pd.concat((all_noisy_models_FT  , sto_noisy_df_FT), ignore_index=True)
+
+            for i, name in enumerate(path_dense_det):
+                # Dense deterministic Weights
+                print("\n\tDense Stochastic\n")
+                print(name)
+                print("###################\n")
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_clean_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+                sto_clean_df_dense = pd.DataFrame.from_dict(sto_clean_df_dense)
+
+                if all_clean_models_dense is None:
+                    all_clean_models_dense  = sto_clean_df_dense
+                else:
+                    all_clean_models_dense  = pd.concat((all_clean_models_dense  , sto_clean_df_dense), ignore_index=True)
+
+                # Deterministic OS Weights
+                print("\n\OS Stochastic\n")
+                name =path_one_shot_sto[i]
+                print(name)
+                print("###################\n")
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_clean_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+                sto_clean_df_OS = pd.DataFrame.from_dict(sto_clean_df_OS)
+
+                if all_clean_models_OS is None:
+                    all_clean_models_OS  = sto_noisy_df_OS
+                else:
+                    all_clean_models_OS  = pd.concat((all_clean_models_OS  , sto_clean_df_OS), ignore_index=True)
+
+                # Deterministic FT Weights
+
+                print("\n\FT Stochastic\n")
+                name = path_fine_tuned_sto[i]
+                print(name)
+                print("###################\n")
+
+                state_dict_raw = torch.load(name, map_location=device)
+                vessel_model.load_state_dict(state_dict_raw["net"])
+                sto_clean_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+                sto_clean_df_FT = pd.DataFrame.from_dict(sto_clean_df_FT)
+
+                if all_clean_models_FT is None:
+                    all_clean_models_FT  = sto_clean_df_FT
+                else:
+                    all_clean_models_FT  = pd.concat((all_clean_models_FT  , sto_clean_df_FT), ignore_index=True)
+                # Deterministic  Dense Weights
+
+                # Deterministic OS Weights
+
+                # Deterministic FT Weights
 
 
 
 
-        clean_variance, noisy_variance = calculate_single_value_from_variance_df(
-            noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=deter_original_dense_df,
-            noisy_variance=all_noisy_models, clean_variance=deter_original_pruned_df)
-        pop = []
-        pruned_performance = []
-        stochastic_dense_performances = []
-        stochastic_deltas = []
-        # accelerator = accelerate.Accelerator(mixed_precision="fp16")
-        # evaluation_set, net = accelerator.prepare(evaluation_set, net)
 
-        # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-        # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
-        # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
-        # del original_performance
-        # del original_performance
 
-        names, weights = zip(*get_layer_dict(net))
-        number_of_layers = len(names)
 
-        var_sto_list = []
-        var_det_list = []
-        for sigma in sigma_list:
-            sigma_per_layer = dict(zip(names, [sigma] * number_of_layers))
-            pruned_original = copy.deepcopy(net)
 
-            cfg.sigma = sigma
-            deter_original_dense_df, deter_original_pruned_df, all_noisy_models, all_noisy_models_dense = measuring_feature_sample_variance(
-                cfg, eval_set=eval_set, name=cfg.name)
-            clean_variance, noisy_variance = calculate_single_value_from_variance_df(
-                noisy_variance_dense=all_noisy_models_dense
-                , clean_variance_dense=deter_original_dense_df,
-                noisy_variance=all_noisy_models,
-                clean_variance=deter_original_pruned_df)
-            # mean_sto1 = np.mean(pruned_performance)
-            var_sto_list.append(noisy_variance)
-            var_det_list.append(clean_variance)
 
-        torch.cuda.empty_cache()
-
+        clean_variance_FT, noisy_variance_FT = calculate_single_value_from_variance_df(
+            noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=all_noisy_models_FT,
+            noisy_variance=all_clean_models_dense, clean_variance=all_clean_models_FT)
+        clean_variance_OS, noisy_variance_OS = calculate_single_value_from_variance_df(
+            noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=all_noisy_models_FT,
+            noisy_variance=all_clean_models_dense, clean_variance=all_clean_models_FT)
+#        TODO: create a propre DF to safe this thing
         df = pd.DataFrame(
             {"Sigma": sigma_list, "Feature variance det": var_det_list, "Feature Variance sto": var_sto_list})
+
 
 
 if __name__ == '__main__':

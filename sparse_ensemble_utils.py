@@ -1002,7 +1002,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
             weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
 
         weights_path = Path(weights_file_path)
-        weights_path.mkdir(parents=True)
+        weights_path.mkdir(parents=True,exist_ok=True)
         measure_and_record_gradient_flow(pruned_model, dataLoader, testLoader, cfg, file_path, total_sparse_FLOPS, -1,
                                          mask_dict=mask_dict, use_wandb=use_wandb)
         state_dict = pruned_model.state_dict()
