@@ -6500,6 +6500,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             reinit=True,
         )
     pruned_model = get_model(cfg)
+    dense_model = get_model(cfg)
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
     else:
@@ -6571,9 +6572,10 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
-        state_dict = best_dense_model.state_dict()
+        state_dict = dense_model.state_dict()
         temp_name = weights_path / "dense.pth"
         torch.save(state_dict,temp_name)
+
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
                                        fine_tune_exclude_layers=cfg.fine_tune_exclude_layers,
