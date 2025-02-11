@@ -6564,7 +6564,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
     file_path = None
     weights_path = ""
-    gradient_flow_file_prefix=filepath_GF_measure
+    gradient_flow_file_prefix = filepath_GF_measure
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
@@ -6574,7 +6574,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         weights_path.mkdir(parents=True)
         state_dict = dense_model.state_dict()
         temp_name = weights_path / "dense.pth"
-        torch.save(state_dict,temp_name)
+        torch.save(state_dict, temp_name)
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -7537,7 +7537,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
     file_path = None
     weights_path = ""
-    gradient_flow_file_prefix=filepath_GF_measure
+    gradient_flow_file_prefix = filepath_GF_measure
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
@@ -7547,7 +7547,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         weights_path.mkdir(parents=True)
         state_dict = best_dense_model.state_dict()
         temp_name = weights_path / "dense.pth"
-        torch.save(state_dict,temp_name)
+        torch.save(state_dict, temp_name)
     initial_performance = test(best_model, use_cuda=use_cuda, testloader=valloader, verbose=1)
 
     end = time.time()
@@ -10567,7 +10567,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
     combine_stochastic_LAMP_DF: pd.DataFrame = None
 
     ########################### Global Determinisitc ########################################
-    for index, individual in enumerate(glob.glob(stochastic_lamp_root+ "*/", recursive=True)):
+    for index, individual in enumerate(glob.glob(stochastic_lamp_root + "*/", recursive=True)):
         individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
         len_df = individual_df.shape[0]
         if len_df < min_epochs:
@@ -10586,7 +10586,8 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
     print(stochastic_lamp_root)
     combine_stochastic_LAMP_DF.to_csv(
         f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",
-        header=True, index=False) ########################### Lamp Deterministic  ########################################
+        header=True,
+        index=False)  ########################### Lamp Deterministic  ########################################
     ########################## First Global stochatic #######################################
     for index, individual in enumerate(glob.glob(stochastic_global_root + "*/", recursive=True)):
         individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
@@ -14019,189 +14020,183 @@ def plot_all_pr_sigma_search_MOO_for_cfg(cfg, arg, models, datasets, sampler="ns
     plt.close()
 
 
-
-
 def feature_variance_fine_tuned(cfg, models_list, datasets_list, sigmas_list, pr_list, weights_path,
-                                    eval_set="val"):
-        use_cuda = torch.cuda.is_available()
-        # net = get_model(cfg)
-        # names, weights = zip(*get_layer_dict(dense_net))
-        # number_of_layers = len(names)
-        # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
-        # cfg.solution = solution2
-        # net2 = get_model(cfg)
-        # cfg.solution = solution3
-        # net3 = get_model(cfg)
+                                eval_set="val"):
+    use_cuda = torch.cuda.is_available()
+    # net = get_model(cfg)
+    # names, weights = zip(*get_layer_dict(dense_net))
+    # number_of_layers = len(names)
+    # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+    # cfg.solution = solution2
+    # net2 = get_model(cfg)
+    # cfg.solution = solution3
+    # net3 = get_model(cfg)
 
+    # print("Glob text:{}".format(
+        # "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+    individual_list = []
+    type_list = []
+    sto_fine_tuned_variance_list = []
+    sto_one_shot_variance_list = []
+    det_fine_tuned_variance_list = []
+    det_one_shot_variance_list = []
+
+    for i in range(len(models_list)):
+        model = models_list[i]
+        dataset = datasets_list[i]
+        pr = pr_list[i]
+        sigma = sigmas_list[i]
+
+        cfg.architecture = model
+        cfg.dataset = dataset
+
+        vessel_model = get_model(cfg)
         evaluation_set = select_eval_set(cfg, eval_set)
-        print("Glob text:{}".format(
-            "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
-        print(things)
-        individual_list = []
-        type_list = []
-        sto_fine_tuned_variance_list = []
-        sto_one_shot_variance_list = []
-        det_fine_tuned_variance_list = []
-        det_one_shot_variance_list = []
 
-        for i in range(len(models_list)):
-            model = models_list[i]
-            dataset = datasets_list[i]
-            pr = pr_list[i]
-            sigma = sigmas_list[i]
+        path_for_sto = weights_path + f"/{dataset}/stochastic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
+        path_for_deter = weights_path + f"/{dataset}/deterministic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
+        path_dense_sto = list(glob.glob(f'{path_for_sto}/**/dense.pth', recursive=True))
+        path_fine_tuned_sto = list(glob.glob(f'{path_for_sto}/**/*99.pth', recursive=True))
+        path_one_shot_sto = list(glob.glob(f'{path_for_sto}/**/*OS.pth', recursive=True))
 
-            cfg.architecture=model
-            cfg.dataset = dataset
+        path_dense_det = list(glob.glob(f'{path_for_deter}/**/dense.pth', recursive=True))
+        path_fine_tuned_det = list(glob.glob(f'{path_for_deter}/**/*99.pth', recursive=True))
+        path_one_shot_det = list(glob.glob(f'{path_for_deter}/**/*OS.pth', recursive=True))
+        # First, all stochastic fine_tuned models
+        all_noisy_models_dense = None
+        all_noisy_models_OS = None
+        all_noisy_models_FT = None
+        # determinsitic models
+        all_clean_models_dense = None
+        all_clean_models_OS = None
+        all_clean_models_FT = None
+        # get_noisy_sample_sigma_per_layer()
+        # N = cfg.population
 
-            vessel_model = get_model(cfg)
+        #  STO first
 
+        for i, name in enumerate(path_dense_sto):
+            # noisy_dense_model = get_noisy_sample_sigma_per_layer(dense_net, cfg, sigma_per_layer=sigma_per_layer)
 
-            path_for_sto = weights_path + f"/{dataset}/stochastic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
-            path_for_deter = weights_path + f"/{dataset}/deterministic_GLOBAL_FT_FV/{model}/alternative/sigma{sigma}/pr{pr}/"
-            path_dense_sto = list(glob.glob(f'{path_for_sto}/**/dense.pth', recursive=True))
-            path_fine_tuned_sto = list(glob.glob(f'{path_for_sto}/**/*99.pth', recursive=True))
-            path_one_shot_sto = list(glob.glob(f'{path_for_sto}/**/*OS.pth', recursive=True))
+            # dense_accuracy_list.append(state_dict_raw["acc"])
 
-            path_dense_det = list(glob.glob(f'{path_for_deter}/**/dense.pth', recursive=True))
-            path_fine_tuned_det = list(glob.glob(f'{path_for_deter}/**/*99.pth', recursive=True))
-            path_one_shot_det = list(glob.glob(f'{path_for_deter}/**/*OS.pth', recursive=True))
-            # First, all stochastic fine_tuned models
-            all_noisy_models_dense = None
-            all_noisy_models_OS = None
-            all_noisy_models_FT = None
-            # determinsitic models
-            all_clean_models_dense = None
-            all_clean_models_OS = None
-            all_clean_models_FT = None
-            # get_noisy_sample_sigma_per_layer()
-            N = cfg.population
+            # print("Dense accuracy:{}".format(state_dict_raw["acc"]))
 
-            #  STO first
+            # Dense stochastic Weights
+            print("\n\tDense Stochastic\n")
+            print(name)
+            print("###################\n")
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_noisy_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_df_dense)
 
-            for i, name in enumerate(path_dense_sto):
-                # noisy_dense_model = get_noisy_sample_sigma_per_layer(dense_net, cfg, sigma_per_layer=sigma_per_layer)
+            if all_noisy_models_dense is None:
+                all_noisy_models_dense = sto_noisy_df_dense
+            else:
+                all_noisy_models_dense = pd.concat((all_noisy_models_dense, sto_noisy_df_dense), ignore_index=True)
 
-                # dense_accuracy_list.append(state_dict_raw["acc"])
+            # Stochastic OS Weights
+            print("\n\OS Stochastic\n")
+            name = path_one_shot_sto[i]
+            print(name)
+            print("###################\n")
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_noisy_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_noisy_df_OS = pd.DataFrame.from_dict(sto_noisy_df_OS)
 
-                # print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+            if all_noisy_models_OS is None:
+                all_noisy_models_OS = sto_noisy_df_OS
+            else:
+                all_noisy_models_OS = pd.concat((all_noisy_models_OS, sto_noisy_df_OS), ignore_index=True)
 
+            # Stochastic FT Weights
 
-                # Dense stochastic Weights
-                print("\n\tDense Stochastic\n")
-                print(name)
-                print("###################\n")
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_noisy_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_noisy_df_dense = pd.DataFrame.from_dict(sto_noisy_df_dense)
+            print("\n\FT Stochastic\n")
+            name = path_fine_tuned_sto[i]
+            print(name)
+            print("###################\n")
 
-                if all_noisy_models_dense is None:
-                   all_noisy_models_dense  = sto_noisy_df_dense
-                else:
-                    all_noisy_models_dense  = pd.concat((all_noisy_models_dense  , sto_noisy_df_dense), ignore_index=True)
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_noisy_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_noisy_df_FT = pd.DataFrame.from_dict(sto_noisy_df_FT)
 
-                # Stochastic OS Weights
-                print("\n\OS Stochastic\n")
-                name =path_one_shot_sto[i]
-                print(name)
-                print("###################\n")
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_noisy_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_noisy_df_OS = pd.DataFrame.from_dict(sto_noisy_df_OS)
+            if all_noisy_models_FT is None:
+                all_noisy_models_FT = sto_noisy_df_FT
+            else:
+                all_noisy_models_FT = pd.concat((all_noisy_models_FT, sto_noisy_df_FT), ignore_index=True)
 
-                if all_noisy_models_OS is None:
-                    all_noisy_models_OS  = sto_noisy_df_OS
-                else:
-                    all_noisy_models_OS  = pd.concat((all_noisy_models_OS  , sto_noisy_df_OS), ignore_index=True)
+        for i, name in enumerate(path_dense_det):
+            # Dense deterministic Weights
+            print("\n\tDense Stochastic\n")
+            print(name)
+            print("###################\n")
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_clean_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_clean_df_dense = pd.DataFrame.from_dict(sto_clean_df_dense)
 
-                # Stochastic FT Weights
+            if all_clean_models_dense is None:
+                all_clean_models_dense = sto_clean_df_dense
+            else:
+                all_clean_models_dense = pd.concat((all_clean_models_dense, sto_clean_df_dense), ignore_index=True)
 
-                print("\n\FT Stochastic\n")
-                name = path_fine_tuned_sto[i]
-                print(name)
-                print("###################\n")
+            # Deterministic OS Weights
+            print("\n\OS Stochastic\n")
+            name = path_one_shot_sto[i]
+            print(name)
+            print("###################\n")
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_clean_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_clean_df_OS = pd.DataFrame.from_dict(sto_clean_df_OS)
 
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_noisy_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_noisy_df_FT = pd.DataFrame.from_dict(sto_noisy_df_FT)
+            if all_clean_models_OS is None:
+                all_clean_models_OS = sto_noisy_df_OS
+            else:
+                all_clean_models_OS = pd.concat((all_clean_models_OS, sto_clean_df_OS), ignore_index=True)
 
-                if all_noisy_models_FT is None:
-                    all_noisy_models_FT  = sto_noisy_df_FT
-                else:
-                    all_noisy_models_FT  = pd.concat((all_noisy_models_FT  , sto_noisy_df_FT), ignore_index=True)
+            # Deterministic FT Weights
 
-            for i, name in enumerate(path_dense_det):
-                # Dense deterministic Weights
-                print("\n\tDense Stochastic\n")
-                print(name)
-                print("###################\n")
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_clean_df_dense = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_clean_df_dense = pd.DataFrame.from_dict(sto_clean_df_dense)
+            print("\n\FT Stochastic\n")
+            name = path_fine_tuned_sto[i]
+            print(name)
+            print("###################\n")
 
-                if all_clean_models_dense is None:
-                    all_clean_models_dense  = sto_clean_df_dense
-                else:
-                    all_clean_models_dense  = pd.concat((all_clean_models_dense  , sto_clean_df_dense), ignore_index=True)
+            state_dict_raw = torch.load(name, map_location=device)
+            vessel_model.load_state_dict(state_dict_raw)
+            sto_clean_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
+            sto_clean_df_FT = pd.DataFrame.from_dict(sto_clean_df_FT)
 
-                # Deterministic OS Weights
-                print("\n\OS Stochastic\n")
-                name =path_one_shot_sto[i]
-                print(name)
-                print("###################\n")
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_clean_df_OS = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_clean_df_OS = pd.DataFrame.from_dict(sto_clean_df_OS)
+            if all_clean_models_FT is None:
+                all_clean_models_FT = sto_clean_df_FT
+            else:
+                all_clean_models_FT = pd.concat((all_clean_models_FT, sto_clean_df_FT), ignore_index=True)
+            # Deterministic  Dense Weights
 
-                if all_clean_models_OS is None:
-                    all_clean_models_OS  = sto_noisy_df_OS
-                else:
-                    all_clean_models_OS  = pd.concat((all_clean_models_OS  , sto_clean_df_OS), ignore_index=True)
+            # Deterministic OS Weights
 
-                # Deterministic FT Weights
-
-                print("\n\FT Stochastic\n")
-                name = path_fine_tuned_sto[i]
-                print(name)
-                print("###################\n")
-
-                state_dict_raw = torch.load(name, map_location=device)
-                vessel_model.load_state_dict(state_dict_raw["net"])
-                sto_clean_df_FT = calculate_variance_models_dataloader(vessel_model, evaluation_set, "cuda")
-                sto_clean_df_FT = pd.DataFrame.from_dict(sto_clean_df_FT)
-
-                if all_clean_models_FT is None:
-                    all_clean_models_FT  = sto_clean_df_FT
-                else:
-                    all_clean_models_FT  = pd.concat((all_clean_models_FT  , sto_clean_df_FT), ignore_index=True)
-                # Deterministic  Dense Weights
-
-                # Deterministic OS Weights
-
-                # Deterministic FT Weights
-
-
-
-
-
-
-
-
-
+            # Deterministic FT Weights
         clean_variance_FT, noisy_variance_FT = calculate_single_value_from_variance_df(
             noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=all_noisy_models_FT,
             noisy_variance=all_clean_models_dense, clean_variance=all_clean_models_FT)
         clean_variance_OS, noisy_variance_OS = calculate_single_value_from_variance_df(
-            noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=all_noisy_models_FT,
-            noisy_variance=all_clean_models_dense, clean_variance=all_clean_models_FT)
-#        TODO: create a propre DF to safe this thing
-        df = pd.DataFrame(
-            {"Sigma": sigma_list, "Feature variance det": var_det_list, "Feature Variance sto": var_sto_list})
+            noisy_variance_dense=all_noisy_models_dense, clean_variance_dense=all_noisy_models_OS,
+            noisy_variance=all_clean_models_dense, clean_variance=all_clean_models_OS)
+        df = pd.DataFrame({
+            "Clean Variance OS": [clean_variance_OS],
+            "Noisy Variance OS": [noisy_variance_OS],
+            "Clean Variance FT": [clean_variance_FT],
+            "Noisy Variance FT": [noisy_variance_FT]
+        })
+        df.to_csv(f"feature_variance_{cfg.architecture}_{cfg.dataset}_FT_OS.csv",index=False)
 
+
+#        TODO: create a proper DF to safe this thing
+#         df = pd.DataFrame(
+#             {"Sigma": sigma_list, "Feature variance det": var_det_list, "Feature Variance sto": var_sto_list})
 
 
 if __name__ == '__main__':
@@ -14360,35 +14355,36 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # [0.72, 0.88, 0.94]
     #
-    # cfg = omegaconf.DictConfig({
-    #     "architecture": "vgg19",
-    #     # "architecture": "resnet18",
-    #     # "dataset": "mnist",
-    #     "dataset": "cifar10",
-    #     # "dataset": "cifar100",
-    #     "exclude_layers": ["conv1", "linear", "fc", "classifier"],
-    #     "model_type": "alternative",
-    #     "pruner": "global",
-    #     "amount": 0.9,
-    #     "batch_size": 512,
-    #     "lr": 0.001,
-    #     "momentum": 0.9,
-    #     "weight_decay": 1e-4, \
-    #     "cyclic_lr": True,
-    #     "lr_peak_epoch": 5,
-    #     "optim": "adam",
-    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-    #     "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-    #     # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-    #     # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-    #     "num_workers": 1,
-    #     "cosine_schedule": False,
-    #     "pad": False,
-    #     "resize": False,
-    #     "input_resolution": 32,
-    #     "epochs": 24
-    # })
+    cfg = omegaconf.DictConfig({
+        "architecture": "vgg19",
+        # "architecture": "resnet18",
+        # "dataset": "mnist",
+        "dataset": "cifar10",
+        # "dataset": "cifar100",
+        "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+        "model_type": "alternative",
+        "pruner": "global",
+        "amount": 0.9,
+        "batch_size": 512,
+        "lr": 0.001,
+        "momentum": 0.9,
+        "weight_decay": 1e-4, \
+        "cyclic_lr": True,
+        "lr_peak_epoch": 5,
+        "optim": "adam",
+        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+        # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+        # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+        "solution":"",
+        "num_workers": 1,
+        "cosine_schedule": False,
+        "pad": False,
+        "resize": False,
+        "input_resolution": 32,
+        "epochs": 24
+    })
 
     # print(cfg)
     # models = ["resnet18", "vgg19"]
@@ -14466,35 +14462,34 @@ if __name__ == '__main__':
     # ####################################
     ######  Para fine-tuning the modelos en general
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    parser.add_argument('--name', type=str, default="",
-                        help='Name for the file', required=False)
-    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
-
-    #   ############ additional parameters #################################
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-
-    args = vars(parser.parse_args())
-    LeMain(args)
-
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    #
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # parser.add_argument('--name', type=str, default="",
+    #                     help='Name for the file', required=False)
+    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # #   ############ additional parameters #################################
+    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    #
+    # args = vars(parser.parse_args())
+    # LeMain(args)
 
     ############# MOO this is for pr and sigma optim ###############################
 
@@ -14539,7 +14534,6 @@ if __name__ == '__main__':
     # #     args["sampler"] = combination[2]
     # LeMain(args)
 
-
     #######################################################################################
 
     #
@@ -14555,17 +14549,20 @@ if __name__ == '__main__':
     #
 
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    # architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
+    architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
     # architecture_values.reverse()
-    # dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
+    dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
     # dataset_values.reverse()
     # # pruning_rate_values = [0.9, 0.83, 0.948, 0.76, 0.8742, 0.92]
-    # pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
+    pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
     # pruning_rate_values.reverse()
     # # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
-    # sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
+    sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
     # sigma_values.reverse()
     #
+
+    feature_variance_fine_tuned(cfg, models_list=architecture_values, datasets_list=dataset_values,
+                                sigmas_list=sigma_values, pr_list=pruning_rate_values, weights_path="/home/luisaam/Documents/PhD/data/gradient_flow_data")
     # # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
     # # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
     # # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]
@@ -14596,41 +14593,41 @@ if __name__ == '__main__':
     #         # for s in sigma_values:
     #         #     cfg.sigma = s
     #
-        # for dataset in dataset_values:
-        #     cfg.dataset = dataset
-        #     for pruning_rate in pruning_rate_values:
-        #         cfg.amount = pruning_rate
-        #         for arch in architecture_values:
-        #             cfg.architecture = arch
-        #             for sig in sigma_values:
-        #                 cfg.sigma=sig
-        #     cfg.sigma=sigma_values[i]
-        #     gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname=f"{cfg.type}_")
-        # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_STO_FT_")
-        # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_DET_FT_")
+    # for dataset in dataset_values:
+    #     cfg.dataset = dataset
+    #     for pruning_rate in pruning_rate_values:
+    #         cfg.amount = pruning_rate
+    #         for arch in architecture_values:
+    #             cfg.architecture = arch
+    #             for sig in sigma_values:
+    #                 cfg.sigma=sig
+    #     cfg.sigma=sigma_values[i]
+    #     gradient_flow_especific_combination_dataframe_generation_stochastic_only(f"gradient_flow_data/{cfg.dataset}/",cfg,2,surname=f"{cfg.type}_")
+    # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_STO_FT_")
+    # unify_sigma_datasets(sigmas=[sigma_values[i]],cfg=cfg,surname="OPTIM_PARAM_DET_FT_")
 
-        # type_string=""
-        # if cfg.type == "det":
-        #     type_string=""
-        # else:
-        #     type_string="MOO_F1"
-        # # for tipo in tipos:
-        # #     df = pd.read_csv(
-        # #             f"gradientflow_stochastic_global_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
-        # #             sep=",", index_col=False)
-        # #     type_variable = "DET" if "DET" in tipo else "STO"
-        # #     print("\n####################################")
-        # #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
-        # #     print("####################################\n")
-        # for tipo in tipos:
-        #     df = pd.read_csv(
-        #             f"gradientflow_stochastic_lamp_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
-        #             sep=",", index_col=False)
-        #     type_variable = "DET" if "DET" in tipo else "STO"
-        #     print("\n####################################")
-        #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
-        #     print("####################################\n")
-        #     calculate_stats(df)
+    # type_string=""
+    # if cfg.type == "det":
+    #     type_string=""
+    # else:
+    #     type_string="MOO_F1"
+    # # for tipo in tipos:
+    # #     df = pd.read_csv(
+    # #             f"gradientflow_stochastic_global_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
+    # #             sep=",", index_col=False)
+    # #     type_variable = "DET" if "DET" in tipo else "STO"
+    # #     print("\n####################################")
+    # #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
+    # #     print("####################################\n")
+    # for tipo in tipos:
+    #     df = pd.read_csv(
+    #             f"gradientflow_stochastic_lamp_all_sigmas_{tipo}_{architecture_values[i]}_{dataset_values[i]}_pr{pruning_rate_values[i]}.csv",
+    #             sep=",", index_col=False)
+    #     type_variable = "DET" if "DET" in tipo else "STO"
+    #     print("\n####################################")
+    #     print(f"{architecture_values[i]} {dataset_values[i]} {pruning_rate_values[i]} {type_variable} sigma {sigma_values[i]}")
+    #     print("####################################\n")
+    #     calculate_stats(df)
 
     ################################################# Ensemble predictions ############################################
     # sigma_values = [0.001,0.003,0.005]
@@ -14811,4 +14808,3 @@ if __name__ == '__main__':
     # #     print("Now global deterministic")
     # # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
     #
-
