@@ -1,5 +1,5 @@
 import argparse
-# from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
+from easy_receptive_fields_pytorch.receptivefield import receptivefield, give_effective_receptive_field
 import copy
 import math
 import torch
@@ -9,7 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 import numpy as np
 # import clip
-# import wandb
+import wandb
 import typing
 import os
 import torch.nn.functional as F
@@ -814,7 +814,7 @@ def run_big_mem_RF_calculation(args):
     print("##############################")
 
     # f_model = resnet34(weights="IMAGENET1K_V1")
-    f_model = resnet34(weights=ResNet)
+    f_model = resnet34(weights=ResNet34_Weights.IMAGENET1K_V1)
 
     # f_model = resnet34()
     # f_model.cuda()
@@ -1144,7 +1144,7 @@ def run_pruning_results(args):
             normalize,
         ])
         weigths_preprocess = ResNet34_Weights.DEFAULT.trans
-        val_dataloader = get_arc3_dataset(args, transforms={"train":train_transform,"val":ResNet34_Weights.})
+        val_dataloader = get_arc3_dataset(args, transforms={"train":train_transform,"val":ResNet34_Weights.IMAGENET1K_V1})
 
         # f_model = resnet34()
 
