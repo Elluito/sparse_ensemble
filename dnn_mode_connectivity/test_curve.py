@@ -48,6 +48,7 @@ if args.dataset is not None:
     loaders, num_classes = data.loaders(
         args.dataset,
         args.data_path,
+
         args.batch_size,
         args.num_workers,
         args.transform,
@@ -96,7 +97,7 @@ for base_model, t_value in zip(base, [0.0, 1.0]):
 
     max_error = 0.0
     for i, (input, _) in enumerate(loader):
-        input = input.cuda(async=True)
+        input = input.cuda()
 
         base_ouput = base_model(input)
         curve_output = curve_model(input, t)
@@ -106,3 +107,4 @@ for base_model, t_value in zip(base, [0.0, 1.0]):
         max_error = max(max_error, error)
     print('Max error: %g' % max_error)
     assert max_error < 1e-4, 'Error is too big (%g)' % max_error
+
