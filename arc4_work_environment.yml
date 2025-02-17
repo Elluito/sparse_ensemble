@@ -165,7 +165,6 @@ dependencies:
       - tifffile==2024.8.30
       - timm==1.0.3
       - torch==2.3.0
-      - torch-receptive-field==0.1.0
       - torch-summary==1.4.5
       - torchconvquality==0.3.0
       - torchmetrics==1.6.1

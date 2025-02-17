@@ -13616,7 +13616,7 @@ def explore_models_shapes():
     wp2.to_csv("weight_shapes_{}_{}_pytorch.csv".format(cfg.architecture, cfg.dataset), sep=";", index=False)
 
     #########################################
-    from torch_receptive_field import receptive_field, receptive_field_for_unit
+    # from torch_receptive_field import receptive_field, receptive_field_for_unit
     from easy_receptive_fields_pytorch.receptivefield import receptivefield
     import pdb
 
