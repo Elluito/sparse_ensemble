@@ -106,13 +106,13 @@ resize=1
 resolution=224
 save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 #save_folder="${HOME}/sparse_ensemble/large_input_pruning_results"
-checkpoints_folder="/nobackup/sclaam/deep_small_models_resized"
+checkpoints_folder="/nobackup/sclaam/deep_small_modelsresized"
 for model in "resnet25_small"; do
 #for dataset in "cifar10"; do
 for dataset in "small_imagenet"; do
 for pruning_rate in "0.8" "0.9" "0.95"; do
 #for rf_level in "5" "6" "7" "8" "10"; do
-for rf_level in "11" "12" "13"; do
+for rf_level in "5" "6" "7" "8" "10" "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
 
 
