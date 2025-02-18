@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_small_imagenet_1731298431.6554563_rf_level_12_sgd_100_res_224_no_ffcv_test_acc_23.8.pth,23.8,23.59
+resnet25_small_normal_small_imagenet_1731298431.6554396_rf_level_12_sgd_100_res_224_no_ffcv_test_acc_23.99.pth,23.99,23.66
+resnet25_small_normal_small_imagenet_1731298431.655472_rf_level_12_sgd_100_res_224_no_ffcv_test_acc_23.7.pth,23.7,23.7
