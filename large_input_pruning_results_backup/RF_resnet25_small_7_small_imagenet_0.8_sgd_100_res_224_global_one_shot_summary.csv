@@ -1,0 +1,2 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_small_imagenet_1729536853.3216171_rf_level_7_sgd_100_res_224_test_acc_67.38.pth,67.38,38.76

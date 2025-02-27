@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_86.76.pth,86.76,10.0
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_87.0.pth,87.0,10.0
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_86.54.pth,86.54,10.03
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_86.08.pth,86.08,10.0
+resnet25_small_normal_cifar10_rf_level_7_ekfac_cifar10_100_res_224_gc_0_test_acc_86.66.pth,86.66,10.06
