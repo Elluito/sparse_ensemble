@@ -3395,7 +3395,7 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=valloader, testLoader=testloader, epochs=args.epochs,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
-                                                      name=seed_from_file,record=args.record)
+                                                      name=os.basename(base_name),record=args.record)
     print("Final Fine-tuned accuracy: {}".format(final_accuracy))
 if __name__ == '__main__':
 
@@ -3423,7 +3423,7 @@ if __name__ == '__main__':
                         help='Location to save the models', required=True)
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
-    parser.add_argument('--record', default=0, type=int,
+    parser.add_argument('--record', default=1, type=int,
                         help='Record accuracy')
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
