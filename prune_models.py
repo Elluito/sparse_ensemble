@@ -3399,6 +3399,8 @@ if __name__ == '__main__':
                         help='Location to save the models', required=True)
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
+    parser.add_argument('--record', default=0, type=int,
+                        help='Record accuracy')
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
