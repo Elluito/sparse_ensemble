@@ -3395,7 +3395,7 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=valloader, testLoader=testloader, epochs=args.epochs,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
-                                                      name=os.ptah.basename(base_name),record=args.record)
+                                                      name=os.path.basename(base_name),record=args.record)
     print("Final Fine-tuned accuracy: {}".format(final_accuracy))
 if __name__ == '__main__':
 
