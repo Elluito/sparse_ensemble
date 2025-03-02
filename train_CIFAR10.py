@@ -1432,7 +1432,7 @@ if __name__ == '__main__':
                         help='Save best model from training')
     parser.add_argument('--pad', default=0, type=int,
                         help='Pad the image to the input size ')
-    parser.add_argument('--input_resolution', default=224, type=int,
+    parser.add_argument('--input_resolution', default=32, type=int,
                         help='Input Resolution for the dataset')
     parser.add_argument('--resize', default=0, type=int, help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
