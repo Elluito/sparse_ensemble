@@ -2,6 +2,8 @@ import copy
 import os
 import pickle
 import time
+from typing import Optional
+
 import torch
 import re
 import argparse
@@ -846,7 +848,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                                      epochs=1,
                                      initial_flops=0, exclude_layers=[],
                                      fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
-                                     cfg=None, save_folder="", name=""):
+                                     cfg=None, save_folder="", name="",record=False):
     from main import get_mask
     from train_CIFAR10 import progress_bar
 
@@ -921,6 +923,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
             progress_bar(batch_idx, len(dataLoader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
+        train_acc =(100.0*correct)/total
         #################################
         #    TEST
         #################################
@@ -946,8 +949,8 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
         # Save checkpoint.
         acc: float = 100. * correct / total
         print("Total test accuracy: {}".format(acc))
-        pruned_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
-        print("Pruned accuracy with \"test\" function :{}".format(pruned_accuracy))
+        pruned_test_accuracy = test(pruned_model, use_cuda=True, testloader=testLoader, verbose=0)
+        print("Pruned accuracy with \"test\" function :{}".format(pruned_test_accuracy))
         if acc > best_acc:
             # print('Saving..')
             state = {
@@ -961,6 +964,17 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                 os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
             torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
             best_acc = acc
+            if record:
+                filepath = "{}/{}_fined_tuned_acc.csv".format(save_folder,name)
+                if Path(filepath).is_file():
+                    log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
+                    df = pd.DataFrame(log_dict)
+                    df.to_csv(filepath, mode="a", header=False, index=False)
+                else:
+                    # Try to read the file to see if it is
+                    log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
+                    df = pd.DataFrame(log_dict)
+                    df.to_csv(filepath, sep=",", index=False)
         scheduler.step()
 
     return best_acc
@@ -3184,7 +3198,190 @@ def fine_tune_summary(args):
                                                                   args.pruning_rate),
         index=False)
 
+def transfer_fine_tuning(args):
+    if "vgg" in args.model:
+        exclude_layers = ["features.0", "classifier"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "densenet" in args.model:
+        exclude_layers = ["conv1", "fc"]
+    if "resnet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "mobilenet" in args.model:
+        exclude_layers = ["conv1", "linear"]
 
+    cfg = omegaconf.DictConfig(
+        {"architecture": args.model,
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         # "pruner": "lamp",
+         "exclude_layers": exclude_layers,
+         "data_path": args.data_folder,
+         "input_resolution": args.input_resolution
+         })
+
+
+    from torchvision.models import resnet18, resnet50
+    trainloader2,valloader2,testloader2 = local_get_datasets(args.args.dataset2)
+
+    net = get_model(args)
+    dense_accuracy_list = []
+    pruned_accuracy_list = []
+    files_names = []
+    search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                           args.RF_level, args.name)
+    things = list(glob.glob(search_string))
+
+    # if len(things) < 2:
+    #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
+    print("Glob text:{}".format(
+        "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                               args.name)))
+    print(things)
+
+    for i, name in enumerate(
+            glob.glob(search_string)):
+
+        print(name)
+
+        print("Device: {}".format(device))
+
+        state_dict_raw = torch.load(name, map_location=device)
+
+        net.load_state_dict(state_dict_raw["net"])
+
+        print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+        # CHange the classification head to the task
+        if "vgg" in args.model:
+            in_features= net.classifier.in_features
+            if args.dataset2=="tiny_imagenet":
+                net.classifier =nn.Linear(in_features,200)
+            if args.dataset2 =="cifar10":
+                net.classifier =nn.Linear(in_features,10)
+        if "resnet" in args.model:
+            in_features= net.linear.in_features
+            if args.dataset2=="tiny_imagenet":
+                net.linear = nn.Linear(in_features,200)
+            if args.dataset2 =="cifar10":
+                net.linear = nn.Linear(in_features,10)
+
+
+        # Run the pruning and_fine_tuning
+
+        local_prune_fine_tune_function(args,net,valloader2,testloader2,cfg,name)
+
+
+
+
+def local_get_datasets(pargs,dataset):
+    args=copy.deepcopy(pargs)
+    args.dataset=dataset
+    if args.ffcv:
+        from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+        train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                      128, args.num_workers)
+        return train, val,testloader
+    else:
+
+        cfg1 = omegaconf.DictConfig(
+            {"architecture": args.model,
+             "model_type": "alternative",
+             # "model_type": "hub",
+             "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+             # "solution": "trained_m
+             "dataset": args.dataset,
+             "batch_size": args.batch_size,
+             "num_workers": args.num_workers,
+             "noise": "gaussian",
+             "input_resolution": args.input_resolution,
+             "pad": args.pad,
+             })
+        if "cifar" in args.dataset:
+            trainloader, valloader, testloader = get_datasets(cfg1)
+        # print("Normal data loaders loaded!!!!")
+        # cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        # cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+        # stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+        # # Data
+        print('==> Preparing data..')
+        current_directory = Path().cwd()
+        data_path = "."
+        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            data_path = "/nobackup/sclaam/data"
+        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            data_path = "/home/luisaam/Documents/PhD/data/"
+        print(data_path)
+        batch_size = args.batch_size
+        if args.dataset == "tiny_imagenet":
+            from test_imagenet import load_tiny_imagenet
+            trainloader, valloader, testloader = load_tiny_imagenet(
+                {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+        if args.dataset == "small_imagenet":
+            if args.ffcv:
+                from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+                trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                          args.ffcv_val,
+                                                                                          batch_size, args.num_workers,
+                                                                                          resolution=args.input_resolution)
+            else:
+                from test_imagenet import load_small_imagenet
+                trainloader, valloader, testloader = load_small_imagenet(
+                    {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                     "resize": args.resize})
+    return trainloader,valloader,testloader
+def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
+    dense_accuracy_list = []
+    fine_tuned_accuracy = []
+
+    folder_name = "{}/pruned_transfer_to_{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
+    if not os.path.isdir(folder_name):
+        os.makedirs(folder_name)
+
+    # new_folder = "{}/pruned/{}".format(args.folder, args.pruning_rate)
+    #
+    # for i, name in enumerate(
+    #         glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+    #                                                                      f"{args.RF_level}{args.name}"))):
+    # state_dict_raw = torch.load("{}/{}".format(args.folder, solution))
+    # dense_accuracy_list.append(state_dict_raw["acc"])
+    # print(state_dict_raw["acc"])
+    # net.load_state_dict(state_dict_raw["net"])
+
+    prune_function(net, cfg)
+    remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+    pruned_accuracy: float = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    print("Pruned accuracy:{}".format(pruned_accuracy))
+    # file_name = args.solution
+    # print(file_name)
+    if "test_acc" in file_name:
+        index_until_test = file_name.index("test_acc")
+        base_name = file_name[:index_until_test]
+    else:
+        base_name = file_name
+
+    # Strings in between _
+
+    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=valloader, testLoader=testloader, epochs=args.epochs,
+                                                      exclude_layers=cfg.exclude_layers, cfg=cfg,
+                                                      save_folder=folder_name,
+                                                      name=base_name,record=args.record)
+    print("Final Fine-tuned accuracy: {}".format(final_accuracy))
 if __name__ == '__main__':
 
     from delve.writers import plot_stat_level_from_results
@@ -3198,15 +3395,20 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
     parser.add_argument('--adjust_bn', default=0, type=int, help='Use adjustment of BN parameters after pruning')
     parser.add_argument('--dataset', default="cifar10", type=str,
-                        help='Dataset to use [cifar10,tiny_imagenet616gg]')
+                        help='Dataset to use [cifar10,tiny_imagenet]')
+    parser.add_argument('--dataset2', default="cifar10", type=str,
+                        help='Second task to finetune if provided [cifar10,tiny_imagenet]')
     parser.add_argument('--model', default="resnet18", type=str,
                         help='Architecture of model [resnet18,resnet50]')
     parser.add_argument('--folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Location where saved models are')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
-                        help='Output folder of the pruning results')
+                        help='Output folder of the pruning results weights')
     parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
                         help='Location to save the models', required=True)
+    parser.add_argument('--resize', default=0, type=int,
+                        help='Either resize the image to 32x32 and then back to input resolution')
+
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
@@ -3263,6 +3465,9 @@ if __name__ == '__main__':
         model_statistics(args)
     if args.experiment == 8:
         measure_filter_quality(args)
+    if args.experiment == 9:
+        transfer_fine_tuning(args)
+
 
     # gradient_flow_calculation(args)
     # save_pruned_representations()
