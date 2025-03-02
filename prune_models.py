@@ -3366,12 +3366,36 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     else:
         base_name = file_name
 
+
+    seed_from_file1 = re.findall("_[0-9]_", base_ame)
+
+    print(seed_from_file1)
+
+    seed_from_file2 = re.findall("_[0-9]_[0-9]_", base_name)
+
+    print(seed_from_file2)
+
+    seed_from_file3 = re.findall("\.[0-9]_", base_name)
+
+    print(seed_from_file3)
+
+    if seed_from_file3:
+
+        seed_from_file = seed_from_file3[0].replace(".", "_")
+
+    elif seed_from_file2:
+
+        seed_from_file = seed_from_file2[0].split("_")[2]
+
+    else:
+        seed_from_file = seed_from_file1[0].replace("_", "")
+
     # Strings in between _
 
     final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=valloader, testLoader=testloader, epochs=args.epochs,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
-                                                      name=base_name,record=args.record)
+                                                      name=seed_from_file,record=args.record)
     print("Final Fine-tuned accuracy: {}".format(final_accuracy))
 if __name__ == '__main__':
 
