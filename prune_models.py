@@ -3321,7 +3321,7 @@ def local_get_datasets(pargs,dataset):
             from test_imagenet import load_tiny_imagenet
             trainloader, valloader, testloader = load_tiny_imagenet(
                 {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+                 "num_workers": args.num_workers, "batch_size": batch_size, "input_resolution": args.input_resolution})
         if args.dataset == "small_imagenet":
             if args.ffcv:
                 from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
@@ -3333,7 +3333,7 @@ def local_get_datasets(pargs,dataset):
                 from test_imagenet import load_small_imagenet
                 trainloader, valloader, testloader = load_small_imagenet(
                     {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                     "num_workers": args.num_workers, "batch_size": batch_size, "input_resolution": args.input_resolution,
                      "resize": args.resize})
     return trainloader,valloader,testloader
 def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):

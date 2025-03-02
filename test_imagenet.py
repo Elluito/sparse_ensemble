@@ -314,8 +314,8 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
     #                                  std=[0.229, 0.224, 0.225])
     if args["resize"]:
-        first_resize = (int(args["resolution"] * ratio), int(args["resolution"] * ratio))
-        target_resolution = (args["resolution"], args["resolution"])
+        first_resize = (int(args["input_resolution"] * ratio), int(args["input_resolution"] * ratio))
+        target_resolution = (args["input_resolution"], args["input_resolution"])
         transform_test = transforms.Compose([transforms.Resize((32, 32)),
                                              transforms.Resize(first_resize),
                                              transforms.CenterCrop(target_resolution),
@@ -333,13 +333,13 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
 
     else:
         transform_test = transforms.Compose([
-            transforms.Resize(int(args["resolution"] * ratio)),
-            transforms.CenterCrop(args["resolution"]),
+            transforms.Resize(int(args["input_resolution"] * ratio)),
+            transforms.CenterCrop(args["input_resolution"]),
             transforms.ToTensor(),
             transforms.Normalize([0.4824, 0.4495, 0.3981], [0.2301, 0.2264, 0.2261]),
         ])
         transform_train = transforms.Compose([
-            transforms.RandomResizedCrop(args["resolution"]),
+            transforms.RandomResizedCrop(args["input_resolution"]),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             normalize_train,
