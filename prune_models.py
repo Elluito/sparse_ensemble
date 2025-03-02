@@ -809,7 +809,7 @@ def logistic_probes_for_model(args):
     net.load_state_dict(state_dict_raw["net"])
 
 
-def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None):
+def test(net, testloader=None, verbose=0, name="ckpt", save_folder="./checkpoint", args=None,use_cuda=True):
     # global best_acc, testloader, device, criterion
     net.eval()
     net = net.to(device)
