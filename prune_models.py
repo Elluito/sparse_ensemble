@@ -3231,7 +3231,7 @@ def transfer_fine_tuning(args):
 
 
     from torchvision.models import resnet18, resnet50
-    trainloader2,valloader2,testloader2 = local_get_datasets(args.dataset2)
+    trainloader2,valloader2,testloader2 = local_get_datasets(args,args.dataset2)
 
     net = get_model(args)
     dense_accuracy_list = []
