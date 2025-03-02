@@ -24,8 +24,8 @@
 #SBATCH --mail-type=ALL
 
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem-per-cpu=2GB
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=4GB
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
