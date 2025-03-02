@@ -3367,7 +3367,7 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
         base_name = file_name
 
 
-    seed_from_file1 = re.findall("_[0-9]_", base_ame)
+    seed_from_file1 = re.findall("_[0-9]_", base_name)
 
     print(seed_from_file1)
 
