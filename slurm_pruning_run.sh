@@ -29,9 +29,10 @@
 #module load pytorch
 
 
-module load python/miniconda
-conda activate ffcv
-
+#module load python/miniconda
+#conda activate ffcv
+module load miniforge/
+conda activate work
 
 
 for ARGUMENT in "$@"
