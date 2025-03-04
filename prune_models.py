@@ -1008,16 +1008,16 @@ def pruning_fine_tuning_experiment(args):
     from torchvision.models import resnet18, resnet50
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=100, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=200, RF_level=args.RF_level)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -1028,12 +1028,12 @@ def pruning_fine_tuning_experiment(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
     dense_accuracy_list = []
     fine_tuned_accuracy = []
@@ -1106,16 +1106,16 @@ def batch_pruning_fine_tuning_experiment(args):
     from torchvision.models import resnet18, resnet50
     if args.model == "resnet18":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=100, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+            net = ResNet50_rf(num_classes=200, RF_level=args.RF_level)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
@@ -1126,12 +1126,12 @@ def batch_pruning_fine_tuning_experiment(args):
             net.fc = nn.Linear(in_features, 100)
     if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=100, RF_level=args.RF_level)
 
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+            net = VGG_RF("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
     dense_accuracy_list = []
     fine_tuned_accuracy = []
