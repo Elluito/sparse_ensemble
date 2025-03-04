@@ -1077,6 +1077,117 @@ def pruning_fine_tuning_experiment(args):
     #
     # strings_in_between = re.findall("(?<=\_)(.*?)(?=\_)", file_name)
 
+def batch_pruning_fine_tuning_experiment(args):
+
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
+    else:
+        exclude_layers = ["conv1", "linear"]
+
+    cfg = omegaconf.DictConfig(
+        {"architecture": "resnet50",
+         "model_type": "alternative",
+         # "model_type": "hub",
+         "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+         # "solution": "trained_m
+         "dataset": args.dataset,
+         "batch_size": 128,
+         "num_workers": args.num_workers,
+         "amount": args.pruning_rate,
+         "noise": "gaussian",
+         "sigma": 0.005,
+         "pruner": "global",
+         "exclude_layers": exclude_layers,
+         "pad":args.pad,
+         "input_resolution":args.input_resolution,
+         })
+    train, valloader, testloader = get_datasets(cfg)
+
+    from torchvision.models import resnet18, resnet50
+    if args.model == "resnet18":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet18_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet18_rf(num_classes=100, rf_level=args.RF_level)
+    if args.model == "resnet50":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
+        if args.type == "pytorch" and args.dataset == "cifar10":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 10)
+        if args.type == "pytorch" and args.dataset == "cifar100":
+            net = resnet50()
+            in_features = net.fc.in_features
+            net.fc = nn.Linear(in_features, 100)
+    if args.model == "vgg19":
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF("VGG19_rf", num_classes=10, rf_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF("VGG19_rf", num_classes=100, rf_level=args.RF_level)
+
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF("VGG19_rf", num_classes=200, rf_level=args.RF_level)
+
+    dense_accuracy_list = []
+    fine_tuned_accuracy = []
+    folder_name = "{}/pruned/{}".format(args.folder, args.pruning_rate)
+    if not os.path.isdir(folder_name):
+        os.makedirs(folder_name)
+    # new_folder = "{}/pruned/{}".format(args.folder, args.pruning_rate)
+
+    #
+    # for i, name in enumerate(
+    #         glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
+    #                                                                      f"{args.RF_level}{args.name}"))):
+    # state_dict_raw = torch.load("{}/{}".format(args.folder, args.solution))
+    # dense_accuracy_list.append(state_dict_raw["acc"])
+    # print(state_dict_raw["acc"])
+    # net.load_state_dict(state_dict_raw["net"])
+    # prune_function(net, cfg)
+    # remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+    # pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    # print("Pruned accuracy:{}".format(pruned_accuracy))
+    # file_name = args.solution
+    # print(file_name)
+
+    search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                           args.RF_level, args.name)
+
+
+    things = list(glob.glob(search_string))
+
+    # if len(things) < 2:
+    #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
+    print("Glob text:{}".format(
+        "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                               args.name)))
+    print(things)
+
+    for i, name in enumerate(
+            glob.glob(search_string)):
+
+        print(name)
+
+        print("Device: {}".format(device))
+        net = get_model(args)
+
+        state_dict_raw = torch.load(name, map_location=device)
+
+        net.load_state_dict(state_dict_raw["net"])
+
+
+        # Run the pruning and_fine_tuning
+
+        local_prune_fine_tune_function(args,net,valloader,testloader,cfg,name)
+
+
+
 
 def prune_selective_layers(args):
     if "vgg" in args.model:
