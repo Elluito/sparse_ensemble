@@ -3593,6 +3593,8 @@ if __name__ == '__main__':
         measure_filter_quality(args)
     if args.experiment == 9:
         transfer_fine_tuning(args)
+    if args.experiment == 10:
+        batch_pruning_fine_tuning_experiment(args)
 
 
     # gradient_flow_calculation(args)
