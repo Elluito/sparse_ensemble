@@ -3399,7 +3399,7 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     print("Final Fine-tuned accuracy: {}".format(final_accuracy))
 if __name__ == '__main__':
 
-    from delve.writers import plot_stat_level_from_results
+    # from delve.writers import plot_stat_level_from_results
 
     parser = argparse.ArgumentParser(description='One shot pruning statistics')
 
