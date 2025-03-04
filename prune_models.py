@@ -966,6 +966,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
             best_acc = acc
         if record:
             filepath = "{}/{}_fined_tuned_acc.csv".format(save_folder,name)
+            print("Recording to {}".format(filepath))
             if Path(filepath).is_file():
                 log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
                 df = pd.DataFrame(log_dict)
