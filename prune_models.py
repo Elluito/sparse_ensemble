@@ -848,7 +848,7 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                                      epochs=1,
                                      initial_flops=0, exclude_layers=[],
                                      fine_tune_exclude_layers=False, fine_tune_non_zero_weights=True,
-                                     cfg=None, save_folder="", name="",record=False):
+                                     cfg=None, save_folder="", name="",record=True):
     from main import get_mask
     from train_CIFAR10 import progress_bar
 
