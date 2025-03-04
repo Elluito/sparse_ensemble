@@ -1112,11 +1112,11 @@ def batch_pruning_fine_tuning_experiment(args):
             net = ResNet18_rf(num_classes=100, RF_level=args.RF_level)
     if args.model == "resnet50":
         if args.type == "normal" and args.dataset == "cifar10":
-            net = ResNet50_rf(num_classes=10, RF_level=args.RF_level)
+            net = ResNet50_rf(num_classes=10, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "cifar100":
-            net = ResNet50_rf(num_classes=100, RF_level=args.RF_level)
+            net = ResNet50_rf(num_classes=100, rf_level=args.RF_level)
         if args.type == "normal" and args.dataset == "tiny_imagenet":
-            net = ResNet50_rf(num_classes=200, RF_level=args.RF_level)
+            net = ResNet50_rf(num_classes=200, rf_level=args.RF_level)
         if args.type == "pytorch" and args.dataset == "cifar10":
             net = resnet50()
             in_features = net.fc.in_features
