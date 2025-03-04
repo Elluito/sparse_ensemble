@@ -3041,6 +3041,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
         #     root='./data', train=False, download=True, transform=transform_test)
         testloader = torch.utils.data.DataLoader(
             testset, batch_size=cfg.batch_size, shuffle=False, num_workers=cfg.num_workers)
+
         return trainloader, valloader, testloader
 
     if 'imagenet' == cfg.dataset:
@@ -3052,7 +3053,10 @@ def get_datasets(cfg: omegaconf.DictConfig):
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data/"
+            if os.path.exists("/nobackup/sclaam/data"):
+                data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/users/sclaam/"):
+                data_path = "/users/sclaam/data2"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
@@ -3135,7 +3139,10 @@ def get_datasets(cfg: omegaconf.DictConfig):
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/nobackup/sclaam/data"):
+                data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/users/sclaam/"):
+                data_path = "/users/sclaam/data2"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
@@ -3149,12 +3156,16 @@ def get_datasets(cfg: omegaconf.DictConfig):
         return trainloader, valloader, testloader
 
     if 'tiny_imagenet' == cfg.dataset:
+
         from test_imagenet import load_tiny_imagenet
 
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data/"
+            if os.path.exists("/nobackup/sclaam/data"):
+                data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/users/sclaam/"):
+                data_path = "/users/sclaam/data2"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
