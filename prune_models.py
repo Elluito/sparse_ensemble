@@ -964,17 +964,18 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
                 os.remove('{}/{}_test_acc_{}.pth'.format(save_folder, name, best_acc))
             torch.save(state, '{}/{}_test_acc_{}.pth'.format(save_folder, name, acc))
             best_acc = acc
-            if record:
-                filepath = "{}/{}_fined_tuned_acc.csv".format(save_folder,name)
-                if Path(filepath).is_file():
-                    log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
-                    df = pd.DataFrame(log_dict)
-                    df.to_csv(filepath, mode="a", header=False, index=False)
-                else:
-                    # Try to read the file to see if it is
-                    log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
-                    df = pd.DataFrame(log_dict)
-                    df.to_csv(filepath, sep=",", index=False)
+        if record:
+            filepath = "{}/{}_fined_tuned_acc.csv".format(save_folder,name)
+            if Path(filepath).is_file():
+                log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, mode="a", header=False, index=False)
+            else:
+                # Try to read the file to see if it is
+                log_dict = {"Epoch": [epoch], "test accuracy": [pruned_test_accuracy], "training accuracy": [train_acc]}
+                df = pd.DataFrame(log_dict)
+                df.to_csv(filepath, sep=",", index=False)
+
         scheduler.step()
 
     return best_acc
@@ -3540,7 +3541,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--solution', default="", type=str, help='Solution to use')
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
-    parser.add_argument('--epochs', default=200, type=int, help='Epochs to train')
+    parser.add_argument('--epochs', default=10, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
     parser.add_argument('--pad', default=0, type=int,
