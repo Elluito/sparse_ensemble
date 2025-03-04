@@ -999,8 +999,9 @@ def pruning_fine_tuning_experiment(args):
          "noise": "gaussian",
          "sigma": 0.005,
          "pruner": "global",
-         "exclude_layers": exclude_layers
-
+         "exclude_layers": exclude_layers,
+         "pad":args.pad,
+         "input_resolution":args.input_resolution,
          })
     train, val, testloader = get_datasets(cfg)
 
