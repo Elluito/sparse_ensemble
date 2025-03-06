@@ -3165,7 +3165,7 @@ def get_datasets(cfg: omegaconf.DictConfig):
             if os.path.exists("/nobackup/sclaam/data"):
                 data_path = "/nobackup/sclaam/data"
             if os.path.exists("/users/sclaam/"):
-                data_path = " /mnt/scratch/sclaam/data2"
+                data_path = "/mnt/scratch/sclaam/data2"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\mnist"
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
