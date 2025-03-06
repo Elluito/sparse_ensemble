@@ -152,7 +152,7 @@ resize=0
 #resolution=224
 #save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 save_folder="${HOME}/sparse_ensemble/pruning_level_0"
-checkpoints_folder="${HOME}/new_models_original_paper"
+checkpoints_folder="${SCRATCH}/new_models_original_paper"
 for model in "vgg19"; do
 #for dataset in "cifar10"; do
 for dataset in "tiny_imagenet"; do
