@@ -170,7 +170,6 @@ dependencies:
     - colorlog==6.7.0
     - comm==0.1.4
     - contourpy==1.2.0
-    - debugpy==1.6.8
     - decorator==5.1.1
     - defusedxml==0.7.1
     - delve==0.1.50
