@@ -274,7 +274,7 @@ dependencies:
     - prometheus-client==0.20.0
     - promise==2.3
     - prompt-toolkit==3.0.39
-    - protobuf==4.0.0rc1
+    - protobuf==3.20
     - psutil==5.9.2
     - ptflops==0.7.3
     - ptyprocess==0.7.0
@@ -323,7 +323,6 @@ dependencies:
     - tensorboardx==2.6.2.2
     - tensorflow-datasets==4.4.0
     - tensorflow-estimator==2.6.0
-    - tensorflow-gpu
     - tensorflow-metadata==1.2.0
     - termcolor==1.1.0
     - terminado==0.18.1
