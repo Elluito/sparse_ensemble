@@ -154,7 +154,6 @@ dependencies:
     - astunparse==1.6.3
     - async-lru==2.0.4
     - attrs==24.2.0
-    - autoattack==0.1
     - autopage==0.5.1
     - babel==2.16.0
     - backcall==0.2.0
