@@ -323,7 +323,7 @@ dependencies:
     - tensorboardx==2.6.2.2
     - tensorflow-datasets==4.4.0
     - tensorflow-estimator==2.6.0
-    - tensorflow-gpu==2.6.0
+    - tensorflow-gpu
     - tensorflow-metadata==1.2.0
     - termcolor==1.1.0
     - terminado==0.18.1
