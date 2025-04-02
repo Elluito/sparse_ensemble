@@ -274,7 +274,7 @@ dependencies:
     - prometheus-client==0.20.0
     - promise==2.3
     - prompt-toolkit==3.0.39
-    - protobuf==4
+    - protobuf==4.0.0rc1
     - psutil==5.9.2
     - ptflops==0.7.3
     - ptyprocess==0.7.0
