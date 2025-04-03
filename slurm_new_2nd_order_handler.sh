@@ -17,7 +17,7 @@ sbatch --nodes=1 --array=1-4 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail
 
 else
 
-sbatch --nodes=1 --time=48:00:00 --partition=gpu--gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}_${name}" slurm_new_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
+sbatch --nodes=1 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.err" --output="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}.out"  --job-name="${algorithm}_rf_${RF_level}_${dataset}_${model}_gc_${grad_clip}_${name}" slurm_new_2nd_order_run.sh "${dataset}" "${model}" "${RF_level}" "normal" "${name}" "${algorithm}" "${grad_clip}" "${record_saturation}" "${epochs}" "${input_res}"
 
 fi
 }
@@ -33,7 +33,7 @@ fi
 grad_clip=0
 epochs=200
 resolution=32
-array=0
+array=1
 for model in "resnet50" "vgg19"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
   for lvl in 1 2 3 4 ; do
