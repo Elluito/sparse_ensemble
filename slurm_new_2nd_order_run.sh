@@ -88,6 +88,7 @@
 export LD_LIBRARY_PATH=""
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
 export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
+
 #export LD_LIBRARY_PATH=""
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
 #export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
@@ -95,8 +96,11 @@ export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 
   if [ $6 == "ekfac" ]
   then
-    # KFac
+
+    # Kfac
+
 #python3.9 Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip $6 --save 1 --experiment 1 --record_time 1 --record_flops 1 --record_saturation 1 --epochs 200 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "ekfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
+
 python Second_order_Receptive_field.py --lr "0.1" --momentum "0.9"  --save 1 --experiment 1 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 2 --optimiser "ekfac" --record 1 --save_folder "$SCRATCH/second_order_checkpoints" --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7 --record_saturation $8  --epochs $9 --input_resolution "${10}"
 
   fi
@@ -104,8 +108,11 @@ python Second_order_Receptive_field.py --lr "0.1" --momentum "0.9"  --save 1 --e
 
     # ASAM
   then
+
 #python3.9 Second_order_Receptive_field.py --lr "0.1" --momentum "0.9" --grad_clip $6 --save 1 --experiment 1 --record_time 1 --record_flops 1 --record_saturation 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 0 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
+
 python Second_order_Receptive_field.py --lr "0.01" --momentum "0.9" --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 2  --save 1 --experiment 1 --optimiser "sam" --record 1 --save_folder "$SCRATCH/second_order_checkpoints"  --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7  --record_saturation $8 --epochs $9 --input_resolution "${10}"
+
   fi
 
 #python3.9 Second_order_Receptive_field.py --level $1
