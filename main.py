@@ -2,7 +2,6 @@ import itertools
 
 print("First line")
 import os
-
 print("After os")
 # import accelerate
 print("After accelerate")
@@ -1252,7 +1251,7 @@ def conver_fitness_to_difference(fitness, pruning_rate):
     if fitness < 0:
         return fitness
     else:
-        fitnes / pruning_rate
+        fitness / pruning_rate
 
 
 def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
@@ -1338,8 +1337,7 @@ def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.tria
             return stochastic_performance, sample_pruning_rate
 
 
-def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
-                                                            use_population=True, use_log_sigma=False, Fx=1):
+def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True, use_population=True, use_log_sigma=False, Fx=1):
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = get_model(cfg)
     train, val_loader, test_loader = get_datasets(cfg)
@@ -1510,7 +1508,7 @@ def run_pr_sigma_fine_tuned_search_MOO_for_cfg(cfg, arg):
         raise Exception("Sampler {} is not suported for this experiment".format(sampler))
 
     # sampler = optuna.samplers.CmaEsSampler(n_startup_trials=10,popsize=4)
-    sampler = optuna.samplers.TPESampler()
+    # sampler = optuna.samplers.TPESamplerler()
     study = optuna.create_study(directions=["maximize", "maximize"], sampler=sampler,
                                 study_name="stochastic-global-pr-and-sigma-optimisation-MOO-{}-{}-{}-{}".format(
                                     cfg.architecture,
@@ -2679,7 +2677,7 @@ def get_intelligent_pruned_network(cfg):
         print(f"Model has compression ratio of {count_zero_parameters(full_model) / count_parameters(full_model)}")
 
 
-def prune_function(net, cfg, pr_per_layer=None):
+def prune_function(net, cfg, pr_per_layer=None,dataloader=None):
     target_sparsity = cfg.amount
     if cfg.pruner == "global":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
@@ -2703,6 +2701,8 @@ def prune_function(net, cfg, pr_per_layer=None):
     if cfg.pruner == "random":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="random",
                         pr_per_layer=pr_per_layer)
+    if cfg.pruner == "grasp":
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",dataLoader=dataloader)
 
 
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
@@ -2710,7 +2710,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     criterion:
                     str =
                     "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
-                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
+                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0,dataLoader=None):
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2771,7 +2771,11 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                         continue
                     else:
                         prune.random_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
-
+    elif type == "grasp":
+        from GRASP.pruner.GraSP import GraSP
+        weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
+        mask :dict[torch.Tensor] = GraSP(net,amount, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function)
+        apply_mask(net,mask_dict=mask)
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))
@@ -6517,10 +6521,12 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     dense_model = get_model(cfg)
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+        remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    if cfg.pruner =="graps":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",dataLoader=valloader)
     else:
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-    remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise", pruner=cfg.pruner)
+        remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     # Add small noise just to get tiny variations of the deterministic case
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
     print("Original version performance: {}".format(initial_performance))
@@ -6564,7 +6570,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataset, f"_{cfg.name}" if cfg.name else "",
+                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -6573,15 +6579,35 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             path: Path = Path(filepath_GF_measure)
             if not path.is_dir():
                 path.mkdir(parents=True)
+
+            # else:
+
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        else:
+
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_{}{}/{}/{}/sigma{}/pr{}/{}/".format(
+                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
+                cfg.architecture,
+                cfg.model_type,
+                cfg.sigma,
+                cfg.amount,
+                identifier)
+            path: Path = Path(filepath_GF_measure)
+
+            if not path.is_dir():
+                path.mkdir(parents=True)
+
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
 
     file_path = None
     weights_path = ""
     gradient_flow_file_prefix = filepath_GF_measure
+    weights_file_path = ""
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
-            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+            # weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weights/"
+            weights_file_path = "/mnt/scratch/sclaam" + gradient_flow_file_prefix + "weights/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
             weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
         weights_path = Path(weights_file_path)
@@ -7424,7 +7450,7 @@ def fine_tune_after_stochatic_pruning_experiment_with_calc_variance(cfg: omegaco
                                        cfg=cfg)
 
 
-def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
+def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
@@ -7476,6 +7502,20 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
                 path.mkdir(parents=True)
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+        else:
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
+                cfg.dataset,, f"_{cfg.name}" if cfg.name else "",
+                cfg.architecture,
+                cfg.model_type,
+                cfg.sigma,
+                cfg.amount,
+                identifier)
+            path: Path = Path(filepath_GF_measure)
+            if not path.is_dir():
+                path.mkdir(parents=True)
+            # else:
+            #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
+
 
     pruned_model = get_model(cfg)
     best_model = None
@@ -7510,6 +7550,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
 
         if cfg.pruner == "global":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
 
         if cfg.pruner == "manual":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
@@ -7517,6 +7558,7 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
                                                        exclude_layers=cfg.exclude_layers, type="layer-wise",
                                                        pruner="lamp", return_pr_per_layer=True)
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
             if cfg.use_wandb:
                 log_dict = {}
                 for name, elem in individual_prs_per_layer.items():
@@ -7527,6 +7569,10 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
                             type="layer-wise",
                             pruner=cfg.pruner)
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+        if cfg.pruner == "graps":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",
+                            dataLoader=valloader)
         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
@@ -7534,7 +7580,6 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
         # original weights and put it in the ranking
         # copy_buffers(from_net=current_model, to_net=sto_mask_transfer_model)
 
-        remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         if first_iter:
             _, unit_sparse_flops = flops(current_model, data)
             first_iter = 0
@@ -7554,9 +7599,10 @@ def fine_tune_after_stochatic_pruning_experiment(cfg: omegaconf.DictConfig, prin
     gradient_flow_file_prefix = filepath_GF_measure
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
-            weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+            # weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
+            weights_file_path = "/mnt/scrath/sclaam/" + gradient_flow_file_prefix + "weights/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
-            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
+            weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weights/"
         weights_path = Path(weights_file_path)
         weights_path.mkdir(parents=True)
         state_dict = best_dense_model.state_dict()
@@ -8181,7 +8227,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int 
     if number_experiment == 10:
         one_shot_static_sigma_stochastic_pruning(cfg, eval_set="val")
     if number_experiment == 11:
-        fine_tune_after_stochatic_pruning_experiment(cfg)
+        fine_tune_after_stochastic_pruning_experiment(cfg)
     if number_experiment == 12:
         lamp_scenario_2_cheap_evaluation(cfg)
     if number_experiment == 13:

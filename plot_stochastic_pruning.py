@@ -1,3 +1,4 @@
+import functools
 import itertools
 
 print("First line")
@@ -2640,7 +2641,12 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     criterion:
                     str =
                     "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
-                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0):
+                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0,dataLoader=None):
+    if type == "grasp" and  not dataLoader:
+        raise Exception("Grasp option can only be used when dataloader is not None")
+    if type == "grasp" and not isinstance(dataLoader,torch.utils.data.DataLoader):
+        raise Exception("Grasp option can only be used when dataloader is instance of torch dataloader")
+
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2702,6 +2708,11 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     else:
                         prune.random_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
 
+    elif type == "grasp":
+            from GRASP.pruner import GraSP
+            weights = weights_to_prune(net, exclude_layer_list=exclude_layers )
+            weight_selection_function = functools.partial(weights_to_prune,exclude_layer_list=exclude_layers)
+            mask = GraSP( net, ratio, train_dataloader=val_loader, device=device,weight_function=None)
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))

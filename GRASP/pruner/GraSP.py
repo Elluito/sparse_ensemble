@@ -1,3 +1,4 @@
+# taken from https://github.com/alecwangcq/GraSP/blob/master/main_prune_non_imagenet.py
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
@@ -46,7 +47,7 @@ def count_fc_parameters(net):
     return total
 
 
-def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_class=25, num_iters=1, T=200, reinit=True):
+def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_class=25, num_iters=1, T=200, reinit=True,weight_function=None):
     eps = 1e-10
     keep_ratio = 1-ratio
     old_net = net
@@ -54,16 +55,18 @@ def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_clas
     net = copy.deepcopy(net)  # .eval()
     net.zero_grad()
 
-    weights = []
+    # weights = []
     total_parameters = count_total_parameters(net)
     fc_parameters = count_fc_parameters(net)
 
-    # rescale_weights(net)
-    for layer in net.modules():
-        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            if isinstance(layer, nn.Linear) and reinit:
-                nn.init.xavier_normal(layer.weight)
-            weights.append(layer.weight)
+    weigths = weight_function(net)
+
+    # # rescale_weights(net)
+    # for layer in net.modules():
+    #     if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
+    #         if isinstance(layer, nn.Linear) and reinit:
+    #             nn.init.xavier_normal(layer.weight)
+    #         weights.append(layer.weight)
 
     inputs_one = []
     targets_one = []

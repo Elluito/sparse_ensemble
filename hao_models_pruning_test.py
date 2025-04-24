@@ -609,7 +609,8 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                 # pruning_method=prune.L1Unstructured,
                 amount=amount
             )
-
+    elif type == "grasp":
+        from GRASP
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))
