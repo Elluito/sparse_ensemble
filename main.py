@@ -2774,7 +2774,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
     elif type == "grasp":
         from GRASP.pruner.GraSP import GraSP
         weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
-        mask :dict[torch.Tensor] = GraSP(net,amount, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function)
+        mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function)
         apply_mask(net,mask_dict=mask)
 
     else:
@@ -6522,8 +6522,8 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-    if cfg.pruner =="graps":
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",dataLoader=valloader)
+    if cfg.pruner =="grasp":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,dataLoader=valloader)
     else:
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise", pruner=cfg.pruner)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
@@ -7503,8 +7503,8 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         else:
-            filepath_GF_measure += "gradient_flow_data/{}/stochastic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataset,, f"_{cfg.name}" if cfg.name else "",
+            filepath_GF_measure += "gradient_flow_data/{}/stochastic_{}{}/{}/{}/sigma{}/pr{}/{}/".format(
+                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -7573,7 +7573,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
         if cfg.pruner == "graps":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",
                             dataLoader=valloader)
-        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
         # Here is where I transfer the mask from the pruned stochastic model to the
@@ -14415,36 +14415,36 @@ if __name__ == '__main__':
     # fp = "data/epsilon_experiments_cifar100_VGG19_global_1680266419.94637_full.csv"
     # [0.72, 0.88, 0.94]
     #
-    cfg = omegaconf.DictConfig({
-        "architecture": "vgg19",
-        # "architecture": "resnet18",
-        # "dataset": "mnist",
-        "dataset": "cifar10",
-        # "dataset": "cifar100",
-        "exclude_layers": ["conv1", "linear", "fc", "classifier"],
-        "model_type": "alternative",
-        "pruner": "global",
-        "amount": 0.9,
-        "batch_size": 512,
-        "lr": 0.001,
-        "momentum": 0.9,
-        "weight_decay": 1e-4, \
-        "cyclic_lr": True,
-        "lr_peak_epoch": 5,
-        "optim": "adam",
-        # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-        # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
-        # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
-        # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
-        # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
-        "solution":"",
-        "num_workers": 1,
-        "cosine_schedule": False,
-        "pad": False,
-        "resize": False,
-        "input_resolution": 32,
-        "epochs": 24
-    })
+    # cfg = omegaconf.DictConfig({
+    #     "architecture": "vgg19",
+    #     # "architecture": "resnet18",
+    #     # "dataset": "mnist",
+    #     "dataset": "cifar10",
+    #     # "dataset": "cifar100",
+    #     "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+    #     "model_type": "alternative",
+    #     "pruner": "grasp",
+    #     "amount": 0.9,
+    #     "batch_size": 512,
+    #     "lr": 0.001,
+    #     "momentum": 0.9,
+    #     "weight_decay": 1e-4, \
+    #     "cyclic_lr": True,
+    #     "lr_peak_epoch": 5,
+    #     "optim": "adam",
+    #     # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+    #     # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+    #     "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+    #     # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+    #     # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+    #     # "solution":"",
+    #     "num_workers": 1,
+    #     "cosine_schedule": False,
+    #     "pad": False,
+    #     "resize": False,
+    #     "input_resolution": 32,
+    #     "epochs": 1
+    # })
 
     # print(cfg)
     # models = ["resnet18", "vgg19"]
@@ -14593,8 +14593,24 @@ if __name__ == '__main__':
     # #     args["dataset"] = combination[1]
     # #     args["sampler"] = combination[2]
     # LeMain(args)
+    ############# SP finetuning local experiment ##############################
 
-    #######################################################################################
+    args = {"experiment": 6, "population": 10, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
+            "one_batch": False, "num_workers": 1, "architecture": "resnet18", "dataset": "cifar10",
+            "modeltype": "alternative", "epochs": 1, "pruner": "grasp", "sigma": 0.005, "pruning_rate": 0.9,
+            "batch_size": 512, "name": "fine_tuned"}
+    # args["architecture"] = args_out["architecture"]
+    # args["dataset"] = args_out["dataset"]
+    # args["sampler"] = args_out["sampler"]
+    # args["pruner"] = args_out["pruner"]
+    # #
+
+    # for combination in itertools.product(models, datasets, sampler):
+    #     args["architecture"] = combination[0]
+    #     args["dataset"] = combination[1]
+    #     args["sampler"] = combination[2]
+    LeMain(args)
+        #######################################################################################
 
     #
     # MDS_projection_plot()
@@ -14609,20 +14625,20 @@ if __name__ == '__main__':
     #
 
     # sigma_values = [0.001,0.0021,0.0032,0.0043,0.005,0.0065,0.0076,0.0087,0.0098,0.011]
-    architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
+    # architecture_values = ["vgg19", "vgg19", "resnet50", "resnet50", "resnet18", "resnet18"]
     # architecture_values.reverse()
-    dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
+    # dataset_values = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
     # dataset_values.reverse()
     # # pruning_rate_values = [0.9, 0.83, 0.948, 0.76, 0.8742, 0.92]
-    pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
+    # pruning_rate_values = [0.95, 0.8, 0.95, 0.85, 0.9, 0.9]
     # pruning_rate_values.reverse()
     # # sigma_values = [0.0013, 0.0025, 0.0028, 0.0012, 0.0038, 0.0036]
-    sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
+    # sigma_values = [0.003, 0.001, 0.003, 0.001, 0.005, 0.003]
     # sigma_values.reverse()
     #
 
-    feature_variance_fine_tuned(cfg, models_list=architecture_values, datasets_list=dataset_values,
-                                sigmas_list=sigma_values, pr_list=pruning_rate_values, weights_path="/home/luisaam/Documents/PhD/data/gradient_flow_data")
+    # feature_variance_fine_tuned(cfg, models_list=architecture_values, datasets_list=dataset_values,
+    #                             sigmas_list=sigma_values, pr_list=pruning_rate_values, weights_path="/home/luisaam/Documents/PhD/data/gradient_flow_data")
     # # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
     # # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
     # # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]

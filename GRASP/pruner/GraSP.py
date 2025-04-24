@@ -59,7 +59,8 @@ def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_clas
     total_parameters = count_total_parameters(net)
     fc_parameters = count_fc_parameters(net)
 
-    weigths = weight_function(net)
+    modules, name = zip(*weight_function(net))
+    weights = list(map(lambda module: module.layer,modules))
 
     # # rescale_weights(net)
     # for layer in net.modules():
