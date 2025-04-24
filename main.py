@@ -2717,9 +2717,8 @@ def prune_function(net, cfg, pr_per_layer=None,dataloader=None):
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
                     type: str = "global",
                     criterion:
-                    str =
-                    "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
-                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0,dataLoader=None):
+                    str = "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
+                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0,dataLoader=None,input_shape=None):
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2786,6 +2785,13 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
         mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function,filter_function=module_filter_function)
         apply_mask(net,mask_dict=mask)
+
+    elif type == "synflow":
+        from synflow_snip_graps.pruning_method.Synflow import Synflow
+        weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
+        module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
+        pruner = Synflow(net,device,input_shape=[128,32,32,3],dataloader=dataLoader,criterion="l1",weights_function=weight_selection_function)
+        pruner.prune(amount)
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))
@@ -7465,6 +7471,7 @@ def fine_tune_after_stochatic_pruning_experiment_with_calc_variance(cfg: omegaco
 
 def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
+    batch_shape = next(trainloader).shape
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     ################################## WANDB configuration ############################################
@@ -7583,10 +7590,13 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
                             type="layer-wise",
                             pruner=cfg.pruner)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-        if cfg.pruner == "graps":
-            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",
+        if cfg.pruner == "grasp":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="grasp",
                             dataLoader=valloader)
-         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        if cfg.pruner == "synflow":
+            prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
+                            dataLoader=valloader,input_shape=batch_shape)
+        # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
         # Here is where I transfer the mask from the pruned stochastic model to the
@@ -14625,7 +14635,7 @@ if __name__ == '__main__':
     #     args["architecture"] = combination[0]
     #     args["dataset"] = combination[1]
     #     args["sampler"] = combination[2]
-    LeMain(args)
+    # LeMain(args)
     #######################################################################################
 
     #
