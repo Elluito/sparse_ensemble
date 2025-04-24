@@ -72,7 +72,7 @@ sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sc
 
 
 ############## Re-run of gradientflow and fine-tuned accuracy plots #######################
-
+#
 #model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 #
 #dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
@@ -80,12 +80,17 @@ sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sc
 #sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
 #pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
 
+model_list=("resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
-model_list=("resnet18")
+dataset_list=( "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
-dataset_list=("cifar10")
-sigma_list=("0.005")
-pruning_rate_list=("0.9")
+sigma_list=("0.003" "0.003" "0.001" "0.003" "0.001")
+pruning_rate_list=("0.9" "0.95" "0.85" "0.95" "0.8")
+
+#model_list=("resnet18")
+#dataset_list=("cifar10")
+#sigma_list=("0.005")
+#pruning_rate_list=("0.9")
 
 
 
