@@ -500,6 +500,15 @@ def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
 
     return modules
 
+def filter_modules(model: torch.nn.Module, exclude_layer_list=[]):
+    modules = []
+    for name, m in model.named_modules():
+        if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
+                m, nn.BatchNorm3d) and name not in exclude_layer_list:
+            modules.append((name,m))
+            # print(name)
+
+    return modules
 
 def get_weights_of_layer_name(model, layer_name):
     for name, m in model.named_modules():
@@ -2774,7 +2783,8 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
     elif type == "grasp":
         from GRASP.pruner.GraSP import GraSP
         weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
-        mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function)
+        module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
+        mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function,filter_function=module_filter_function)
         apply_mask(net,mask_dict=mask)
 
     else:
@@ -6519,6 +6529,8 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         )
     pruned_model = get_model(cfg)
     dense_model = get_model(cfg)
+    pruned_model.to(device)
+    dense_model.to(device)
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
@@ -7600,7 +7612,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             # weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weigths/"
-            weights_file_path = "/mnt/scrath/sclaam/" + gradient_flow_file_prefix + "weights/"
+            weights_file_path = "/mnt/scratch/sclaam/" + gradient_flow_file_prefix + "weights/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
             weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weights/"
         weights_path = Path(weights_file_path)
@@ -14594,7 +14606,6 @@ if __name__ == '__main__':
     # #     args["sampler"] = combination[2]
     # LeMain(args)
     ############# SP finetuning local experiment ##############################
-
     args = {"experiment": 6, "population": 10, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
             "one_batch": False, "num_workers": 1, "architecture": "resnet18", "dataset": "cifar10",
             "modeltype": "alternative", "epochs": 1, "pruner": "grasp", "sigma": 0.005, "pruning_rate": 0.9,
@@ -14610,7 +14621,7 @@ if __name__ == '__main__':
     #     args["dataset"] = combination[1]
     #     args["sampler"] = combination[2]
     LeMain(args)
-        #######################################################################################
+    #######################################################################################
 
     #
     # MDS_projection_plot()

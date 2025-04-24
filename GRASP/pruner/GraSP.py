@@ -47,7 +47,7 @@ def count_fc_parameters(net):
     return total
 
 
-def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_class=25, num_iters=1, T=200, reinit=True,weight_function=None):
+def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_class=25, num_iters=1, T=200, reinit=True,weight_function=None,filter_function=None):
     eps = 1e-10
     keep_ratio = 1-ratio
     old_net = net
@@ -60,7 +60,7 @@ def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_clas
     fc_parameters = count_fc_parameters(net)
 
     modules, name = zip(*weight_function(net))
-    weights = list(map(lambda module: module.layer,modules))
+    weights = list(map(lambda module: module.weight,modules))
 
     # # rescale_weights(net)
     # for layer in net.modules():
@@ -131,17 +131,24 @@ def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_clas
         grad_f = autograd.grad(loss, weights, create_graph=True)
         z = 0
         count = 0
-        for layer in net.modules():
-            if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-                z += (grad_w[count].data * grad_f[count]).sum()
-                count += 1
+
+        # for layer in net.modules():
+        #     if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
+        #         z += (grad_w[count].data * grad_f[count]).sum()
+        #         count += 1
+        for module in modules:
+            z += (grad_w[count].data * grad_f[count]).sum()
+            count += 1
+
         z.backward()
 
     grads = dict()
-    old_modules = list(old_net.modules())
-    for idx, layer in enumerate(net.modules()):
+    # old_modules = list(old_net.modules())
+    old_names,old_modules = zip(*filter_function(old_net))
+    new_names,new_modules = zip(*filter_function(net))
+    for idx, layer in enumerate(new_modules):
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            grads[old_modules[idx]] = -layer.weight.data * layer.weight.grad  # -theta_q Hg
+            grads[old_names[idx]] = -layer.weight.data * layer.weight.grad  # -theta_q Hg
 
     # Gather all scores in a single vector and normalise
     all_scores = torch.cat([torch.flatten(x) for x in grads.values()])
