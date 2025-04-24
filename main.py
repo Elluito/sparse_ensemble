@@ -6619,7 +6619,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
             # weights_file_path = "/nobackup/sclaam/" + gradient_flow_file_prefix + "weights/"
-            weights_file_path = "/mnt/scratch/sclaam" + gradient_flow_file_prefix + "weights/"
+            weights_file_path = "/mnt/scratch/sclaam/" + gradient_flow_file_prefix + "weights/"
         if Path(gradient_flow_file_prefix).owner() == "luisaam":
             weights_file_path = "GF_data/" + gradient_flow_file_prefix + "weigths/"
         weights_path = Path(weights_file_path)
@@ -6627,6 +6627,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         state_dict = dense_model.state_dict()
         temp_name = weights_path / "dense.pth"
         torch.save(state_dict, temp_name)
+
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -7607,7 +7608,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
     # remove_reparametrization(model=pruned_model, exclude_layer_list=cfg.exclude_layers)
 
     file_path = None
-    weights_path = ""
+    weights_file_path = ""
     gradient_flow_file_prefix = filepath_GF_measure
     if gradient_flow_file_prefix != "":
         if Path(gradient_flow_file_prefix).owner() == "sclaam":
