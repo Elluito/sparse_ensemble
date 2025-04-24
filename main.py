@@ -2863,10 +2863,12 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         current_directory = Path().cwd()
         data_path = "./datasets"
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            if os.path.exists("/nobackup/sclaam/data"):
-                data_path = "/nobackup/sclaam/data"
+            # if os.path.exists("/nobackup/sclaam/data"):
+            #     data_path = "/nobackup/sclaam/data"
             if os.path.exists("/users/sclaam/"):
                 data_path = " /mnt/scratch/sclaam/data2"
+
+
         elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
             data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
@@ -2925,7 +2927,10 @@ def get_cifar_datasets(cfg: omegaconf.DictConfig):
         current_directory = Path().cwd()
         data_path = ""
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/nobackup/sclaam/data"):
+                data_path = "/nobackup/sclaam/data"
+            if os.path.exists("/users/sclaam/"):
+                data_path = " /mnt/scratch/sclaam/data2"
         elif "luis alfredo" == current_directory.owner() or "luis alfredo" in current_directory.__str__():
             data_path = "c:/users\luis alfredo\onedrive - university of leeds\phd\datasets\cifar100"
         elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
