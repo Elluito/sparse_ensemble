@@ -1,10 +1,34 @@
 #!/bin/bash
-#$ -cwd -V
-# -l h_rt=01:00:00
-#$ -pe smp 8
-# Send emails when job starts and ends
-#$ -m be
-#$ -l h_vmem=16G
+# set the number of nodes
+#SBATCH --nodes=1
+# set max wallclock time
+#SBATCH --time=00:09:00
+
+# set name of job
+#SBATCH --job-name=pytorch_test
+
+#SBATCH --error=pytorch_test.err
+
+#SBATCH --output=pytorch_test.output
+
+# set partition (devel, small, big)
+
+#SBATCH --partition=small
+
+# set number of GPUs
+#SBATCH --gres=gpu:1
+
+# mail alert at start, end and abortion of execution
+#SBATCH --mail-type=ALL
+
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem-per-cpu=4GB
+
+# send mail to this address
+#SBATCH --mail-user=sclaam@leeds.ac.uk
+#module load pytorch
+
 
 #python3.9 -c "import os; print(os.environ)"
 ##python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
