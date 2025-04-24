@@ -26,9 +26,9 @@ name=$7
 #
 #qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" arc4_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"  "alternative" 100 "${name}" #"${save_folder}" "${name}"
 
-#sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.err" --gres=gpu:1 --output="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
-#sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.err" --gres=gpu:1 --output="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
-./slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.err" --gres=gpu:1 --output="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.err" --gres=gpu:1 --output="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+#./slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 }
 
 ###############TPE side of the table#######################

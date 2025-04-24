@@ -1021,6 +1021,7 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
         disable_all_except(pruned_model, exclude_layers)
 
     criterion = nn.CrossEntropyLoss()
+
     for epoch in range(epochs):
         for batch_idx, (data, target) in enumerate(dataLoader):
             data, target = data.cuda(), target.cuda()
