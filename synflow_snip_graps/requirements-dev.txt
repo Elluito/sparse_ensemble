@@ -1,0 +1,15 @@
+pre-commit
+
+# formatting
+isort==5.13.2
+black==24.4.2
+
+# testing
+pylint==3.1.0
+mypy==1.10.0
+flake8
+flake8-bugbear
+flake8-docstrings
+
+# generating requirements
+pipreqs
