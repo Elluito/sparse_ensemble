@@ -26,8 +26,8 @@ name=$7
 #
 #qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" arc4_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"  "alternative" 100 "${name}" #"${save_folder}" "${name}"
 
-sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.err" --gres=gpu:1 --output="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
-sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.err" --gres=gpu:1 --output="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto.err" --gres=gpu:1 --output="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 200 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det.err" --gres=gpu:1 --output="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det.out"  --job-name="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 200 "${name}" #"${save_folder}" "${name}"
 #./slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 }
 
@@ -89,8 +89,8 @@ model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
-sigma_list=("0.001" "0.005" "0.001" "0.003" "0.001" "0.003")
-pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+sigma_list=("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
+pruning_rate_list=("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
 
 ################################################
 

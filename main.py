@@ -7482,7 +7482,8 @@ def fine_tune_after_stochatic_pruning_experiment_with_calc_variance(cfg: omegaco
 
 def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
-    batch_shape = next(trainloader).shape
+    # batch_shape = next(itertrainloader).shape
+    batch_shape =  (32,32,3)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     ################################## WANDB configuration ############################################
