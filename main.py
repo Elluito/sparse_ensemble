@@ -6552,10 +6552,12 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     dense_model = get_model(cfg)
     pruned_model.to(device)
     dense_model.to(device)
+    print(f"CFG pruner {cfg.pruner}")
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     if cfg.pruner == "grasp":
+        print("I entered to GRASP")
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
                         dataLoader=valloader)
     if cfg.pruner == "synflow":
@@ -6563,6 +6565,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                         dataLoader=valloader)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     else:
+        print("I entered to the ELSE ")
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                         pruner=cfg.pruner)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
