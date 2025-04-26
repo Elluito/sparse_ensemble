@@ -6666,6 +6666,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         wandb.join()
 
 
+
 @torch.no_grad()
 def preditions_on_batch(model1, model2, batch):
     model1.eval()
@@ -7594,9 +7595,10 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
         if cfg.pruner == "manual":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="manual", pr_per_layer=pr_per_layer)
-            individual_prs_per_layer = prune_with_rate(copy_of_pruned_model, target_sparsity,
-                                                       exclude_layers=cfg.exclude_layers, type="layer-wise",
-                                                       pruner="lamp", return_pr_per_layer=True)
+
+            # individual_prs_per_layer = prune_with_rate(, target_sparsity,
+            #                                            exclude_layers=cfg.exclude_layers, type="layer-wise",
+            #                                            pruner="lamp", return_pr_per_layer=True)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
             if cfg.use_wandb:
                 log_dict = {}
@@ -10763,7 +10765,12 @@ def gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner
     # combine_deterministic_LAMP_DF: pd.DataFrame = None
     #
     ########################### Pruner Determinisitc ########################################
+    glob_string = deterministic_pruner_root + "*/"
 
+    list_glob = list(glob.glob(glob_string, recursive=True))
+    print(glob_string)
+    print(list_glob)
+    print(len(list_glob))
     for index, individual in enumerate(glob.glob(deterministic_pruner_root + "*/", recursive=True)):
         individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
         len_df = individual_df.shape[0]
@@ -14832,35 +14839,34 @@ if __name__ == '__main__':
 
     ######  Para fine-tuning the modelos en general
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    parser.add_argument('--name', type=str, default="",
-                        help='Name for the file', required=False)
-    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
-
-    #   ############ additional parameters #################################
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-
-    args = vars(parser.parse_args())
-
-    LeMain(args)
-
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # parser.add_argument('--name', type=str, default="",
+    #                     help='Name for the file', required=False)
+    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # #   ############ additional parameters #################################
+    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    #
+    # args = vars(parser.parse_args())
+    #
+    # LeMain(args)
 
     ############# Fine tune experiments ###############################
 
@@ -14912,25 +14918,27 @@ if __name__ == '__main__':
     #          "deterministic_GRASP_FT_comparison_table_1", "deterministic_SYNFLOW_FT_comparison_table_1",
     #          "stochastic_SYNFLOW_FT_comparison_table_1", "stochastic_GRASP_FT_comparison_table_1"]
 
+    ############# Unifying sigmas ##############################
+
     # pruners = ["synflow", "grasp"]
     # names = ["FT_comparison_table_1", "FT_comparison_figs"]
     #
     # architectures = ["vgg19", "resnet50", "resnet18"]
     #
     # datasets_list = ["cifar10", "cifar100"]
-
-    # # figs
-    # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
-    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
     #
-    # # table1
-    # #             cifar10 cifar100
-    # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-    # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+    # # # figs
+    # # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
+    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
+    # #
+    # # # table1
+    # # #             cifar10 cifar100
+    # # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+    # # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+    # #
+    # # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
     #
-    # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
-    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
-
     # pruning_rates = \
     #     {("vgg19", "cifar10", "FT_comparison_table_1"): 0.95, ("vgg19", "cifar10", "FT_comparison_figs"): 0.944, (
     #         "vgg19", "cifar100", "FT_comparison_table_1"): 0.8, ("vgg19", "cifar100", "FT_comparison_figs"): 0.944, (
@@ -14977,6 +14985,20 @@ if __name__ == '__main__':
     #                     gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner(
     #                         f"gradient_flow_data/{cfg.dataset}/", cfg,
     #                         name=name, pruner=pruner)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # for j in range(len(names)):
     #     unify_sigma_datasets(sigmas=[sigma_values[i]], cfg=cfg, surname=names[i])
