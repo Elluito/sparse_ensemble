@@ -29,7 +29,7 @@ if [ "${dataset}" = "cifar100" ]; then
 if [ "${model}" = "resnet50" ]; then
 sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto.err" --gres=gpu:1 --output="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 200 "${name}" #"${save_folder}" "${name}"
 sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det.err" --gres=gpu:1 --output="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det.out"  --job-name="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_${pruner}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 200 "${name}" #"${save_folder}" "${name}"
-if
+fi
 fi
 #./slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 }
