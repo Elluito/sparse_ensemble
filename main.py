@@ -7620,6 +7620,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
                             dataLoader=valloader, input_shape=batch_shape)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
+
         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
