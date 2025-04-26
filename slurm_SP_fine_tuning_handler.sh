@@ -72,20 +72,21 @@ sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sc
 
 
 ############## Re-run of gradientflow and fine-tuned accuracy plots #######################
-#
-#model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-#
-#dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
-#
-#sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
-#pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
 
-model_list=("resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
-dataset_list=( "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
-sigma_list=("0.003" "0.003" "0.001" "0.003" "0.001")
-pruning_rate_list=("0.9" "0.95" "0.85" "0.95" "0.8")
+dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+
+sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+#model_list=("resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+#
+#dataset_list=( "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+#
+#sigma_list=("0.003" "0.003" "0.001" "0.003" "0.001")
+#pruning_rate_list=("0.9" "0.95" "0.85" "0.95" "0.8")
 
 #model_list=("resnet18")
 #dataset_list=("cifar10")
@@ -106,7 +107,7 @@ dataset="${dataset_list[$idxA]}"
 sigma="${sigma_list[$idxA]}"
 pruning_rate="${pruning_rate_list[$idxA]}"
 
-run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "grasp" "32" "FT_FV" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "synflow" "32" "FT_FV" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 done
 
 
