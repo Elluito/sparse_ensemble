@@ -6594,7 +6594,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.measure_gradient_flow:
         identifier = f"{time.time():14.2f}".replace(" ", "")
         if cfg.pruner == "lamp":
-            filepath_GF_measure += "gradient_flow_data/{}/deterministic_LAMP{}/{}/{}/sigma{}/pr{}/{}/".format(
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_LAMP{}/{}/{}/sigma0.0/pr{}/{}/".format(
                 cfg.dataset, f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
@@ -6608,7 +6608,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # else:
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
-            filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL{}/{}/{}/sigma0.0/pr{}/{}/".format(
                 cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
@@ -6624,7 +6624,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         else:
 
-            filepath_GF_measure += "gradient_flow_data/{}/deterministic_{}{}/{}/{}/sigma{}/pr{}/{}/".format(
+            filepath_GF_measure += "gradient_flow_data/{}/deterministic_{}{}/{}/{}/sigma0.0/pr{}/{}/".format(
                 cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
@@ -7600,11 +7600,11 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
             #                                            exclude_layers=cfg.exclude_layers, type="layer-wise",
             #                                            pruner="lamp", return_pr_per_layer=True)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-            if cfg.use_wandb:
-                log_dict = {}
-                for name, elem in individual_prs_per_layer.items():
-                    log_dict["individual_{}_pr".format(name)] = elem
-                wandb.log(log_dict)
+            # if cfg.use_wandb:
+            #     log_dict = {}
+            #     for name, elem in individual_prs_per_layer.items():
+            #         log_dict["individual_{}_pr".format(name)] = elem
+            #     wandb.log(log_dict)
         if cfg.pruner == "lamp":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
                             type="layer-wise",
@@ -14839,34 +14839,34 @@ if __name__ == '__main__':
 
     ######  Para fine-tuning the modelos en general
 
-    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-    #                     required=True)
-    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-    #                     help='The type of model (which model definition/declaration) to use in the architecture',
-    #                     required=True)
-    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-    #                     required=False)
-    # parser.add_argument('--name', type=str, default="",
-    #                     help='Name for the file', required=False)
-    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-    #                     required=False)
-    #
-    # #   ############ additional parameters #################################
-    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-    #
-    # args = vars(parser.parse_args())
-    #
-    # LeMain(args)
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
+    parser.add_argument('--name', type=str, default="",
+                        help='Name for the file', required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+                        required=False)
+
+    #   ############ additional parameters #################################
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+
+    args = vars(parser.parse_args())
+
+    LeMain(args)
 
     ############# Fine tune experiments ###############################
 

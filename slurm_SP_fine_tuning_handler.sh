@@ -89,7 +89,8 @@ model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
-sigma_list=("0.005" "0.001" "0.005" "0.001" "0.005" "0.001")
+#sigma_list=("0.005" "0.001" "0.005" "0.001" "0.005" "0.001")
+sigma_list=("0.0" "0.0" "0.0" "0.0" "0.005" "0.001")
 pruning_rate_list=("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
 
 ################################################
@@ -125,38 +126,39 @@ run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruni
 done
 
 
-pruning_method="synflow"
-max=${#model_list[@]}                                  # Take the length of that array
-for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-model="${model_list[$idxA]}"
-dataset="${dataset_list[$idxA]}"
-sigma="${sigma_list[$idxA]}"
-pruning_rate="${pruning_rate_list[$idxA]}"
-run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-done
-
-
-
-# Now run the same but with table 1 parameters
-
-#model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-#dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
-#
-#sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
-#pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
-#
-#pruning_method="grasp"
+#pruning_method="synflow"
 #max=${#model_list[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #model="${model_list[$idxA]}"
 #dataset="${dataset_list[$idxA]}"
 #sigma="${sigma_list[$idxA]}"
 #pruning_rate="${pruning_rate_list[$idxA]}"
-#
-#run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 #done
-#
-#
+
+
+
+# Now run the same but with table 1 parameters
+
+model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+
+sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+pruning_method="grasp"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
+done
+
+
 #pruning_method="synflow"
 #max=${#model_list[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
@@ -169,7 +171,7 @@ done
 
 
 
-
+#
 #max=${#model_list[@]}                                  # Take the length of that array
 #for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 #model="${model_list[$idxA]}"
