@@ -6601,7 +6601,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                 cfg.dataset, f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
-                cfg.sigma,
+                # cfg.sigma,
                 cfg.amount,
                 identifier)
             path: Path = Path(filepath_GF_measure)
@@ -6615,7 +6615,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                 cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
-                cfg.sigma,
+                # cfg.sigma,
                 cfg.amount,
                 identifier)
             path: Path = Path(filepath_GF_measure)
@@ -6631,7 +6631,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
                 cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
-                cfg.sigma,
+                # cfg.sigma,
                 cfg.amount,
                 identifier)
             path: Path = Path(filepath_GF_measure)
