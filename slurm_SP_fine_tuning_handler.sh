@@ -26,8 +26,8 @@ name=$7
 #
 #qsub -l h_rt=48:00:00 -l coproc_v100=1  -N "DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" arc4_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}"  "alternative" 100 "${name}" #"${save_folder}" "${name}"
 
-sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.err" --gres=gpu:1 --output="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
-sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.err" --gres=gpu:1 --output="DP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.out"  --job-name="SP_FT_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.err" --gres=gpu:1 --output="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_sto" slurm_SP_fine_tuning_run.sh 11 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
+sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.err" --gres=gpu:1 --output="DP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det.out"  --job-name="SP_${name}_${model}_${dataset}_sig_${sigma}_pr_${pr}_det" slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 #./slurm_SP_fine_tuning_run.sh 6 "${sigma}" "${pruner}" "${model}" "${dataset}" "${pr}" "alternative" 100 "${name}" #"${save_folder}" "${name}"
 }
 
@@ -73,13 +73,26 @@ sbatch --nodes=1 --time=47:00:00 --partition=gpu  --mail-type=all --mail-user=sc
 
 ############## Re-run of gradientflow and fine-tuned accuracy plots #######################
 
+#### Table 1 parameters ############################################
+#model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+#
+#dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+#
+#sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+#pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+################################################
+
+#### Parameters for Figures 8,9,10 ############################################
 
 model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
-sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+sigma_list=("0.001" "0.005" "0.001" "0.003" "0.001" "0.003")
 pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+################################################
 
 #model_list=("resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 #
@@ -100,6 +113,7 @@ pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
 #sigma_list=("0.001" "0.003")
 #pruning_rate_list=("0.8" "0.95")
 
+pruning_method="grasp"
 max=${#model_list[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 model="${model_list[$idxA]}"
@@ -107,8 +121,53 @@ dataset="${dataset_list[$idxA]}"
 sigma="${sigma_list[$idxA]}"
 pruning_rate="${pruning_rate_list[$idxA]}"
 
-run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "synflow" "32" "FT_FV" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
 done
+
+
+pruning_method="synflow"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+done
+
+
+
+# Now run the same but with table 1 parameters
+model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+
+dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+
+sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+pruning_rate_list=("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+pruning_method="grasp"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+done
+
+
+pruning_method="synflow"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+done
+
+
 
 
 #max=${#model_list[@]}                                  # Take the length of that array
