@@ -7615,8 +7615,9 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
                             pruner=cfg.pruner)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         if cfg.pruner == "grasp":
+            num_classes = 10 if cfg.dataset == "cifar10" else 100
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
-                            dataLoader=valloader)
+                            dataLoader=valloader,num_classes=num_classes)
         if cfg.pruner == "synflow":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
                             dataLoader=valloader, input_shape=batch_shape)
