@@ -6564,11 +6564,11 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
                         dataLoader=valloader)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-    else:
-        print("I entered to the ELSE ")
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
-                        pruner=cfg.pruner)
-        remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
+    # else:
+    #     print("I entered to the ELSE ")
+    #     prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+    #                     pruner=cfg.pruner)
+    #     remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     # Add small noise just to get tiny variations of the deterministic case
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
     print("Original version performance: {}".format(initial_performance))

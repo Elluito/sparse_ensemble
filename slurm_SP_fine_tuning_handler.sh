@@ -126,15 +126,15 @@ run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruni
 done
 
 
-#pruning_method="synflow"
-#max=${#model_list[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-#model="${model_list[$idxA]}"
-#dataset="${dataset_list[$idxA]}"
-#sigma="${sigma_list[$idxA]}"
-#pruning_rate="${pruning_rate_list[$idxA]}"
-#run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-#done
+pruning_method="synflow"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_figs" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+done
 
 
 
@@ -159,15 +159,15 @@ run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruni
 done
 
 
-#pruning_method="synflow"
-#max=${#model_list[@]}                                  # Take the length of that array
-#for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
-#model="${model_list[$idxA]}"
-#dataset="${dataset_list[$idxA]}"
-#sigma="${sigma_list[$idxA]}"
-#pruning_rate="${pruning_rate_list[$idxA]}"
-#run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-#done
+pruning_method="synflow"
+max=${#model_list[@]}                                  # Take the length of that array
+for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
+model="${model_list[$idxA]}"
+dataset="${dataset_list[$idxA]}"
+sigma="${sigma_list[$idxA]}"
+pruning_rate="${pruning_rate_list[$idxA]}"
+run_sp_fine_tuning "${model}" "${dataset}" "${sigma}" "${pruning_rate}" "${pruning_method}" "32" "FT_comparison_table_1" #"${HOME}/second_order_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/second_order_pruning" "sam_optim_saturation_200_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+done
 
 
 
