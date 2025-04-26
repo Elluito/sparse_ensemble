@@ -2725,7 +2725,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     criterion:
                     str = "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0, dataLoader=None,
-                    input_shape=None):
+                    input_shape=None,num_classes=10):
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2792,7 +2792,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         module_filter_function = partial(filter_modules, exclude_layer_list=exclude_layers)
         mask: dict[torch.Tensor] = GraSP(net, amount, reinit=False, train_dataloader=dataLoader, device=device,
                                          weight_function=weight_selection_function,
-                                         filter_function=module_filter_function)
+                                         filter_function=module_filter_function,num_classes=num_classes)
         apply_mask(net, mask_dict=mask)
     elif type == "synflow":
         from synflow_snip_graps.pruning_method.Synflow import Synflow
@@ -6558,8 +6558,9 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     if cfg.pruner == "grasp":
         print("I entered to GRASP")
+        num_classes= 10 if cfg.dataset=="cifar10" else 100
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
-                        dataLoader=valloader)
+                        dataLoader=valloader,num_classes=num_classes)
     if cfg.pruner == "synflow":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
                         dataLoader=valloader)
