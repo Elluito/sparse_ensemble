@@ -988,8 +988,8 @@ def restricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: torc
 
     data, y = next(iter(dataLoader))
     data = data.cuda()
-    # forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
-    forward_pass_dense_flops, forward_pass_sparse_flops = 0,0
+    forward_pass_dense_flops, forward_pass_sparse_flops = flops(pruned_model, data)
+    # forward_pass_dense_flops, forward_pass_sparse_flops = 0,0
 
     file_path = None
     weights_path = ""

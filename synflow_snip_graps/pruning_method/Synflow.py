@@ -4,10 +4,9 @@ import torch
 import torch.nn as nn
 import torch.nn.utils.prune as prune
 
-from pruner import Pruner
+from .pruner import Pruner
 
 
-#TODO: Remember to pass the partial function to this  class
 class Synflow(Pruner):
     def __init__(
         self,
@@ -28,7 +27,7 @@ class Synflow(Pruner):
         #         (nn.Linear, "bias"),
         #     )
         # )
-        self.params_to_prune = weights_function(net)
+        self.params_to_prune = weights_function(net,param_name="weight")
 
         prune.global_unstructured(
             self.params_to_prune,
@@ -37,17 +36,20 @@ class Synflow(Pruner):
         )
         # https://pytorch.org/tutorials/intermediate/pruning_tutorial.html
         # To get gradient of each weight(after prune at least one time)
-         temp_list = self.get_params(
-            (
-                (nn.Conv2d, "weight_orig"),
-                # (nn.Conv2d, "bias_orig"),
-                # (nn.Linear, "weight_orig"),
-                # (nn.Linear, "bias_orig"),
-            )
-        )
+        # temp_list = self.get_params(
+        #     (
+        #         (nn.Conv2d, "weight_orig"),
+        #         # (nn.Conv2d, "bias_orig"),
+        #         # (nn.Linear, "weight_orig"),
+        #         # (nn.Linear, "bias_orig"),
+        #     )
+        # )
 
-        temp_list.pop(0)
-        self.params_to_prune_orig = tuple(temp_list)
+        self.params_to_prune_orig = weights_function(net,param_name="weight_orig")
+
+        # # The first convolutional layer should not be here
+        # temp_list.pop(0)
+        # self.params_to_prune_orig = tuple(temp_list)
 
     def prune(self, amount: int):
         unit_amount = 1 - ((1 - amount) ** 0.01)

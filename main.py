@@ -116,7 +116,8 @@ print("safe All imports")
 plt.rcParams["mathtext.fontset"] = "cm"
 
 # enable cuda devices
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = "cpu"
 
 sns.reset_orig()
 sns.reset_defaults()
@@ -490,12 +491,12 @@ def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig, noise_on_L
 ##################################################################################################################
 
 
-def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[]):
+def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[],param_name="weight"):
     modules = []
     for name, m in model.named_modules():
-        if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
+        if hasattr(m, param_name) and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
-            modules.append((m, "weight"))
+            modules.append((m, param_name))
             # print(name)
 
     return modules
@@ -2785,16 +2786,17 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
         mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function,filter_function=module_filter_function)
         apply_mask(net,mask_dict=mask)
-
     elif type == "synflow":
         from synflow_snip_graps.pruning_method.Synflow import Synflow
         weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
-        module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
-        pruner = Synflow(net,device,input_shape=[128,32,32,3],dataloader=dataLoader,criterion="l1",weights_function=weight_selection_function)
+        # module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
+        pruner = Synflow(net,torch.device(device),input_shape=[32,32,3],dataloader=dataLoader,criterion="l1",weights_function=weight_selection_function)
         pruner.prune(amount)
+        pass
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))
+
 
 
 def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
@@ -6547,6 +6549,10 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     if cfg.pruner =="grasp":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,dataLoader=valloader)
+    if cfg.pruner == "synflow":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
+                            dataLoader=valloader)
+        remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     else:
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise", pruner=cfg.pruner)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
@@ -7576,7 +7582,6 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
         if cfg.pruner == "global":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-
         if cfg.pruner == "manual":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
                             pruner="manual", pr_per_layer=pr_per_layer)
@@ -7589,7 +7594,6 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
                 for name, elem in individual_prs_per_layer.items():
                     log_dict["individual_{}_pr".format(name)] = elem
                 wandb.log(log_dict)
-
         if cfg.pruner == "lamp":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers,
                             type="layer-wise",
@@ -7601,6 +7605,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
         if cfg.pruner == "synflow":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
                             dataLoader=valloader,input_shape=batch_shape)
+            remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
 
@@ -12386,6 +12391,7 @@ def LeMain(args):
     # features_similarity_comparison_experiments(cfg.architecture)
 
     experiment_selector(cfg, args, args["experiment"])
+
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # plot_histograms_predictions("normal_seed2")
@@ -14421,6 +14427,8 @@ if __name__ == '__main__':
     #     cfg.solution = solutions[i]
     #     plot_variable_pr_sigma(cfg)
 
+    # le_Main(ags)
+
     #################################################################################################################
 
     # stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg)
@@ -14551,7 +14559,6 @@ if __name__ == '__main__':
     ######  Para fine-tuning the modelos en general
 
     parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-
     parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
     parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
     parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
@@ -14597,45 +14604,41 @@ if __name__ == '__main__':
     #                     required=False)
     # parser.add_argument('-fnc', '--functions', type=int, default=1,
     #                     help='Type of functions for MOO optim of sigma and pr', required=False)
-    #
     # args_out = vars(parser.parse_args())
-    #
     #
     # args = {"experiment": 21, "population": 5, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
     #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
     #         "modeltype": "alternative", "epochs": 100, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
     #         "batch_size": 512, "name": "fine_tuned"}
+
     # # args["architecture"] = args_out["architecture"]
     # # args["dataset"] = args_out["dataset"]
     # # args["sampler"] = args_out["sampler"]
     # # args["pruner"] = args_out["pruner"]
     # # #
     # models = ["resnet18", "resnet50", "vgg19"]
-    #
     # datasets = ["cifar10", "cifar100"]
-    #
     # sampler = ["nsga"]
-    #
     # models = ["resnet18"]
     # datasets = ["cifar10"]
     # sampler = ["tpe"]
-    #
     # # for combination in itertools.product(models, datasets, sampler):
     # #     args["architecture"] = combination[0]
     # #     args["dataset"] = combination[1]
     # #     args["sampler"] = combination[2]
     # LeMain(args)
     ############# SP finetuning local experiment ##############################
+
     # args = {"experiment": 6, "population": 10, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
     #         "one_batch": False, "num_workers": 1, "architecture": "resnet18", "dataset": "cifar10",
-    #         "modeltype": "alternative", "epochs": 1, "pruner": "grasp", "sigma": 0.005, "pruning_rate": 0.9,
-    #         "batch_size": 512, "name": "fine_tuned"}
+    #         "modeltype": "alternative", "epochs": 1, "pruner": "synflow", "sigma": 0.005, "pruning_rate": 0.9,
+    #         "batch_size": 512, "name": "deleteme"}
     # args["architecture"] = args_out["architecture"]
     # args["dataset"] = args_out["dataset"]
     # args["sampler"] = args_out["sampler"]
     # args["pruner"] = args_out["pruner"]
     # #
-
+    #
     # for combination in itertools.product(models, datasets, sampler):
     #     args["architecture"] = combination[0]
     #     args["dataset"] = combination[1]
