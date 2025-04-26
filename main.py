@@ -2,6 +2,7 @@ import itertools
 
 print("First line")
 import os
+
 print("After os")
 # import accelerate
 print("After accelerate")
@@ -491,25 +492,28 @@ def get_noisy_sample(net: torch.nn.Module, cfg: omegaconf.DictConfig, noise_on_L
 ##################################################################################################################
 
 
-def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[],param_name="weight"):
+def weights_to_prune(model: torch.nn.Module, exclude_layer_list=[], param_name="weight"):
     modules = []
     for name, m in model.named_modules():
-        if hasattr(m, param_name) and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
-                m, nn.BatchNorm3d) and name not in exclude_layer_list:
+        if hasattr(m, param_name) and type(m) != nn.BatchNorm1d and not isinstance(m,
+                                                                                   nn.BatchNorm2d) and not isinstance(
+            m, nn.BatchNorm3d) and name not in exclude_layer_list:
             modules.append((m, param_name))
             # print(name)
 
     return modules
+
 
 def filter_modules(model: torch.nn.Module, exclude_layer_list=[]):
     modules = []
     for name, m in model.named_modules():
         if hasattr(m, 'weight') and type(m) != nn.BatchNorm1d and not isinstance(m, nn.BatchNorm2d) and not isinstance(
                 m, nn.BatchNorm3d) and name not in exclude_layer_list:
-            modules.append((name,m))
+            modules.append((name, m))
             # print(name)
 
     return modules
+
 
 def get_weights_of_layer_name(model, layer_name):
     for name, m in model.named_modules():
@@ -1347,7 +1351,8 @@ def find_pr_sigma_MOO_for_dataset_architecture_fine_tuned_GMP(trial: optuna.tria
             return stochastic_performance, sample_pruning_rate
 
 
-def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True, use_population=True, use_log_sigma=False, Fx=1):
+def find_pr_sigma_MOO_for_dataset_architecture_one_shot_GMP(trial: optuna.trial.Trial, cfg, one_batch=True,
+                                                            use_population=True, use_log_sigma=False, Fx=1):
     # in theory cfg is available everywhere because it is define on the if name ==__main__ section
     net = get_model(cfg)
     train, val_loader, test_loader = get_datasets(cfg)
@@ -2687,7 +2692,7 @@ def get_intelligent_pruned_network(cfg):
         print(f"Model has compression ratio of {count_zero_parameters(full_model) / count_parameters(full_model)}")
 
 
-def prune_function(net, cfg, pr_per_layer=None,dataloader=None):
+def prune_function(net, cfg, pr_per_layer=None, dataloader=None):
     target_sparsity = cfg.amount
     if cfg.pruner == "global":
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
@@ -2712,14 +2717,15 @@ def prune_function(net, cfg, pr_per_layer=None,dataloader=None):
         prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="random",
                         pr_per_layer=pr_per_layer)
     if cfg.pruner == "grasp":
-        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps",dataLoader=dataloader)
+        prune_with_rate(net, target_sparsity, exclude_layers=cfg.exclude_layers, type="graps", dataLoader=dataloader)
 
 
 def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], pruner: str = "erk",
                     type: str = "global",
                     criterion:
                     str = "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
-                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0,dataLoader=None,input_shape=None):
+                    is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0, dataLoader=None,
+                    input_shape=None):
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2782,21 +2788,23 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                         prune.random_unstructured(module, name="weight", amount=float(pr_per_layer[name]))
     elif type == "grasp":
         from GRASP.pruner.GraSP import GraSP
-        weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
-        module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
-        mask :dict[torch.Tensor] = GraSP(net,amount,reinit= False, train_dataloader=dataLoader, device=device,weight_function=weight_selection_function,filter_function=module_filter_function)
-        apply_mask(net,mask_dict=mask)
+        weight_selection_function = partial(weights_to_prune, exclude_layer_list=exclude_layers)
+        module_filter_function = partial(filter_modules, exclude_layer_list=exclude_layers)
+        mask: dict[torch.Tensor] = GraSP(net, amount, reinit=False, train_dataloader=dataLoader, device=device,
+                                         weight_function=weight_selection_function,
+                                         filter_function=module_filter_function)
+        apply_mask(net, mask_dict=mask)
     elif type == "synflow":
         from synflow_snip_graps.pruning_method.Synflow import Synflow
-        weight_selection_function = partial(weights_to_prune,exclude_layer_list=exclude_layers)
+        weight_selection_function = partial(weights_to_prune, exclude_layer_list=exclude_layers)
         # module_filter_function = partial(filter_modules,exclude_layer_list=exclude_layers)
-        pruner = Synflow(net,torch.device(device),input_shape=[32,32,3],dataloader=dataLoader,criterion="l1",weights_function=weight_selection_function)
+        pruner = Synflow(net, torch.device(device), input_shape=[32, 32, 3], dataloader=dataLoader, criterion="l1",
+                         weights_function=weight_selection_function)
         pruner.prune(amount)
         pass
 
     else:
         raise NotImplementedError("Not implemented for type {}".format(type))
-
 
 
 def optim_function_intelligent_pruning(trial: optuna.trial.Trial, cfg) -> tuple:
@@ -6547,14 +6555,16 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
     if cfg.pruner == "global":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="global")
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-    if cfg.pruner =="grasp":
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,dataLoader=valloader)
+    if cfg.pruner == "grasp":
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
+                        dataLoader=valloader)
     if cfg.pruner == "synflow":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
-                            dataLoader=valloader)
+                        dataLoader=valloader)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     else:
-        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise", pruner=cfg.pruner)
+        prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     # Add small noise just to get tiny variations of the deterministic case
     initial_performance = test(pruned_model, use_cuda=use_cuda, testloader=testloader, verbose=0)
@@ -6599,7 +6609,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
             # filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         if cfg.pruner == "global":
             filepath_GF_measure += "gradient_flow_data/{}/deterministic_GLOBAL{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
+                cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -6615,7 +6625,7 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         else:
 
             filepath_GF_measure += "gradient_flow_data/{}/deterministic_{}{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
+                cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -6644,7 +6654,6 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         state_dict = dense_model.state_dict()
         temp_name = weights_path / "dense.pth"
         torch.save(state_dict, temp_name)
-
 
     restricted_fine_tune_measure_flops(pruned_model, valloader, testloader, FLOP_limit=cfg.flop_limit,
                                        use_wandb=cfg.use_wandb, epochs=cfg.epochs, exclude_layers=cfg.exclude_layers,
@@ -7483,7 +7492,7 @@ def fine_tune_after_stochatic_pruning_experiment_with_calc_variance(cfg: omegaco
 def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, print_exclude_layers=True):
     trainloader, valloader, testloader = get_datasets(cfg)
     # batch_shape = next(itertrainloader).shape
-    batch_shape =  (32,32,3)
+    batch_shape = (32, 32, 3)
     target_sparsity = cfg.amount
     use_cuda = torch.cuda.is_available()
     ################################## WANDB configuration ############################################
@@ -7536,7 +7545,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
         else:
             filepath_GF_measure += "gradient_flow_data/{}/stochastic_{}{}/{}/{}/sigma{}/pr{}/{}/".format(
-                cfg.dataset,cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
+                cfg.dataset, cfg.pruner.upper(), f"_{cfg.name}" if cfg.name else "",
                 cfg.architecture,
                 cfg.model_type,
                 cfg.sigma,
@@ -7547,7 +7556,6 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
                 path.mkdir(parents=True)
             # else:
             #     filepath_GF_measure+=  f"fine_tune_pr_{cfg.amount}{exclude_layers_string}{non_zero_string}"
-
 
     pruned_model = get_model(cfg)
     best_model = None
@@ -7605,7 +7613,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
                             dataLoader=valloader)
         if cfg.pruner == "synflow":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
-                            dataLoader=valloader,input_shape=batch_shape)
+                            dataLoader=valloader, input_shape=batch_shape)
             remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
         # prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="layer-wise",
         #                 pruner=cfg.pruner)
@@ -10724,6 +10732,81 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
     # combine_stochastic_LAMP_DF.to_csv(
     #     f"gradientflow_stochastic_lamp_{surname}{cfg.architecture}_{cfg.dataset}_sigma_{cfg.sigma}_pr{cfg.amount}.csv",
     #     header=True, index=False)
+
+
+def gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner(prefix: str, cfg, min_epochs=11,
+                                                                                 is_mask_transfer=False,
+                                                                                 name: str = "", pruner: str = ""):
+    '''
+    This function is for unifying the results of a particular exp
+    @rtype: object
+    @param prefix:This is the folder were deterministic LAMP/GLOBAL and stochastic LAMP/GLOBAL folders (with all the subfolder struceture) reside. Should contain the same dataset name as in cfg.
+    @param cfg: Configuration for a particular architceture X sigma X pruning rate combination to create a dataframe with all individuals results. The dataset is
+    present in the prefix string
+    '''
+    # prefix = Path(prefix)
+    middle_string = cfg.model_type
+    # if cfg.model_type == "hub" :
+    #     middle_string = "/hub"
+
+    assert cfg.dataset in prefix, "Prefix does not contain the name of the dataset: {}!={}".format(cfg.dataset, prefix)
+    deterministic_pruner_root = prefix + f"deterministic_{pruner.upper()}_{name}/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
+
+    # deterministic_global_root = prefix + "deterministic_GLOBAL/" + f"{cfg.architecture}/{cfg.model_type}/sigma0.0/pr{cfg.amount}/"
+
+    stochastic_pruner_root = prefix + f"stochastic_{pruner.upper()}_{name}/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+    # stochastic_lamp_root = prefix + "stochastic_LAMP/" + f"{cfg.architecture}/{cfg.model_type}/sigma{cfg.sigma}/pr{cfg.amount}/"
+
+    combine_stochastic_PRUNER_DF: pd.DataFrame = None
+    # combine_stochastic_LAMP_DF: pd.DataFrame = None
+    combine_deterministic_PRUNER_DF: pd.DataFrame = None
+    # combine_deterministic_LAMP_DF: pd.DataFrame = None
+    #
+    ########################### Pruner Determinisitc ########################################
+
+    for index, individual in enumerate(glob.glob(deterministic_pruner_root + "*/", recursive=True)):
+        individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df < min_epochs:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [0] * len_df
+        individual_df["Pruner"] = [pruner.upper()] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_deterministic_PRUNER_DF is None:
+            combine_deterministic_PRUNER_DF = individual_df
+        else:
+            combine_deterministic_PRUNER_DF = pd.concat((combine_deterministic_PRUNER_DF, individual_df),
+                                                        ignore_index=True)
+
+    combine_deterministic_PRUNER_DF.to_csv(
+        f"gradientflow_deterministic_{pruner}_{name}_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv", header=True,
+        index=False)
+
+    ########################### Pruner Stochastic ########################################
+
+    for index, individual in enumerate(glob.glob(stochastic_pruner_root + "*/", recursive=True)):
+        individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
+        len_df = individual_df.shape[0]
+        if len_df < min_epochs:
+            continue
+        individual_df["individual"] = [index] * len_df
+        individual_df["sigma"] = [cfg.sigma] * len_df
+        individual_df["Pruner"] = [pruner.upper()] * len_df
+        individual_df["Architecture"] = [cfg.architecture] * len_df
+        individual_df["Dataset"] = [cfg.dataset] * len_df
+        individual_df["Pruning Rate"] = [cfg.amount] * len_df
+        if combine_stochastic_PRUNER_DF is None:
+            combine_stochastic_PRUNER_DF = individual_df
+        else:
+            combine_stochastic_PRUNER_DF = pd.concat((combine_stochastic_PRUNER_DF, individual_df),
+                                                     ignore_index=True)
+    combine_stochastic_PRUNER_DF.to_csv(
+        f"gradientflow_stochastic_{pruner}_{name}_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv", header=True,
+        index=False)
+    return combine_stochastic_PRUNER_DF, combine_deterministic_PRUNER_DF
 
 
 def gradient_flow_especific_combination_dataframe_generation(prefix: str, cfg, min_epochs=11, is_mask_transfer=False):
@@ -14128,7 +14211,7 @@ def feature_variance_fine_tuned(cfg, models_list, datasets_list, sigmas_list, pr
     # net3 = get_model(cfg)
 
     # print("Glob text:{}".format(
-        # "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
+    # "{}/{}_normal_{}_*_level_{}*test_acc*.pth".format(args.folder, args.model, args.dataset, args.RF_level)))
     individual_list = []
     type_list = []
     sto_fine_tuned_variance_list = []
@@ -14286,7 +14369,7 @@ def feature_variance_fine_tuned(cfg, models_list, datasets_list, sigmas_list, pr
             "Clean Variance FT": [clean_variance_FT],
             "Noisy Variance FT": [noisy_variance_FT]
         })
-        df.to_csv(f"feature_variance_{cfg.architecture}_{cfg.dataset}_FT_OS.csv",index=False)
+        df.to_csv(f"feature_variance_{cfg.architecture}_{cfg.dataset}_FT_OS.csv", index=False)
 
 
 #        TODO: create a proper DF to safe this thing
@@ -14557,39 +14640,39 @@ if __name__ == '__main__':
     # ####################################
     # Para la imagen the MOO
     # ####################################
+
     ######  Para fine-tuning the modelos en general
 
-    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
-    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
-    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
-    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
-    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
-    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
-    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
-    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
-    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
-                        required=True)
-    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
-                        help='The type of model (which model definition/declaration) to use in the architecture',
-                        required=True)
-    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
-                        required=False)
-    parser.add_argument('--name', type=str, default="",
-                        help='Name for the file', required=False)
-    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
-    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
-                        required=False)
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    # parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    # parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    # parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    # parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+    #                     help='The type of model (which model definition/declaration) to use in the architecture',
+    #                     required=True)
+    # parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+    #                     required=False)
+    # parser.add_argument('--name', type=str, default="",
+    #                     help='Name for the file', required=False)
+    # parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    # parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+    #                     required=False)
+    #
+    # #   ############ additional parameters #################################
+    # # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+    #
+    # args = vars(parser.parse_args())
+    #
+    # LeMain(args)
 
-    #   ############ additional parameters #################################
-    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
-    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
-
-    args = vars(parser.parse_args())
-
-    LeMain(args)
-
-   ############# Fine tune experiments ###############################
-
+    ############# Fine tune experiments ###############################
 
     ############# MOO this is for pr and sigma optim ###############################
 
@@ -14672,8 +14755,235 @@ if __name__ == '__main__':
     # sigma_values.reverse()
     #
 
+    # print(cfg)
+    # models = ["resnet18", "vgg19"]
+    # df_files = ["data/epsilon_experiments_t_1-33_full.csv",
+    #             "data/epsilon_experiments_cifar10_VGG19_global_1680561544.77210_full.csv"]
+    # sigmas_lists = [[0.005], [0.001]]
+    # pruning_rates_list = [[0.5, 0.8, 0.9], [0.72, 0.88, 0.94]]
+    # legend_list = [[False, False, True], [False, False, True]]
+    #
+    # for i in range(len(models)):
+    #     fp = df_files[i]
+    #     cfg.architecture = models[i]
+    #     for sigmas in sigmas_lists[i]:
+    #         for k, pr in enumerate(pruning_rates_list[i]):
+    #             legend = legend_list[k]
+    #             cfg.amount = pr
+    #             for sig in sigmas:
+    #                 plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[sig],
+    #                                                           specific_pruning_rates=[pr], legend=legend)
+
+    ## For resnet18
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.9])
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.8], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.5], legend=False)
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.9])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.8], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.5], legend=False)
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.9])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.8], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.5], legend=False)
+    #
+    # ##   For VGG19
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.94])
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.88], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.001],
+    #                                           specific_pruning_rates=[0.72], legend=False)
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.94])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.88], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.003],
+    #                                           specific_pruning_rates=[0.72], legend=False)
+    #
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.94])
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.88], legend=False)
+    # plot_specific_pr_sigma_epsilon_statistics(fp, cfg, specific_sigmas=[0.005],
+    #                                           specific_pruning_rates=[0.72], legend=False)
+
+    # # ##############################################################################
+    # #  Stochastic/deterministic prunig with meausrement of gradient flow (use task array runs for concurrent runs)
+    # # ##############################################################################
+
+    #
+    # ####################################
+    # Para la imagen the MOO
+    # ####################################
+
+    ######  Para fine-tuning the modelos en general
+
+    parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    parser.add_argument('-exp', '--experiment', type=int, default=15, help='Experiment number', required=True)
+    parser.add_argument('-pop', '--population', type=int, default=1, help='Population', required=False)
+    parser.add_argument('-ep', '--epochs', type=int, default=10, help='Epochs for fine tuning', required=False)
+    parser.add_argument('-sig', '--sigma', type=float, default=0.005, help='Noise amplitude', required=True)
+    parser.add_argument('-bs', '--batch_size', type=int, default=512, help='Batch size', required=True)
+    parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+                        required=True)
+    parser.add_argument('-mt', '--modeltype', type=str, default="alternative",
+                        help='The type of model (which model definition/declaration) to use in the architecture',
+                        required=True)
+    parser.add_argument('-pru', '--pruning_rate', type=float, default=0.9, help='percentage of weights to prune',
+                        required=False)
+    parser.add_argument('--name', type=str, default="",
+                        help='Name for the file', required=False)
+    parser.add_argument('-nw', '--num_workers', type=int, default=8, help='Number of workers', required=False)
+    parser.add_argument('-ob', '--one_batch', type=bool, default=False, help='One batch in sigma pr optim',
+                        required=False)
+
+    #   ############ additional parameters #################################
+    # # parser.add_argument('-so', '--solution',type=str,default="", help='Path to the pretrained solution, it must be consistent with all the other parameters', required=True)
+    # parser.add_argument('-gen', '--generation', type=int, default=10, help='Generations', required=False)
+
+    args = vars(parser.parse_args())
+
+    LeMain(args)
+
+
+    ############# Fine tune experiments ###############################
+
+    ############# MOO this is for pr and sigma optim ###############################
+
+    # parser = argparse.ArgumentParser(description='Stochastic pruning experiments')
+    # parser.add_argument('-dt', '--dataset', type=str, default="cifar10", help='Dataset for experiments', required=True)
+    # parser.add_argument('-pr', '--pruner', type=str, default="global", help='Type of prune', required=True)
+    # parser.add_argument('-ar', '--architecture', type=str, default="resnet18", help='Type of architecture',
+    #                     required=True)
+    # parser.add_argument('-sa', '--sampler', type=str, default="tpe", help='Sampler for pr sigma optim', required=False)
+    # parser.add_argument('-ls', '--log_sigma', type=bool, default=False,
+    #                     help='Use log scale for sigma in pr,sigma optim', required=False)
+    # parser.add_argument('-tr', '--trials', type=int, default=300, help='Number of trials for sigma,pr optim',
+    #                     required=False)
+    # parser.add_argument('-fnc', '--functions', type=int, default=1,
+    #                     help='Type of functions for MOO optim of sigma and pr', required=False)
+    # args_out = vars(parser.parse_args())
+    #
+    # args = {"experiment": 21, "population": 5, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
+    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+    #         "modeltype": "alternative", "epochs": 100, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+    #         "batch_size": 512, "name": "fine_tuned"}
+
+    # # args["architecture"] = args_out["architecture"]
+    # # args["dataset"] = args_out["dataset"]
+    # # args["sampler"] = args_out["sampler"]
+    # # args["pruner"] = args_out["pruner"]
+    # # #
+    # models = ["resnet18", "resnet50", "vgg19"]
+    # datasets = ["cifar10", "cifar100"]
+    # sampler = ["nsga"]
+    # models = ["resnet18"]
+    # datasets = ["cifar10"]
+    # sampler = ["tpe"]
+    # # for combination in itertools.product(models, datasets, sampler):
+    # #     args["architecture"] = combination[0]
+    # #     args["dataset"] = combination[1]
+    # #     args["sampler"] = combination[2]
+    # LeMain(args)
+    ############# SP finetuning local experiment ##############################
+
+    # args = {"experiment": 6, "population": 10, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
+    #         "one_batch": False, "num_workers": 1, "architecture": "resnet18", "dataset": "cifar10",
+
+    # sigma_values = [0.001, 0.005]
+    # names = ["deterministic_SYNFLOW_FT_comparison_figs", "deterministic_GRASP_FT_comparison_figs",
+    #          "stochastic_SYNFLOW_FT_comparison_figs", "stochastic_GRASP_FT_comparison_figs",
+    #          "deterministic_GRASP_FT_comparison_table_1", "deterministic_SYNFLOW_FT_comparison_table_1",
+    #          "stochastic_SYNFLOW_FT_comparison_table_1", "stochastic_GRASP_FT_comparison_table_1"]
+
+    # pruners = ["synflow", "grasp"]
+    # names = ["FT_comparison_table_1", "FT_comparison_figs"]
+    #
+    # architectures = ["vgg19", "resnet50", "resnet18"]
+    #
+    # datasets_list = ["cifar10", "cifar100"]
+
+    # # figs
+    # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
+    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
+    #
+    # # table1
+    # #             cifar10 cifar100
+    # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+    # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+    #
+    # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
+    # pruning_rates = \
+    #     {("vgg19", "cifar10", "FT_comparison_table_1"): 0.95, ("vgg19", "cifar10", "FT_comparison_figs"): 0.944, (
+    #         "vgg19", "cifar100", "FT_comparison_table_1"): 0.8, ("vgg19", "cifar100", "FT_comparison_figs"): 0.944, (
+    #          "resnet18", "cifar10", "FT_comparison_table_1"): 0.9, ("resnet18", "cifar10", "FT_comparison_figs"): 0.9, (
+    #          "resnet18", "cifar100", "FT_comparison_table_1"): 0.9, ("resnet18", "cifar100", "FT_comparison_figs"): 0.9,
+    #      (
+    #          "resnet50", "cifar10", "FT_comparison_table_1"): 0.95, ("resnet50", "cifar10", "FT_comparison_figs"): 0.95,
+    #      (
+    #          "resnet50", "cifar100", "FT_comparison_table_1"): 0.85,
+    #      ("resnet50", "cifar100", "FT_comparison_figs"): 0.95}
+    #
+    # sigmas = \
+    #     {("vgg19", "cifar10", "FT_comparison_table_1"): [0.003],
+    #      ("vgg19", "cifar10", "FT_comparison_figs"): [0.001, 0.005], (
+    #          "vgg19", "cifar100", "FT_comparison_table_1"): [0.001],
+    #      ("vgg19", "cifar100", "FT_comparison_figs"): [0.001, 0.005], (
+    #          "resnet18", "cifar10", "FT_comparison_table_1"): [0.005],
+    #      ("resnet18", "cifar10", "FT_comparison_figs"): [0.001, 0.005], (
+    #          "resnet18", "cifar100", "FT_comparison_table_1"): [0.003],
+    #      ("resnet18", "cifar100", "FT_comparison_figs"): [0.001, 0.005], (
+    #          "resnet50", "cifar10", "FT_comparison_table_1"): [0.003],
+    #      ("resnet50", "cifar10", "FT_comparison_figs"): [0.001, 0.005], (
+    #          "resnet50", "cifar100", "FT_comparison_table_1"): [0.001],
+    #      ("resnet50", "cifar100", "FT_comparison_figs"): [0.001, 0.005]}
+    #
+    # cfg = omegaconf.DictConfig({
+    #     "architecture": "vgg19",
+    #     "dataset": "cifar10",
+    #     "model_type": "alternative",
+    #     "amount": 0.9,
+    #     "sigma": 0.001,
+    # })
+    #
+    # for j in range(len(names)):
+    #     for i in range(len(architectures)):
+    #         for z in range(len(datasets_list)):
+    #             name = names[j]
+    #             cfg.architecture = architectures[i]
+    #             cfg.dataset = datasets_list[z]
+    #             for s in sigmas[(cfg.architecture, cfg.dataset, name)]:
+    #                 cfg.sigma = s
+    #                 cfg.amount = pruning_rates[(cfg.architecture, cfg.dataset, name)]
+    #                 for pruner in pruners:
+    #                     gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner(
+    #                         f"gradient_flow_data/{cfg.dataset}/", cfg,
+    #                         name=name, pruner=pruner)
+
+    # for j in range(len(names)):
+    #     unify_sigma_datasets(sigmas=[sigma_values[i]], cfg=cfg, surname=names[i])
+
     # feature_variance_fine_tuned(cfg, models_list=architecture_values, datasets_list=dataset_values,
     #                             sigmas_list=sigma_values, pr_list=pruning_rate_values, weights_path="/home/luisaam/Documents/PhD/data/gradient_flow_data")
+
     # # # pruning_rate_values = [0.91  ,   0.81,      0.94       ,0.77       ,0.86   ,         0.92]
     # # # sigma_values =        [0.0011,   0.00184,    0.00256      , 0.00194     ,0.00456    ,      0.00485]
     # # # # pruning_rate_values = [0.915  ,  0.85, 0.948      ,0.76     ,0.94    ,0.86]

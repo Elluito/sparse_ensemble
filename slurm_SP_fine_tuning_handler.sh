@@ -138,8 +138,8 @@ done
 
 
 # Now run the same but with table 1 parameters
-model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 
+model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
 
 sigma_list=("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
