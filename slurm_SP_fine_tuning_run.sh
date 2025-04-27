@@ -55,3 +55,4 @@ unset GOMP_CPU_AFFINITY KMP_AFFINITY
 python main.py -exp $1 -bs 1 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --name $9 -pop 1 --num_workers 0
 
 #python main.py
+
