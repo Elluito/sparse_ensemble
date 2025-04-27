@@ -14931,19 +14931,19 @@ if __name__ == '__main__':
     # architectures = ["vgg19", "resnet50", "resnet18"]
     #
     # datasets_list = ["cifar10", "cifar100"]
+
+    # # figs
+    # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
+    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
     #
-    # # # figs
-    # # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
-    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
-    # #
-    # # # table1
-    # # #             cifar10 cifar100
-    # # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-    # # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
-    # #
-    # # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
-    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+    # # table1
+    # #             cifar10 cifar100
+    # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+    # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
     #
+    # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
+
     # pruning_rates = \
     #     {("vgg19", "cifar10", "FT_comparison_table_1"): 0.95, ("vgg19", "cifar10", "FT_comparison_figs"): 0.944, (
     #         "vgg19", "cifar100", "FT_comparison_table_1"): 0.8, ("vgg19", "cifar100", "FT_comparison_figs"): 0.944, (
