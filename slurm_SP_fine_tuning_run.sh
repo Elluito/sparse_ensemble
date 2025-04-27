@@ -21,7 +21,7 @@
 # mail alert at start, end and abortion of execution
 #SBATCH --mail-type=ALL
 
-#SBATCH --node=1
+# ####SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=32
