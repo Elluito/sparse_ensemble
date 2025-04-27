@@ -1,6 +1,5 @@
-import itertools
-
 print("First line")
+import itertools
 import os
 
 print("After os")
