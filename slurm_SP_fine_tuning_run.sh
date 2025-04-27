@@ -22,8 +22,8 @@
 #SBATCH --mail-type=ALL
 
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=12GB
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=16GB
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
@@ -50,6 +50,7 @@ export LD_LIBRARY_PATH=""
 #export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
 
 unset GOMP_CPU_AFFINITY KMP_AFFINITY
+
 
 python main.py -exp $1 -bs 1 --sigma $2 --pruner $3 --architecture $4 --dataset $5 --pruning_rate $6 --modeltype $7 --epochs $8 --name $9 -pop 1 --num_workers 0
 

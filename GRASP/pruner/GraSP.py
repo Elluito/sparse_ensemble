@@ -81,6 +81,8 @@ def GraSP(net, ratio, train_dataloader, device, num_classes=10, samples_per_clas
         print("(1): Iterations %d/%d." % (it, num_iters))
         inputs, targets = GraSP_fetch_data(train_dataloader, num_classes, samples_per_class)
         N = inputs.shape[0]
+        print("Inputs shape: {}".format(inputs.shape))
+        print("Current iteration: {}".format(it))
         din = copy.deepcopy(inputs)
         dtarget = copy.deepcopy(targets)
         inputs_one.append(din[:N//2])
