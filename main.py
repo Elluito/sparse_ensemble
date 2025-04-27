@@ -40,6 +40,7 @@ import omegaconf
 import copy
 import pprint
 import torch
+torch.multiprocessing.set_sharing_strategy('file_system')
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
