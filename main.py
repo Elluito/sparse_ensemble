@@ -40,6 +40,7 @@ import omegaconf
 import copy
 import pprint
 import torch
+
 torch.multiprocessing.set_sharing_strategy('file_system')
 import torch.nn as nn
 import torch.optim as optim
@@ -2725,7 +2726,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
                     criterion:
                     str = "l1", exclude_layers: list = [], pr_per_layer: dict = {}, return_pr_per_layer: bool = False,
                     is_stochastic: bool = False, noise_type: str = "", noise_amplitude=0, dataLoader=None,
-                    input_shape=None,num_classes=10):
+                    input_shape=None, num_classes=10):
     if type == "global":
         # print("Exclude layers in prun_with_rate:{}".format(exclude_layers))
         weights = weights_to_prune(net, exclude_layer_list=exclude_layers)
@@ -2792,7 +2793,7 @@ def prune_with_rate(net: torch.nn.Module, amount: typing.Union[int, float], prun
         module_filter_function = partial(filter_modules, exclude_layer_list=exclude_layers)
         mask: dict[torch.Tensor] = GraSP(net, amount, reinit=False, train_dataloader=dataLoader, device=device,
                                          weight_function=weight_selection_function,
-                                         filter_function=module_filter_function,num_classes=num_classes)
+                                         filter_function=module_filter_function, num_classes=num_classes)
         apply_mask(net, mask_dict=mask)
     elif type == "synflow":
         from synflow_snip_graps.pruning_method.Synflow import Synflow
@@ -6558,9 +6559,9 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
         remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
     if cfg.pruner == "grasp":
         print("I entered to GRASP")
-        num_classes= 10 if cfg.dataset=="cifar10" else 100
+        num_classes = 10 if cfg.dataset == "cifar10" else 100
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
-                        dataLoader=valloader,num_classes=num_classes)
+                        dataLoader=valloader, num_classes=num_classes)
     if cfg.pruner == "synflow":
         prune_with_rate(pruned_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
                         dataLoader=valloader)
@@ -6668,7 +6669,6 @@ def run_fine_tune_experiment(cfg: omegaconf.DictConfig):
 
     if cfg.use_wandb:
         wandb.join()
-
 
 
 @torch.no_grad()
@@ -7617,7 +7617,7 @@ def fine_tune_after_stochastic_pruning_experiment(cfg: omegaconf.DictConfig, pri
         if cfg.pruner == "grasp":
             num_classes = 10 if cfg.dataset == "cifar10" else 100
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type=cfg.pruner,
-                            dataLoader=valloader,num_classes=num_classes)
+                            dataLoader=valloader, num_classes=num_classes)
         if cfg.pruner == "synflow":
             prune_with_rate(current_model, target_sparsity, exclude_layers=cfg.exclude_layers, type="synflow",
                             dataLoader=valloader, input_shape=batch_shape)
@@ -10799,6 +10799,13 @@ def gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner
         index=False)
 
     ########################### Pruner Stochastic ########################################
+    print(f"Stochastic {pruner}")
+    glob_string = stochastic_pruner_root + "*/"
+
+    list_glob = list(glob.glob(glob_string, recursive=True))
+    print(glob_string)
+    print(list_glob)
+    print(len(list_glob))
 
     for index, individual in enumerate(glob.glob(stochastic_pruner_root + "*/", recursive=True)):
         individual_df = pd.read_csv(individual + "recordings.csv", sep=",", header=0, index_col=False)
@@ -14926,25 +14933,27 @@ if __name__ == '__main__':
 
     ############# Unifying sigmas ##############################
 
-    # pruners = ["synflow", "grasp"]
+    ## pruners = ["synflow", "grasp"]
+
+    # pruners = ["grasp"]
     # names = ["FT_comparison_table_1", "FT_comparison_figs"]
     #
     # architectures = ["vgg19", "resnet50", "resnet18"]
     #
     # datasets_list = ["cifar10", "cifar100"]
-
+    #
     # # figs
-    # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
-    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
+    # # sigma_list = ("0.001" "0.005" "0.001" "0.005" "0.001" "0.005")
+    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.95" "0.944" "0.944")
+    # #
+    # # # table1
+    # # #             cifar10 cifar100
+    # # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
+    # # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
+    # #
+    # # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
+    # # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
     #
-    # # table1
-    # #             cifar10 cifar100
-    # model_list = ("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
-    # dataset_list = ("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
-    #
-    # sigma_list = ("0.005" "0.003" "0.003" "0.001" "0.003" "0.001")
-    # pruning_rate_list = ("0.9" "0.9" "0.95" "0.85" "0.95" "0.8")
-
     # pruning_rates = \
     #     {("vgg19", "cifar10", "FT_comparison_table_1"): 0.95, ("vgg19", "cifar10", "FT_comparison_figs"): 0.944, (
     #         "vgg19", "cifar100", "FT_comparison_table_1"): 0.8, ("vgg19", "cifar100", "FT_comparison_figs"): 0.944, (
@@ -14991,16 +15000,6 @@ if __name__ == '__main__':
     #                     gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner(
     #                         f"gradient_flow_data/{cfg.dataset}/", cfg,
     #                         name=name, pruner=pruner)
-
-
-
-
-
-
-
-
-
-
 
 
 
