@@ -36,6 +36,7 @@ sbatch --nodes=1 --time=12:00:00 --array=1-5 --partition=gpu  --mail-type=all --
 }
 
 ###############TPE side of the table#######################
+
 #model_list=("resnet18" "resnet18" "resnet50" "resnet50" "vgg19" "vgg19")
 #
 #dataset_list=("cifar10" "cifar100" "cifar10" "cifar100" "cifar10" "cifar100")
@@ -99,15 +100,15 @@ sbatch --nodes=1 --time=12:00:00 --array=1-5 --partition=gpu  --mail-type=all --
 
 ################################################
 
-model_list=("resnet18" "resnet50" "vgg19" )
+model_list=("resnet18" "resnet50" "resnet50" "vgg19" )
 
-dataset_list=( "cifar100" "cifar100" "cifar100")
+dataset_list=( "cifar100" "cifar10" "cifar100" "cifar100")
 
-sigma_list=("0.005" "0.005" "0.005")
+sigma_list=("0.001" "0.001" "0.001" "0.001")
 
-pruning_rate_list=("0.9" "0.95" "0.944")
+pruning_rate_list=("0.9" "0.95" "0.95"  "0.944")
 
-#pruning_rate_list=("0.9" "0.95" "0.85" "0.95" "0.8")
+#pruning_rate_list=("0.09" "0.95" "0.85" "001.95" "0.8")
 
 #model_list=("resnet18")
 #dataset_list=("cifar10")
@@ -121,7 +122,7 @@ pruning_rate_list=("0.9" "0.95" "0.944")
 #sigma_list=("0.001" "0.003")
 #pruning_rate_list=("0.8" "0.95")
 
-pruning_method="grasp"
+pruning_method="synflow"
 max=${#model_list[@]}                                  # Take the length of that array
 for ((idxA=0; idxA<max; idxA++)); do              # iterate idxA from 0 to length
 model="${model_list[$idxA]}"
