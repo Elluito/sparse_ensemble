@@ -24,7 +24,7 @@
 # ####SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=128G
+#SBATCH --mem=16G
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
