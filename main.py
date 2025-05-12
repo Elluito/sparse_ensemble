@@ -10829,6 +10829,7 @@ def gradient_flow_specific_combination_dataframe_generation_with_name_and_pruner
     return combine_stochastic_PRUNER_DF, combine_deterministic_PRUNER_DF
 
 
+
 def gradient_flow_especific_combination_dataframe_generation(prefix: str, cfg, min_epochs=11, is_mask_transfer=False):
     '''
     This function is for unifying the results of a particular exp
@@ -14428,7 +14429,7 @@ def run_unifying_of_sigmas():
 
     pruners = ["grasp"]
     # names = ["FT_comparison_table_1", "FT_comparison_figs"]
-    names = ["FT_comparison_figs"]
+    names = ["FT_comparison_table_1"]
 
     architectures = ["vgg19", "resnet50", "resnet18"]
 
@@ -14989,7 +14990,7 @@ if __name__ == '__main__':
     # LeMain(args)
 
     ############# Fine tune experiments ###############################
-    run_le_Main_with_external_parameters()
+    # run_le_Main_with_external_parameters()
 
     ############# MOO this is for pr and sigma optim ###############################
 
@@ -15041,7 +15042,7 @@ if __name__ == '__main__':
 
     ############# Unifying sigmas ##############################
 
-    # run_unifying_of_sigmas()
+    run_unifying_of_sigmas()
 
     # for j in range(len(names)):
 

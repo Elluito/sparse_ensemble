@@ -124,7 +124,7 @@ sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
 fs = 12
-fig_size = (5, 4)
+fig_size = (6, 4)
 legend_multiplier = 0.6
 labels_multiplier = 0.8
 ticks_multiplier = 0.6
@@ -1447,6 +1447,7 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
                                                                            one_batch_string))
 
     fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    axs.set_box_aspect(0.6)
     plt.title("{}".format(cfg.dataset.upper()), fontsize=fs * arg["labels_multiplier"])
     cmap = plt.cm.get_cmap('magma')
     p_lees_than_0 = p[p["Difference with deterministic"] < 0]
@@ -1498,12 +1499,13 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # plt.legend()
     plt.grid(linestyle="--", alpha=0.5)
     plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
+        "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}_V2.pdf".format(
             cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
     # fig_size=(3,3)
     fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    # axs.set_box_aspect(0.6)
     plt.title("{}".format(cfg.dataset.upper()), fontsize=fs * arg["labels_multiplier"])
     cmap = plt.cm.get_cmap('magma')
     p_lees_than_0 = p[p["Difference with deterministic"] < 0]
@@ -1574,7 +1576,7 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
     # plt.legend()
     plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.pdf".format(
+        "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}_V2.pdf".format(
             cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
@@ -4548,7 +4550,7 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
         pdf1 = count1 / torch.sum(count1)
         cdf1 = torch.cumsum(pdf1, dim=0)
         fig, ax = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-        ax.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string}-Det. Dense")
+        ax.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(),linewidth=2, label=f"{architecture_string}-Det. Dense")
         names1, weights1 = zip(*get_layer_dict(net))
 
         # for i, pr in enumerate(pruning_rates):
@@ -4564,7 +4566,7 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
             count2, bin_counts2 = torch.histogram(param_vector_noisy, bins=len(param_vector_noisy), range=range)
         pdf2 = count2 / torch.sum(count2)
         cdf2 = torch.cumsum(pdf2, dim=0)
-        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(),
+        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(),linewidth=2,
                  label=fr"{architecture_string}-Sto. $\sigma$={cfg.sigma}")
 
         names2, weights2 = zip(*get_layer_dict(noisy_model))
@@ -4587,7 +4589,7 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
                 f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_{range[1]}_range.pdf")
         else:
             plt.savefig(
-                f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range.pdf")
+                f"/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range_V2.pdf")
 
     if cfg2 is not None:
 
@@ -9534,6 +9536,680 @@ def calculate_stats(df):
     print(stats.iloc[0])
 
 
+def one_single_plot_for_full_scatter(ax, plot_legend, ):
+    # plt.figure()
+    # fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+
+    first_dataframe: pd.DataFrame = list_stochastic_dataframes[0]
+    list_of_all_dfs: list = [None] * len(list_stochastic_dataframes)
+    for i in range(len(list_stochastic_dataframes)):
+        for sigma in first_dataframe["sigma"].unique():
+            all_df1: pd.DataFrame = None
+            dataFrame1 = list_stochastic_dataframes[i]
+
+            sigma_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
+            gradient_flow = []
+            accuracy = []
+            type = []
+            sigma_list = []
+
+            for elem in sigma_temp_df["individual"].unique():
+                # One-shot data
+                temp_df = sigma_temp_df[sigma_temp_df["individual"] == elem]
+                if use_set == "val":
+                    gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"] == -1].iloc[0]))
+                    accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"] == -1]))
+                    type.append("One-Shot")
+                    sigma_list.append(sigma)
+                    # Now the fine-tuned data
+                    gradient_flow.append(float(temp_df.iloc[len(temp_df) - 1]["val_set_gradient_magnitude"]))
+                    print(temp_df["Epoch"])
+                    accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"] == temp_df["Epoch"].max()].iloc[0]))
+                    type.append("Fine-tuned")
+                    sigma_list.append(sigma)
+                elif use_set == "test":
+                    gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"] == -1].iloc[0]))
+                    accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"] == -1]))
+                    type.append("One-Shot")
+                    sigma_list.append(sigma)
+                    # Now the fine-tuned data
+                    gradient_flow.append(float(temp_df.iloc[len(temp_df) - 1]["test_set_gradient_magnitude"]))
+                    # print(temp_df["Epoch"])
+                    accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"] == temp_df["Epoch"].max()].iloc[0]))
+                    type.append("Fine-tuned")
+                    sigma_list.append(sigma)
+            d = pd.DataFrame(
+                {"Gradient Magnitude": gradient_flow,
+                 "Accuracy": accuracy,
+                 "Type": type,
+                 "Sigma": sigma_list
+
+                 })
+            all_df1 = list_of_all_dfs[i]
+            if all_df1 is None:
+                all_df1 = d
+                list_of_all_dfs[i] = all_df1
+            else:
+                all_df1 = pd.concat((all_df1, d), ignore_index=True)
+                list_of_all_dfs[i] = all_df1
+
+    if not sigmas_to_show:
+        # all_df1["Scaled Sigma"] = all_df1 = ["Sigma"] * 100
+        g = sns.scatterplot(ax=ax, data=all_df1, x="Gradient Magnitude", y="Accuracy", alpha="Scaled Sigma",
+                            style="Type",
+                            color="red", legend="full" if show_legend else False, edgecolor=None, linewidth=0, s=300)
+    else:
+        print(f"len of list_of_all_dfs {len(list_of_all_dfs)}")
+        for kn in range(len(list_of_all_dfs)):
+            all_df1 = list_of_all_dfs[kn]
+            bool_index_vector = np.zeros(len(all_df1))
+            for s in sigmas_to_show:
+                bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
+            sigma_df = all_df1[bool_index_vector]
+
+            print("Sigma: {}".format(s))
+            print('-' * 30)
+            print("Accuracy")
+            stats = sigma_df.groupby(['Type'])['Accuracy'].agg(['mean', 'count', 'std'])
+            print(stats)
+            print('-' * 30)
+
+            ci95_hi = []
+            ci95_lo = []
+
+            for i in stats.index:
+                m, c, s = stats.loc[i]
+                ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+                ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+
+            stats['ci95_hi'] = ci95_hi
+            stats['ci95_lo'] = ci95_lo
+            print(stats)
+
+            print("\n")
+            print("Gradient Flow")
+            print("\n")
+            stats = sigma_df.groupby(['Type'])['Gradient Magnitude'].agg(['mean', 'count', 'std'])
+            print(stats)
+            print('-' * 30)
+
+            ci95_hi = []
+            ci95_lo = []
+
+            for i in stats.index:
+                m, c, s = stats.loc[i]
+                ci95_hi.append(m + 1.96 * s / math.sqrt(c))
+                ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+
+            stats['ci95_hi'] = ci95_hi
+            stats['ci95_lo'] = ci95_lo
+            print(stats)
+
+            # sigma_df["Scaled sigma"]=sigma_df["Sigma"]*100
+
+            alpha = [0.1, 0.4]
+
+            for i, s in enumerate(sigmas_to_show):
+                temp1 = sigma_df[sigma_df["Sigma"] == s]
+                # scaled_sigmas=sigma_df["Sigma"]*2000*np.log(sigma_df["Sigma"]*2000)
+                #     scaled_sigmas=5*np.exp(sigma_df["Sigma"]*500)
+                one_shot = temp1[temp1["Type"] == "One-Shot"]
+                fine_tuning = temp1[temp1["Type"] == "Fine-tuned"]
+
+                ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                        # fillstyle=fill_style[i],
+                        markerfacecolor=sigma_colors[i],
+                        # markerfacecoloralt='magenta',
+                        marker="o",
+                        markeredgecolor=pruner_colors[kn],
+                        # alpha=0.4,
+                        linewidth=0,
+                        markeredgewidth=1.3,
+                        ms=10
+                        )
+                ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                        # fillstyle=fill_style[i],
+                        markerfacecolor=sigma_colors[i],
+                        # markerfacecoloralt='magenta',
+                        marker="P",
+                        markeredgecolor=pruner_colors[kn],
+                        # alpha=0.4,
+                        linewidth=0,
+                        # markeredgewidth=0.6,
+                        markeredgewidth=1.3,
+                        ms=10
+                        )
+    plt.title("")
+    plt.xlabel("Gradient Flow", fontsize=fs * cfg.labels_multiplier)
+    # Deterministic dataframe 1
+
+    # Plots the deterministic points
+    for kk in range(len(list_detesministic_dataframes)):
+        deterministic_dataframe1 = list_detesministic_dataframes[kk]
+        individual_1 = deterministic_dataframe1.iloc[0]["individual"]
+        deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == individual_1]
+        deterministic_initial_gradient_fow = 0
+        deterministic_initial_accuracy = 0
+        deterministic_final_accuracy = 0
+        deterministic_final_gradient_fow = 0
+        if use_set == "val":
+
+            deterministic_initial_gradient_fow = float(
+                deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"] == -1].iloc[0])
+            deterministic_final_gradient_fow = float(
+                deterministic_dataframe.iloc[len(deterministic_dataframe) - 1]["val_set_gradient_magnitude"])
+            deterministic_initial_accuracy = float(
+                deterministic_dataframe["val_accuracy"][deterministic_dataframe["Epoch"] == -1])
+            deterministic_final_accuracy = float(deterministic_dataframe["val_accuracy"][
+                                                     deterministic_dataframe["Epoch"] == deterministic_dataframe[
+                                                         "Epoch"].max()].iloc[0])
+
+        elif use_set == "test":
+
+            deterministic_initial_gradient_fow = float(
+                deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"] == -1].iloc[0])
+            deterministic_final_gradient_fow = float(
+                deterministic_dataframe.iloc[len(deterministic_dataframe) - 1]["test_set_gradient_magnitude"])
+            deterministic_initial_accuracy = float(
+                deterministic_dataframe["test_accuracy"][deterministic_dataframe["Epoch"] == -1])
+            deterministic_final_accuracy = float(deterministic_dataframe["test_accuracy"][
+                                                     deterministic_dataframe["Epoch"] == deterministic_dataframe[
+                                                         "Epoch"].max()].iloc[0])
+        # Plots the deterministic points
+        print(" ######################### DETERMINISTIC ##########################")
+        print(f"Fine-Tuned accuracy: {deterministic_final_accuracy} Fine-tuned GF: {deterministic_final_gradient_fow}")
+        print(f"One-Shot accuracy: {deterministic_initial_accuracy} One-Shot GF: {deterministic_initial_gradient_fow}")
+        print(" ##################################################################")
+        ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
+                # fillstyle=fill_style[i],
+                markerfacecolor=pruner_colors[kk],
+                # markerfacecoloralt='aquamarine',
+                marker="x",
+                # alpha=0.4,
+                linewidth=0,
+                markeredgecolor=pruner_colors[kk],
+                markeredgewidth=3,
+                ms=10
+                )
+        ax.plot(deterministic_initial_gradient_fow, deterministic_initial_accuracy,
+                # fillstyle=fill_style[i],
+                markerfacecolor=pruner_colors[kk],
+                # markerfacecoloralt='aquamarine',
+                marker="^",
+                # alpha=0.4,
+                linewidth=0,
+                markeredgecolor=pruner_colors[kk],
+                markeredgewidth=1,
+                ms=10
+                )
+
+    if show_legend:
+
+        if legend_inside:
+            temp_handles = []
+            for j, label in enumerate(list_of_labels):
+                marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label=label,
+                                markerfacecolor=pruner_colors[j],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(marker)
+            for k, s_value in enumerate(sigmas_to_show):
+                handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label='$\sigma$={}'.format(s_value),
+                                markerfacecolor=sigma_colors[k],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(handle)
+
+            static_handles = [
+                Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+                       markerfacecolor='k', markersize=10),
+                Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+                       markerfacecolor='k', alpha=0.6, markersize=10),
+                Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+                       label='Fine-Tuned DP', markersize=10),
+                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+            ]
+            temp_handles.extend(static_handles)
+            temp_handles.reverse()
+            lgd = plt.legend(handles=temp_handles, loc='upper right', prop={"size": fs * cfg.legends_multiplier})
+            # plt.xlim([0, 1.58])
+        else:
+            temp_handles = []
+            for j, label in enumerate(list_of_labels):
+                marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label=label,
+                                markerfacecolor=pruner_colors[j],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(marker)
+                # temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
+            for k, s_value in enumerate(sigmas_to_show):
+                handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label='$\sigma$={}'.format(s_value),
+                                markerfacecolor=sigma_colors[k],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(handle)
+            static_handles = [
+                Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+                       markerfacecolor='k', markersize=10),
+                Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+                       markerfacecolor='k', alpha=0.6, markersize=10),
+                Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+                       label='Fine-Tuned DP', markersize=10),
+                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+            ]
+            temp_handles.extend(static_handles)
+            temp_handles.reverse()
+            lgd = plt.legend(handles=temp_handles, bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1,
+                             prop={"size": fs * 0.6})
+
+        for handle_leg in lgd.legend_handles:
+            handle_leg._sizes = [100]
+
+        # lgd.legend_handles[0]._sizes = [300]
+        # lgd.legend_handles[1]._sizes = [300]
+
+    plt.grid(ls="--", alpha=0.5)
+
+    ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
+    # ax1.set_xlabel("")
+    ax.set_ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
+    ax.set_xlabel("Gradient Flow", fontsize=fs * cfg.labels_multiplier)
+    # ax2.set_xlabel("")
+    # fig = matplotlib.pyplot.gcf()
+    # fig.set_size_inches(10, 10)
+    # plt.xlim(0,2.5)
+    return ax
+
+
+def single_scatter_plot_V4(list_stochastic_dataframes: typing.List[pd.DataFrame],
+                           list_detesministic_dataframes: typing.List[pd.DataFrame], list_of_labels: typing.List[str],
+                           title: str = "",
+                           file: str = "", use_set="val", sigmas_to_show=[], sigma_colors=[], os_ft_colors=[],
+                           pruner_colors=[], show_legend=True, legend_inside=False,
+                           cfg=None, ax=None, last_is_inset=True,in_ax=None):
+    first_dataframe: pd.DataFrame = list_stochastic_dataframes[0]
+    last_index = len(list_stochastic_dataframes) - 1
+    list_of_all_dfs: list = [None] * len(list_stochastic_dataframes)
+    for i in range(len(list_stochastic_dataframes)):
+        for sigma in first_dataframe["sigma"].unique():
+            all_df1: pd.DataFrame = None
+            dataFrame1 = list_stochastic_dataframes[i]
+
+            sigma_temp_df = dataFrame1[dataFrame1["sigma"] == sigma]
+            gradient_flow = []
+            accuracy = []
+            type = []
+            sigma_list = []
+
+            for elem in sigma_temp_df["individual"].unique():
+                # One-shot data
+                temp_df = sigma_temp_df[sigma_temp_df["individual"] == elem]
+                if use_set == "val":
+                    gradient_flow.append(float(temp_df['val_set_gradient_magnitude'][temp_df["Epoch"] == -1].iloc[0]))
+                    accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"] == -1]))
+                    type.append("One-Shot")
+                    sigma_list.append(sigma)
+                    # Now the fine-tuned data
+                    gradient_flow.append(float(temp_df.iloc[len(temp_df) - 1]["val_set_gradient_magnitude"]))
+                    print(temp_df["Epoch"])
+                    accuracy.append(float(temp_df["val_accuracy"][temp_df["Epoch"] == temp_df["Epoch"].max()].iloc[0]))
+                    type.append("Fine-tuned")
+                    sigma_list.append(sigma)
+                elif use_set == "test":
+                    gradient_flow.append(float(temp_df['test_set_gradient_magnitude'][temp_df["Epoch"] == -1].iloc[0]))
+                    accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"] == -1]))
+                    type.append("One-Shot")
+                    sigma_list.append(sigma)
+                    # Now the fine-tuned data
+                    gradient_flow.append(float(temp_df.iloc[len(temp_df) - 1]["test_set_gradient_magnitude"]))
+                    # print(temp_df["Epoch"])
+                    accuracy.append(float(temp_df["test_accuracy"][temp_df["Epoch"] == temp_df["Epoch"].max()].iloc[0]))
+                    type.append("Fine-tuned")
+                    sigma_list.append(sigma)
+            d = pd.DataFrame(
+                {"Gradient Magnitude": gradient_flow,
+                 "Accuracy": accuracy,
+                 "Type": type,
+                 "Sigma": sigma_list
+
+                 })
+            all_df1 = list_of_all_dfs[i]
+            if all_df1 is None:
+                all_df1 = d
+                list_of_all_dfs[i] = all_df1
+            else:
+                all_df1 = pd.concat((all_df1, d), ignore_index=True)
+                list_of_all_dfs[i] = all_df1
+
+    if not sigmas_to_show:
+        # all_df1["Scaled Sigma"] = all_df1 = ["Sigma"] * 100
+        g = sns.scatterplot(ax=ax, data=all_df1, x="Gradient Magnitude", y="Accuracy", alpha="Scaled Sigma",
+                            style="Type",
+                            color="red", legend="full" if show_legend else False, edgecolor=None, linewidth=0, s=300)
+    else:
+        print(f"len of list_of_all_dfs {len(list_of_all_dfs)}")
+        for kn in range(len(list_of_all_dfs)):
+            all_df1 = list_of_all_dfs[kn]
+            bool_index_vector = np.zeros(len(all_df1))
+            for s in sigmas_to_show:
+                bool_index_vector = np.logical_or(bool_index_vector, all_df1["Sigma"] == s)
+            sigma_df = all_df1[bool_index_vector]
+
+            alpha = [0.1, 0.4]
+            for i, s in enumerate(sigmas_to_show):
+                temp1 = sigma_df[sigma_df["Sigma"] == s]
+                one_shot = temp1[temp1["Type"] == "One-Shot"]
+                fine_tuning = temp1[temp1["Type"] == "Fine-tuned"]
+                if last_is_inset:
+                    if kn != last_index:
+                        ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                                # fillstyle=fill_style[i],
+                                markerfacecolor=sigma_colors[i],
+                                # markerfacecoloralt='magenta',
+                                marker="o",
+                                markeredgecolor=pruner_colors[kn],
+                                # alpha=0.4,
+                                linewidth=0,
+                                markeredgewidth=1.3,
+                                ms=15
+                                )
+                        ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                                # fillstyle=fill_style[i],
+                                markerfacecolor=sigma_colors[i],
+                                # markerfacecoloralt='magenta',
+                                marker="P",
+                                markeredgecolor=pruner_colors[kn],
+                                # alpha=0.4,
+                                linewidth=0,
+                                # markeredgewidth=0.6,
+                                markeredgewidth=1.3,
+                                ms=15
+                                )
+                    if kn == last_index:
+
+                        in_ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                                   # fillstyle=fill_style[i],
+                                   markerfacecolor=sigma_colors[i],
+                                   # markerfacecoloralt='magenta',
+                                   marker="o",
+                                   markeredgecolor=pruner_colors[kn],
+                                   # alpha=0.4,
+                                   linewidth=0,
+                                   markeredgewidth=1,
+                                   ms=15
+                                   )
+                        in_ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                                   # fillstyle=fill_style[i],
+                                   markerfacecolor=sigma_colors[i],
+                                   # markerfacecoloralt='magenta',
+                                   marker="P",
+                                   markeredgecolor=pruner_colors[kn],
+                                   # alpha=0.4,
+                                   linewidth=0,
+                                   # markeredgewidth=0.6,
+                                   markeredgewidth=1,
+                                   ms=15
+                                   )
+                        # in_ax.set_xscale("log")
+
+
+                else:
+                    ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
+                            # fillstyle=fill_style[i],
+                            markerfacecolor=sigma_colors[i],
+                            # markerfacecoloralt='magenta',
+                            marker="o",
+                            markeredgecolor=pruner_colors[kn],
+                            # alpha=0.4,
+                            linewidth=0,
+                            markeredgewidth=1.3,
+                            ms=15
+                            )
+                    ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
+                            # fillstyle=fill_style[i],
+                            markerfacecolor=sigma_colors[i],
+                            # markerfacecoloralt='magenta',
+                            marker="P",
+                            markeredgecolor=pruner_colors[kn],
+                            # alpha=0.4,
+                            linewidth=0,
+                            # markeredgewidth=0.6,
+                            markeredgewidth=1.3,
+                            ms=15
+                            )
+
+    # plt.title("")
+    # plt.xlabel("Gradient Flow", fontsize=fs * cfg.labels_multiplier)
+    # Deterministic dataframe 1
+
+    # Plots the deterministic points
+    for kk in range(len(list_detesministic_dataframes)):
+        deterministic_dataframe1 = list_detesministic_dataframes[kk]
+        individual_1 = deterministic_dataframe1.iloc[0]["individual"]
+        deterministic_dataframe = deterministic_dataframe1[deterministic_dataframe1["individual"] == individual_1]
+        deterministic_initial_gradient_fow = 0
+        deterministic_initial_accuracy = 0
+        deterministic_final_accuracy = 0
+        deterministic_final_gradient_fow = 0
+        if use_set == "val":
+
+            deterministic_initial_gradient_fow = float(
+                deterministic_dataframe['val_set_gradient_magnitude'][deterministic_dataframe["Epoch"] == -1].iloc[0])
+            deterministic_final_gradient_fow = float(
+                deterministic_dataframe.iloc[len(deterministic_dataframe) - 1]["val_set_gradient_magnitude"])
+            deterministic_initial_accuracy = float(
+                deterministic_dataframe["val_accuracy"][deterministic_dataframe["Epoch"] == -1])
+            deterministic_final_accuracy = float(deterministic_dataframe["val_accuracy"][
+                                                     deterministic_dataframe["Epoch"] == deterministic_dataframe[
+                                                         "Epoch"].max()].iloc[0])
+
+        elif use_set == "test":
+
+            deterministic_initial_gradient_fow = float(
+                deterministic_dataframe['test_set_gradient_magnitude'][deterministic_dataframe["Epoch"] == -1].iloc[0])
+            deterministic_final_gradient_fow = float(
+                deterministic_dataframe.iloc[len(deterministic_dataframe) - 1]["test_set_gradient_magnitude"])
+            deterministic_initial_accuracy = float(
+                deterministic_dataframe["test_accuracy"][deterministic_dataframe["Epoch"] == -1])
+            deterministic_final_accuracy = float(deterministic_dataframe["test_accuracy"][
+                                                     deterministic_dataframe["Epoch"] == deterministic_dataframe[
+                                                         "Epoch"].max()].iloc[0])
+        # Plots the deterministic points
+        print(" ######################### DETERMINISTIC ##########################")
+        print(f"Fine-Tuned accuracy: {deterministic_final_accuracy} Fine-tuned GF: {deterministic_final_gradient_fow}")
+        print(f"One-Shot accuracy: {deterministic_initial_accuracy} One-Shot GF: {deterministic_initial_gradient_fow}")
+        print(" ##################################################################")
+        if last_is_inset:
+            if kk != last_index:
+                ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
+                        # fillstyle=fill_style[i],
+                        markerfacecolor=pruner_colors[kk],
+                        # markerfacecoloralt='aquamarine',
+                        marker="x",
+                        # alpha=0.4,
+                        linewidth=0,
+                        markeredgecolor=pruner_colors[kk],
+                        # markeredgecolor="k",
+                        markeredgewidth=3,
+                        ms=25
+                        )
+                ax.plot(deterministic_initial_gradient_fow, deterministic_initial_accuracy,
+                        # fillstyle=fill_style[i],
+                        markerfacecolor=pruner_colors[kk],
+                        # markerfacecoloralt='aquamarine',
+                        marker="^",
+                        # alpha=0.4,
+                        linewidth=0,
+                        # markeredgecolor=pruner_colors[kk],
+                        markeredgecolor="k",
+                        markeredgewidth=1,
+                        ms=25
+                        )
+            if kk == last_index:
+                # ax_in = ax.inset_axes(inset_args)
+                in_ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
+                           # fillstyle=fill_style[i],
+                           markerfacecolor=pruner_colors[kk],
+                           # markerfacecoloralt='aquamarine',
+                           marker="x",
+                           # alpha=0.4,
+                           linewidth=0,
+                           markeredgecolor=pruner_colors[kk],
+                           # markeredgecolor="k",
+                           markeredgewidth=3,
+                           ms=25
+                           )
+                in_ax.plot(deterministic_initial_gradient_fow, deterministic_initial_accuracy,
+                           # fillstyle=fill_style[i],
+                           markerfacecolor=pruner_colors[kk],
+                           # markerfacecoloralt='aquamarine',
+                           marker="^",
+                           # alpha=0.4,
+                           linewidth=0,
+                           # markeredgecolor=pruner_colors[kk],
+                           markeredgecolor="k",
+                           markeredgewidth=1,
+                           ms=25
+                           )
+
+    ax.grid(ls="--", alpha=0.5)
+
+    ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
+    in_ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
+    # ax.set_ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
+    # ax.set_xlabel("Gradient Flow", fontsize=fs * cfg.labels_multiplier)
+    temp_handles = []
+    if show_legend:
+        for j, label in enumerate(list_of_labels):
+            marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+                            color='w',
+                            label=label,
+                            markerfacecolor=pruner_colors[j],
+                            markerfacecoloralt='k',
+                            # markeredgecolor="gold",
+                            markersize=10)
+            temp_handles.append(marker)
+            # temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
+        for k, s_value in enumerate(sigmas_to_show):
+            handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+                            color='w',
+                            label='$\sigma$={}'.format(s_value),
+                            markerfacecolor=sigma_colors[k],
+                            markerfacecoloralt='k',
+                            # markeredgecolor="gold",
+                            markersize=10)
+            temp_handles.append(handle)
+        static_handles = [
+            Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+                   markerfacecolor='k', markersize=10),
+            Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+                   markerfacecolor='k', markersize=10),
+            Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+                   label='Fine-Tuned DP', markersize=10),
+            Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+        ]
+        temp_handles.extend(static_handles)
+        temp_handles.reverse()
+        # if legend_inside:
+        #     temp_handles = []
+        #     for j, label in enumerate(list_of_labels):
+        #         marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+        #                         color='w',
+        #                         label=label,
+        #                         markerfacecolor=pruner_colors[j],
+        #                         markerfacecoloralt='k',
+        #                         # markeredgecolor="gold",
+        #                         markersize=10)
+        #         temp_handles.append(marker)
+        #     for k, s_value in enumerate(sigmas_to_show):
+        #         handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+        #                         color='w',
+        #                         label='$\sigma$={}'.format(s_value),
+        #                         markerfacecolor=sigma_colors[k],
+        #                         markerfacecoloralt='k',
+        #                         # markeredgecolor="gold",
+        #                         markersize=10)
+        #         temp_handles.append(handle)
+        #
+        #     static_handles = [
+        #         Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+        #                markerfacecolor='k', markersize=10),
+        #         Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+        #                markerfacecolor='k', alpha=0.6, markersize=10),
+        #         Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+        #                label='Fine-Tuned DP', markersize=10),
+        #         Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+        #     ]
+        #     temp_handles.extend(static_handles)
+        #     temp_handles.reverse()
+        #     # lgd = plt.legend(handles=temp_handles, loc='lower left', prop={"size": fs * cfg.legends_multiplier},ncol=9)
+        #
+        #     # plt.xlim([0, 1.58])
+        # else:
+        #     temp_handles = []
+        #     for j, label in enumerate(list_of_labels):
+        #         marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+        #                         color='w',
+        #                         label=label,
+        #                         markerfacecolor=pruner_colors[j],
+        #                         markerfacecoloralt='k',
+        #                         # markeredgecolor="gold",
+        #                         markersize=10)
+        #         temp_handles.append(marker)
+        #         # temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
+        #     for k, s_value in enumerate(sigmas_to_show):
+        #         handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+        #                         color='w',
+        #                         label='$\sigma$={}'.format(s_value),
+        #                         markerfacecolor=sigma_colors[k],
+        #                         markerfacecoloralt='k',
+        #                         # markeredgecolor="gold",
+        #                         markersize=10)
+        #         temp_handles.append(handle)
+        #     static_handles = [
+        #         Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+        #                markerfacecolor='k', markersize=10),
+        #         Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+        #                markerfacecolor='k', alpha=0.6, markersize=10),
+        #         Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+        #                label='Fine-Tuned DP', markersize=10),
+        #         Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+        #     ]
+        #     temp_handles.extend(static_handles)
+        #     temp_handles.reverse()
+        #     # lgd = plt.legend(handles=temp_handles, loc='lower left', prop={"size": fs * cfg.legends_multiplier},ncol=9)
+        #     # lgd = plt.legend(handles=temp_handles, bbox_to_anchor=(0, -0.005), loc='upper left', borderaxespad=0.1,
+        #     #                  prop={"size": fs * cfg.legends_multiplier})
+        #     # lgd = plt.legend(handles=temp_handles, bbox_to_anchor=(0, -0.005), loc='upper left', borderaxespad=0.1,
+        #     #                  prop={"size": fs * cfg.legends_multiplier})
+        #
+        # for handle_leg in lgd.legend_handles:
+        #     handle_leg._sizes = [100]
+
+        # lgd.legend_handles[0]._sizes = [300]
+        # lgd.legend_handles[1]._sizes = [300]
+
+    # ax2.set_xlabel("")
+    # fig = matplotlib.pyplot.gcf()
+    # fig.set_size_inches(10, 10)
+    # plt.xlim(0,2.5)
+    # plt.savefig(file, bbox_inches="tight")
+
+    return temp_handles
+
+
 def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame],
                            list_detesministic_dataframes: typing.List[pd.DataFrame], list_of_labels: typing.List[str],
                            title: str = "",
@@ -9667,7 +10343,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                         markeredgecolor=pruner_colors[kn],
                         # alpha=0.4,
                         linewidth=0,
-                        markeredgewidth=0.9,
+                        markeredgewidth=1.3,
                         ms=10
                         )
                 ax.plot(fine_tuning["Gradient Magnitude"], fine_tuning["Accuracy"],
@@ -9678,7 +10354,8 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                         markeredgecolor=pruner_colors[kn],
                         # alpha=0.4,
                         linewidth=0,
-                        markeredgewidth=0.6,
+                        # markeredgewidth=0.6,
+                        markeredgewidth=1.3,
                         ms=10
                         )
     plt.title("")
@@ -9718,6 +10395,10 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                                      deterministic_dataframe["Epoch"] == deterministic_dataframe[
                                                          "Epoch"].max()].iloc[0])
         # Plots the deterministic points
+        print(" ######################### DETERMINISTIC ##########################")
+        print(f"Fine-Tuned accuracy: {deterministic_final_accuracy} Fine-tuned GF: {deterministic_final_gradient_fow}")
+        print(f"One-Shot accuracy: {deterministic_initial_accuracy} One-Shot GF: {deterministic_initial_gradient_fow}")
+        print(" ##################################################################")
         ax.plot(deterministic_final_gradient_fow, deterministic_final_accuracy,
                 # fillstyle=fill_style[i],
                 markerfacecolor=pruner_colors[kk],
@@ -9746,13 +10427,55 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
         if legend_inside:
             temp_handles = []
             for j, label in enumerate(list_of_labels):
-                temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
+                marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label=label,
+                                markerfacecolor=pruner_colors[j],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(marker)
             for k, s_value in enumerate(sigmas_to_show):
-                handle = Line2D([0], [0], marker='o',  # fillstyle="left",
+                handle = Line2D([0], [0], marker='s',  # fillstyle="left",
                                 color='w',
                                 label='$\sigma$={}'.format(s_value),
                                 markerfacecolor=sigma_colors[k],
-                                markerfacecoloralt='grey',
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(handle)
+
+            static_handles = [
+                Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
+                       markerfacecolor='k', markersize=10),
+                Line2D([0], [0], marker='o', color='w', label='One-shot SP',
+                       markerfacecolor='k', alpha=0.6, markersize=10),
+                Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
+                       label='Fine-Tuned DP', markersize=10),
+                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
+            ]
+            temp_handles.extend(static_handles)
+            temp_handles.reverse()
+            lgd = plt.legend(handles=temp_handles, loc='upper right', prop={"size": fs * cfg.legends_multiplier})
+            # plt.xlim([0, 1.58])
+        else:
+            temp_handles = []
+            for j, label in enumerate(list_of_labels):
+                marker = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label=label,
+                                markerfacecolor=pruner_colors[j],
+                                markerfacecoloralt='k',
+                                # markeredgecolor="gold",
+                                markersize=10)
+                temp_handles.append(marker)
+                # temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
+            for k, s_value in enumerate(sigmas_to_show):
+                handle = Line2D([0], [0], marker='s',  # fillstyle="left",
+                                color='w',
+                                label='$\sigma$={}'.format(s_value),
+                                markerfacecolor=sigma_colors[k],
+                                markerfacecoloralt='k',
                                 # markeredgecolor="gold",
                                 markersize=10)
                 temp_handles.append(handle)
@@ -9766,31 +10489,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                 Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
             ]
             temp_handles.extend(static_handles)
-            lgd = plt.legend(handles=temp_handles, loc='upper right', prop={"size": fs * cfg.legends_multiplier})
-            # plt.xlim([0, 1.58])
-        else:
-            temp_handles = []
-            for j, label in enumerate(list_of_labels):
-                temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
-            for k, s_value in enumerate(sigmas_to_show):
-                handle = Line2D([0], [0], marker='o',  # fillstyle="left",
-                                color='w',
-                                label='$\sigma$={}'.format(s_value),
-                                markerfacecolor=sigma_colors[k],
-                                markerfacecoloralt='grey',
-                                # markeredgecolor="gold",
-                                markersize=10)
-                temp_handles.append()
-            static_handles = [
-                Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
-                       markerfacecolor='k', markersize=10),
-                Line2D([0], [0], marker='o', color='w', label='One-shot SP',
-                       markerfacecolor='k', alpha=0.6, markersize=10),
-                Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
-                       label='Fine-Tuned DP', markersize=10),
-                Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
-            ]
-            temp_handles.extend(static_handles)
+            temp_handles.reverse()
             lgd = plt.legend(handles=temp_handles, bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1,
                              prop={"size": fs * 0.6})
 
@@ -12153,50 +12852,14 @@ def LeMain(args):
 
     cfg.exclude_layers = exclude_layers
 
-    # weights_analysis_per_weight(cfg)
-    # print(omegaconf.OmegaConf.to_yaml(cfg))
-    # net = get_model(cfg)
-    # train, val, testloader = get_datasets(cfg)
-    #
-    # dense_performance = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    # print("Dense performance on test set = {}".format(dense_performance))
-    # pruned_model = copy.deepcopy(net)
-    # # cfg.amount = 0.9
-    # prune_function(pruned_model, cfg)
-    # remove_reparametrization(pruned_model, exclude_layer_list=cfg.exclude_layers)
-    # print("sparsity")
-    #
-    # # Add small noise just to get tiny variations of the deterministic case
-    # det_performance = test(pruned_model, use_cuda=True, testloader=testloader, verbose=0)
-    # print("Deterministic pruning outside function: {}".format(det_performance))
-
-    # solution1 = "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth"
-    # solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
-    # solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
-    #
-    # cfg.solution = solution1
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed1",show_legend=True)
-    # cfg.solution = solution2
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed2",show_legend=False)
-    # cfg.solution = solution3
-    # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3",show_legend=False)
-
-    # print(args)
-    # cfg.solution = ""
-    # truncated_network_unrestricted_training(cfg)
-    # truncated_network_fine_tune_linear_layer_only(cfg)
-    # explore_models_shapes()
-    # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
-    # features_similarity_comparison_experiments(cfg.architecture)
-
-    # experiment_selector(cfg, args, args["experiment"])
-    # MDS_projection_plot(cfg)
-    # bias_comparison_resnet18()
-    # plot_histograms_predictions("normal_seed2")
     # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
+
     cfg.legends_multiplier = args["legends_multiplier"]
     cfg.labels_multiplier = args["labels_multiplier"]
     cfg.ticks_mutiplier = args["ticks_multiplier"]
+
+    # experiment_selector(cfg,args,number_experiment=args["experiment"])
+
     CDF_weights_analysis_stochastic_deterministic(cfg)
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
@@ -14359,7 +15022,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
         f"_{cfg.population}_{eval_set}_{name}.pdf")
 
 
-def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig10=True):
+def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fig89=True, fig10=True):
     if fig1:
         cfg = omegaconf.DictConfig({
             # "architecture": "vgg19",
@@ -14797,6 +15460,200 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
         # #     # gradient_flow_correlation_analysis("gradient_flow_data/",cfg)
         # #     #
         # #
+
+    if fig57_2:
+
+        cfg = omegaconf.DictConfig({
+            "sigma": 0.003,
+            "amount": 0.9,
+            "architecture": "resnet18",
+            "model_type": "alternative",
+            "dataset": "cifar100",
+            "set": "test",
+            "solution": "",
+            "batch_size": 512,
+            # "batch_size": 128,
+            "num_workers": 0,
+        })
+
+        # df = pd.read_csv(f"gradientflow_stochastic_lamp_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+        # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
+        # models = ["resnet18", "resnet18", "resnet50", "resnet50", "VGG19", "VGG19"]
+        # datasets = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
+
+        models = ["resnet18", "resnet50", "VGG19", "resnet18", "resnet50", "VGG19"]
+        datasets = ["cifar10", "cifar10", "cifar10", "cifar100", "cifar100", "cifar100"]
+        pr_list = [0.9, 0.9528, 0.94, 0.9, 0.9528, 0.94]
+
+        # for comparison figs
+        # Only grasp
+        # pr_list = [0.9, 0.9, 0.95, 0.95, 0.944, 0.944]
+        # All of them
+        # pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
+        # sigmas = [0.001, 0.005],
+        sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
+        # sigmas_list = [[0.001],[0.001],[0.001],[0.001],[0.001],[0.001]]
+
+        # For table 1
+        # pr_list = [0.9, 0.9, 0.95, 0.85, 0.95, 0.8]
+        # sigmas_list = [[0.005],[0.003],[0.003],[0.001],[0.003],[0.001]]
+        # sigmas = {}
+        # for i in range(len(models)):
+        # sigmas = {():}
+
+        # models= ["resnet18"]
+        # pr_rate_grasp = 0
+        # dataset= ["cifar10"]
+        # pr_list= [0.9]
+
+        # fig_size = (30,5)
+        fig_size = (20,10)
+
+        fig, axs = plt.subplots(2, 3, figsize=fig_size, layout="compressed")
+
+        legend_handlers = None
+
+        for i in range(len(models)):
+            ax = axs.flat[i]
+            # ax.set_box_aspect(0.5)
+
+            cfg.architecture = models[i]
+            cfg.dataset = datasets[i]
+            # pr_rate_grasp = pr_list[i]
+            cfg.amount = pr_list[i]
+            inset_args = [0.5, 0.5, 0.5, 0.5]
+            if cfg.architecture == "resnet18" and cfg.dataset == "cifar10":
+                ax.set_xlim([0, 1.7])
+                inset_args =[0.5,0.1,0.5,0.5]
+            if cfg.architecture == "resnet50" and cfg.dataset == "cifar100":
+                ax.set_xlim([0, 16])
+                inset_args = [0.5, 0.2, 0.5, 0.5]
+            # file = f"{directory}scatter_{cfg.architecture}_both_dataset_{cfg.set}.pdf",
+
+            print("{} {}".format(models[i], datasets[i]))
+
+            df = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
+            df2 = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
+
+            if cfg.architecture == "resnet50":
+                pr_rate_grasp = 0.95
+                archi = cfg.architecture.lower()
+            if cfg.architecture == "VGG19":
+                pr_rate_grasp = 0.944
+                archi = cfg.architecture.lower()
+            if cfg.architecture == "resnet18":
+                pr_rate_grasp = 0.9
+                archi = cfg.architecture.lower()
+
+            df3 = pd.read_csv(
+                f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+                sep=",", header=0, index_col=False)
+
+            # This is for table 1
+            # archi = cfg.architecture.lower()
+            # df3 = pd.read_csv(
+            #     f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_table_1_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+            #     sep=",", header=0, index_col=False)
+
+            deterministic_lamp_df = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
+
+            deterministic_global_df = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
+
+            deterministic_GRASP_df = pd.read_csv(
+                f"gradientflow_deterministic_grasp_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+                sep=",", header=0, index_col=False)
+
+            sigmas = sigmas_list[i]
+            cfg.labels_multiplier = 2.5
+            cfg.legends_multiplier = 2.185
+            cfg.ticks_multiplier =2.5
+
+            # directory = "gradient_flow_results_test_set/"
+            # directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
+
+            directory = "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/scatterPlots/"
+
+            print("##################################")
+            # print(f"{cfg.pruner.upper()}")
+            print("ALL of them")
+            print(f"\t {cfg.architecture}-{cfg.dataset}")
+            print("##################################")
+
+            in_ax = ax.inset_axes(inset_args)
+            in_ax.grid(ls="--", alpha=0.9)
+            in_ax.set_xscale("log")
+
+            # if cfg.dataset == "cifar10":
+            #     in_ax.set_
+            # if cfg.dataset == "cifar100":
+
+            if i != len(models) - 1:
+
+                single_scatter_plot_V4(
+                    [df, df2, df3],
+                    [deterministic_lamp_df, deterministic_global_df, deterministic_GRASP_df],
+                    ["LAMP", "GLOBAL", "GRASP"],
+                    use_set=cfg.set, sigmas_to_show=sigmas,
+                    sigma_colors=["gold", "yellowgreen"],
+                    pruner_colors=["crimson", "dodgerblue", "darkorchid"],
+                    # pruner_colors=["darkslategrey"],
+                    show_legend=False, legend_inside=False, cfg=cfg, last_is_inset=True, ax=ax,in_ax=in_ax)
+
+            if i == len(models) - 1:
+
+                legend_handlers = single_scatter_plot_V4([df, df2, df3],
+                                                         [deterministic_lamp_df, deterministic_global_df,
+                                                          deterministic_GRASP_df],
+                                                         ["LAMP", "GLOBAL", "GRASP"],
+                                                         use_set=cfg.set, sigmas_to_show=sigmas,
+                                                         sigma_colors=["gold", "yellowgreen"],
+                                                         pruner_colors=["crimson", "dodgerblue", "darkorchid"],
+                                                         # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",
+                                                         # pruner_colors=["darkslategrey"],
+                                                         show_legend=True, legend_inside=False, cfg=cfg,
+                                                         last_is_inset=True, ax=ax,in_ax=in_ax)
+
+        lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(1, 0.5005), loc='center left', borderaxespad=0.1,
+                         prop={"size": fs * cfg.legends_multiplier})
+        # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.01,-0.15), loc='center left', borderaxespad=0.1,
+        #                  prop={"size": fs * cfg.legends_multiplier},ncols=9)
+
+        for handle_leg in lgd.legend_handles:
+            # handle_leg._sizes = [1000]
+            handle_leg.set_markersize(25)
+        # fig.text(0.6,-0.019, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
+        fig.text(0.1, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+
+        fig.text(0.5,-0.06, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
+        # fig.text(-0.009, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+        cols = ["RESNET18", "RESNET50", "VGG19"]
+        # cols = ["RESNET18-CIFAR10", "RESNET50-CIFAR10", "VGG19-CIFAR10","RESNET18-CIFAR100", "RESNET50-CIFAR100", "VGG19-CIFAR100"]
+        rows = ["CIFAR10", "CIFAR100"]
+
+        for ax, col in zip(axs[0], cols):
+            ax.set_title(col,size=fs * cfg.labels_multiplier)
+
+        # for ax, col in zip(axs, cols):
+        #     ax.set_title(col,size=fs * cfg.labels_multiplier)
+        for ax, row in zip(axs[:, 0], rows):
+            ax.set_ylabel(row, rotation=0,size=fs * cfg.labels_multiplier)
+            # ax.yaxis.labelpad = 25
+            ax.yaxis.labelpad = 90
+
+        # plt.show()
+        file = f"/home/luisaam/Documents/Intercom Interview may 2025/Project_Presentation/Feathergraphics/scatter_stochastic_test_{cfg.set}.pdf"
+        # plt.savefig(file, bbox_inches="tight")
+        # file = f"{directory}scatter_all_models_all_datasets_V5.pdf"
+        plt.savefig(file, bbox_inches="tight")
+
     if fig57:
         cfg = omegaconf.DictConfig({
             "sigma": 0.003,
@@ -14815,25 +15672,42 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
         # df2 = pd.read_csv(f"gradientflow_stochastic_global_mask_transfer_resnet18_cifar10_sigma_0.005_pr0.9.csv",sep = ",",header = 0, index_col = False)
         models = ["resnet18", "resnet18", "resnet50", "resnet50", "VGG19", "VGG19"]
         dataset = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
-        pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
-        # pr_list = [0.9, 0.9, 0.95, 0.95, 0.944, 0.944]
+
+        # for comparison figs
+        # Only grasp
+        pr_list = [0.9, 0.9, 0.95, 0.95, 0.944, 0.944]
+        # All of them
+        # pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
+        # sigmas = [0.001, 0.005],
+        sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
+        # sigmas_list = [[0.001],[0.001],[0.001],[0.001],[0.001],[0.001]]
+
+        # For table 1
+        # pr_list = [0.9, 0.9, 0.95, 0.85, 0.95, 0.8]
+        # sigmas_list = [[0.005],[0.003],[0.003],[0.001],[0.003],[0.001]]
+        # sigmas = {}
+        # for i in range(len(models)):
+        # sigmas = {():}
 
         # models= ["resnet18"]
-        pr_rate_grasp = 0
+        # pr_rate_grasp = 0
         # dataset= ["cifar10"]
         # pr_list= [0.9]
         for i in range(len(models)):
             cfg.architecture = models[i]
             cfg.amount = pr_list[i]
             cfg.dataset = dataset[i]
+            pr_rate_grasp = pr_list[i]
 
             print("{} {}".format(models[i], dataset[i]))
-            df = pd.read_csv(
-                f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-                sep=",", header=0, index_col=False)
-            df2 = pd.read_csv(
-                f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-                sep=",", header=0, index_col=False)
+
+            # df = pd.read_csv(
+            #     f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+            #     sep=",", header=0, index_col=False)
+            # df2 = pd.read_csv(
+            #     f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+            #     sep=",", header=0, index_col=False)
+
             if cfg.architecture == "resnet50":
                 pr_rate_grasp = 0.95
                 archi = cfg.architecture.lower()
@@ -14843,32 +15717,55 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
             if cfg.architecture == "resnet18":
                 pr_rate_grasp = 0.9
                 archi = cfg.architecture.lower()
+
             df3 = pd.read_csv(
                 f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
                 sep=",", header=0, index_col=False)
-            deterministic_lamp_df = pd.read_csv(
-                f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-                sep=",", header=0, index_col=False)
-            deterministic_global_df = pd.read_csv(
-                f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-                sep=",", header=0, index_col=False)
+
+            # This is for table 1
+
+            # archi = cfg.architecture.lower()
+            # df3 = pd.read_csv(
+            #     f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_table_1_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+            #     sep=",", header=0, index_col=False)
+
+            # deterministic_lamp_df = pd.read_csv(
+            #     f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+            #     sep=",", header=0, index_col=False)
+
+            # deterministic_global_df = pd.read_csv(
+            #     f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+            #     sep=",", header=0, index_col=False)
 
             deterministic_GRASP_df = pd.read_csv(
                 f"gradientflow_deterministic_grasp_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
                 sep=",", header=0, index_col=False)
+
+            # deterministic_GRASP_df = pd.read_csv(
+            #     f"gradientflow_deterministic_grasp_FT_comparison_table_1_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+            #     sep=",", header=0, index_col=False)
+
+            # deterministic_SYNFLOW_df = pd.read_csv(
+            #     f"gradientflow_deterministic_synflow_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
+            #     sep=",", header=0, index_col=False)
             #     sigmas = [0.005]
             #     sigmas = [0.001,0.0021,0.005,0.0065,0.0076,0.011]
-            sigmas = [0.001, 0.005]
+
+            sigmas = sigmas_list[i]
             cfg.labels_multiplier = 1.7
             cfg.legends_multiplier = 1
             cfg.ticks_multiplier = 1.6
+
             # directory = "gradient_flow_results_test_set/"
             # directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
             directory = "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/scatterPlots/"
             print("##################################")
-            print("\t LAMP")
+            # print(f"{cfg.pruner.upper()}")
+            print("GASP")
+            print(f"\t {cfg.architecture}-{cfg.dataset}")
             print("##################################")
             if cfg.dataset == "cifar10":
+
                 # scatter_plot_sigmas_V3([df, df2, df3],
                 #                        [deterministic_lamp_df, deterministic_global_df, deterministic_GRASP_df],
                 #                        ["LAMP", "GMP", "GRASP"],
@@ -14880,9 +15777,10 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
                 scatter_plot_sigmas_V3([df3],
                                        [deterministic_GRASP_df],
                                        ["GRASP"],
-                                       file=f"{directory}jscatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_grasp_only.pdf",
+                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_deleteme.pdf",
                                        use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
                                        pruner_colors=["darkorchid"],
+                                       # pruner_colors=["darkslategrey"],
                                        show_legend=False, legend_inside=True, cfg=cfg)
 
                 # scatter_plot_sigmas_V2(df, df2, deterministic_dataframe1=deterministic_lamp_df,
@@ -14899,17 +15797,15 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
                 #                        file=f"{directory}join_scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_v4_with_grasp.pdf",
                 #                        use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
                 #                        pruner_colors=["crimson", "dodgerblue", "darkorchid"],
-                #                        show_legend=true, legend_inside=true, cfg=cfg)
-
-
+                #                         show_legend=true, legend_inside=true, cfg=cfg)
                 scatter_plot_sigmas_V3([df3],
-                                       [ deterministic_global_df],
+                                       [deterministic_GRASP_df],
                                        ["GRASP"],
-                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_grasp_only.pdf",
                                        use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
                                        pruner_colors=["darkorchid"],
+                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_deleteme.pdf",
+                                       # pruner_colors=["darkslategrey"],
                                        show_legend=True, legend_inside=True, cfg=cfg)
-
                 # scatter_plot_sigmas_V2(df, df2, deterministic_dataframe1=deterministic_lamp_df,
                 #                        deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
                 #                        det_label2='Deter. GMP',
@@ -14917,6 +15813,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
                 #                        use_set=cfg.set, sigmas_to_show=sigmas,
                 #                        show_legend=True, legend_inside=True, cfg=cfg
                 #                        )
+
     if fig89:
         args = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
                 "log_sigma": True,
@@ -14938,7 +15835,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
         # datasets = ["cifar10"]
         # sampler = ["tpe"]
         # global labels_multiplier, ticks_multiplier, legend_multiplier, fig_size
-        fig_size = (10, 10)
+        fig_size = (4,4)
         labels_multiplier = 1
         ticks_multiplier = 0.8
         legend_multiplier = 1
@@ -15045,11 +15942,11 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
         # sampler = ["tpe"]
         # global labels_multiplier, ticks_multiplier, legend_multiplier, fig_size
         fig_size = (10, 10)
-        labels_multiplier = 1
+        labels_multiplier = 1.4
         ticks_multiplier = 0.8
-        legend_multiplier = 1
+        legend_multiplier = 1.4
 
-        args["legends_multiplier"] = 0.9
+        args["legends_multiplier"] = 1.3
         args["ticks_multiplier"] = 1.6
         args["labels_multiplier"] = 1.7
 
@@ -15061,4 +15958,4 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig89=True, fig1
 
 
 if __name__ == '__main__':
-    plot_stochastic_graphics(fig1=0, fig23=0, fig57=1, fig89=0, fig10=0)
+    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=1,fig57=0, fig89=0, fig10=0)
