@@ -15526,7 +15526,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                 ax.set_xlim([0, 1.7])
                 inset_args =[0.5,0.1,0.5,0.5]
             if cfg.architecture == "resnet50" and cfg.dataset == "cifar100":
-                ax.set_xlim([0, 16])
+                ax.set_xlim([0, 20])
                 inset_args = [0.5, 0.2, 0.5, 0.5]
             # file = f"{directory}scatter_{cfg.architecture}_both_dataset_{cfg.set}.pdf",
 
