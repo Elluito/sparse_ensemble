@@ -32,13 +32,20 @@ fi
 
 
 grad_clip=0
+
 epochs=200
+
 resolution=32
+
 array=1
+
 for model in "resnet50" "vgg19"; do
 #for model in "deep_small_vgg" "resnet25_small"; do # all two models
+
   for lvl in 1 2 3 4 ; do
+
 #  for lvl in 5 6 7 8 10; do
+
     for optim in "ekfac"; do
       for dataset in "cifar10"; do
 
