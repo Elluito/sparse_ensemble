@@ -633,7 +633,7 @@ if __name__ == '__main__':
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
     parser.add_argument('--type', default="normal", type=str, help='Type of implementation [normal,official]')
     parser.add_argument('--RF_level', default="4", type=str, help='Receptive field level')
-    parser.add_argument('--num_workers', default=4, type=int, help='Number of workers to use')
+    parser.add_argument('--num_workers', default=8, type=int, help='Number of workers to use')
     parser.add_argument('--dataset', "-dt", default="cifar10", type=str,
                         help='Dataset to use [cifar10,tiny_imagenet,small_imagenet]')
     parser.add_argument('--model', default="resnet50", type=str, help='Architecture of model [resnet18,resnet50]')
