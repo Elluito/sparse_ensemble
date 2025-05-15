@@ -79,12 +79,11 @@ def training(net, trainloader, testloader, optimizer, file_name_sufix, config, s
              save_folder="", use_scheduler=False, use_scheduler_batch=False, save=False, record=False, verbose=0,
              grad_clip=0, saturationTracker=False, record_flops=False, macs_per_batch=None, flops_per_batch=None):
     criterion = nn.CrossEntropyLoss()
-    seed = time.time()
     args = config
     net.to(device)
 
     if saturationTracker:
-        csv_tracker = SaturationTracker("{}/{}_seed_{}".format(save_folder, file_name_sufix,seed), save_to="csv", modules=net,
+        csv_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="csv", modules=net,
                                         device=device)
         # plot_tracker = SaturationTracker("{}/{}".format(save_folder, file_name_sufix), save_to="plot", modules=net,
         #                                  device=device)
@@ -456,6 +455,8 @@ def main(args):
     #     #                            Optimiser
     #     ########################################################################
 
+    seed = time.time()
+
     if args.optimiser == "kfac":
         # optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=0.003, damping=0.03)
         optimiser = KFACOptimizer(net, lr=args.lr, momentum=args.momentum, weight_decay=5e-4, damping=0.03)
@@ -466,8 +467,8 @@ def main(args):
         base_optimizer = torch.optim.SGD  # define an optimizer for the "sharpness-aware" update
         optimiser = SAM(net.parameters(), base_optimizer, lr=args.lr, momentum=args.momentum, rho=0.5, adaptive=True,
                         weight_decay=5e-4)
-    solution_name = "{}_{}_{}_rf_level_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
-                                                     args.name)
+    solution_name = "{}_{}_{}_rf_level_{}_{}_{}".format(args.model, args.type, args.dataset, args.RF_level,
+                                                     args.name,seed)
     if args.save:
         state = {
             'net': net.state_dict(),
