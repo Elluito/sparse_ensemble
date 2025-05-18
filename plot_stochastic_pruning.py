@@ -1420,6 +1420,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
 
 def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # one_batch = False  # arg["one_batch"]
+    plot_directory = cfg["plot_folder"]
     one_batch = arg["one_batch"]
     one_batch_string = "whole_batch" if not one_batch else "one_batch"
     sampler = arg["sampler"]
@@ -1445,7 +1446,7 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
         "MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
                                                                            function_string,
                                                                            one_batch_string))
-
+    fig_size=(6,4)
     fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
     axs.set_box_aspect(0.6)
     plt.title("{}".format(cfg.dataset.upper()), fontsize=fs * arg["labels_multiplier"])
@@ -1474,15 +1475,9 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     for axis in ['top', 'bottom', 'left', 'right']:
         axins.spines[axis].set_linewidth(1)
         axins.spines[axis].set_color('gray')
-    # axins.xaxis.set_major_locator(ticker.MultipleLocator(0.2))
-    # axins.xaxis.set_minor_locator(ticker.MultipleLocator(0.1))
-    # axins.yaxis.set_major_locator(ticker.MultipleLocator(3))
+
     axins.set_ylabel("$\sigma$", fontsize=fs * arg["labels_multiplier"], labelpad=-1)
     axins.grid(linestyle="--", alpha=0.5)
-    # axins.set_xlabel("$\gamma$", fontsize=fs * arg["labels_multiplier"],labelpad=-2.5)
-    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
-    # fig.colorbar(scins,cax=axins_cbar)
-    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
 
     plt.ylabel("SP on Val set", fontsize=fs * arg["labels_multiplier"], labelpad=-3)
 
@@ -1498,9 +1493,10 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
     # plt.legend()
     plt.grid(linestyle="--", alpha=0.5)
+    # /home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/pareto_fronts/
     plt.savefig(
-        "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}_V2.pdf".format(
-            cfg.architecture, cfg.dataset, sampler, function_string,
+        "{}pareto_front_v3_{}_{}_{}_{}_{}_V2.pdf".format(
+            plot_directory, cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
     # fig_size=(3,3)
@@ -1523,41 +1519,6 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
                      c=color_values, cmap=cmap,  # s=sizes*np.log(sizes),
                      s=100,
                      norm=matplotlib.colors.PowerNorm(gamma=0.8))
-    # axs_y = axs.twinx()
-    # sc2 = axs_y.scatter(y=p_more_than_0["Gradient Flow On Val"], x=p_more_than_0["Stochastic performance"],
-    #                     c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                     norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    # sc_less_than_0_2 = axs_y.scatter(y=p_lees_than_0["Gradient Flow On Val"], x=p_lees_than_0["Stochastic performance"],
-    #                                  facecolors='none', edgecolors='k', s=15)
-
-    # sc = plt.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                  c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                  norm=matplotlib.colors.PowerNorm(gamma=1.2))
-
-    # axins2 = inset_axes(axs, width="40%", height="40%", loc="lower left")
-
-    # axins = axs.inset_axes([0.13, 0.12, 0.35, 0.5])
-    #
-    # axins.ticklabel_format(axis="y",style="sci",scilimits=(0,0))
-    #
-    # axins_cbar = axs.inset_axes([0.49, 0.12, 0.02, 0.5])
-    #
-    # scins = axins.scatter(y=p_more_than_0["Sigma"], x=p_more_than_0["Pruning rate"],
-    #                       c=color_values, cmap=cmap,#s=sizes*np.log(sizes),
-    #                       norm=matplotlib.colors.PowerNorm(gamma=1.2))
-    # scins = axins.scatter(y=p_lees_than_0 ["Sigma"], x=p_lees_than_0["Pruning rate"],
-    #                       facecolors="none",edgocolor="k",) #s=sizes*np.log(sizes),)
-    # axins.tick_params(axis='both', which='major', labelsize=fs*0.8)
-    # for axis in ['top', 'bottom', 'left', 'right']:
-    #     axins.spines[axis].set_linewidth(1)
-    #     axins.spines[axis].set_color('gray')
-    #
-    # axins.set_ylabel("$\sigma$",fontsize=20)
-    # axins.set_xlabel("$\sigma$",fontsize=20)
-
-    # mark_inset(axs, axins, loc1=2, loc2=4, fc="none", ec='gray', lw=1)
-    # fig.colorbar(scins,cax=axins_cbar)
-    # norm=matplotlib.colors.LogNorm(vmin=color_values.min(),vmax=color_values.max()), s=100)
 
     plt.ylabel("SP on Val set", fontsize=fs * arg["labels_multiplier"], labelpad=-3)
 
@@ -1576,8 +1537,8 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
     # plt.legend()
     plt.savefig(
-        "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}_V2.pdf".format(
-            cfg.architecture, cfg.dataset, sampler, function_string,
+        "{}pareto_front_with_GF_{}_{}_{}_{}_{}_V2.pdf".format(
+            plot_directory, cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
 
@@ -1840,7 +1801,7 @@ def run_pr_sigma_search_MOO_for_cfg(cfg, arg):
     # plt.ylabel("$\sigma$", fontsize=fs * 0.8)
     # plt.legend()
     plt.savefig(
-        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
+        "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/pareto_fronts/{}pareto_front_v3_{}_{}_{}_{}_{}.pdf".format(
             cfg.architecture, cfg.dataset, sampler, function_string,
             one_batch_string), bbox_inches="tight")
     plt.close()
@@ -4550,7 +4511,8 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
         pdf1 = count1 / torch.sum(count1)
         cdf1 = torch.cumsum(pdf1, dim=0)
         fig, ax = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-        ax.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(),linewidth=2, label=f"{architecture_string}-Det. Dense")
+        ax.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), linewidth=2,
+                label=f"{architecture_string}-Det. Dense")
         names1, weights1 = zip(*get_layer_dict(net))
 
         # for i, pr in enumerate(pruning_rates):
@@ -4566,7 +4528,7 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
             count2, bin_counts2 = torch.histogram(param_vector_noisy, bins=len(param_vector_noisy), range=range)
         pdf2 = count2 / torch.sum(count2)
         cdf2 = torch.cumsum(pdf2, dim=0)
-        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(),linewidth=2,
+        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(), linewidth=2,
                  label=fr"{architecture_string}-Sto. $\sigma$={cfg.sigma}")
 
         names2, weights2 = zip(*get_layer_dict(noisy_model))
@@ -9838,7 +9800,7 @@ def single_scatter_plot_V4(list_stochastic_dataframes: typing.List[pd.DataFrame]
                            title: str = "",
                            file: str = "", use_set="val", sigmas_to_show=[], sigma_colors=[], os_ft_colors=[],
                            pruner_colors=[], show_legend=True, legend_inside=False,
-                           cfg=None, ax=None, last_is_inset=True,in_ax=None):
+                           cfg=None, ax=None, last_is_inset=True, in_ax=None):
     first_dataframe: pd.DataFrame = list_stochastic_dataframes[0]
     last_index = len(list_stochastic_dataframes) - 1
     list_of_all_dfs: list = [None] * len(list_stochastic_dataframes)
@@ -9938,7 +9900,6 @@ def single_scatter_plot_V4(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                 ms=15
                                 )
                     if kn == last_index:
-
                         in_ax.plot(one_shot["Gradient Magnitude"], one_shot["Accuracy"],
                                    # fillstyle=fill_style[i],
                                    markerfacecolor=sigma_colors[i],
@@ -12842,6 +12803,7 @@ def LeMain(args):
         "num_workers": args["num_workers"],
         "save_model_path": "stochastic_pruning_models/",
         "save_data_path": "stochastic_pruning_data/",
+        "plot_folder": args["plot_folder"],
         "gradient_cliping": True,
         "pad": False,
         "input_resolution": 32,
@@ -12858,9 +12820,9 @@ def LeMain(args):
     cfg.labels_multiplier = args["labels_multiplier"]
     cfg.ticks_mutiplier = args["ticks_multiplier"]
 
-    # experiment_selector(cfg,args,number_experiment=args["experiment"])
+    experiment_selector(cfg, args, number_experiment=args["experiment"])
 
-    CDF_weights_analysis_stochastic_deterministic(cfg)
+    # CDF_weights_analysis_stochastic_deterministic(cfg)
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
     # stochastic_soup_of_models(cfg, name="")
@@ -15507,9 +15469,10 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # pr_list= [0.9]
 
         # fig_size = (30,5)
-        fig_size = (20,10)
+        fig_size = (20, 10)
 
         fig, axs = plt.subplots(2, 3, figsize=fig_size, layout="compressed")
+        # fig, axs = plt.subplots(1, 6, figsize=fig_size, layout="compressed")
 
         legend_handlers = None
 
@@ -15524,7 +15487,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             inset_args = [0.5, 0.5, 0.5, 0.5]
             if cfg.architecture == "resnet18" and cfg.dataset == "cifar10":
                 ax.set_xlim([0, 1.7])
-                inset_args =[0.5,0.1,0.5,0.5]
+                inset_args = [0.5, 0.1, 0.5, 0.5]
             if cfg.architecture == "resnet50" and cfg.dataset == "cifar100":
                 ax.set_xlim([0, 20])
                 inset_args = [0.5, 0.2, 0.5, 0.5]
@@ -15574,12 +15537,12 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             sigmas = sigmas_list[i]
             cfg.labels_multiplier = 2.5
             cfg.legends_multiplier = 2.185
-            cfg.ticks_multiplier =2.5
+            cfg.ticks_multiplier = 2.5
 
             # directory = "gradient_flow_results_test_set/"
             # directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
 
-            directory = "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/scatterPlots/"
+            directory = "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/scatterPlots/"
 
             print("##################################")
             # print(f"{cfg.pruner.upper()}")
@@ -15596,7 +15559,6 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             # if cfg.dataset == "cifar100":
 
             if i != len(models) - 1:
-
                 single_scatter_plot_V4(
                     [df, df2, df3],
                     [deterministic_lamp_df, deterministic_global_df, deterministic_GRASP_df],
@@ -15605,10 +15567,9 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                     sigma_colors=["gold", "yellowgreen"],
                     pruner_colors=["crimson", "dodgerblue", "darkorchid"],
                     # pruner_colors=["darkslategrey"],
-                    show_legend=False, legend_inside=False, cfg=cfg, last_is_inset=True, ax=ax,in_ax=in_ax)
+                    show_legend=False, legend_inside=False, cfg=cfg, last_is_inset=True, ax=ax, in_ax=in_ax)
 
             if i == len(models) - 1:
-
                 legend_handlers = single_scatter_plot_V4([df, df2, df3],
                                                          [deterministic_lamp_df, deterministic_global_df,
                                                           deterministic_GRASP_df],
@@ -15619,39 +15580,42 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                                                          # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}.pdf",
                                                          # pruner_colors=["darkslategrey"],
                                                          show_legend=True, legend_inside=False, cfg=cfg,
-                                                         last_is_inset=True, ax=ax,in_ax=in_ax)
+                                                         last_is_inset=True, ax=ax, in_ax=in_ax)
+
+        # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.01,-0.15), loc='center left', borderaxespad=0.1,
+        #                  prop={"size": fs * cfg.legends_multiplier},ncols=9)
 
         lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(1, 0.5005), loc='center left', borderaxespad=0.1,
                          prop={"size": fs * cfg.legends_multiplier})
-        # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.01,-0.15), loc='center left', borderaxespad=0.1,
-        #                  prop={"size": fs * cfg.legends_multiplier},ncols=9)
 
         for handle_leg in lgd.legend_handles:
             # handle_leg._sizes = [1000]
             handle_leg.set_markersize(25)
-        # fig.text(0.6,-0.019, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
-        fig.text(0.1, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+        # fig.text(0.1, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+        fig.text(0.5, -0.06, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
 
-        fig.text(0.5,-0.06, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
-        # fig.text(-0.009, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+        # fig.text(0.6,-0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
+        fig.text(-0.009, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+
         cols = ["RESNET18", "RESNET50", "VGG19"]
         # cols = ["RESNET18-CIFAR10", "RESNET50-CIFAR10", "VGG19-CIFAR10","RESNET18-CIFAR100", "RESNET50-CIFAR100", "VGG19-CIFAR100"]
         rows = ["CIFAR10", "CIFAR100"]
 
         for ax, col in zip(axs[0], cols):
-            ax.set_title(col,size=fs * cfg.labels_multiplier)
+            ax.set_title(col, size=fs * cfg.labels_multiplier)
 
         # for ax, col in zip(axs, cols):
         #     ax.set_title(col,size=fs * cfg.labels_multiplier)
+
         for ax, row in zip(axs[:, 0], rows):
-            ax.set_ylabel(row, rotation=0,size=fs * cfg.labels_multiplier)
+            ax.set_ylabel(row, rotation=0, size=fs * cfg.labels_multiplier)
             # ax.yaxis.labelpad = 25
             ax.yaxis.labelpad = 90
 
         # plt.show()
-        file = f"/home/luisaam/Documents/Intercom Interview may 2025/Project_Presentation/Feathergraphics/scatter_stochastic_test_{cfg.set}.pdf"
+        # file = f"/home/luisaam/Documents/Intercom Interview may 2025/Project_Presentation/Feathergraphics/scatter_stochastic_test_{cfg.set}.pdf"
         # plt.savefig(file, bbox_inches="tight")
-        # file = f"{directory}scatter_all_models_all_datasets_V5.pdf"
+        file = f"{directory}scatter_all_models_all_datasets_V6.pdf"
         plt.savefig(file, bbox_inches="tight")
 
     if fig57:
@@ -15835,7 +15799,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # datasets = ["cifar10"]
         # sampler = ["tpe"]
         # global labels_multiplier, ticks_multiplier, legend_multiplier, fig_size
-        fig_size = (4,4)
+        fig_size = (4, 4)
         labels_multiplier = 1
         ticks_multiplier = 0.8
         legend_multiplier = 1
@@ -15919,13 +15883,14 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         #     plot_get_statistics_on_FLOPS_until_threshold(df_sto,df_det,cfg=cfg,threshold=90,pruning_type="lamp",use_log=True)
         # #     print("Now global deterministic")
         # # get_statistics_on_FLOPS_until_threshold(df,92,is_det=True)
-        #
+
     if fig10:
         args = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
                 "log_sigma": True,
                 "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar100",
                 "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.003, "pruning_rate": 0.9,
-                "batch_size": 512, "name": "no_name"}
+                "batch_size": 512, "name": "no_name",
+                "plot_folder": "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/pareto_fronts/"}
         # args["architecture"] = args_out["architecture"]
         # args["dataset"] = args_out["dataset"]
         # args["sampler"] = args_out["sampler"]
@@ -15958,4 +15923,4 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
 
 if __name__ == '__main__':
-    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=1,fig57=0, fig89=0, fig10=0)
+    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=0, fig57=0, fig89=0, fig10=1)
