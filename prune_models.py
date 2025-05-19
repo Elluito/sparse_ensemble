@@ -1154,22 +1154,6 @@ def batch_pruning_fine_tuning_experiment(args):
     folder_name = "{}/pruned/{}".format(args.folder, args.pruning_rate)
     if not os.path.isdir(folder_name):
         os.makedirs(folder_name)
-    # new_folder = "{}/pruned/{}".format(args.folder, args.pruning_rate)
-
-    #
-    # for i, name in enumerate(
-    #         glob.glob("{}/{}_normal_{}_*_level_{}_test_acc_*.pth".format(args.folder, args.model, args.dataset,
-    #                                                                      f"{args.RF_level}{args.name}"))):
-    # state_dict_raw = torch.load("{}/{}".format(args.folder, args.solution))
-    # dense_accuracy_list.append(state_dict_raw["acc"])
-    # print(state_dict_raw["acc"])
-    # net.load_state_dict(state_dict_raw["net"])
-    # prune_function(net, cfg)
-    # remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-    # pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    # print("Pruned accuracy:{}".format(pruned_accuracy))
-    # file_name = args.solution
-    # print(file_name)
 
     search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
                                                                            args.RF_level, args.name)
@@ -3468,7 +3452,8 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     dense_accuracy_list = []
     fine_tuned_accuracy = []
 
-    folder_name = "{}/pruned_transfer_to_{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
+    # folder_name = "{}/pruned_transfer_to_{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
+    folder_name = "{}/pruned{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
     if not os.path.isdir(folder_name):
         os.makedirs(folder_name)
 
@@ -3484,8 +3469,9 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
 
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-    pruned_accuracy: float = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    print("Pruned accuracy:{}".format(pruned_accuracy))
+    pruned_accuracy_test: float = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    pruned_accuracy_train: float = test(net, use_cuda=True, testloader=valloader, verbose=0)
+    print("Pruned accuracy:{}".format(pruned_accuracy_test))
     # file_name = args.solution
     # print(file_name)
     if "test_acc" in file_name:
@@ -3494,6 +3480,17 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     else:
         base_name = file_name
 
+    filepath = "{}/{}_fined_tuned_acc.csv".format(folder_name, base_name)
+    print("Recording to {}".format(filepath))
+    if Path(filepath).is_file():
+        log_dict = {"Epoch": [-1], "test accuracy": [pruned_accuracy_test], "training accuracy": [pruned_accuracy_train]}
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, mode="a", header=False, index=False)
+    else:
+        # Try to read the file to see if it is
+        log_dict = {"Epoch": [-1], "test accuracy": [pruned_accuracy_test], "training accuracy": [pruned_accuracy_train]}
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, sep=",", index=False)
 
     seed_from_file1 = re.findall("_[0-9]_", base_name)
 
