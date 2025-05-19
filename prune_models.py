@@ -3453,7 +3453,7 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     fine_tuned_accuracy = []
 
     # folder_name = "{}/pruned_transfer_to_{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
-    folder_name = "{}/pruned{}/{}".format(args.folder,args.dataset2,args.pruning_rate)
+    folder_name = "{}/pruned/{}".format(args.folder,args.pruning_rate)
     if not os.path.isdir(folder_name):
         os.makedirs(folder_name)
 
