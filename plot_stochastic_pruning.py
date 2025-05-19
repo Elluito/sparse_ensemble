@@ -15582,20 +15582,20 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                                                          show_legend=True, legend_inside=False, cfg=cfg,
                                                          last_is_inset=True, ax=ax, in_ax=in_ax)
 
-        # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.01,-0.15), loc='center left', borderaxespad=0.1,
-        #                  prop={"size": fs * cfg.legends_multiplier},ncols=9)
+        lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.12,-0.15), loc='center left', borderaxespad=0.1,
+                         prop={"size": fs * cfg.legends_multiplier},ncols=5)
 
-        lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(1, 0.5005), loc='center left', borderaxespad=0.1,
-                         prop={"size": fs * cfg.legends_multiplier})
+        # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(1, 0.5005), loc='center left', borderaxespad=0.1,
+        #                  prop={"size": fs * cfg.legends_multiplier})
 
         for handle_leg in lgd.legend_handles:
             # handle_leg._sizes = [1000]
             handle_leg.set_markersize(25)
         # fig.text(0.1, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
-        fig.text(0.5, -0.06, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
+        fig.text(0.6, -0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
 
         # fig.text(0.6,-0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
-        fig.text(-0.009, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+        fig.text(0.08,0.5, 'Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
 
         cols = ["RESNET18", "RESNET50", "VGG19"]
         # cols = ["RESNET18-CIFAR10", "RESNET50-CIFAR10", "VGG19-CIFAR10","RESNET18-CIFAR100", "RESNET50-CIFAR100", "VGG19-CIFAR100"]
@@ -15923,4 +15923,4 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
 
 if __name__ == '__main__':
-    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=0, fig57=0, fig89=0, fig10=1)
+    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=1, fig57=0, fig89=0, fig10=0)

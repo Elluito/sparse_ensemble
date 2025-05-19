@@ -1005,7 +1005,7 @@ def pruning_fine_tuning_experiment(args):
          "pad":args.pad,
          "input_resolution":args.input_resolution,
          })
-    train, val, testloader = get_datasets(cfg)
+    trainloader, valloader, testloader = get_datasets(cfg)
 
     from torchvision.models import resnet18, resnet50
     if args.model == "resnet18":
@@ -1055,9 +1055,12 @@ def pruning_fine_tuning_experiment(args):
     net.load_state_dict(state_dict_raw["net"])
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
-    pruned_accuracy = test(net, use_cuda=True, testloader=testloader, verbose=0)
-    print("Pruned accuracy:{}".format(pruned_accuracy))
+    pruned_accuracy_test = test(net, use_cuda=True, testloader=testloader, verbose=0)
+    pruned_accuracy_train = test(net, use_cuda=True, testloader=trainloader, verbose=0)
+
+    print("Pruned accuracy:{}".format(pruned_accuracy_test))
     file_name = args.solution
+
     print(file_name)
     if "test_acc" in file_name:
         index_until_test = file_name.index("test_acc")
@@ -1065,9 +1068,20 @@ def pruning_fine_tuning_experiment(args):
     else:
         base_name = file_name
 
+    filepath = "{}/{}_fined_tuned_acc.csv".format(folder_name, base_name)
+    print("Recording to {}".format(filepath))
+    if Path(filepath).is_file():
+        log_dict = {"Epoch": [-1], "test accuracy": [pruned_accuracy_test], "training accuracy": [pruned_accuracy_train]}
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, mode="a", header=False, index=False)
+    else:
+        # Try to read the file to see if it is
+        log_dict = {"Epoch": [-1], "test accuracy": [pruned_accuracy_test], "training accuracy": [pruned_accuracy_train]}
+        df = pd.DataFrame(log_dict)
+        df.to_csv(filepath, sep=",", index=False)
     # Strings in between _
 
-    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=val, testLoader=testloader, epochs=args.epochs,
+    final_accuracy = fine_tune_pruned_model_with_mask(net, dataLoader=valloader, testLoader=testloader, epochs=args.epochs,
                                                       exclude_layers=cfg.exclude_layers, cfg=cfg,
                                                       save_folder=folder_name,
                                                       name=base_name)
