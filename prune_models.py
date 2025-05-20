@@ -3474,12 +3474,12 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     print("Pruned accuracy:{}".format(pruned_accuracy_test))
     # file_name = args.solution
     # print(file_name)
-    # if "test_acc" in file_name:
-    #     index_until_test = file_name.index("test_acc")
-    #     base_name = file_name[:index_until_test]
-    #     os.path.basename(base_name)
-    # else:
-    #     base_name = file_name
+    if "test_acc" in file_name:
+        index_until_test = file_name.index("test_acc")
+        base_name = file_name[:index_until_test]
+        os.path.basename(base_name)
+    else:
+        base_name = file_name
     base_name = os.path.basename(file_name)
     filepath = "{}/{}_fined_tuned_acc.csv".format(folder_name, base_name)
     print("Recording to {}".format(filepath))
