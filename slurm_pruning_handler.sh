@@ -170,7 +170,7 @@ for rf_level in "5" "6" "7" "8" "10"; do
 
 #run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
 
-run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "sgd_100_res_224" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
 
 
 done
