@@ -1060,7 +1060,7 @@ def main():
     # density = torchessian.F(support,l_s1_levelp.real,w_s1_levelp.real,m)
     # ax.plot(support.numpy(), density.numpy(), color='y')
     ax.set_yscale('log')
-    ax.set_yticks([10 ** (i - 7) for i in range(10)])
+    ax.set_yticks([10 ** (i - 10) for i in range(10)])
     ax.set_ylim(10 ** -10, 10 ** 3)
     m_patch = mpatches.Patch(color='magenta', label='RF (107,107)')
     # c_patch = mpatches.Patch(color='cyan', label='Level 1 seed 1')
@@ -1077,6 +1077,7 @@ def main():
     # plt.title("Hessian spectre comparisons")
     plt.xlim(-11, 18)
     plt.savefig("paper_plots/Hessian_spectre_resnet50_trained_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/Hessian_spectre_resnet50_trained_cifar10.pdf",  bbox_inches="tight", pad_inches=0.05)
 
     ############ VGG
     l_file = open("smoothness/vgg19/l_seed_0_rf_level_1.pkl", "rb")
@@ -1111,19 +1112,19 @@ def main():
     support = torch.linspace(-20, 36, 1000000)
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
     density = torchessian.F(support, l_s0_level1.real, w_s0_level1.real, m)
-    ax.plot(support.numpy(), density.numpy(), color='m')
+    ax.plot(support.numpy(), density.numpy(), color='m',label="RF (181,181)")
     # density = torchessian.f(support,l_s1_level1.real,w_s1_level1.real,m)
     # ax.plot(support.numpy(), density.numpy(), color='c')
     # density = torchessian.f(support, l_s0_level2.real,w_s0_level2.real, m)
     # ax.plot(support.numpy(), density.numpy(), color='r')
     density = torchessian.F(support, l_s0_level3.real, w_s0_level3.real, m)
-    ax.plot(support.numpy(), density.numpy(), color='b')
+    ax.plot(support.numpy(), density.numpy(), color='b',label="RF (537,537)")
     density = torchessian.F(support, l_s0_level4.real, w_s0_level4.real, m)
-    ax.plot(support.numpy(), density.numpy(), color='g')
+    ax.plot(support.numpy(), density.numpy(), color='g',label="RF (715,715)")
     # density = torchessian.f(support,l_s0_levelp.real,w_s0_levelp.real,m)
     # ax.plot(support.numpy(), density.numpy(), color='y')
     ax.set_yscale('log')
-    ax.set_yticks([10 ** (i - 7) for i in range(10)])
+    ax.set_yticks([10 ** (i - 10) for i in range(10)])
     ax.set_ylim(10 ** -10, 10 ** 3)
     m_patch = mpatches.Patch(color='magenta', label='RF (181,181)')
     # c_patch = mpatches.patch(color='cyan', label='level 1 seed 1')
@@ -1133,13 +1134,15 @@ def main():
     # yellow_patch = mpatches.patch(color='yellow', label='level 4 seed 1')
     # plt.legend(handles=[m_patch,c_patch,red_patch, blue_patch,gree_patch])
     plt.xlim(-20, 36)
-    plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
+    # plt.legend(handles=[m_patch, blue_patch, green_patch], prop={"size": fs*0.8})
+    plt.legend(prop={"size": fs*0.8})
     # plt.title("hessian spectre comparisons")
     plt.xlabel("$\lambda$", fontsize=15)
     plt.ylabel("$P(\lambda)$", fontsize=15)
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.tick_params(axis='both', which='minor', labelsize=15)
     plt.savefig("paper_plots/Hessian_spectre_vgg_trained_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/Hessian_spectre_vgg_trained_cifar10.pdf",  bbox_inches="tight", pad_inches=0.05)
 
     ### Initialisation
 
@@ -1205,7 +1208,7 @@ def main():
     # density = torchessian.f(support,l_s0_levelp.real,w_s0_levelp.real,m)
     # ax.plot(support.numpy(), density.numpy(), color='y')
     ax.set_yscale('log')
-    ax.set_yticks([10 ** (i - 7) for i in range(10)])
+    ax.set_yticks([10 ** (i - 10) for i in range(10)])
     ax.set_ylim(10 ** -10, 10 ** 3)
     m_patch = mpatches.Patch(color='magenta', label='RF(107,107)')
     # c_patch = mpatches.Patch(color='cyan', label='level 1 seed 1')
@@ -1221,6 +1224,7 @@ def main():
     ax.tick_params(axis='both', which='major', labelsize=15)
     ax.tick_params(axis='both', which='minor', labelsize=15)
     plt.savefig("paper_plots/Hessian_spectre_resnet50_init_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/Hessian_spectre_resnet50_init_cifar10.pdf",  bbox_inches="tight", pad_inches=0.05)
 
     ############ VGG
     # Level 1
@@ -1300,6 +1304,7 @@ def main():
     ax.tick_params(axis='both', which='minor', labelsize=15)
     # plt.title("hessian spectre comparisons at initialisation")
     plt.savefig("paper_plots/Hessian_spectre_vgg_init_cifar10.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/Hessian_spectre_vgg_init_cifar10.pdf",  bbox_inches="tight", pad_inches=0.05)
     ############################ Pruning Results CIFAR10 ##############################################################
     df = pd.read_csv("cifa10_pruning_results.csv", delimiter=",")
 

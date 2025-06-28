@@ -154,7 +154,7 @@ else
     python prune_models.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --data_folder "${DATA_FOLDER}" --save_folder "${SAVE_FOLDER}" --input_resolution "${INPUT_RES}" --resize "${RESIZE}" --epochs 10 --record 1
   fi
 
-#############################################################
+###########################################################
 #   Soup Idea applied to stochastic pruning
 #############################################################
 

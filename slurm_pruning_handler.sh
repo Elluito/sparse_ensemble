@@ -137,7 +137,6 @@ else
 #
 #
 ##run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_2" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sgd_100_res_224_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
-##run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_2" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "ekfac_cifar10_100_res_224_gc_0_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 ##run_pruning "${model}" "${dataset}" "${HOME}/deep_small_models_2" "${HOME}/datasets" "${HOME}/sparse_ensemble/large_input_pruning_results" "sam_cifar10_100_res_224_gc_0_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}"
 #
 #
@@ -151,27 +150,27 @@ else
 
 
 
-resolution=32
+#resolution=32
 resize=0
-#resolution=224
+resolution=224
 #save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
 #save_folder="${HOME}/sparse_ensemble/pruning_level_0"
 #checkpoints_folder="${SCRATCH}/new_models_original_paper"
-save_folder="${HOME}/sparse_ensemble/second_order_pruning_lr_0.1_momentum_0.9"
-checkpoints_folder="${SCRATCH}/second_order_checkpoints"
-for model in "resnet50"; do
-for dataset in "cifar10"; do
-#for dataset in "tiny_imagenet"; do
-for pruning_rate in "0.6" "0.8" "0.9" ; do
-for rf_level in "1"; do
-#for rf_level in "5" "6" "7" "8" "10"; do
+save_folder="${HOME}/sparse_ensemble/RF_and_SP_results"
+checkpoints_folder="${SCRATCH}/deep_small_models_for_RF"
+for model in "resnet25_small"; do
+#for dataset in "cifar10"; do
+for dataset in "small_imagenet"; do
+for pruning_rate in "0.9" ; do
+#for rf_level in "1"; do
+for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
 
 
 #run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
 
-run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "lr_0.1_momentum_0.9_ekfac_200_res_32_gc_0" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
 
 #"lr_0.1_momentum_0.9_ekfac_200_res_32_gc_0"
 

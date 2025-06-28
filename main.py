@@ -9199,10 +9199,6 @@ def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(
                                                                                 show_legend=True, pr_list=[]):
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
-    # cfg.solution = solution2
-    # net2 = get_model(cfg)
-    # cfg.solution = solution3
-    # net3 = get_model(cfg)
 
     evaluation_set = select_eval_set(cfg, eval_set)
     N = cfg.population
@@ -9360,8 +9356,8 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     pruned_original2 = copy.deepcopy(net2)
     pruned_original3 = copy.deepcopy(net3)
 
-    names, weights = zip(*get_layer_dict(net))
-    number_of_layers = len(names)
+   names, weights = zip(*get_layer_dict(net))
+    number_of_layers= len(names)
     sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
 
     if cfg.pruner == "global":
@@ -9941,24 +9937,7 @@ def stochastic_pruning_global_against_LAMP_deterministic_pruning(cfg: omegaconf.
 
 
 ############################# Scatter plots #############################################################
-def calculate_stats(df):
-    one_shot_gradient_fow = df['test_set_gradient_magnitude'][df["Epoch"] == -1]
-    fine_tune_final_gradient_fow = df.iloc[len(df) - 1]["test_set_gradient_magnitude"]
-    one_shot_accuracy = df["test_accuracy"][df["Epoch"] == -1]
-    fine_tuned_accuracy = df["test_accuracy"][df["Epoch"] == df["Epoch"].max()]
-
-    print("One Shot Accuracy")
-    print('-' * 30)
-    stats = df.groupby(['Epoch'])['test_accuracy'].agg(['mean', 'count', 'std', "median"])
-    # print(stats.iloc[0])
-
-    ci95_hi = []
-    ci95_lo = []
-
-    for i in stats.index:
-        m, c, s, me = stats.loc[i]
-        ci95_hi.append(m + 1.96 * s / math.sqrt(c))
-        ci95_lo.append(m - 1.96 * s / math.sqrt(c))
+    ci95_lo.append(m - 1.96 * s / math.sqrt(c))
 
     stats['ci95_hi'] = ci95_hi
     stats['ci95_lo'] = ci95_lo
@@ -10654,7 +10633,7 @@ def gradient_flow_especific_combination_dataframe_generation_stochastic_only(pre
     This function is for unifying the results of a particular exp
     @rtype: object
     @param prefix:This is the folder were deterministic LAMP/GLOBAL and stochastic LAMP/GLOBAL folders (with all the subfolder struceture) reside. Should contain the same dataset name as in cfg.
-    @param cfg: Configuration for a particular architceture X sigma X pruning rate combination to create a dataframe with all individuals results. The dataset is
+    @param cfg: Configuration for a particular architecture X sigma X pruning rate combination to create a dataframe with all individuals results. The dataset is
     present in the prefix string
     '''
     # prefix = Path(prefix)
@@ -13899,7 +13878,7 @@ def explore_models_shapes():
 
 
 def stochastic_soup_of_models(cfg: omegaconf.DictConfig, eval_set: str = "test", name: str = "", version="dense"):
-    print("Started stichastic function")
+    print("Started stochastic function")
     use_cuda = torch.cuda.is_available()
     net = get_model(cfg)
     evaluation_set = select_eval_set(cfg, eval_set)

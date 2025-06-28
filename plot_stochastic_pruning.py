@@ -124,7 +124,7 @@ sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
 fs = 12
-fig_size = (6, 4)
+fig_size = (3,3)
 legend_multiplier = 0.6
 labels_multiplier = 0.8
 ticks_multiplier = 0.6
@@ -1419,6 +1419,7 @@ def test_pr_sigma_combination(cfg, pr, sigma, cal_val=False):
 
 
 def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
+
     # one_batch = False  # arg["one_batch"]
     plot_directory = cfg["plot_folder"]
     one_batch = arg["one_batch"]
@@ -1446,7 +1447,7 @@ def plot_pr_sigma_search_MOO_for_cfg(cfg, arg):
         "MOO_pareto_fronts/pareto_front_with_GF_{}_{}_{}_{}_{}.csv".format(cfg.architecture, cfg.dataset, sampler,
                                                                            function_string,
                                                                            one_batch_string))
-    fig_size=(6,4)
+    fig_size = (6, 4)
     fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
     axs.set_box_aspect(0.6)
     plt.title("{}".format(cfg.dataset.upper()), fontsize=fs * arg["labels_multiplier"])
@@ -8553,6 +8554,7 @@ def plot_variable_pr_sigma(cfg: omegaconf.DictConfig, name: str = "", eval_set: 
     plt.grid(ls='--', alpha=0.5)
     plt.savefig(
         f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_sigma_and_pr_seed_1_v2_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}_{name}.pdf")
 
@@ -8841,162 +8843,33 @@ def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(
 
 def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omegaconf.DictConfig, solution2, solution3,
                                                                        eval_set: str = "test", name: str = "",
+                                                                       folder="/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots",
                                                                        show_legend=True):
-    # use_cuda = torch.cuda.is_available()
-    # net = get_model(cfg)
-    # cfg.solution = solution2
-    # net2 = get_model(cfg)
-    # cfg.solution = solution3
-    # net3 = get_model(cfg)
-    #
-    # evaluation_set = select_eval_set(cfg, eval_set)
-    # N = cfg.population
-    # pop = []
-    # pruned_performance = []
-    # stochastic_dense_performances = []
-    # stochastic_deltas = []
-    # # accelerator = accelerate.Accelerator(mixed_precision="fp16")
-    # # evaluation_set, net = accelerator.prepare(evaluation_set, net)
-    #
-    # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
-    # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
-    # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
-    #
-    # pruned_original = copy.deepcopy(net)
-    # pruned_original2 = copy.deepcopy(net2)
-    # pruned_original3 = copy.deepcopy(net3)
-    #
-    # names, weights = zip(*get_layer_dict(net))
-    # number_of_layers = len(names)
-    # sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
-    #
-    # if cfg.pruner == "global":
-    #     prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
-    #     prune_with_rate(pruned_original2, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
-    #     prune_with_rate(pruned_original3, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
-    # else:
-    #     prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
-    #                     pruner=cfg.pruner)
-    #     prune_with_rate(pruned_original2, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
-    #                     pruner=cfg.pruner)
-    #     prune_with_rate(pruned_original3, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
-    #                     pruner=cfg.pruner)
-    #
-    # remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
-    # remove_reparametrization(pruned_original2, exclude_layer_list=cfg.exclude_layers)
-    # remove_reparametrization(pruned_original3, exclude_layer_list=cfg.exclude_layers)
-    #
-    # # record_predictions(pruned_original, evaluation_set,
-    # #                    "{}_one_shot_det_{}_predictions_{}".format(cfg.architecture, cfg.model_type, cfg.dataset))
-    # pruned_original_performance = test(pruned_original, use_cuda, evaluation_set, verbose=1)
-    # pruned_original_performance2 = test(pruned_original2, use_cuda, evaluation_set, verbose=1)
-    # pruned_original_performance3 = test(pruned_original3, use_cuda, evaluation_set, verbose=1)
-    #
-    # del pruned_original
-    # # pop.append(pruned_original)
-    # # pruned_performance.append(pruned_original_performance)
-    # labels = []
-    #
-    # # stochastic_dense_performances.append(original_performance)
-    #
-    # pruned_performance, stochastic_dense_performances = obtain_N_models(cfg, net, sigma_per_layer, evaluation_set,
-    #                                                                     use_cuda)
-    # pruned_performance2, stochastic_dense_performances2 = obtain_N_models(cfg, net2, sigma_per_layer, evaluation_set,
-    #                                                                       use_cuda)
-    # pruned_performance3, stochastic_dense_performances3 = obtain_N_models(cfg, net3, sigma_per_layer, evaluation_set,
-    #                                                                       use_cuda)
-    # # len(pruned performance)-1 because the first one is the pruned original
-    # labels.extend(["stochastic pruned"] * (len(pruned_performance)))
-    # labels.extend(["stochastic pruned"] * (len(pruned_performance2)))
-    # labels.extend(["stochastic pruned"] * (len(pruned_performance3)))
-    #
-    # # This gives a list of the INDEXES that would sort "pruned_performance". I know that the index 0 of
-    # # pruned_performance is the pruned original. Then I ask ranked index where is the element 0 which references the
-    # # index 0 of pruned_performance.
-    # # assert len(labels) == len(pruned_performance), f"The labels and the performances are not the same length: " \
-    # #                                                f"{len(labels)}!={len(pruned_performance)}"
-    #
-    # ranked_index = np.flip(np.argsort(pruned_performance))
-    # index_of_pruned_original = list(ranked_index).index(0)
-    # # all_index = np.ones(len(ranked_index), dtype=bool)
-    # # all_index[index_of_pruned_original] = False
-    # # ranked_index = ranked_index[all_index]
-    #
-    # ranked_index2 = np.flip(np.argsort(pruned_performance2))
-    # # index_of_pruned_original2 = list(ranked_index2).index(0)
-    # # all_index2 = np.ones(len(ranked_index2), dtype=bool)
-    # # all_index2[index_of_pruned_original2] = False
-    # # ranked_index2 = ranked_index2[all_index2]
-    #
-    # ranked_index3 = np.flip(np.argsort(pruned_performance3))
-    # # index_of_pruned_original3 = list(ranked_index3).index(0)
-    # # all_index3 = np.ones(len(ranked_index3), dtype=bool)
-    # # all_index3[index_of_pruned_original3] = False
-    # # ranked_index3 = ranked_index3[all_index3]
-    #
-    # pruned_performance = np.array(pruned_performance)
-    # mean_pruned_sto1 = np.mean(pruned_performance)
-    # pruned_performance2 = np.array(pruned_performance2)
-    # mean_pruned_sto2 = np.mean(pruned_performance2)
-    # pruned_performance3 = np.array(pruned_performance3)
-    # mean_pruned_sto3 = np.mean(pruned_performance3)
-    #
-    # stochastic_dense_performances = np.array(stochastic_dense_performances)
-    # mean_dense_sto1 = np.mean(stochastic_dense_performances)
-    # stochastic_dense_performances2 = np.array(stochastic_dense_performances2)
-    # mean_dense_sto2 = np.mean(stochastic_dense_performances2)
-    # stochastic_dense_performances3 = np.array(stochastic_dense_performances3)
-    # mean_dense_sto3 = np.mean(stochastic_dense_performances3)
-    #
-    #
-    # del pop
-    #
-    # # ################################ plotting the comparison #########################################################
-    #
-    # df = pd.DataFrame({"Orig1 acc": [original_performance]*len(pruned_performance),
-    #                     "Det1 sparse acc": [pruned_original_performance]*len(pruned_performance),
-    #                     "sto1 dense acc": stochastic_dense_performances,
-    #                     "sto1 sparse acc": pruned_performance,
-    #                     "rank1": ranked_index,
-    #                     "Orig2 acc":[original_performance2]*len(pruned_performance2),
-    #                     "Det2 sparse acc":[pruned_original_performance2]*len(pruned_performance2),
-    #                     "sto2 dense acc": stochastic_dense_performances2,
-    #                     "sto2 sparse acc": pruned_performance2,
-    #                     "rank2": ranked_index2,
-    #                     "Orig3 acc":[original_performance3]*len(pruned_performance3),
-    #                     "Det3 sparse acc":[pruned_original_performance3]*len(pruned_performance3),
-    #                     "sto3 dense acc": stochastic_dense_performances3,
-    #                     "sto3 sparse acc": pruned_performance3,
-    #                     "rank3": ranked_index3,
-    #
-    #                     })
-    # df.to_csv(f"seeds_experiments_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv", index=False)
-
     df = pd.read_csv(f"seeds_experiments_{cfg.architecture}_{cfg.dataset}_sigma{cfg.sigma}_pr{cfg.amount}.csv",
                      index_col=False)
 
     original_performance = float(df["Orig1 acc"][0])
-    original_performance2 = float(df["Orig2 acc"][0])
-    original_performance3 = float(df["Orig3 acc"][0])
+    # original_performance2 = float(df["Orig2 acc"][0])
+    # original_performance3 = float(df["Orig3 acc"][0])
     pruned_original_performance = float(df["Det1 sparse acc"][0])
-    pruned_original_performance2 = float(df["Det2 sparse acc"][0])
-    pruned_original_performance3 = float(df["Det3 sparse acc"][0])
+    # pruned_original_performance2 = float(df["Det2 sparse acc"][0])
+    # pruned_original_performance3 = float(df["Det3 sparse acc"][0])
 
     stochastic_dense_performances = df["sto1 dense acc"]
-    stochastic_dense_performances2 = df["sto2 dense acc"]
-    stochastic_dense_performances3 = df["sto3 dense acc"]
+    # stochastic_dense_performances2 = df["sto2 dense acc"]
+    # stochastic_dense_performances3 = df["sto3 dense acc"]
 
     pruned_performance = df["sto1 sparse acc"]
-    pruned_performance2 = df["sto2 sparse acc"]
-    pruned_performance3 = df["sto3 sparse acc"]
+    # pruned_performance2 = df["sto2 sparse acc"]
+    # pruned_performance3 = df["sto3 sparse acc"]
 
     ranked_index = df["rank1"]
-    ranked_index2 = df["rank2"]
-    ranked_index3 = df["rank3"]
+    # ranked_index2 = df["rank2"]
+    # ranked_index3 = df["rank3"]
 
     mean_pruned_sto1 = np.mean(pruned_performance)
-    mean_pruned_sto2 = np.mean(pruned_performance2)
-    mean_pruned_sto3 = np.mean(pruned_performance3)
+    # mean_pruned_sto2 = np.mean(pruned_performance2)
+    # mean_pruned_sto3 = np.mean(pruned_performance3)
     index_of_pruned_original = list(ranked_index).index(0)
 
     labels = ["stochastic pruned"] * (len(pruned_performance) * 3)
@@ -9008,23 +8881,23 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     original_line = ax.axhline(y=original_performance, color="r", linestyle="-", label="Seed 1")
-    original_line2 = ax.axhline(y=original_performance2, color="orange", linestyle="-", label="Seed 2")
-    original_line3 = ax.axhline(y=original_performance3, color="blue", linestyle="-", label="Seed 3")
+    # original_line2 = ax.axhline(y=original_performance2, color="orange", linestyle="-", label="Seed 2")
+    # original_line3 = ax.axhline(y=original_performance3, color="blue", linestyle="-", label="Seed 3")
 
     deterministic_pruning_line = ax.axhline(y=pruned_original_performance, linestyle=":", color="r", label="Seed 1")
-    deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2, linestyle=":", color="orange",
-                                             label="Seed 2")
-    deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3, linestyle=":", color="blue",
-                                             label="Seed 3")
+    # deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2, linestyle=":", color="orange",
+    #                                          label="Seed 2")
+    # deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3, linestyle=":", color="blue",
+    #                                          label="Seed 3")
 
     stochastic_mean = ax.axhline(y=mean_pruned_sto1, linestyle=(0, (5, 5)), color="r", label="Seed 1", alpha=0.5)
-    stochastic_mean2 = ax.axhline(y=mean_pruned_sto2, linestyle=(0, (5, 5)), color="orange", label="Seed 2", alpha=0.5)
-    stochastic_mean3 = ax.axhline(y=mean_pruned_sto3, linestyle=(0, (5, 5)), color="blue", label="Seed 3", alpha=0.5)
+    # stochastic_mean2 = ax.axhline(y=mean_pruned_sto2, linestyle=(0, (5, 5)), color="orange", label="Seed 2", alpha=0.5)
+    # stochastic_mean3 = ax.axhline(y=mean_pruned_sto3, linestyle=(0, (5, 5)), color="blue", label="Seed 3", alpha=0.5)
 
     plt.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
     # plt.tick_params(axis='x', which='major')
     plt.xlabel("Ranking Index", fontsize=fs * cfg.labels_multiplier)
-    plt.ylabel("Accuracy on test Set", fontsize=fs * cfg.labels_multiplier)
+    plt.ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
 
     stochastic_models_points_dense = []
     stochastic_models_points_dense2 = []
@@ -9046,13 +8919,13 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             pruned_point = ax.scatter(i, element, c="r", marker="o", s=50)
             stochastic_models_points_pruned.append(pruned_point)
 
-    for i, element in enumerate(pruned_performance2[ranked_index2]):
-        pruned_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="o", s=50)
-        stochastic_models_points_pruned2.append(pruned_point2)
-
-    for i, element in enumerate(pruned_performance3[ranked_index3]):
-        pruned_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="o", s=50)
-        stochastic_models_points_pruned3.append(pruned_point3)
+    # for i, element in enumerate(pruned_performance2[ranked_index2]):
+    #     pruned_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="o", s=50)
+    #     stochastic_models_points_pruned2.append(pruned_point2)
+    #
+    # for i, element in enumerate(pruned_performance3[ranked_index3]):
+    #     pruned_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="o", s=50)
+    #     stochastic_models_points_pruned3.append(pruned_point3)
 
     for i, element in enumerate(stochastic_dense_performances[ranked_index]):
         if i == index_of_pruned_original or element == 1:
@@ -9063,29 +8936,29 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             dense_point = ax.scatter(i, element, c="r", marker="s", s=50)
             stochastic_models_points_dense.append(dense_point)
 
-    for i, element in enumerate(stochastic_dense_performances2[ranked_index2]):
-        if i == index_of_pruned_original or element == 1:
-            # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-            dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
-            # continue
-        else:
-            dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
-            stochastic_models_points_dense2.append(dense_point2)
+    # for i, element in enumerate(stochastic_dense_performances2[ranked_index2]):
+    #     if i == index_of_pruned_original or element == 1:
+    #         # ax.scatter(i, element, c="y", marker="o", label="original model performance")
+    #         dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
+    #         # continue
+    #     else:
+    #         dense_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="s", s=50)
+    #         stochastic_models_points_dense2.append(dense_point2)
 
-    for i, element in enumerate(stochastic_dense_performances3[ranked_index3]):
-        if i == index_of_pruned_original or element == 1:
-            # ax.scatter(i, element, c="y", marker="o", label="original model performance")
-            dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
-            # continue
-        else:
-            dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
-            stochastic_models_points_dense3.append(dense_point3)
+    # for i, element in enumerate(stochastic_dense_performances3[ranked_index3]):
+    #     if i == index_of_pruned_original or element == 1:
+    #         # ax.scatter(i, element, c="y", marker="o", label="original model performance")
+    #         dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
+    #         # continue
+    #     else:
+    #         dense_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="s", s=50)
+    #         stochastic_models_points_dense3.append(dense_point3)
 
     if show_legend:
         handles = [
-            Patch(facecolor="red", label="Seed 1"),
-            Patch(facecolor="orange", label="Seed 2"),
-            Patch(facecolor="blue", label="Seed 3"),
+            # Patch(facecolor="red", label="Seed 1"),
+            # Patch(facecolor="orange", label="Seed 2"),
+            # Patch(facecolor="blue", label="Seed 3"),
             # Line2D([0], [0], marker='o', color='w', label='Seed 1',
             #        markerfacecolor='red', alpha=0.6, markersize=10),
             # Line2D([0], [0], marker='o', color='w', label='Seed 1',
@@ -9093,18 +8966,18 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             # Line2D([0], [0], marker='o', color='w', label='Seed 3',
             #        markerfacecolor='blue', alpha=0.6, markersize=10),
 
-            Line2D([0], [0], marker='o', color='w', label='SP',
-                   markerfacecolor='k', alpha=0.6, markersize=10),
+            Line2D([0], [0], linestyle="-", color='red', label='Dense Det.'),
             Line2D([0], [0], marker='s', color='w', label='Dense Sto.',
-                   markerfacecolor='k', alpha=0.6, markersize=10),
-
-            Line2D([0], [0], linestyle="-", color='k', label='Dense Det.'),
-            Line2D([0], [0], linestyle=":", color='k', label='DP'),
-            Line2D([0], [0], linestyle=(0, (5, 5)), color='k', alpha=0.5, label='Mean SP'),
+                   markerfacecolor='red', markersize=10),
+            Line2D([0], [0], marker='o', color='w', label='SP',
+                   markerfacecolor='red', markersize=10),
+            Line2D([0], [0], linestyle=(0, (5, 5)), color='red', label='Mean SP'),
+            Line2D([0], [0], linestyle=":", color='red', label='DP'),
         ]
         # plt.legend(bbox_to_anchor=(1.005, 1), handles=handles, prop={"size": fs * legend_multiplier})
-        plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier})
-        plt.xlim(-0.5, 9.5)
+        plt.legend(handles=handles,bbox_to_anchor=(1.005, 1), prop={"size": fs * cfg.legends_multiplier})
+        # plt.xlim(-0.5, 9.5)
+        plt.xlim(-0.5, 5.05)
         # plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
         #             deterministic_pruning_line],
         #            ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
@@ -9117,7 +8990,7 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
 
     plt.grid(ls='--', alpha=0.5)
     plt.savefig(
-        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_fused_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
+        f"{folder}/ranking_fused_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}_{name}.pdf")
 
@@ -10045,7 +9918,8 @@ def single_scatter_plot_V4(list_stochastic_dataframes: typing.List[pd.DataFrame]
                            ms=25
                            )
 
-    ax.grid(ls="--", alpha=0.5)
+    # ax.grid(ls="--", alpha=0.5)
+    ax.grid(ls="--", alpha=0.9)
 
     ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
     in_ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
@@ -10176,7 +10050,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                            title: str = "",
                            file: str = "", use_set="val", sigmas_to_show=[], sigma_colors=[], os_ft_colors=[],
                            pruner_colors=[], show_legend=True, legend_inside=False,
-                           cfg=None):
+                           cfg=None,show_model=False):
     first_dataframe: pd.DataFrame = list_stochastic_dataframes[0]
     list_of_all_dfs: list = [None] * len(list_stochastic_dataframes)
     for i in range(len(list_stochastic_dataframes)):
@@ -10232,6 +10106,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
 
     plt.figure()
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
+
 
     if not sigmas_to_show:
         # all_df1["Scaled Sigma"] = all_df1 = ["Sigma"] * 100
@@ -10319,7 +10194,10 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                         markeredgewidth=1.3,
                         ms=10
                         )
-    plt.title("")
+    if show_model:
+        plt.title(f"{cfg.architecture.upper()}", size=fs * cfg.labels_multiplier)
+    else:
+        plt.title("")
     plt.xlabel("Gradient Flow", fontsize=fs * cfg.labels_multiplier)
     # Deterministic dataframe 1
 
@@ -10332,6 +10210,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
         deterministic_initial_accuracy = 0
         deterministic_final_accuracy = 0
         deterministic_final_gradient_fow = 0
+
         if use_set == "val":
 
             deterministic_initial_gradient_fow = float(
@@ -10395,7 +10274,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                 markerfacecoloralt='k',
                                 # markeredgecolor="gold",
                                 markersize=10)
-                temp_handles.append(marker)
+                # temp_handles.append(marker)
             for k, s_value in enumerate(sigmas_to_show):
                 handle = Line2D([0], [0], marker='s',  # fillstyle="left",
                                 color='w',
@@ -10404,13 +10283,13 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                 markerfacecoloralt='k',
                                 # markeredgecolor="gold",
                                 markersize=10)
-                temp_handles.append(handle)
+                # temp_handles.append(handle)
 
             static_handles = [
                 Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
                        markerfacecolor='k', markersize=10),
                 Line2D([0], [0], marker='o', color='w', label='One-shot SP',
-                       markerfacecolor='k', alpha=0.6, markersize=10),
+                       markerfacecolor='k', alpha=1, markersize=10),
                 Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
                        label='Fine-Tuned DP', markersize=10),
                 Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
@@ -10429,7 +10308,7 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                 markerfacecoloralt='k',
                                 # markeredgecolor="gold",
                                 markersize=10)
-                temp_handles.append(marker)
+                # temp_handles.append(marker)
                 # temp_handles.append(Patch(facecolor=pruner_colors[j], label=label))
             for k, s_value in enumerate(sigmas_to_show):
                 handle = Line2D([0], [0], marker='s',  # fillstyle="left",
@@ -10439,12 +10318,12 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                                 markerfacecoloralt='k',
                                 # markeredgecolor="gold",
                                 markersize=10)
-                temp_handles.append(handle)
+                # temp_handles.append(handle)
             static_handles = [
                 Line2D([0], [0], marker='P', color='w', label='Fine-Tuned SP',
                        markerfacecolor='k', markersize=10),
                 Line2D([0], [0], marker='o', color='w', label='One-shot SP',
-                       markerfacecolor='k', alpha=0.6, markersize=10),
+                       markerfacecolor='k', alpha=1, markersize=10),
                 Line2D([0], [0], marker="x", linewidth=0, markerfacecolor="k", markeredgecolor="k", markeredgewidth=4,
                        label='Fine-Tuned DP', markersize=10),
                 Line2D([0], [0], marker="^", color='w', markerfacecolor="k", label='One-Shot DP', markersize=10),
@@ -10455,12 +10334,14 @@ def scatter_plot_sigmas_V3(list_stochastic_dataframes: typing.List[pd.DataFrame]
                              prop={"size": fs * 0.6})
 
         for handle_leg in lgd.legend_handles:
-            handle_leg._sizes = [100]
+            # handle_leg._sizes = [100]
+            handle_leg.markersize = 12
 
         # lgd.legend_handles[0]._sizes = [300]
         # lgd.legend_handles[1]._sizes = [300]
 
-    plt.grid(ls="--", alpha=0.5)
+
+    plt.grid(ls="--", alpha=1)
 
     ax.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
     # ax1.set_xlabel("")
@@ -14912,7 +14793,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
     ax.tick_params(axis="y", colors="k", labelsize=fs * cfg.ticks_multiplier)
     ax.tick_params(axis="x", colors="red", labelsize=fs * cfg.ticks_multiplier)
     ax.set_xlabel("$\sigma$", color="red", fontsize=fs * cfg.labels_multiplier)
-    ax.set_ylabel("Accuracy in test set", fontsize=fs * cfg.labels_multiplier)
+    ax.set_ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
 
     twiny_ax = ax.twiny()
 
@@ -14957,6 +14838,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
                label=f'Mean SP. $\sigma={cfg.sigma}$ '),
         Line2D([0], [0], linestyle=":", color='cornflowerblue', label='DP'),
         Line2D([0], [0], linestyle="--", marker="o", color='red', label='Mean SP $\gamma=0.9$'),
+        Line2D([0], [0],linestyle=None, marker="*", color='w',markerfacecolor='red',markeredgecolor="k", label='Best accuracy'),
         # Line2D([0], [0], linestyle=":", color=FV_color, label='FV Det.'),
         # Line2D([0], [0], linestyle="--", marker="o", color=FV_color, label='FV SP'),
     ]
@@ -14971,18 +14853,26 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
         twiny_ax.annotate(r'Best $\Delta$', xy=(pr_max, mean_sto1_list[index_best_difference]), xytext=(1.01, 95),
                           arrowprops=dict(facecolor='orange', shrink=0.05),
                           horizontalalignment='right', verticalalignment='top')
-
+    lgd = None
     if cfg.dataset == "cifar10":
-        plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="lower center")
+        # lgd=plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="lower center")
+        lgd=plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="lower center")
+
     else:
-        plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="center left")
+
+        # lgd= plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="upper left")
+        lgd= plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, bbox_to_anchor=(0.5,0.9))
 
     plt.grid(ls='--', alpha=0.5)
+    for handle_leg in lgd.legend_handles:
+        # handle_leg._sizes = [1000]
+        handle_leg.set_markersize(12)
     plt.savefig(
-        f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/mean_var_and_acc_vs_sigma_and_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_sto_det_{cfg.noise}_sigma_"
+        f"/home/luisaam/mean_var_and_acc_vs_sigma_and_pr_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_sto_det_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}_{name}.pdf")
 
+# def helper_function_plot_stochastic_graphics():
 
 def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fig89=True, fig10=True):
     if fig1:
@@ -15005,8 +14895,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             "cyclic_lr": True,
             "lr_peak_epoch": 5,
             "optim": "adam",
-            # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
-            "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+            "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+            # "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
             # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
             # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
             # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
@@ -15030,23 +14920,23 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # args["ticks_multiplier"] = 1.6
         # args["labels_multiplier"] = 1.7
 
-        # print(f"Low pruning rate=0.6")
-        # cfg.amount = 0.6
-        # t0 = time.time()
-        # stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg, solution2=solution2,
-        #                                                                    solution3=solution3, show_legend=False)
-        # t1 = time.time()
-        # print(f"Time in seconds: {(t1 - t0)} s")
-        # print(f"Time in minutes: {(t1 - t0) / 60} min")
-        #
-        # print(f"HIgh pruning rate=0.9")
-        # cfg.amount = 0.9
-        # t0 = time.time()
-        # stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg, solution2=solution2,
-        #                                                                    solution3=solution3, show_legend=True)
-        # t1 = time.time()
-        # print(f"Time in seconds: {(t1 - t0)} s")
-        # print(f"Time in minutes: {(t1 - t0) / 60} min")
+        print(f"Low pruning rate=0.6")
+        cfg.amount = 0.6
+        t0 = time.time()
+        stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg, solution2=solution2,
+                                                                           solution3=solution3, show_legend=False,folder="/home/luisaam")
+        t1 = time.time()
+        print(f"Time in seconds: {(t1 - t0)} s")
+        print(f"Time in minutes: {(t1 - t0) / 60} min")
+
+        print(f"HIgh pruning rate=0.9")
+        cfg.amount = 0.9
+        t0 = time.time()
+        stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg, solution2=solution2,
+                                                                           solution3=solution3, show_legend=True,folder="/home/luisaam")
+        t1 = time.time()
+        print(f"Time in seconds: {(t1 - t0)} s")
+        print(f"Time in minutes: {(t1 - t0) / 60} min")
         # #
         # # print(f"Low pruning rate=0.7")
         # # cfg.amount = 0.7
@@ -15123,9 +15013,11 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             cfg.labels_multiplier = 1.7
             cfg.legends_multiplier = 1.2
             cfg.ticks_multiplier = 1.6
+
             plot_variable_pr_sigma_variance(cfg)
+
             cfg.legends_multiplier = 1
-            plot_feature_variance_collapse_stand_alone(cfg)
+            # plot_feature_variance_collapse_stand_alone(cfg)
 
         #################################################################################################################
 
@@ -15443,9 +15335,12 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # models = ["resnet18", "resnet18", "resnet50", "resnet50", "VGG19", "VGG19"]
         # datasets = ["cifar10", "cifar100", "cifar10", "cifar100", "cifar10", "cifar100"]
 
-        models = ["resnet18", "resnet50", "VGG19", "resnet18", "resnet50", "VGG19"]
-        datasets = ["cifar10", "cifar10", "cifar10", "cifar100", "cifar100", "cifar100"]
-        pr_list = [0.9, 0.9528, 0.94, 0.9, 0.9528, 0.94]
+        # models = ["resnet18", "resnet50", "VGG19", "resnet18", "resnet50", "VGG19"]
+        # datasets = ["cifar10", "cifar10", "cifar10", "cifar100", "cifar100", "cifar100"]
+        # pr_list = [0.9, 0.9528, 0.94, 0.9, 0.9528, 0.94]
+        models = ["resnet50", "resnet50"]
+        datasets = ["cifar10", "cifar100"]
+        pr_list = [0.9528, 0.9528]
 
         # for comparison figs
         # Only grasp
@@ -15453,7 +15348,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # All of them
         # pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
         # sigmas = [0.001, 0.005],
-        sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
+        # sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
+        sigmas_list = [[0.001, 0.005], [0.001, 0.005]]
         # sigmas_list = [[0.001],[0.001],[0.001],[0.001],[0.001],[0.001]]
 
         # For table 1
@@ -15471,7 +15367,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # fig_size = (30,5)
         fig_size = (20, 10)
 
-        fig, axs = plt.subplots(2, 3, figsize=fig_size, layout="compressed")
+        # fig, axs = plt.subplots(2, 3, figsize=fig_size, layout="compressed")
+        fig, axs = plt.subplots(1, 2, figsize=fig_size, layout="compressed")
         # fig, axs = plt.subplots(1, 6, figsize=fig_size, layout="compressed")
 
         legend_handlers = None
@@ -15533,6 +15430,20 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             deterministic_GRASP_df = pd.read_csv(
                 f"gradientflow_deterministic_grasp_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
                 sep=",", header=0, index_col=False)
+            if cfg.architecture == "VGG19" and cfg.dataset == "cifar100":
+                print("Sigmas for VGG19 in cifar100")
+                print("{}".format(list(df2["sigma"].unique())))
+                large_sigma_df = df2[df2["sigma"] == 0.001]
+                print("Gradient flow 0.001")
+                print("{}".format(large_sigma_df["test_set_gradient_magnitude"]))
+                print("Accuracy 0.001")
+                print("{}".format(large_sigma_df["test_accuracy"]))
+
+                large_sigma_df = df2[df2["sigma"] == 0.005]
+                print("Gradient flow 0.005")
+                print("{}".format(large_sigma_df["test_set_gradient_magnitude"]))
+                print("Accuracy 0.005")
+                print("{}".format(large_sigma_df["test_accuracy"]))
 
             sigmas = sigmas_list[i]
             cfg.labels_multiplier = 2.5
@@ -15542,7 +15453,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             # directory = "gradient_flow_results_test_set/"
             # directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
 
-            directory = "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/scatterPlots/"
+            # directory = "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/scatterPlots/"
+            directory = "/home/luisaam/"
 
             print("##################################")
             # print(f"{cfg.pruner.upper()}")
@@ -15582,8 +15494,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                                                          show_legend=True, legend_inside=False, cfg=cfg,
                                                          last_is_inset=True, ax=ax, in_ax=in_ax)
 
-        lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.12,-0.15), loc='center left', borderaxespad=0.1,
-                         prop={"size": fs * cfg.legends_multiplier},ncols=5)
+        lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(0.12, -0.15), loc='center left', borderaxespad=0.1,
+                         prop={"size": fs * cfg.legends_multiplier}, ncols=5)
 
         # lgd = fig.legend(handles=legend_handlers, bbox_to_anchor=(1, 0.5005), loc='center left', borderaxespad=0.1,
         #                  prop={"size": fs * cfg.legends_multiplier})
@@ -15592,33 +15504,38 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             # handle_leg._sizes = [1000]
             handle_leg.set_markersize(25)
         # fig.text(0.1, 0.5, ' Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
-        fig.text(0.6, -0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
+
+        fig.text(0.5, -0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
 
         # fig.text(0.6,-0.07, 'Gradient Flow', ha='center', size=fs * cfg.labels_multiplier)
-        fig.text(0.08,0.5, 'Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
 
-        cols = ["RESNET18", "RESNET50", "VGG19"]
+        fig.text(-0.015, 0.5, 'Accuracy', va='center', rotation="vertical", size=fs * cfg.labels_multiplier)
+
+        # cols = ["RESNET18", "RESNET50", "VGG19"]
+        cols = ["CIFAR10", "CIFAR100"]
         # cols = ["RESNET18-CIFAR10", "RESNET50-CIFAR10", "VGG19-CIFAR10","RESNET18-CIFAR100", "RESNET50-CIFAR100", "VGG19-CIFAR100"]
-        rows = ["CIFAR10", "CIFAR100"]
+        # rows = ["CIFAR10", "CIFAR100"]
 
-        for ax, col in zip(axs[0], cols):
+        # for ax, col in zip(axs[0], cols):
+        #     ax.set_title(col, size=fs * cfg.labels_multiplier)
+
+        for ax, col in zip(axs, cols):
             ax.set_title(col, size=fs * cfg.labels_multiplier)
 
-        # for ax, col in zip(axs, cols):
-        #     ax.set_title(col,size=fs * cfg.labels_multiplier)
-
-        for ax, row in zip(axs[:, 0], rows):
-            ax.set_ylabel(row, rotation=0, size=fs * cfg.labels_multiplier)
-            # ax.yaxis.labelpad = 25
-            ax.yaxis.labelpad = 90
-
+        # for ax, row in zip(axs[:, 0], rows):
+        #     ax.set_ylabel(row, rotation=0, size=fs * cfg.labels_multiplier)
+        #     # ax.yaxis.labelpad = 25
+        #     ax.yaxis.labelpad = 90
+        # fig.title("RESNET50" ,size=fs * cfg.labels_multiplier)
+        fig.text(-1.5, 1, 'RESNET50', ha='center', size=fs * cfg.labels_multiplier * 1.2)
         # plt.show()
         # file = f"/home/luisaam/Documents/Intercom Interview may 2025/Project_Presentation/Feathergraphics/scatter_stochastic_test_{cfg.set}.pdf"
         # plt.savefig(file, bbox_inches="tight")
-        file = f"{directory}scatter_all_models_all_datasets_V6.pdf"
+        file = f"{directory}scatter_all_models_all_datasets_V7.pdf"
         plt.savefig(file, bbox_inches="tight")
 
     if fig57:
+
         cfg = omegaconf.DictConfig({
             "sigma": 0.003,
             "amount": 0.9,
@@ -15639,12 +15556,22 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
         # for comparison figs
         # Only grasp
-        pr_list = [0.9, 0.9, 0.95, 0.95, 0.944, 0.944]
+        # pr_list = [0.9, 0.9, 0.95, 0.95, 0.944, 0.944]
         # All of them
-        # pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
+        pr_list = [0.9, 0.9, 0.9528, 0.9528, 0.94, 0.94]
         # sigmas = [0.001, 0.005],
-        sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
-        # sigmas_list = [[0.001],[0.001],[0.001],[0.001],[0.001],[0.001]]
+        # sigmas_list = [[0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005], [0.001, 0.005]]
+
+        sigmas_list = [[0.001],[0.001],[0.001],[0.001],[0.001],[0.001]]
+        show_M = False
+        noise_color = ["gold"]
+        string_sigma = "low_sigma"
+
+
+        # sigmas_list = [[0.005],[0.005],[0.005],[0.005],[0.005],[0.005]]
+        # show_M = True
+        # noise_color = ["yellowgreen"]
+        # string_sigma = "high_sigma"
 
         # For table 1
         # pr_list = [0.9, 0.9, 0.95, 0.85, 0.95, 0.8]
@@ -15665,12 +15592,12 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
             print("{} {}".format(models[i], dataset[i]))
 
-            # df = pd.read_csv(
-            #     f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-            #     sep=",", header=0, index_col=False)
-            # df2 = pd.read_csv(
-            #     f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-            #     sep=",", header=0, index_col=False)
+            df_lamp = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_stochastic_lamp_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
+            df_global = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_stochastic_global_all_sigmas_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
 
             if cfg.architecture == "resnet50":
                 pr_rate_grasp = 0.95
@@ -15682,7 +15609,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                 pr_rate_grasp = 0.9
                 archi = cfg.architecture.lower()
 
-            df3 = pd.read_csv(
+            df_grasp = pd.read_csv(
                 f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
                 sep=",", header=0, index_col=False)
 
@@ -15693,13 +15620,13 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             #     f"gradientflow_stochastic_grasp_all_sigmas_FT_comparison_table_1_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
             #     sep=",", header=0, index_col=False)
 
-            # deterministic_lamp_df = pd.read_csv(
-            #     f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-            #     sep=",", header=0, index_col=False)
+            deterministic_lamp_df = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_deterministic_lamp_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
 
-            # deterministic_global_df = pd.read_csv(
-            #     f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
-            #     sep=",", header=0, index_col=False)
+            deterministic_global_df = pd.read_csv(
+                f"stochastic_pruning_csv/gradientflow_deterministic_global_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}.csv",
+                sep=",", header=0, index_col=False)
 
             deterministic_GRASP_df = pd.read_csv(
                 f"gradientflow_deterministic_grasp_FT_comparison_figs_{archi}_{cfg.dataset}_pr{pr_rate_grasp}.csv",
@@ -15722,12 +15649,30 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
             # directory = "gradient_flow_results_test_set/"
             # directory = "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/scatterPlots/"
-            directory = "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/scatterPlots/"
+            # directory = "/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/scatterPlots/"
+            directory = "/home/luisaam/"
             print("##################################")
             # print(f"{cfg.pruner.upper()}")
             print("GASP")
             print(f"\t {cfg.architecture}-{cfg.dataset}")
             print("##################################")
+
+            sto_list = [df_lamp]
+            det_list = [deterministic_lamp_df]
+            list_of_names =["LAMP"]
+            string_method ="LAMP"
+            color_prune = ["crimson"]
+
+            # sto_list = [df_global]
+            # det_list = [deterministic_global_df]
+            # list_of_names = ["GMP"]
+            # string_method = "GMP"
+            # color_prune = ["dodgerblue"]
+
+
+
+            string_name=f"{string_method}_{string_sigma}"
+
             if cfg.dataset == "cifar10":
 
                 # scatter_plot_sigmas_V3([df, df2, df3],
@@ -15738,14 +15683,25 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                 #                        pruner_colors=["crimson", "dodgerblue", "darkorchid"],
                 #                        show_legend=False, legend_inside=True, cfg=cfg)
 
-                scatter_plot_sigmas_V3([df3],
-                                       [deterministic_GRASP_df],
-                                       ["GRASP"],
-                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_deleteme.pdf",
-                                       use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
-                                       pruner_colors=["darkorchid"],
+                scatter_plot_sigmas_V3(
+                #                        [df3],
+                # [deterministic_GRASP_df],
+                #             ["GRASP"],
+                      sto_list,
+                det_list,
+                    list_of_names,
+                    # ["GMP"],
+                    # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_low_sigma.pdf",
+                    # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_high_sigma.pdf",
+                    # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_LAMP_low_sigma.pdf",
+                    file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_{string_name}.pdf",
+                                       use_set=cfg.set, sigmas_to_show=sigmas,
+                                       # sigma_colors=["gold","yellowgreen"],
+                                       sigma_colors=noise_color,
+                                       # pruner_colors=["dodgerblue"],
+                                       pruner_colors=color_prune,
                                        # pruner_colors=["darkslategrey"],
-                                       show_legend=False, legend_inside=True, cfg=cfg)
+                                       show_legend=False, legend_inside=True, cfg=cfg,show_model=show_M)
 
                 # scatter_plot_sigmas_V2(df, df2, deterministic_dataframe1=deterministic_lamp_df,
                 #                        deterministic_dataframe2=deterministic_global_df, det_label1='',
@@ -15762,14 +15718,47 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                 #                        use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
                 #                        pruner_colors=["crimson", "dodgerblue", "darkorchid"],
                 #                         show_legend=true, legend_inside=true, cfg=cfg)
-                scatter_plot_sigmas_V3([df3],
-                                       [deterministic_GRASP_df],
-                                       ["GRASP"],
-                                       use_set=cfg.set, sigmas_to_show=sigmas, sigma_colors=["gold", "yellowgreen"],
-                                       pruner_colors=["darkorchid"],
-                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_deleteme.pdf",
+                if cfg.architecture=="VGG19":
+                    scatter_plot_sigmas_V3(
+                        sto_list,
+                        det_list,
+                        list_of_names,
+                        # [df_lamp],
+                        #                [deterministic_lamp_df],
+                        #                ["LAMP"],
+                                       use_set=cfg.set, sigmas_to_show=sigmas,
+                                       sigma_colors=noise_color,
+                                       # pruner_colors=["dodgerblue"],
+                                       pruner_colors=color_prune,
+                                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_low_sigma.pdf",
+                                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_high_sigma.pdf",
+                                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_LAMP_low_sigma.pdf",
+                                       file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_{string_name}.pdf",
                                        # pruner_colors=["darkslategrey"],
-                                       show_legend=True, legend_inside=True, cfg=cfg)
+                                       show_legend=True, legend_inside=True, cfg=cfg,show_model=show_M)
+                else:
+                    scatter_plot_sigmas_V3(
+                        # [df],
+                        # [deterministic_lamp_df],
+                        # ["GMP"],
+                        sto_list,
+                        det_list,
+                        list_of_names,
+                        # [df_lamp],
+                        # [deterministic_lamp_df],
+                        # ["LAMP"],
+                        use_set=cfg.set, sigmas_to_show=sigmas,
+                        # sigma_colors=["gold"],
+                        sigma_colors=noise_color,
+                        # pruner_colors=["dodgerblue"],
+                        pruner_colors=color_prune,
+                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_low_sigma.pdf",
+                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_GMP_high_sigma.pdf",
+                        # file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_LAMP_low_sigma.pdf",
+                        file=f"{directory}scatter_{cfg.architecture}_{cfg.dataset}_pr{cfg.amount}_{cfg.set}_{string_name}.pdf",
+                        # pruner_colors=["darkslategrey"],
+                        show_legend=False, legend_inside=True, cfg=cfg,show_model=show_M)
+
                 # scatter_plot_sigmas_V2(df, df2, deterministic_dataframe1=deterministic_lamp_df,
                 #                        deterministic_dataframe2=deterministic_global_df, det_label1='Deter. LAMP',
                 #                        det_label2='Deter. GMP',
@@ -15777,6 +15766,8 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
                 #                        use_set=cfg.set, sigmas_to_show=sigmas,
                 #                        show_legend=True, legend_inside=True, cfg=cfg
                 #                        )
+            # file = f"/home/luisaam/scatter_{cfg.architecture}_{cfg.dataset}_GMP_high_sigma.pdf"
+            # plt.savefig(file, bbox_inches="tight")
 
     if fig89:
         args = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
@@ -15923,4 +15914,4 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
 
 
 if __name__ == '__main__':
-    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=1, fig57=0, fig89=0, fig10=0)
+    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=0, fig57=1, fig89=0, fig10=0)

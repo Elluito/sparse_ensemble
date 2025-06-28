@@ -1,31 +1,19 @@
 from main import get_datasets, get_model, prune_with_rate, get_noisy_sample, remove_reparametrization, test, \
     get_random_batch, sparsity, get_layer_dict, prune_function
 import argparse
-from shrinkbench.metrics.flops import flops
 import wandb
 import omegaconf
-from omegaconf import DictConfig
 import copy
-import torch
-import os
 from itertools import cycle
 import loss_landscapes
 import loss_landscapes.metrics as metrics
-import numpy as np
-import time
-import re
-import torchessian as torchessian
-import pandas as pd
 import torch
 import torch.nn.functional as F
 import numpy as np
-import pickle
-import matplotlib.ticker as ticker
 import matplotlib
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.legend_handler import HandlerLineCollection, HandlerTuple
-import matplotlib.lines as mlines
 from sparse_ensemble_utils import test
 import math
 

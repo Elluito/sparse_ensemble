@@ -16099,7 +16099,7 @@ def saturation_accuracy_resnet50_plots():
 
 
     """### RF 110
-        
+      
         #### GMP
         """
 
@@ -16119,12 +16119,15 @@ def saturation_accuracy_resnet50_plots():
     columns_names = list(mean_df.columns)
     new_names = list(map(trim, columns_names))
     dict_names = {}
+
     for i in range(len(new_names)):
         dict_names[columns_names[i]] = new_names[i]
+
     mean_df.rename(columns=dict_names, inplace=True)
     new_dict = {}
     accuracies_list = []
     names_list = []
+
     for name in mean_df.columns:
         accuracies = list(mean_df[name])
         accuracies_list.extend(accuracies)
@@ -16138,14 +16141,18 @@ def saturation_accuracy_resnet50_plots():
         "saturation_results/cifar10/resnet50/SGD/resnet50_normal_cifar10_1726773378.6547081_rf_level_1_recording_200_no_ffcv.csv",
         delimiter=";")
 
-    fig, ax = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+
     epoch_df, pm = extract_layer_stat(saturation_df,
                                       epoch=199,
                                       primary_metric=None,
                                       stat='saturation',
                                       state_mode="train")
-
     col_names = epoch_df.columns
+
+
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+
 
     tick_index = []
     layer_names = list(new_df["Pruned layer"].unique())
@@ -16181,6 +16188,7 @@ def saturation_accuracy_resnet50_plots():
 
     # plot_saturation(epoch_df=epoch_df, ax=ax2,index_to_keep=tick_index)
     # ax2.errorbar(x=range(len(tick_index)),y=means,yerr=stds,ecolor="red",marker='o', mfc='red',capsize=2,markeredgewidth=1,markeredgecolor="k",ls="none")
+
     ax2.scatter(x=range(len(tick_index)), y=epoch_df.values[0][tick_index], color="blue", marker="o", s=100)
 
     ax2.set_ylabel("Saturation", fontsize=fs * labels_multiplier)
@@ -16205,7 +16213,9 @@ def saturation_accuracy_resnet50_plots():
     ax.yaxis.label.set_color('red')
 
     plt.grid(ls="--", alpha=0.5)
+
     plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/sat_pruning_resnet50_outblock_rf_1_sgd_gmp.pdf")
+
     plt.close()
 
     """####  Random"""
@@ -16913,9 +16923,10 @@ def saturation_accuracy_resnet50_plots():
 
     plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/sat_pruning_resnet50_outblock_rf_4_sgd_random.pdf")
     plt.close()
+
+
     """## SGD"""
 
-    import seaborn as sns
     import matplotlib.pyplot as plt
 
     all_df = all_df_in_block[all_df_in_block["optimiser"] == "SGD"]
@@ -16942,7 +16953,6 @@ def saturation_accuracy_resnet50_plots():
         # o=o.replace("-",".")
         return layer_name
 
-    all_df_in_block
 
     """### RF 110
         
@@ -17805,6 +17815,7 @@ def saturation_accuracy_resnet50_plots():
     # plt.title("RF={}".format(resnets_rfs_values[4]))
     plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/sat_pruning_resnet50_inblock_rf_4_sgd_random.pdf")
     plt.close()
+
 def saturation_accuracy_vgg19_plots():
     """"
     # vgg19
@@ -35112,8 +35123,11 @@ if __name__ == '__main__':
     # resnet50_cifar10_saturation_different_rf()
     # resnet25_small_imagenet_saturation()
     # saturation_accuracy_plots()
+
     saturation_accuracy_resnet50_plots()
+
     saturation_accuracy_vgg19_plots()
+
     # probes_accuracy()
     # large_input_experiments()
     # large_input_experiments_only_sgd_paper()

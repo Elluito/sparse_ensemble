@@ -17,6 +17,7 @@ import random
 
 import matplotlib as mpl
 
+from scipy.stats import ttest_1samp
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -31,7 +32,7 @@ from torch.nn.utils import parameters_to_vector
 from collections import defaultdict
 from torchconvquality import measure_quality
 from main import prune_function, remove_reparametrization, get_layer_dict, get_datasets, count_parameters, \
-    get_threshold_and_pruned_vector_from_pruning_rate
+    get_threshold_and_pruned_vector_from_pruning_rate,obtain_N_models
 from alternate_models import *
 from similarity_comparison_architecture import features_similarity_comparison_experiments
 from sparse_ensemble_utils import disable_bn, mask_gradient, sparsity
@@ -549,6 +550,8 @@ def record_features_cifar10_model_pruned(architecture="resnet18", seed=1, modelt
         if o == maximun_samples:
             break
         o += 1
+
+
 
 
 def test_ffcv(net, testloader, one_batch=False, verbose=2, count_flops=False, batch_flops=0, number_batches=0):
@@ -2259,7 +2262,259 @@ def measure_filter_quality(args):
                                                                  args.name, args.pruning_rate))
 
 
+def main_with_stochastic_pruning(args):
+
+
+        if "vgg" in args.model:
+            exclude_layers = ["features.0", "classifier"]
+        if "resnet" in args.model:
+            exclude_layers = ["conv1", "linear"]
+        if "densenet" in args.model:
+            exclude_layers = ["conv1", "fc"]
+        if "resnet" in args.model:
+            exclude_layers = ["conv1", "linear"]
+        if "mobilenet" in args.model:
+            exclude_layers = ["conv1", "linear"]
+
+        cfg = omegaconf.DictConfig(
+            {"architecture": args.model,
+             "model_type": "alternative",
+             # "model_type": "hub",
+             "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+             # "solution": "trained_m
+             "dataset": args.dataset,
+             "batch_size": 128,
+             "num_workers": args.num_workers,
+             "amount": args.pruning_rate,
+             "noise": "gaussian",
+             "sigma": 0.005,
+             "pruner": "global",
+             # "pruner": "lamp",
+             "exclude_layers": exclude_layers,
+             "data_path": args.data_folder,
+             "input_resolution": args.input_resolution
+             })
+
+        if args.ffcv:
+            from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+
+            train, val, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train, args.ffcv_val,
+                                                                          128, args.num_workers)
+        else:
+
+            cfg1 = omegaconf.DictConfig(
+                {"architecture": args.model,
+                 "model_type": "alternative",
+                 "population": 10,
+                 "pruner":"global",
+                 # "model_type": "hub",
+                 "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+                 # "solution": "trained_m
+                 "dataset": args.dataset,
+                 "batch_size": args.batch_size,
+                 "num_workers": args.num_workers,
+                 "noise": "gaussian",
+                 "input_resolution": args.input_resolution,
+                 "pad": args.pad,
+                 })
+            if "cifar" in args.dataset:
+                trainloader, valloader, testloader = get_datasets(cfg1)
+            # print("Normal data loaders loaded!!!!")
+            # cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+            # cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+            # stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+            # # Data
+            print('==> Preparing data..')
+            current_directory = Path().cwd()
+            data_path = "."
+            if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+                data_path = "/nobackup/sclaam/data"
+            elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+                data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+            elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+                data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+            elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+                data_path = "/home/luisaam/Documents/PhD/data/"
+            print(data_path)
+            batch_size = args.batch_size
+            if args.dataset == "tiny_imagenet":
+                from test_imagenet import load_tiny_imagenet
+
+                trainloader, valloader, testloader = load_tiny_imagenet(
+                    {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+            if args.dataset == "small_imagenet":
+                if args.ffcv:
+                    from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+
+                    trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+                                                                                              args.ffcv_val,
+                                                                                              batch_size, args.num_workers,
+                                                                                              resolution=args.input_resolution)
+                else:
+                    from test_imagenet import load_small_imagenet
+
+                    trainloader, valloader, testloader = load_small_imagenet(
+                        {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+                         "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                         "resize": args.resize})
+
+        pr_list = [0.8,0.85,0.9,0.95]
+        sigma_list = [0.001,0.003,0.005]
+        net = get_model(args)
+
+        dense_accuracy_list = []
+        pruned_accuracy_list = []
+        files_names = []
+        search_string = "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset,
+                                                                               args.RF_level, args.name)
+        things = list(glob.glob(search_string))
+
+        # if len(things) < 2:
+        #     search_string = "{}/{}_normal_{}_*_level_{}.pth".format(args.folder, args.model, args.dataset, args.RF_level)
+
+        print("Glob text:{}".format(
+            "{}/{}_normal_{}_*_level_{}_*{}*test_acc_*.pth".format(args.folder, args.model, args.dataset, args.RF_level,
+                                                                   args.name)))
+        print(things)
+        for i, name in enumerate(
+                glob.glob(search_string)):
+
+            print(name)
+
+            print("Device: {}".format(device))
+
+            state_dict_raw = torch.load(name, map_location=device)
+
+            net.load_state_dict(state_dict_raw["net"])
+
+            print("Dense accuracy:{}".format(state_dict_raw["acc"]))
+
+            calculated_accuracy = test(net, testloader=testloader)
+
+            dense_accuracy_list.append(calculated_accuracy)
+            # dense_accuracy_list.append(state_dict_raw["acc"])
+            print("Calculated Dense accuracy:{}".format(calculated_accuracy))
+
+            p_value_list = []
+            median_diff_list = []
+            det_performance_list = []
+            # for all sigmas
+            for pr in pr_list:
+                cfg.amount = pr
+                det_net = copy.deepcopy(net)
+                prune_function(det_net, cfg)
+                remove_reparametrization(det_net, exclude_layer_list=cfg.exclude_layers)
+                det_pruned_accuracy = test(det_net, testloader=testloader)
+                for sigma in sigma_list:
+                    cfg.sigma = sigma
+
+                    stochastic_perfomances = obtain_N_models(cfg,net,sigma_per_layer=sigma,evaluation_set=testloader,use_cuda=True if device=="cuda" else False)
+                    median_peformance = np.median(stochastic_perfomances)
+                    diff = det_pruned_accuracy - median_peformance
+                    stats_result = ttest_1samp(stochastic_perfomances,det_pruned_accuracy,alternative="greater")
+                    median_diff_list.append(diff)
+                    p_value_list.append(stats_result.pvalue)
+                    det_performance_list.append(det_pruned_accuracy)
+
+
+            save_df = pd.DataFrame({"PR":pr_list,"Sigma":sigma_list,"P value (greater than)":p_value_list,"Diff with mean (det-sto)":median_diff_list,"Det performance":det_performance_list})
+            save_df.to_csv(
+                "{}/{}_{}_{}_{}_{}_one_shot_stochastic_pruning_summary.csv".format(args.save_folder, args.model,
+                                                                      args.RF_level, args.dataset,
+                                                                      args.pruning_rate,
+                                                                      args.name, cfg.pruner), index=False)
+
+
+
+            # prune_function(net, cfg)
+            # remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
+            # if args.adjust_bn:
+            #     adjust_bn_running_stats(net, trainloader, max_iter=100)
+            #
+            # t0 = time.time()
+            # if args.ffcv:
+            #     pruned_accuracy = test_ffcv(net, testloader=testloader, verbose=0)
+            # else:
+            #     pruned_accuracy = test(net, testloader=testloader)
+            #
+            # t1 = time.time()
+            #
+            # print("Pruned accuracy:{}".format(pruned_accuracy))
+            #
+            # print("Time for inference: {}".format(t1 - t0))
+
+        #     pruned_accuracy_list.append(pruned_accuracy)
+        #     weight_names, weights = zip(*get_layer_dict(net))
+        #
+        #     zero_number = lambda w: (torch.count_nonzero(w == 0) / w.nelement()).cpu().numpy()
+        #     pruning_rates_per_layer = list(map(zero_number, weights))
+        #
+        #     seed_from_file1 = re.findall("_[0-9]_", name)
+        #
+        #     print(seed_from_file1)
+        #
+        #     seed_from_file2 = re.findall("_[0-9]_[0-9]_", name)
+        #
+        #     print(seed_from_file2)
+        #
+        #     seed_from_file3 = re.findall("\.[0-9]_", name)
+        #
+        #     print(seed_from_file3)
+        #
+        #     if seed_from_file3:
+        #
+        #         seed_from_file = seed_from_file3[0].replace(".", "_")
+        #
+        #     elif seed_from_file2:
+        #
+        #         seed_from_file = seed_from_file2[0].split("_")[2]
+        #
+        #     elif seed_from_file1:
+        #
+        #         seed_from_file = seed_from_file1[0].replace("_", "")
+        #     else:
+        #         seed_from_file = i
+        #
+        #     df2 = pd.DataFrame({"layer_names": weight_names, "pr": pruning_rates_per_layer})
+        #     print("Seed from file {}".format(seed_from_file1))
+        #     df2.to_csv(
+        #         "{}/{}_level_{}_seed_{}_{}_{}_pruning_rates_global_pr_{}.csv".format(args.save_folder,
+        #                                                                              args.model,
+        #                                                                              args.RF_level,
+        #                                                                              seed_from_file,
+        #                                                                              args.dataset,
+        #                                                                              args.name,
+        #                                                                              args.pruning_rate),
+        #         index=False)
+        #
+        #     print("Done")
+        #     file_name = os.path.basename(name)
+        #     print(file_name)
+        #     files_names.append(file_name)
+        #
+        # df = pd.DataFrame({"Name": files_names,
+        #                    "Dense Accuracy": dense_accuracy_list,
+        #                    "Pruned Accuracy": pruned_accuracy_list,
+        #                    })
+        #
+        # if args.adjust_bn:
+        #     df.to_csv(
+        #         "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_bn_adjusted_summary.csv".format(args.save_folder, args.model,
+        #                                                                           args.RF_level, args.dataset,
+        #                                                                           args.pruning_rate,
+        #                                                                           args.name, cfg.pruner), index=False)
+        #
+        # else:
+        #     df.to_csv(
+        #         "{}/RF_{}_{}_{}_{}_{}_{}_one_shot_summary.csv".format(args.save_folder, args.model,
+        #                                                               args.RF_level, args.dataset,
+        #                                                               args.pruning_rate,
+        #                                                               args.name, cfg.pruner), index=False)
+
+
 def main(args):
+
     if "vgg" in args.model:
         exclude_layers = ["features.0", "classifier"]
     if "resnet" in args.model:
@@ -3609,6 +3864,8 @@ if __name__ == '__main__':
         transfer_fine_tuning(args)
     if args.experiment == 10:
         batch_pruning_fine_tuning_experiment(args)
+    if args.experiment == 11:
+        main_with_stochastic_pruning(args)
 
 
     # gradient_flow_calculation(args)
