@@ -9356,7 +9356,7 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
     pruned_original2 = copy.deepcopy(net2)
     pruned_original3 = copy.deepcopy(net3)
 
-   names, weights = zip(*get_layer_dict(net))
+    names, weights = zip(*get_layer_dict(net))
     number_of_layers= len(names)
     sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
 
