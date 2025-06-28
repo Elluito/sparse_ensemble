@@ -304,6 +304,7 @@ def test_pin_and_num_workers(args):
 
 def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=True, shuffle_test=False,
                         random_split_generator=None, seed_worker=None):
+
     assert isinstance(args, dict), "args for load_small_imagenet must be a dictionary"
 
     ratio = 256 / 224
@@ -332,6 +333,7 @@ def load_small_imagenet(args: dict, val_size=5000, test_size=10000, shuffle_val=
         ])
 
     else:
+
         transform_test = transforms.Compose([
             transforms.Resize(int(args["input_resolution"] * ratio)),
             transforms.CenterCrop(args["input_resolution"]),

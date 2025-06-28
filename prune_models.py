@@ -2356,7 +2356,7 @@ def main_with_stochastic_pruning(args):
 
                     trainloader, valloader, testloader = load_small_imagenet(
                         {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                         "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+                         "num_workers": args.num_workers, "batch_size": batch_size, "input_resolution": args.input_resolution,
                          "resize": args.resize})
 
         pr_list = [0.8,0.85,0.9,0.95]
