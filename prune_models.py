@@ -2326,16 +2326,16 @@ def main_with_stochastic_pruning(args):
             # # Data
             print('==> Preparing data..')
             current_directory = Path().cwd()
-            data_path = "."
-            if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-                data_path = "/nobackup/sclaam/data"
-            elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-                data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-            elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
-                data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
-            elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-                data_path = "/home/luisaam/Documents/PhD/data/"
-            print(data_path)
+            data_path = "{}".format(args.data_folder)
+            # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+            #     data_path = "/nobackup/sclaam/data"
+            # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+            #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+            # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+            #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+            # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+            #     data_path = "/home/luisaam/Documents/PhD/data/"
+            # print(data_path)
             batch_size = args.batch_size
             if args.dataset == "tiny_imagenet":
                 from test_imagenet import load_tiny_imagenet
