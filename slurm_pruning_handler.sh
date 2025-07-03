@@ -157,7 +157,7 @@ resolution=224
 #save_folder="${HOME}/sparse_ensemble/pruning_level_0"
 #checkpoints_folder="${SCRATCH}/new_models_original_paper"
 save_folder="${HOME}/sparse_ensemble/RF_and_SP_results"
-checkpoints_folder="${SCRATCH}/deep_small_models_for_RF"
+checkpoints_folder="${SCRATCH}/deep_small_models_for_RF_and_stochastic_pruning"
 for model in "resnet25_small"; do
 #for dataset in "cifar10"; do
 for dataset in "small_imagenet"; do
