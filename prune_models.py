@@ -2279,6 +2279,7 @@ def main_with_stochastic_pruning(args):
         cfg = omegaconf.DictConfig(
             {"architecture": args.model,
              "model_type": "alternative",
+             "population":10,
              # "model_type": "hub",
              "solution": "trained_models/cifar10/resnet50_cifar10.pth",
              # "solution": "trained_m
