@@ -2410,7 +2410,10 @@ def main_with_stochastic_pruning(args):
                 for sigma in sigma_list:
                     cfg.sigma = sigma
 
-                    stochastic_perfomances = obtain_N_models(cfg,net,sigma_per_layer=sigma,evaluation_set=testloader,use_cuda=True if device=="cuda" else False)
+                    names, weights = zip(*get_layer_dict(net))
+                    number_of_layers = len(names)
+                    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+                    stochastic_perfomances = obtain_N_models(cfg,net,sigma_per_layer=sigma_per_layer, evaluation_set=testloader,use_cuda=True if device=="cuda" else False)
                     median_peformance = np.median(stochastic_perfomances)
                     diff = det_pruned_accuracy - median_peformance
                     stats_result = ttest_1samp(stochastic_perfomances,det_pruned_accuracy,alternative="greater")
