@@ -2400,6 +2400,8 @@ def main_with_stochastic_pruning(args):
             p_value_list = []
             median_diff_list = []
             det_performance_list = []
+            list_of_sigmas =[]
+            list_of_prs =[]
             # for all sigmas
             for pr in pr_list:
                 cfg.amount = pr
@@ -2420,11 +2422,13 @@ def main_with_stochastic_pruning(args):
                     median_diff_list.append(diff)
                     p_value_list.append(stats_result.pvalue)
                     det_performance_list.append(det_pruned_accuracy)
+                    list_of_sigmas.append(sigma)
+                    list_of_prs.append(pr)
 
 
-            save_df = pd.DataFrame({"PR":pr_list,"Sigma":sigma_list,"P value (greater than)":p_value_list,"Diff with mean (det-sto)":median_diff_list,"Det performance":det_performance_list})
+            save_df = pd.DataFrame({"PR":list_of_prs,"Sigma":list_of_sigmas,"P value (greater than)":p_value_list,"Diff with mean (det-sto)":median_diff_list,"Det performance":det_performance_list})
             save_df.to_csv(
-                "{}/{}_{}_{}_{}_{}_one_shot_stochastic_pruning_summary.csv".format(args.save_folder, args.model,
+                "{}/{}_{}_{}_{}_{}_one_shot_stochastic_pruning_RF_summary.csv".format(args.save_folder, args.model,
                                                                       args.RF_level, args.dataset,
                                                                       args.pruning_rate,
                                                                       args.name, cfg.pruner), index=False)
