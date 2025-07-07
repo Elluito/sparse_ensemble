@@ -1,0 +1,6 @@
+Name,N Shallow layer index,N Shallow layer name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_cifar10_seed_1_rf_level_4_test_acc_85.98.pth,1,features.4,85.98,85.86
+vgg19_normal_cifar10_seed_0_rf_level_4_test_acc_85.82.pth,1,features.4,85.82,85.79
+vgg19_normal_cifar10_seed_3_rf_level_4_test_acc_86.08.pth,1,features.4,86.08,86.02
+vgg19_normal_cifar10_seed_2_rf_level_4_test_acc_85.53.pth,1,features.4,85.53,85.43
+vgg19_normal_cifar10_seed_4_rf_level_4_test_acc_85.99.pth,1,features.4,85.99,85.95

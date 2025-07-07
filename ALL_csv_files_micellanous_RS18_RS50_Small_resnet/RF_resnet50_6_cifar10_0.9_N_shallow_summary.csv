@@ -1,0 +1,6 @@
+Name,N Shallow layer index,N Shallow layer name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_seed_3_rf_level_6_no_recording_test_acc_53.97.pth,1,layer1.0.conv1,53.97,53.97
+resnet50_normal_cifar10_seed_0_rf_level_6_no_recording_test_acc_52.76.pth,1,layer1.0.conv1,52.76,52.76
+resnet50_normal_cifar10_seed_1_rf_level_6_no_recording_test_acc_53.15.pth,1,layer1.0.conv1,53.15,53.15
+resnet50_normal_cifar10_seed_2_rf_level_6_no_recording_test_acc_51.76.pth,1,layer1.0.conv1,51.76,51.76
+resnet50_normal_cifar10_seed_4_rf_level_6_no_recording_test_acc_55.19.pth,1,layer1.0.conv1,55.19,55.19

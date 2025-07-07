@@ -1,0 +1,6 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet24_normal_tiny_imagenet_seed_2_rf_level_5_no_recording_test_acc_36.92.pth,36.92,34.52
+resnet24_normal_tiny_imagenet_seed_0_rf_level_5_no_recording_test_acc_36.74.pth,36.74,33.87
+resnet24_normal_tiny_imagenet_seed_3_rf_level_5_no_recording_test_acc_35.97.pth,35.97,32.45
+resnet24_normal_tiny_imagenet_seed_4_rf_level_5_no_recording_test_acc_37.05.pth,37.05,34.3
+resnet24_normal_tiny_imagenet_seed_1_rf_level_5_no_recording_test_acc_36.47.pth,36.47,33.67

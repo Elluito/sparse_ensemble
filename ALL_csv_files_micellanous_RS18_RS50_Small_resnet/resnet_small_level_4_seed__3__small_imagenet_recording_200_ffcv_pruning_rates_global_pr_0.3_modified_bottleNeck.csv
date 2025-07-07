@@ -1,0 +1,12 @@
+layer_names,pr
+conv1,0.0
+layer1.0.conv1,0.08569336
+layer1.0.conv2,0.29249403
+layer1.0.shortcut.0,0.11566162
+layer2.0.conv1,0.01687622
+layer2.0.conv2,0.09074741
+layer2.0.shortcut.0,0.043876648
+layer3.0.conv1,0.2318039
+layer3.0.conv2,0.40306556
+layer3.0.shortcut.0,0.17993546
+linear,0.0
