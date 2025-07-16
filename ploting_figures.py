@@ -101,7 +101,8 @@ def main():
     plt.legend(prop={"size": fs*0.7}, loc="lower right")
     plt.tight_layout()
     plt.grid(ls='--', alpha=0.5)
-    plt.savefig("paper_plots/resnet50_CIFAR10_training.pgf",  bbox_inches="tight", pad_inches=0.05)
+    # plt.savefig("paper_plots/resnet50_CIFAR10_training.pgf",  bbox_inches="tight", pad_inches=0.05)
+    plt.savefig("paper_plots/resnet50_CIFAR10_training.pdf",  bbox_inches="tight", pad_inches=0.05)
     # tikzplotlib.save("paper_plots/resnet50_CIFAR10_training.tex")
     ### Tiny ImageNet
     plt.figure()
