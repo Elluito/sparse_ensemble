@@ -2395,7 +2395,7 @@ def main_with_stochastic_pruning(args):
 
             dense_accuracy_list.append(calculated_accuracy)
             # dense_accuracy_list.append(state_dict_raw["acc"])
-            print("Calculated Dense accuracy:{}".format(calculated_accuracy))
+
 
             p_value_list = []
             median_diff_list = []
