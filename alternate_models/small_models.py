@@ -358,6 +358,7 @@ class Deep_small_ResNetRF(nn.Module):
             self.maxpool = nn.MaxPool2d(kernel_size=58, stride=57, padding=1)
         if self.rf_level == 13:
             self.maxpool = nn.MaxPool2d(kernel_size=94, stride=93, padding=1)
+
         # self.maxpool = nn.MaxPool2d(kernel_size=64, stride=63, padding=1)
         # if self.fix_points is None:
         #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
