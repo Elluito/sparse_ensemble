@@ -112,7 +112,7 @@ python Second_order_Receptive_field.py --lr "0.1" --momentum "0.5"  --save 1 --e
 
 #python3.9 Second_order_Receptive_field.py --lr "0.1" --momentum "0.9" --grad_clip $6 --save 1 --experiment 1 --record_time 1 --record_flops 1 --record_saturation 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 0 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
 
-python Second_order_Receptive_field.py --lr "0.01" --momentum "0.9" --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 8  --save 1 --experiment 1 --optimiser "sam" --record 1 --save_folder "$SCRATCH/second_order_checkpoints_changde_lr"  --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7  --record_saturation $8 --epochs $9 --input_resolution "${10}"
+python Second_order_Receptive_field.py --lr "0.01" --momentum "0.9" --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 8  --save 1 --experiment 1 --optimiser "sam" --record 1 --save_folder "$SCRATCH/second_order_checkpoints_changed_lr"  --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7  --record_saturation $8 --epochs $9 --input_resolution "${10}"
 
   fi
 
