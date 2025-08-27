@@ -121,15 +121,15 @@ vgg_rfs = [180, 181, 359, 537, 715]
 
 fs = 12
 # fig_size = (3, 2.5) # For the large_input_experiments_only_sgd_paper()
-fig_size = (4
-            , 2.5) # For the vgg19_cifar10_saturation()
+# fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
 
-legends_multiplier = 0.5
+fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
+legends_multiplier = 1.1
 # labels_multiplier = 1 # For the large_input_experiments_only_sgd_paper()
 # ticks_multiplier = 0.8 # For the large_input_experiments_only_sgd_paper()
 
-labels_multiplier = 1.7 # For the vgg19_cifar10_saturation()
-ticks_multiplier = 1.1 # For the vgg19_cifar10_saturation()
+labels_multiplier = 1.3 # For the vgg19_cifar10_saturation()
+ticks_multiplier = 1.2 # For the vgg19_cifar10_saturation()
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
@@ -1219,6 +1219,7 @@ def batchnorm_pruning_acuracies_vgg19_cifar10():
     # Average saturation of each method
     # EKFac
 
+    global sns,plt
     saturation_lvl1_ekfac = pd.read_csv(
         "saturation_results/cifar10/vgg19/EKFAC/vgg19_normal_cifar10_rf_level_1_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
@@ -1276,7 +1277,7 @@ def batchnorm_pruning_acuracies_vgg19_cifar10():
         print("\n Eval saturation \n")
         print("{}\n\n\n".format(float(eval_average)))
         return train_average, eval_average
-
+    resnet_rfs = [1,2,3,4,5]
     optim_list = []
     level_list = []
     sat_train_list = []
@@ -1308,7 +1309,6 @@ def batchnorm_pruning_acuracies_vgg19_cifar10():
 
     average_saturation_df = pd.DataFrame({"optimiser": optim_list, "RF": level_list, "train saturation": sat_train_list,
                                           "eval saturation": sat_eval_list})
-    average_saturation_df
 
     average_saturation_df["Saturation Gap"] = average_saturation_df["eval saturation"] - average_saturation_df[
         "train saturation"]
@@ -1897,6 +1897,7 @@ def batchnorm_pruning_acuracies_vgg19_cifar10():
     for ax in axs.flat:
         ax.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
         ax.tick_params(axis='x', which='major', labelrotation=90)
+    fig.savefig("AA_test_deeleteme.pdf")
     plt.close()
 
     #
@@ -1945,6 +1946,7 @@ def saturation_resnet50_cifar50_all_optim():
 
     # Average saturation of each method
     # EKFac
+    global resnets_rfs,sns,plt
 
     saturation_lvl1_ekfac = pd.read_csv(
         "saturation_results/cifar10/resnet50/EKFAC/resnet50_normal_cifar10_rf_level_1_ekfac_optim_hyper_saturation_200_gc_0.csv",
@@ -2820,7 +2822,7 @@ def saturation_resnet50_cifar50_all_optim():
     df_level3_ekfac
 
     (all_df["Pruned Accuracy"] / all_df["Dense Accuracy"]) * 100
-
+def saturation_resnet50_cifar10_all_optim_pr_09():
     """## 0.9"""
 
     from matplotlib import pyplot as plt
@@ -3006,19 +3008,19 @@ def saturation_resnet50_cifar50_all_optim():
 
     all_df["Scaled Pruned Accuracy"] = (all_df["Pruned Accuracy"] / all_df["Dense Accuracy"]) * 100
 
-    sns.barplot(ax=axs[0], data=all_df, x="RF", y="Scaled Pruned Accuracy", hue="optimiser", alpha=0.5)
-    sns.barplot(ax=axs[1], data=all_df, x="RF", y="Pruned Accuracy", hue="optimiser", legend=False, alpha=0.5)
+    sns.barplot(ax=axs[0], data=all_df, x="RF", y="Scaled Pruned Accuracy", hue="optimiser")
+    sns.barplot(ax=axs[1], data=all_df, x="RF", y="Pruned Accuracy", hue="optimiser")
 
     sns.stripplot(
         x="RF",
         y="Scaled Pruned Accuracy",
         hue="optimiser",
-        data=all_df, dodge=True, alpha=0.6, ax=axs[0], legend=False)
+        data=all_df, dodge=True, ax=axs[0], legend=False)
     sns.stripplot(
         x="RF",
         y="Pruned Accuracy",
         hue="optimiser",
-        data=all_df, dodge=True, alpha=0.6, ax=axs[1], legend=False)
+        data=all_df, dodge=True, ax=axs[1], legend=False)
 
     def f(x):
         return x
@@ -3039,11 +3041,12 @@ def saturation_resnet50_cifar50_all_optim():
         ax.grid(ls="--")
 
         # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_pr_0.9_all_optimisers.pdf")
-        plt.close()
+        # plt.close()
+
+    fig.savefig("AA_resnet50_cifar10_pr_0.9_all_optimisers.pdf")
+    plt.close(fig)
 
     all_df_original_lrs = all_df
-
-    all_df_original_lrs
 
     from matplotlib import pyplot as plt
     import seaborn as sns
@@ -3393,7 +3396,7 @@ def saturation_resnet50_cifar50_all_optim():
     fig, axs = plt.subplots(1, 2, figsize=fig_size, layout="compressed", sharey=True)
 
     sns.barplot(ax=axs[0], data=all_df, x="RF", y="Scaled Pruned Accuracy", hue="optimiser")
-    sns.barplot(ax=axs[1], data=all_df, x="RF", y="Pruned Accuracy", hue="optimiser", legend=False)
+    sns.barplot(ax=axs[1], data=all_df, x="RF", y="Pruned Accuracy", hue="optimiser")
 
     # sns.barplot(data=all_df,x="RF",y="Pruned Accuracy",hue="optimiser",errorbar="ci")
 
@@ -22555,7 +22558,7 @@ def resnet50_cifar10_saturation_different_rf():
     plt.close()
 
 
-def sharpness_plots():
+def sharpness_plots(save_directory):
     """# TODO: Sharpness
 
     ## Resnet50 x CIFAR10
@@ -22654,41 +22657,47 @@ def sharpness_plots():
     # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50__cifar10_adaptative_sharpness_optim_saturation.pdf")
     plt.close()
 
-    sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_adaptative_sharpness_optim_full.pdf")
-    plt.close()
+    # fig,ax = sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
+    # fig.tight_layout()
+    # plt.savefig(f"{save_directory}/resnet50_cifar10_adaptative_sharpness_optim_full.pdf",bbox_inches="tight")
+    # plt.close()
 
     sharpness_df = all_df.filter(items=["sharpness_obj", "sharpness_err", "RF", "optimiser"])
 
     sharpness_df = sharpness_df.rename(
         columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
                  "optimiser": "Optimiser"})
-    sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
-    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50__cifar10_adaptative_sharpness_optim_short.pdf")
-    plt.close()
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+    # plt.savefig(f"{save_directory}/resnet50__cifar10_adaptative_sharpness_optim_short.pdf")
+    # plt.close()
 
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-    sns.scatterplot(data=sharpness_df, x="RF", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser")
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
+    sns.scatterplot(data=sharpness_df, x="RF", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser",s=100)
     axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
     # axs.set_ylabel("
     # secay.tick_params(axis='x',labelrotation=90)
 
-    axs.set_xlabel("Receptive Field", fontsize=25)
-    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=25)
+    axs.set_xlabel("Receptive Field", fontsize=fs*labels_multiplier)
+    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=fs*labels_multiplier)
 
     # axs.legend(prop={"size": fs*1.7})
-    axs.legend(prop={"size": fs * 1.7}, bbox_to_anchor=(0.78, 0.7), loc='upper left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, bbox_to_anchor=(0.78, 0.7), loc='left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, loc='center left')
     # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+    fig.tight_layout()
+    axs.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf")
-    plt.close()
+        f"{save_directory}/resnet50_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf",bbox_inches="tight")
+    plt.close(fig)
 
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
+    print("\nResNet50\n")
+    print(sharpness_df)
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
     sns.scatterplot(data=sharpness_df, x="RF", y="$\sigma_{l_{\infty}}$", hue="Optimiser")
     # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_worst_case_sharpness_err_vs_RF_optim.pdf")
-    plt.close()
+        f"{save_directory}/resnet50_cifar10_worst_case_sharpness_err_vs_RF_optim.pdf")
+    plt.close(fig)
 
     """## VGG19 x CIFAR10"""
 
@@ -22772,12 +22781,12 @@ def sharpness_plots():
     #   ax.set_title(f"RF={unique_RF[i]}")
 
     # ax.legend(loc="upper right")
-    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19__cifar10_adaptative_sharpness_optim_saturation.pdf")
+    # plt.savefig(f"{save_directory}/vgg19__cifar10_adaptative_sharpness_optim_saturation.pdf")
     plt.close()
 
-    sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_adaptative_sharpness_optim_full.pdf")
-    plt.close()
+    # sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
+    # plt.savefig(f"{save_directory}/vgg19_cifar10_adaptative_sharpness_optim_full.pdf")
+    # plt.close()
 
     sharpness_df = all_df.filter(items=["sharpness_obj", "RF", "optimiser"])
     # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
@@ -22785,27 +22794,32 @@ def sharpness_plots():
         columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
                  "optimiser": "Optimiser"})
     sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_adaptative_sharpness_optim_short.pdf")
+    plt.savefig(f"{save_directory}/vgg19_cifar10_adaptative_sharpness_optim_short.pdf")
     plt.close()
 
     # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
 
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
-    sns.scatterplot(data=sharpness_df, x="RF", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser")
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
+    print("\nVGG19\n")
+    print(sharpness_df)
+    sns.scatterplot(data=sharpness_df, x="RF", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser",s=100)
     axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
     # axs.set_ylabel("
     # secay.tick_params(axis='x',labelrotation=90)
 
-    axs.set_xlabel("Receptive Field", fontsize=25)
-    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=25)
+    axs.set_xlabel("Receptive Field", fontsize=fs*labels_multiplier)
+    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=fs*labels_multiplier)
+    axs.grid(ls="--")
 
     # axs.legend(prop={"size": fs*1.7})
-    axs.legend(prop={"size": fs * 1.7}, bbox_to_anchor=(0.78, 0.7), loc='upper left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, bbox_to_anchor=(0.78, 0.7), loc='upper left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, loc='centerr')
     # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+    fig.tight_layout()
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf")
+        f"{save_directory}/vgg19_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf",bbox_inches="tight")
 
-    plt.close()
+    plt.close(fig)
 
 
 def large_input_experiments():
@@ -35114,7 +35128,7 @@ def plot_pareto(df, title: str):
     plt.show()
 
 #
-# level8_seed0.sum(axis=1)
+# level8_seed0.sum(axis=1
 #
 
 
@@ -35124,10 +35138,15 @@ if __name__ == '__main__':
     # resnet25_small_imagenet_saturation()
     # saturation_accuracy_plots()
 
-    saturation_accuracy_resnet50_plots()
+    # saturation_accuracy_resnet50_plots()
 
-    saturation_accuracy_vgg19_plots()
+    # saturation_accuracy_vgg19_plots()
 
+    # batchnorm_pruning_acuracies_vgg19_cifar10()
+    # saturation_resnet50_cifar10_all_optim_pr_09()
+
+    folder = "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_Optimisers_and_pruning/figures/sharpness/"
+    sharpness_plots(folder)
     # probes_accuracy()
     # large_input_experiments()
     # large_input_experiments_only_sgd_paper()
