@@ -25,7 +25,7 @@
 
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=6GB
+#SBATCH --mem-per-cpu=4GB
 
 # send mail to this address
 #SBATCH --mail-user=sclaam@leeds.ac.uk
@@ -53,7 +53,6 @@
 #  fi
 #
 #python -c "import torch;device = 'cuda' if torch.cuda.is_available() else 'cpu';print(device);print('Cuda version with torch: {}'.format(torch.version.cuda))"
-
 #python -c "import os; print(os.environ)"
 #printf "Start Test \n"
 #python test_backwards.py
@@ -89,32 +88,13 @@
 export LD_LIBRARY_PATH=""
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
 export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
-
 #export LD_LIBRARY_PATH=""
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib"
 #export PYTHONPATH="/jmain02/home/J2AD014/mtc03/lla98-mtc03/.conda/envs/ffcv/lib/python3.9/site-packages"
 
+#############################################################
+#     Train  with FFCV
+#############################################################
 
-  if [ $6 == "ekfac" ]
-  then
 
-    # Kfac
-
-#python3.9 Second_order_Receptive_field.py --lr "0.01" --momentum "0.5" --grad_clip $6 --save 1 --experiment 1 --record_time 1 --record_flops 1 --record_saturation 1 --epochs 200 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 4 --optimiser "ekfac" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
-
-python Second_order_Receptive_field.py --lr "0.1" --momentum "0.1"  --save 1 --experiment 1 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 8 --optimiser "ekfac" --record 1 --save_folder "$SCRATCH/second_order_checkpoints_changed_lr" --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7 --record_saturation $8  --epochs $9 --input_resolution "${10}"
-
-  fi
-  if [ $6 == "sam" ]
-
-    # ASAM
-  then
-
-#python3.9 Second_order_Receptive_field.py --lr "0.1" --momentum "0.9" --grad_clip $6 --save 1 --experiment 1 --record_time 1 --record_flops 1 --record_saturation 1 --epochs 100 --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 0 --optimiser "sam" --record 1 -dt $1 --model $2 --RF_level $3 --type $4 --name $5 --save_folder "$HOME/second_order_experiments"
-
-python Second_order_Receptive_field.py --lr "0.01" --momentum "0.9" --batch_size 128 --use_scheduler 1 --use_scheduler_batch 0 --num_workers 8  --save 1 --experiment 1 --optimiser "sam" --record 1 --save_folder "$SCRATCH/second_order_checkpoints_changed_lr"  --dataset $1 --model $2 --RF_level $3 --type $4 --name $5 --grad_clip $7  --record_saturation $8 --epochs $9 --input_resolution "${10}"
-
-  fi
-
-#python3.9 Second_order_Receptive_field.py --level $1
-#python zero_cost_nas_RF.py
+python train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "${12}" --model $1 --dataset $2 --num_workers $3 --lr $4 --RF_level $5 --type $6 --epochs $7  --name $8 --width $9 --record "${10}" --input_resolution "${11}"
