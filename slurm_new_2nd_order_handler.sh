@@ -50,27 +50,27 @@ for model in "vgg19"; do
       for dataset in "cifar10"; do
 
 
-        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_0.1_momentum_0.5_${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
+        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_0.1_momentum_0.1_${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
 
 done
 done
 done
 done
 
-for model in "vgg19"; do
-#for model in "deep_small_vgg" "resnet25_small"; do # all two models
-
-  for lvl in 1 2 3 4 ; do
-
-#  for lvl in 5 6 7 8 10; do
-
-    for optim in "sam"; do
-      for dataset in "cifar10"; do
-
-
-        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_0.01_momentum_0.9_${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
-
-done
-done
-done
-done
+#for model in "vgg19"; do
+##for model in "deep_small_vgg" "resnet25_small"; do # all two models
+#
+#  for lvl in 1 2 3 4 ; do
+#
+##  for lvl in 5 6 7 8 10; do
+#
+#    for optim in "sam"; do
+#      for dataset in "cifar10"; do
+#
+#
+#        run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_0.01_momentum_0.9_${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
+#
+#done
+#done
+#done
+#done
