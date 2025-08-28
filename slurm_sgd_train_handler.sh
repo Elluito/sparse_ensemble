@@ -20,6 +20,7 @@
 
 resolution=32
 save_folder="${SCRATCH}/second_order_checkpoints_changed_lr"
+
 for lvl in 1 2 3 4; do    # iterate idxa from 0 to length
 for model in  "vgg19";do
 for dataset in "cifar10"; do
