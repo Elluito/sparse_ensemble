@@ -52,6 +52,7 @@ for model in "vgg19"; do
 
         run_2nd_order_experiment "${model}" "${dataset}" "${optim}" "lr_0.1_momentum_0.1_${optim}_${epochs}_res_${resolution}_gc_${grad_clip}" "${epochs}" "${grad_clip}" "${lvl}" 1 "${array}" "${resolution}"
 
+
 done
 done
 done
