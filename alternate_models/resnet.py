@@ -340,6 +340,113 @@ class ResNetRFStride(nn.Module):
         out = self.linear(out)
         return out
 
+class ResNetRFDilation(nn.Module):
+    def __init__(self, block: typing.Union[BasicBlock, Bottleneck], num_blocks, num_classes=10, multiplier=1,
+                 fixed_points=None,
+                 RF_level=1):
+        super(ResNetRFDilation, self).__init__()
+        self.in_planes = 64 * multiplier
+        self.fix_points = fixed_points
+        self.rf_level = RF_level
+        self.relu = nn.ReLU()
+        self.width_multiplier = multiplier
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+
+        # The dilation and the padding must be the same so the featuremap size does not change
+
+        self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+                               stride=1, padding=self.rf_level, dilation=self.rf_level, bias=False)
+
+        self.maxpool =  None
+        # if self.rf_level == 1:
+            # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        # if self.rf_level == 2:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=3, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 3:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=4, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 4:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=5, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 5:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=6, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 6:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=7, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 7:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=8, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 8:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=9, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 9:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=10, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 10:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=11, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        # if self.rf_level == 11:
+        #     # self.maxpool = nn.MaxPool2d(kernel_size=3, stride=12, padding=1)
+        #     self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+        #                        stride=1, padding=1, bias=False)
+        if self.fix_points is None:
+            # self.conv1 = nn.Conv2d(3, 64 * self.width_multiplier, kernel_size=3,
+            #                        stride=1, padding=1, bias=False)
+            self.bn1 = nn.BatchNorm2d(64 * self.width_multiplier)
+            self.layer1 = self._make_layer(block, 64 * self.width_multiplier, num_blocks[0], stride=1)
+            self.layer2 = self._make_layer(block, 128 * self.width_multiplier, num_blocks[1], stride=2)
+            self.layer3 = self._make_layer(block, 256 * self.width_multiplier, num_blocks[2], stride=2)
+            self.layer4 = self._make_layer(block, 512 * self.width_multiplier, num_blocks[3], stride=2)
+            self.linear = nn.Linear(512 * block.expansion * self.width_multiplier, num_classes)
+        if self.fix_points is not None:
+            self.conv1 = curves.Conv2d(3, 64, kernel_size=3,
+                                       stride=1, padding=1, bias=False, fix_points=self.fix_points)
+            self.bn1 = curves.BatchNorm2d(64, fix_points=self.fix_points)
+            self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+            self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+            self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+            self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+            self.linear = curves.Linear(512 * block.expansion, num_classes, self.fix_points)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride, fixed_points=self.fix_points))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = self.relu(self.bn1(self.conv1(x)))
+        # if self.rf_level != 1:
+        # out = self.maxpool(out)
+        print("Layer 0:{}".format(out.size()))
+        out = self.layer1(out)
+        print("Layer 1:{}".format(out.size()))
+        out = self.layer2(out)
+        print("Layer 2:{}".format(out.size()))
+        out = self.layer3(out)
+        print("Layer 3:{}".format(out.size()))
+        out = self.layer4(out)
+        print("Layer 4:{}".format(out.size()))
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        # print("out:{}".format(out.size()))
+        out = self.linear(out)
+        return out
+
 
 def ResNet18(num_classes=10, fix_points=None):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes, fix_points)
@@ -378,6 +485,13 @@ def ResNet50_rf_stride(num_classes=10, fix_points=None, rf_level=1, multiplier=1
                               RF_level=rf_level,
                               multiplier=multiplier)
 
+def ResNet50_rf_dilation(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
+    if rf_level == 0:
+        return ResNet(Bottleneck, [3, 4, 6, 3], num_classes, fix_points)
+    else:
+        return ResNetRFDilation(Bottleneck, [3, 4, 6, 3], num_classes=num_classes, fixed_points=fix_points,
+                              RF_level=rf_level,
+                              multiplier=multiplier)
 
 def ResNet24_rf(num_classes=10, fix_points=None, rf_level=1, multiplier=1):
     if rf_level == 0:
@@ -412,13 +526,14 @@ def test():
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
     blocks = [4]
-    receptive_fields = ["k6", "k7", "k8", "k9", 5, 6, 7]
+    # receptive_fields = ["k6", "k7", "k8", "k9", 5, 6, 7]
+    receptive_fields = [1,3,54,107,159]
 
     fig, axs = plt.subplots(2, 2)
     axs = axs.flatten()
     for rf in receptive_fields:
 
-        net = ResNet18_rf(num_classes=10, RF_level=rf)
+        net = ResNet50_rf_dilation(num_classes=10, rf_level=rf)
 
         y = net(torch.randn(3, 3, 32, 32))
 
@@ -428,7 +543,7 @@ def test():
 
         get_features_only_until_block_layer(net, block=4, net_type=1)
 
-        size = [1, 3, 1000, 1000]
+        size = [1, 3, 500, 500]
 
         if rf == 5:
             size = [1, 3, 1500, 1500]
@@ -440,6 +555,8 @@ def test():
             size = [1, 3, 3100, 3100]
 
         le_rf = receptivefield(net, size)
+
+
         # y = net(torch.randn(3, 3, 32, 32))
         print(le_rf.rfsize)
         # samples = []
@@ -495,7 +612,8 @@ def test_cifar():
     input_ = torch.rand(2, 3, 32, 32)
     for i in p:
         print("level {}".format(i))
-        net = ResNet50_rf_stride(num_classes=10, rf_level=i)
+        # net = ResNet50_rf_stride(num_classes=10, rf_level=i)
+        net = ResNet50_rf_dilation(num_classes=10, rf_level=i)
         try:
             net(input_)
             print("all good")
@@ -504,4 +622,5 @@ def test_cifar():
 
 
 if __name__ == '__main__':
-    test_cifar()
+    # test_cifar()
+    test()

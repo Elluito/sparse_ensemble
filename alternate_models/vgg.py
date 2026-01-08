@@ -200,6 +200,106 @@ class VGG_RF_stride(nn.Module):
         return nn.Sequential(*layers)
 
 
+class VGG_RF_dilation(nn.Module):
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_dilation, self).__init__()
+
+        self.rf_level: int = RF_level
+
+        self.maxpool = None
+
+        self.config = cfg[vgg_name]
+
+
+
+
+
+        # if self.rf_level == 1:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 2:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=3, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 3:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=4, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 4:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=5, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 5:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=6, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 6:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=7, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 7:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=8, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 8:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=9, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 9:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=10, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 10:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=11, padding=1)
+        #     self.config = cfg[vgg_name]
+        # if self.rf_level == 11:
+        #     self.maxpool = nn.MaxPool2d(kernel_size=3, stride=12, padding=1)
+        #     self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+
+        for i, layer in enumerate(self.features):
+            x = layer(x)
+            try:
+
+                print("{}".format(cfg["VGG19"][i]))
+
+                print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+
+            except:
+
+                print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
+
+        # out = self.features(x)
+        out = x
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+
+            else:
+                # The dilation and the padding must be the same so the featuremap size does not change
+                if len(layers) == 0 :
+                    layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=self.rf_level,dilation=self.rf_level),
+                               nn.BatchNorm2d(x),
+                               nn.ReLU(inplace=True)]
+                    in_channels = x
+
+                else:
+                    layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                               nn.BatchNorm2d(x),
+                               nn.ReLU(inplace=True)]
+                    in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
 def get_features_only_VGG(net):
     # ResNet block to compute receptive field for
     def features_only(self, x):
@@ -216,7 +316,7 @@ def test():
     import matplotlib.pyplot as plt
     from main import get_features_only_until_block_layer_VGG
 
-    print("Receptive field normal resnet18")
+    print("Receptive field normal vgg")
     # net = ResNet18_rf(num_classes=10, rf_level=4)
 
     # net = resnet18(pretrained=False)
@@ -228,8 +328,9 @@ def test():
     # shapes = get_activations_shape(net, x)
     # y = net(torch.randn(3, 3, 32, 32))
     # print(y)
-    # blocks = [1, 2, 3, 4]
-    blocks = ["k6", "k7", "k8", "k9"]
+    # blocks = [1, 2, 3, 4,5,6,7,8,9,10,11]
+    blocks = [91,180,269]
+    # blocks = ["k6", "k7", "k8", "k9"]
     receptive_fields = []
 
     # net = VGG_RF('VGG19_rf', rf_level=4)
@@ -240,12 +341,20 @@ def test():
     for i in blocks:
         # samples = []
         # for j in range(10):
+
         print("################################")
         print(i)
         print("################################")
-        net = VGG_RF('VGG19_rf', RF_level=i)
+
+        # net = VGG_RF('VGG19_rf', RF_level=i)
+
+        net = VGG_RF_dilation('VGG19_rf', RF_level=i)
+
+
         get_features_only_until_block_layer_VGG(net, block=4, net_type=1)
-        le_rf = receptivefield(net, (1, 3, 1500, 1500))
+
+        le_rf = receptivefield(net, (1, 3, 800, 800))
+
         print(le_rf.rfsize)
         # in_grad, input_pos = give_effective_receptive_field(net, (1, 3, 32, 32))
 
@@ -268,15 +377,26 @@ def test():
 
 
 def test_cifar():
+
     p = [1, 2, 3, 4]
+
     input_ =torch.rand(2,3,32,32)
+
     for i in p:
+
         print("level {}".format(i))
-        net = VGG_RF_stride('VGG19_rf', RF_level=i)
-        net(input_)
+
+        #net = VGG_RF_stride('VGG19_rf', RF_level=i)
+
+        net = VGG_RF_dilation('VGG19_rf', RF_level=i)
+
+        output = net(input_)
+
+        print("Output: {}".format(output))
+
         print("all good")
 
 
 if __name__ == '__main__':
-    test_cifar()
-# test()
+    # test_cifar()
+    test()

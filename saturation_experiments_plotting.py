@@ -121,9 +121,9 @@ vgg_rfs = [180, 181, 359, 537, 715]
 
 fs = 12
 # fig_size = (3, 2.5) # For the large_input_experiments_only_sgd_paper()
-# fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
+fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
 
-fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
+# fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
 legends_multiplier = 1.1
 # labels_multiplier = 1 # For the large_input_experiments_only_sgd_paper()
 # ticks_multiplier = 0.8 # For the large_input_experiments_only_sgd_paper()
@@ -960,7 +960,7 @@ def optimisers_saturation():
 
     # plt.grid(ls="--")
     # plt.savefig()
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_pr_0.9_all_optimisers.pdf")
+    plt.savefig(f"{save_folder}/vgg19_cifar10_pr_0.9_all_optimisers.pdf")
 
     plt.close()
 
@@ -3040,7 +3040,7 @@ def saturation_resnet50_cifar10_all_optim_pr_09():
         ax.tick_params(axis='x', which='major', labelrotation=90)
         ax.grid(ls="--")
 
-        # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_pr_0.9_all_optimisers.pdf")
+        # plt.savefig(f"{save_folder}/resnet50_cifar10_pr_0.9_all_optimisers.pdf")
         # plt.close()
 
     fig.savefig("AA_resnet50_cifar10_pr_0.9_all_optimisers.pdf")
@@ -4756,7 +4756,7 @@ def weight_inspection_resnet50_cifar10():
     import seaborn as sns
     import pickle
     def read_string(name):
-        with open(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/{name}.pkl", "rb") as f:
+        with open(f"{save_folder}/{name}.pkl", "rb") as f:
             return pickle.load(f)
 
     # CDFs
@@ -5084,7 +5084,7 @@ def weight_inspection_resnet50_cifar10():
     plt.xlabel("$|w|$")
     plt.ylabel("CDF")
     plt.xlim(0, 0.05)
-    plt.savefig(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/average_cdf_resnet_50_cifar10_level1.pdf")
+    plt.savefig(f"{save_folder}/average_cdf_resnet_50_cifar10_level1.pdf")
     del all_cdf_mean
     del all_cdf_std
     fig.clf()
@@ -5138,7 +5138,7 @@ def weight_inspection_resnet50_cifar10():
     plt.xlabel("$|w|$")
     plt.ylabel("CDF")
     plt.xlim(0, 0.05)
-    plt.savefig(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/average_cdf_resnet_50_cifar10_level2.pdf")
+    plt.savefig(f"{save_folder}/average_cdf_resnet_50_cifar10_level2.pdf")
     del all_cdf_mean
     del all_cdf_std
     fig.clf()
@@ -18812,7 +18812,7 @@ def saturation_accuracy_vgg19_plots():
 
     plt.close()
 
-def probes_accuracy():
+def probes_accuracy(save_folder):
     accuracy_ticks =range(0,110,10)
     """# TODO: Probes accuracy
     ## VGG X cifar10
@@ -18887,7 +18887,7 @@ def probes_accuracy():
     axs.legend(prop={"size": fs * legends_multiplier})
 
     plt.grid(ls="--")
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_vgg_cifar_32.pdf")
+    plt.savefig(f"{save_folder}/probe_accuracy_vgg_cifar_32.pdf")
     # plt.xticks(rotation=45)
     plt.close()
 
@@ -18985,7 +18985,7 @@ def probes_accuracy():
     axs.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     # #plt.xticks(rotation=90)
     plt.grid(ls="--")
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet50_cifar_32_low_levels.pdf")
+    plt.savefig(f"{save_folder}/probe_accuracy_resnet50_cifar_32_low_levels.pdf")
 
     plt.close()
 
@@ -19102,7 +19102,7 @@ def probes_accuracy():
     # #plt.xticks(rotation=90)
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet50_cifar_32_low_levels_smooth.pdf")
+        f"{save_folder}/probe_accuracy_resnet50_cifar_32_low_levels_smooth.pdf")
 
     plt.close()
 
@@ -19199,7 +19199,7 @@ def probes_accuracy():
     axs.xaxis.set_major_locator(ticker.MultipleLocator(5))
     axs.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     # #plt.xticks(rotation=90)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet50_cifar_32_high_levels.pdf")
+    plt.savefig(f"{save_folder}/probe_accuracy_resnet50_cifar_32_high_levels.pdf")
 
     plt.close()
 
@@ -19317,7 +19317,7 @@ def probes_accuracy():
     # #plt.xticks(rotation=90)
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet50_cifar_32_high_levels_smooth.pdf")
+        f"{save_folder}/probe_accuracy_resnet50_cifar_32_high_levels_smooth.pdf")
 
     plt.close()
 
@@ -19439,7 +19439,7 @@ def probes_accuracy():
 
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels.pdf")
 
     plt.close()
 
@@ -19580,7 +19580,7 @@ def probes_accuracy():
 
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_smooth.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_smooth.pdf")
     plt.close()
 
     linear_l5 = float(l5[l5["name"] == "linear"]["eval_acc"])
@@ -19725,7 +19725,7 @@ def probes_accuracy():
 
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth.pdf")
 
     plt.close()
 
@@ -19755,7 +19755,7 @@ def probes_accuracy():
     axs.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels.pdf")
 
     """## ResNet25 x Small imagenet pruned $\gamma=0.95$ *batch norm adjusted*"""
 
@@ -19890,7 +19890,7 @@ def probes_accuracy():
 
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_batchnorm_adjusted.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_batchnorm_adjusted.pdf")
 
     plt.close()
 
@@ -20047,7 +20047,7 @@ def probes_accuracy():
     plt.grid(ls="--")
 
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_smooth_batchnorm_adjusted.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels_smooth_batchnorm_adjusted.pdf")
     plt.close()
 
     def smooth_function(array):
@@ -20197,10 +20197,10 @@ def probes_accuracy():
     axs.legend(prop={"size": fs * legends_multiplier})
     # #plt.xticks(rotation=90)
 
-    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224.pdf")
+    # plt.savefig(f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224.pdf")
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth_batchnorm_adjusted.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth_batchnorm_adjusted.pdf")
 
     plt.close()
 
@@ -20337,7 +20337,7 @@ def probes_accuracy():
 
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_lower_levels.pdf")
 
     plt.close()
 
@@ -20490,15 +20490,15 @@ def probes_accuracy():
     axs.legend(prop={"size": fs * legends_multiplier})
     # #plt.xticks(rotation=90)
 
-    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224.pdf")
+    # plt.savefig(f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224.pdf")
     plt.grid(ls="--")
     plt.savefig(
-        "/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth.pdf")
+        f"{save_folder}/probe_accuracy_resnet25_small_imagenet_detailed_224_higher_levels_smooth.pdf")
 
     plt.close()
 
 
-def filter_quiality():
+def filter_quiality(save_folder):
     """# TODO: Filter quality
 
     ## RESNET50 X CIFAR10
@@ -20522,7 +20522,7 @@ def filter_quiality():
 
     preamble = "inter_layer_pruning_results/"
 
-    resnets_rfs_values
+    # resnets_rfs_values
 
     df_level1_ekfac = pd.read_csv(f"{preamble}{ekfac_lvl1}", delimiter=",")
     df_level1_ekfac["RF"] = [resnets_rfs_values[1]] * len(df_level1_ekfac)
@@ -20587,7 +20587,7 @@ def filter_quiality():
         ax.grid(ls="--")
 
     # plt.tight_layout()
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/filter_quality_resnet50_cifar10s.pdf")
+    plt.savefig(f"{save_folder}/filter_quality_resnet50_cifar10s.pdf")
     plt.close()
 
     """## VGG19 X CIFAR10"""
@@ -20657,6 +20657,8 @@ def filter_quiality():
         kind="scatter", s=25
     )
     # plt.xticks(rotation=90)
+    plt.xticks([],[])
+
     axs.set_ylabel('Entropy Variance (Filter Diversity)')
     # sns.barplot(data=all_df,x="layer_name",y="variance_entropy",hue="optimiser",errorbar="ci")
     plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/filter_quality_vgg19_cifar10.pdf")
@@ -21975,7 +21977,7 @@ def saturation_resnet25_smal_imagenet():
     level8_seed0.sum(axis=1)
 
 
-def vgg19_cifar10_saturation():
+def vgg19_cifar10_saturation(save_folder):
     """#VGG19 cifar10 saturation for different RF"""
 
     vgg_ekfac_saturation_df_1 = pd.read_csv(
@@ -22085,7 +22087,7 @@ def vgg19_cifar10_saturation():
     # X axis
     fig.text(0.5, -0.04, 'Layer', ha='center', size=fs * labels_multiplier)
 
-    fig.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_saturation.pdf", bbox_inches="tight")
+    fig.savefig(f"{save_folder}/vgg19_cifar10_saturation.pdf", bbox_inches="tight")
     plt.close()
 
     ##################################################################
@@ -22129,7 +22131,7 @@ def vgg19_cifar10_saturation():
     # ax.set_xticks([])
     # ax.tick_params(axis="x",color="w")
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
-    fig.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_saturation_v2.pdf", bbox_inches="tight")
+    fig.savefig(f"{save_folder}/vgg19_cifar10_saturation_v2.pdf", bbox_inches="tight")
 
     """### Whole model SGD Only"""
 
@@ -22159,7 +22161,7 @@ def vgg19_cifar10_saturation():
 
     # ax.legend()
 
-    # # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_optim_saturation.pdf")
+    # # plt.savefig(f"{save_folder}/vgg19_optim_saturation.pdf")
     plt.close()
 
     all_sgd = all_df[all_df["optimiser"] == "SGD"]
@@ -22188,7 +22190,7 @@ def vgg19_cifar10_saturation():
 
     # ax.legend()
 
-    # # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_optim_saturation.pdf")
+    # # plt.savefig(f"{save_folder}/vgg19_optim_saturation.pdf")
     plt.close()
     # ax.set_title(f"RF={rf_unique[i]}")
     # plt.tight_layout()
@@ -22205,7 +22207,7 @@ def vgg19_cifar10_saturation():
     ax.set_xlabel('Receptive Field', fontsize=fs * labels_multiplier)
     # ax.set_ylabel('Entropy Variance (Filter Diversity)')
     ax.set_ylabel('Saturation', fontsize=fs * labels_multiplier)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_cifar10_saturation_whole_model.pdf")
+    plt.savefig(f"{save_folder}/vgg19_cifar10_saturation_whole_model.pdf")
 
 
 
@@ -22226,7 +22228,7 @@ def numpy_ewma_vectorized_v2(data, window):
     return out
 
 
-def resnet50_cifar10_saturation_different_rf():
+def resnet50_cifar10_saturation_different_rf(save_folder):
     """# TODO: resnet50 cifar10 saturation for different RF"""
 
     resnet_all_layers = ["conv1","layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
@@ -22366,7 +22368,7 @@ def resnet50_cifar10_saturation_different_rf():
     # # X axis
     # fig.text(0.5, -0.04, 'Layer', ha='center', size=fs * labels_multiplier)
     # ax.legend(loc="upper right")
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_saturation.pdf", bbox_inches="tight")
+    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation.pdf", bbox_inches="tight")
 
     ##################################################################
     ############################# Version 2 ##########################
@@ -22417,7 +22419,7 @@ def resnet50_cifar10_saturation_different_rf():
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     # ax.tick_params(axis="x", labelcolor="w")
     ax.legend()
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_saturation_inblock_v2.pdf",
+    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_inblock_v2.pdf",
                 bbox_inches="tight")
 
     plt.close()
@@ -22464,7 +22466,7 @@ def resnet50_cifar10_saturation_different_rf():
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.legend()
     # ax.tick_params(axis="x", labelcolor="w")
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50_cifar10_saturation_outblock_v2.pdf",
+    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_outblock_v2.pdf",
                 bbox_inches="tight")
 
     plt.close()
@@ -22510,7 +22512,7 @@ def resnet50_cifar10_saturation_different_rf():
 
     # ax.legend()
 
-    # # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_optim_saturation.pdf")
+    # # plt.savefig(f"{save_folder}/vgg19_optim_saturation.pdf")
 
     all_sgd = all_df[all_df["optimiser"] == "SGD"]
 
@@ -22539,7 +22541,7 @@ def resnet50_cifar10_saturation_different_rf():
     # ax.legend()
 
     # ax.set_title(f"RF={rf_unique[i]}")
-    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/vgg19_optim_saturation.pdf")
+    # plt.savefig(f"{save_folder}/vgg19_optim_saturation.pdf")
     # plt.close()
 
     mean_epoch_df_dense = pd.DataFrame(
@@ -22554,7 +22556,7 @@ def resnet50_cifar10_saturation_different_rf():
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     # ax.set_ylabel('Entropy Variance (Filter Diversity)')
     ax.set_ylabel('Saturation', fontsize=fs * labels_multiplier)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resne50_cifar10_saturation_whole_model.pdf")
+    plt.savefig(f"{save_folder}/resne50_cifar10_saturation_whole_model.pdf")
     plt.close()
 
 
@@ -32925,6 +32927,12 @@ def variance_explosion_tables():
                                  delimiter=",").T.iloc[1:]
     clean_variance = pd.read_csv("variance_collapse/resnet18_cifar10_original_deter_absolute_mean.csv",
                                  delimiter=",").T.iloc[1:]
+
+    dense_noisy_variance = pd.read_csv("variance_collapse/resnet18_cifar10_noisy_sto_pr_0.9_sigma_0.005_absolute_mean.csv",
+                                 delimiter=",").T.iloc[1:]
+    dense_clean_variance = pd.read_csv("variance_collapse/resnet18_cifar10_original_deter_absolute_mean.csv",
+                                 delimiter=",").T.iloc[1:]
+
     clean_variance = clean_variance.rename(columns={0: "Variance"})
     noisy_variance = noisy_variance.rename(columns={0: "Variance"})
     clean_variance["Layer"] = clean_variance.index
@@ -32932,28 +32940,34 @@ def variance_explosion_tables():
 
     clean_variance.index = range(len(clean_variance))
     noisy_variance.index = range(len(noisy_variance))
-    clean_variance["Type"] = ["Deterministic"] * len(clean_variance)
-    noisy_variance["Type"] = ["Stochastic"] * len(noisy_variance)
+    clean_variance["Type"] = ["Original"] * len(clean_variance)
+    noisy_variance["Type"] = ["Noisy"] * len(noisy_variance)
 
     all_df = pd.concat([clean_variance, noisy_variance], ignore_index=True)
     #
 
-    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed", sharey=True)
+    fig, axs = plt.subplots(1, 1, figsize=(4,3), layout="compressed", sharey=True)
 
-    b = sns.barplot(ax=axs, data=all_df, x="Layer", y="Variance", hue="Type", alpha=0.5)
+    b = sns.lineplot(ax=axs, data=all_df, x="Layer", y="Variance",hue="Type", style="Type",markers={"Original":"o","Noisy":"s"})
     # b.set_yscale("log")
 
-    axs.legend(prop={"size": fs * 1.7}, loc="upper left")
-    axs.set_xlabel("Layer", fontsize=25)
+    axs.legend(prop={"size": fs }, loc="upper left")
+    axs.set_xlabel("Layer", fontsize=15)
+    axs.set_ylabel("Feature Variance", fontsize=15)
     axs.set_xticklabels([])
-    axs.set_xticklabels(range(len(axs.get_xticks())), size=25)
+    # axs.set_xticklabels(range(len(axs.get_xticks())), size=25)
+    axs.set_xticks(range(len(axs.get_xticks())),range(len(axs.get_xticks())), size=25)
 
     # for ax in axs.flat:
     axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
+    axs.xaxis.set_major_locator(ticker.MultipleLocator(3))
     # axs.tick_params(axis='x', which='major', labelrotation=90)
     # sns.barplot(ax=axs[1],data=all_df,x="Layer",y="Variance",color="Type",legend=False,alpha=0.3)
 
     # sns.barplot(ax=axs[1],data=all_df,x="RF",y="Pruned Accuracy",hue="optimiser",legend=False,alpha=0.5)
+    plt.tight_layout()
+    # plt.yscale("log")
+    plt.savefig("feature_variance_resnet18_cifar10.pdf",bbox_inches="tight")
 
     clean_mean = clean_variance["Variance"].mean()
     noisy_mean = noisy_variance["Variance"].mean()
@@ -32961,6 +32975,49 @@ def variance_explosion_tables():
     print(f"Average variance sto-noisy:{noisy_mean}")
     plt.close()
 
+
+    dense_noisy_variance = pd.read_csv("variance_collapse/resnet18_cifar10_noisy_sto_pr_0.9_global_sigma_0.005_dense_var_mean.csv",
+                                       delimiter=",").T.iloc[1:]
+    dense_clean_variance = pd.read_csv("variance_collapse/resnet18_cifar10_pr_0.9_global_original_dense_deter_var_mean.csv",
+                                       delimiter=",").T.iloc[1:]
+    dense_clean_variance = dense_clean_variance.rename(columns={0: "Variance"})
+    dense_noisy_variance = dense_noisy_variance.rename(columns={0: "Variance"})
+    dense_clean_variance["Layer"] = dense_clean_variance.index
+    dense_noisy_variance["Layer"] = dense_noisy_variance.index
+
+    dense_clean_variance.index = range(len(dense_clean_variance))
+    dense_noisy_variance.index = range(len(dense_noisy_variance))
+    dense_clean_variance["Type"] = ["Original"] * len(dense_clean_variance)
+    dense_noisy_variance["Type"] = ["Noisy"] * len(dense_noisy_variance)
+
+    all_dense_df = pd.concat([dense_clean_variance, dense_noisy_variance], ignore_index=True)
+
+
+    fig, axs = plt.subplots(1, 1, figsize=(4,3), layout="compressed", sharey=True)
+
+    b = sns.lineplot(ax=axs, data=all_dense_df,style="Type",markers={"Original":"o","Noisy":"s"}, x="Layer", y="Variance", hue="Type")
+
+    # b.set_yscale("log")
+
+    axs.legend(prop={"size": fs}, loc="upper left")
+    axs.set_xlabel("Layer", fontsize=15)
+    axs.set_ylabel("Feature Variance", fontsize=15)
+    # axs.set_xticklabels([])
+    # axs.set_xticklabels(range(len(axs.get_xticks())), size=25)
+    axs.set_xticks(range(len(axs.get_xticks())),range(len(axs.get_xticks())), size=25)
+
+    # for ax in axs.flat:
+    axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
+    # axs.xaxis.set_minor_locator(ticker.MultipleLocator(3))
+    axs.xaxis.set_major_locator(ticker.MultipleLocator(3))
+    # ticker.MultipleLocator( )
+    # axs.tick_params(axis='x', which='major', labelrotation=90)
+    # sns.barplot(ax=axs[1],data=all_df,x="Layer",y="Variance",color="Type",legend=False,alpha=0.3)
+
+    # sns.barplot(ax=axs[1],data=all_df,x="RF",y="Pruned Accuracy",hue="optimiser",legend=False,alpha=0.5)
+    plt.tight_layout()
+    # plt.yscale("log")
+    plt.savefig("feature_variance_dense_resnet18_cifar10.pdf",bbox_inches="tight")
     """### Resent18 x CIFAR100 $\sigma=0.003,\gamma=0.9$
 
 
@@ -34996,7 +35053,7 @@ def resnet25_small_imagenet_saturation():
                 bbox_inches="tight")
     # fig, axs = plt.subplots(1, 2, fig25_small_imagenet_detailed.pdf")
     plt.close()
-def weights_resnet50_vgg19():
+def weights_resnet50_vgg19(save_folder):
 
     cfg_resnet50 = omegaconf.DictConfig(
         {"architecture": "resnet50",
@@ -35066,19 +35123,19 @@ def weights_resnet50_vgg19():
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))
     ax.tick_params(axis='both', labelsize=fs * ticks_multiplier)
     plt.grid(ls="--",alpha=0.5)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/weights_pruned_resnet50_cumsum_inv.pdf")
+    plt.savefig(f"{save_folder}/weights_pruned_resnet50_cumsum_inv.pdf")
     plt.close()
     #### total percentage#####
 
     fig,ax =plt.subplots(1,1,figsize=fig_size,layout="compressed")
     ax.bar(x1,y3, color="salmon")
-    ax.set_ylabel(r"$\%$ of total weights", fontsize=fs * labels_multiplier)
-    ax.set_xlabel("Layer", fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\%$ of total weights", fontsize=fs )
+    ax.set_xlabel("Layer", fontsize=fs )
     ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(2))
     ax.tick_params(axis='both', labelsize=fs * ticks_multiplier)
     plt.grid(ls="--",alpha=0.5)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/weights_pruned_resnet50_totperc.pdf")
+    plt.savefig(f"{save_folder}/weights_pruned_resnet50_totperc.pdf")
     plt.close()
     ####  VGG19  ###################
     #### CUMSUM#####
@@ -35091,18 +35148,18 @@ def weights_resnet50_vgg19():
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     ax.tick_params(axis='both', labelsize=fs * ticks_multiplier)
     plt.grid(ls="--",alpha=0.5)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/weights_pruned_vgg19_cumsu_inv.pdf")
+    plt.savefig(f"{save_folder}/weights_pruned_vgg19_cumsu_inv.pdf")
     plt.close()
     #### total percentage#####
     fig,ax =plt.subplots(1,1,figsize=fig_size,layout="compressed")
     ax.bar(x2,y4, color="salmon")
-    ax.set_ylabel(r"$\%$ of total weights", fontsize=fs * labels_multiplier)
-    ax.set_xlabel("Layer", fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\%$ of total weights", fontsize=fs )
+    ax.set_xlabel("Layer", fontsize=fs)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     ax.tick_params(axis='both', labelsize=fs * ticks_multiplier)
     plt.grid(ls="--",alpha=0.5)
-    plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/weights_pruned_vgg19_totperc.pdf")
+    plt.savefig(f"{save_folder}/weights_pruned_vgg19_totperc.pdf")
     plt.close()
 def plot_pareto(df, title: str):
     # define aesthetics for plot
@@ -35133,8 +35190,9 @@ def plot_pareto(df, title: str):
 
 
 if __name__ == '__main__':
-    # vgg19_cifar10_saturation()
-    # resnet50_cifar10_saturation_different_rf()
+    folder = "/home/luisaam/Pictures"
+    # vgg19_cifar10_saturation(folder)
+    # resnet50_cifar10_saturation_different_rf(folder)
     # resnet25_small_imagenet_saturation()
     # saturation_accuracy_plots()
 
@@ -35145,10 +35203,10 @@ if __name__ == '__main__':
     # batchnorm_pruning_acuracies_vgg19_cifar10()
     # saturation_resnet50_cifar10_all_optim_pr_09()
 
-    folder = "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_Optimisers_and_pruning/figures/sharpness/"
-    sharpness_plots(folder)
-    # probes_accuracy()
+    # sharpness_plots(folder)
+    # probes_accuracy(folder)
     # large_input_experiments()
     # large_input_experiments_only_sgd_paper()
-    # weights_resnet50_vgg19()
+    # weights_resnet50_vgg19(folder)
+    variance_explosion_tables()
 

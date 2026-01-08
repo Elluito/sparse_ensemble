@@ -260,6 +260,7 @@ def get_model(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
+
     if args.model == "resnet50_stride":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet50_rf_stride(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
@@ -277,6 +278,18 @@ def get_model(args):
             net = resnet50()
             in_features = net.fc.in_features
             net.fc = nn.Linear(in_features, 100)
+
+    if args.model == "resnet50_dilation":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_dilation(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_dilation(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_dilation(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_dilation(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+
     if args.model == "resnet24":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
@@ -298,8 +311,8 @@ def get_model(args):
             raise NotImplementedError(
                 " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
                                                                                      args.dataset))
-    if args.model == "vgg19":
 
+    if args.model == "vgg19":
         if args.type == "normal" and args.dataset == "cifar10":
             net = VGG_RF("VGG19_rf", num_classes=10, RF_level=args.RF_level)
 
@@ -318,6 +331,18 @@ def get_model(args):
             net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = VGG_RF_stride("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    if args.model == "vgg19_dilation":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_dilation("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_dilation("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_dilation("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_dilation("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
             net = small_ResNet_rf(num_classes=10, RF_level=args.RF_level, multiplier=args.width)

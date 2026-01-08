@@ -124,7 +124,7 @@ sns.reset_orig()
 sns.reset_defaults()
 matplotlib.rc_file_defaults()
 fs = 12
-fig_size = (3,3)
+fig_size = (5,4)
 legend_multiplier = 0.6
 labels_multiplier = 0.8
 ticks_multiplier = 0.6
@@ -4547,12 +4547,13 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
         plt.legend(loc="upper left", prop={"size": fs * cfg.legends_multiplier})
 
         ax.tick_params(axis="both", labelsize=fs * cfg.ticks_mutiplier)
+        ax.grid(ls="--")
         if range is not None:
             plt.savefig(
                 f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_{range[1]}_range.pdf")
         else:
             plt.savefig(
-                f"/home/luisaam/Documents/PhD/MyPapers/IJCNN_2025_revision/figures/cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range_V2.pdf")
+                f"/home/luisaam/Pictures/cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range_V2.pdf")
 
     if cfg2 is not None:
 
@@ -4803,7 +4804,7 @@ def epsilon_for_pruning_rate_given_best_sigma(filepath: str, cfg: omegaconf.Dict
 
 
 def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.DictConfig, specific_sigmas: list,
-                                              specific_pruning_rates: list, legend=True, show_labels=True):
+                                              specific_pruning_rates: list, legend=True, show_labels=True,save_folder="/home/luisaam/Pictures"):
     use_cuda = torch.cuda.is_available()
 
     net = get_model(cfg)
@@ -5020,8 +5021,8 @@ def plot_specific_pr_sigma_epsilon_statistics(filepath: str, cfg: omegaconf.Dict
         #             bbox_inches="tight")
         plt.grid(ls="--")
         plt.savefig(
-            "/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/epsilon_v2_allN_all_{}_{}_pr_{}_sigma={}_{}.pdf".format(
-                cfg.dataset, cfg.architecture, pr_string,
+            "{}/epsilon_v2_allN_all_{}_{}_pr_{}_sigma={}_{}.pdf".format(
+                save_folder,cfg.dataset, cfg.architecture, pr_string,
                 current_sigma, cfg.pruner),
             bbox_inches="tight")
         plt.close()
@@ -8699,6 +8700,118 @@ def stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cf
         f"/home/luisaam/Documents/PhD/IJCNN_2025_stochastic_pruning/figures/seedsPlots/ranking_mean_vs_sigma_seed_1_{cfg.dataset}_{cfg.pruner}_{cfg.architecture}_stochastic_deterministic_{cfg.noise}_sigma_"
         f"{cfg.sigma}_pr_{cfg.amount}_batchSize_{cfg.batch_size}_pop"
         f"_{cfg.population}_{eval_set}_{name}.pdf")
+def count_changes(mask_original,mask_noisy,index=1):
+    assert len(mask_original) == len(mask_noisy), "Arrays are not the same lenght"
+
+    # Counting the changes of array 1
+
+    counter_a = 0
+
+    counter_b = 0
+
+    counter_b = torch.bitwise_and(torch.bitwise_not(mask_noisy),mask_original).sum()
+
+    counter_a = torch.bitwise_and(torch.bitwise_not(mask_original),mask_noisy).sum()
+
+    # for i in range(len(mask_original)):
+    #
+    #     origi_w = mask_original[i]
+    #
+    #     noisy_w = mask_noisy[i]
+    #
+    #     if origi_w==1 and noisy_w==0:
+    #         counter_b +=1
+    #     if origi_w==0 and noisy_w==1:
+    #         counter_a += 1
+    #     print(f"{(i+1)/len(mask_original)*100}%")
+    #     print(f"Counter a: {counter_a}")
+    #     print(f"Counter b: {counter_b}")
+    return counter_a,counter_b
+
+def counting_weights_that_change_between_sto_det(cfg: omegaconf.DictConfig, eval_set: str = "test"):
+
+    use_cuda = torch.cuda.is_available()
+    net = get_model(cfg)
+    # cfg.solution = solution2
+    # net2 = get_model(cfg)
+    # cfg.solution = solution3
+    # net3 = get_model(cfg)
+
+    evaluation_set = select_eval_set(cfg, eval_set)
+    N = cfg.population
+    pop = []
+    pruned_performance = []
+    stochastic_dense_performances = []
+    stochastic_deltas = []
+    # accelerator = accelerate.Accelerator(mixed_precision="fp16")
+    # evaluation_set, net = accelerator.prepare(evaluation_set, net)
+
+    # original_performance = test(net, use_cuda, evaluation_set, verbose=1)
+    # original_performance2 = test(net2, use_cuda, evaluation_set, verbose=1)
+    # original_performance3 = test(net3, use_cuda, evaluation_set, verbose=1)
+    # del original_performance
+    # del original_performance
+
+    names, weights = zip(*get_layer_dict(net))
+    number_of_layers = len(names)
+    sigma_per_layer = dict(zip(names, [cfg.sigma] * number_of_layers))
+
+    mean_sto1_list = []
+    mean_sto2_list = []
+    mean_sto3_list = []
+
+    det1_list = []
+    det2_list = []
+    det3_list = []
+
+    total_a = []
+    total_b = []
+
+    pruned_original = copy.deepcopy(net)
+
+    # pruned_original2 = copy.deepcopy(net2)
+
+    # pruned_original3 = copbase_modely.deepcopy(net3)
+
+    if cfg.pruner == "global":
+        prune_with_rate(pruned_original, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+
+        # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="global")
+        # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="global")
+
+    else:
+        prune_with_rate(pruned_original, cfg.cmount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                        pruner=cfg.pruner)
+
+        # prune_with_rate(pruned_original2, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
+        # prune_with_rate(pruned_original3, pr, exclude_layers=cfg.exclude_layers, type="layer-wise",
+        #                 pruner=cfg.pruner)
+
+    remove_reparametrization(pruned_original, exclude_layer_list=cfg.exclude_layers)
+    weights_pruned_original= parameters_to_vector(pruned_original.parameters())
+
+    non_zero_pruned_original = weights_pruned_original!= 0
+
+    for i in range(cfg.population):
+
+        base_model = copy.deepcopy(net)
+        noisy_model = get_noisy_sample_sigma_per_layer(base_model, cfg, sigma_per_layer=sigma_per_layer)
+        if cfg.pruner == "global":
+            prune_with_rate(noisy_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="global")
+        else:
+            prune_with_rate(noisy_model, cfg.amount, exclude_layers=cfg.exclude_layers, type="layer-wise",
+                            pruner=cfg.pruner)
+
+        remove_reparametrization(noisy_model, exclude_layer_list=cfg.exclude_layers)
+        weights_noisy_model = parameters_to_vector(noisy_model.parameters())
+        non_zero_noisy_model = weights_noisy_model!=0
+        count_a, count_b = count_changes(non_zero_pruned_original,non_zero_noisy_model)
+        total_a.append(count_a)
+        total_b.append(count_b)
+    print(f"The average weights that are pruned in the deterministic that are not pruned in the stochastic is: {np.average(total_a)}")
+    print(
+    f"The average weights that are not pruned in the deterministic that are pruned in the stochastic is: {np.average(total_b)}")
 
 
 def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg: omegaconf.DictConfig, solution2,
@@ -8737,6 +8850,7 @@ def stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(
     det1_list = []
     det2_list = []
     det3_list = []
+
     for pr in pr_list:
         pruned_original = copy.deepcopy(net)
         # pruned_original2 = copy.deepcopy(net2)
@@ -8849,55 +8963,56 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
                      index_col=False)
 
     original_performance = float(df["Orig1 acc"][0])
-    # original_performance2 = float(df["Orig2 acc"][0])
-    # original_performance3 = float(df["Orig3 acc"][0])
+    original_performance2 = float(df["Orig2 acc"][0])
+    original_performance3 = float(df["Orig3 acc"][0])
     pruned_original_performance = float(df["Det1 sparse acc"][0])
-    # pruned_original_performance2 = float(df["Det2 sparse acc"][0])
-    # pruned_original_performance3 = float(df["Det3 sparse acc"][0])
+    pruned_original_performance2 = float(df["Det2 sparse acc"][0])
+    pruned_original_performance3 = float(df["Det3 sparse acc"][0])
 
     stochastic_dense_performances = df["sto1 dense acc"]
-    # stochastic_dense_performances2 = df["sto2 dense acc"]
-    # stochastic_dense_performances3 = df["sto3 dense acc"]
+    stochastic_dense_performances2 = df["sto2 dense acc"]
+    stochastic_dense_performances3 = df["sto3 dense acc"]
 
     pruned_performance = df["sto1 sparse acc"]
-    # pruned_performance2 = df["sto2 sparse acc"]
-    # pruned_performance3 = df["sto3 sparse acc"]
+    pruned_performance2 = df["sto2 sparse acc"]
+    pruned_performance3 = df["sto3 sparse acc"]
 
     ranked_index = df["rank1"]
-    # ranked_index2 = df["rank2"]
-    # ranked_index3 = df["rank3"]
+    ranked_index2 = df["rank2"]
+    ranked_index3 = df["rank3"]
 
     mean_pruned_sto1 = np.mean(pruned_performance)
-    # mean_pruned_sto2 = np.mean(pruned_performance2)
-    # mean_pruned_sto3 = np.mean(pruned_performance3)
+    mean_pruned_sto2 = np.mean(pruned_performance2)
+    mean_pruned_sto3 = np.mean(pruned_performance3)
     index_of_pruned_original = list(ranked_index).index(0)
 
     labels = ["stochastic pruned"] * (len(pruned_performance) * 3)
 
-    # mean_dense_sto1 = np.mean(stochastic_dense_performances)
-    # mean_dense_sto2 = np.mean(stochastic_dense_performances2)
-    # mean_dense_sto3 = np.mean(stochastic_dense_performances3)
+    mean_dense_sto1 = np.mean(stochastic_dense_performances)
+    mean_dense_sto2 = np.mean(stochastic_dense_performances2)
+    mean_dense_sto3 = np.mean(stochastic_dense_performances3)
 
+    print(f"\n\nfig size {fig_size}\n\n")
     fig, ax = plt.subplots(figsize=fig_size, layout="compressed")
 
     original_line = ax.axhline(y=original_performance, color="r", linestyle="-", label="Seed 1")
-    # original_line2 = ax.axhline(y=original_performance2, color="orange", linestyle="-", label="Seed 2")
-    # original_line3 = ax.axhline(y=original_performance3, color="blue", linestyle="-", label="Seed 3")
+    original_line2 = ax.axhline(y=original_performance2, color="orange", linestyle="-", label="Seed 2")
+    original_line3 = ax.axhline(y=original_performance3, color="blue", linestyle="-", label="Seed 3")
 
     deterministic_pruning_line = ax.axhline(y=pruned_original_performance, linestyle=":", color="r", label="Seed 1")
-    # deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2, linestyle=":", color="orange",
-    #                                          label="Seed 2")
-    # deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3, linestyle=":", color="blue",
-    #                                          label="Seed 3")
+    deterministic_pruning_line2 = ax.axhline(y=pruned_original_performance2, linestyle=":", color="orange",
+                                             label="Seed 2")
+    deterministic_pruning_line3 = ax.axhline(y=pruned_original_performance3, linestyle=":", color="blue",
+                                             label="Seed 3")
 
     stochastic_mean = ax.axhline(y=mean_pruned_sto1, linestyle=(0, (5, 5)), color="r", label="Seed 1", alpha=0.5)
-    # stochastic_mean2 = ax.axhline(y=mean_pruned_sto2, linestyle=(0, (5, 5)), color="orange", label="Seed 2", alpha=0.5)
-    # stochastic_mean3 = ax.axhline(y=mean_pruned_sto3, linestyle=(0, (5, 5)), color="blue", label="Seed 3", alpha=0.5)
+    stochastic_mean2 = ax.axhline(y=mean_pruned_sto2, linestyle=(0, (5, 5)), color="orange", label="Seed 2", alpha=0.5)
+    stochastic_mean3 = ax.axhline(y=mean_pruned_sto3, linestyle=(0, (5, 5)), color="blue", label="Seed 3", alpha=0.5)
 
     plt.tick_params(axis='both', which='major', labelsize=fs * cfg.ticks_multiplier)
     # plt.tick_params(axis='x', which='major')
     plt.xlabel("Ranking Index", fontsize=fs * cfg.labels_multiplier)
-    plt.ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
+    plt.ylabel("Test Accuracy", fontsize=fs * cfg.labels_multiplier)
 
     stochastic_models_points_dense = []
     stochastic_models_points_dense2 = []
@@ -8919,13 +9034,13 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             pruned_point = ax.scatter(i, element, c="r", marker="o", s=50)
             stochastic_models_points_pruned.append(pruned_point)
 
-    # for i, element in enumerate(pruned_performance2[ranked_index2]):
-    #     pruned_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="o", s=50)
-    #     stochastic_models_points_pruned2.append(pruned_point2)
-    #
-    # for i, element in enumerate(pruned_performance3[ranked_index3]):
-    #     pruned_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="o", s=50)
-    #     stochastic_models_points_pruned3.append(pruned_point3)
+    for i, element in enumerate(pruned_performance2[ranked_index2]):
+        pruned_point2 = ax.scatter(i + 1 / 3, element, c="orange", marker="o", s=50)
+        stochastic_models_points_pruned2.append(pruned_point2)
+
+    for i, element in enumerate(pruned_performance3[ranked_index3]):
+        pruned_point3 = ax.scatter(i + 2 / 3, element, c="blue", marker="o", s=50)
+        stochastic_models_points_pruned3.append(pruned_point3)
 
     for i, element in enumerate(stochastic_dense_performances[ranked_index]):
         if i == index_of_pruned_original or element == 1:
@@ -8956,9 +9071,9 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
 
     if show_legend:
         handles = [
-            # Patch(facecolor="red", label="Seed 1"),
-            # Patch(facecolor="orange", label="Seed 2"),
-            # Patch(facecolor="blue", label="Seed 3"),
+            Patch(facecolor="red", label="Seed 1"),
+            Patch(facecolor="orange", label="Seed 2"),
+            Patch(facecolor="blue", label="Seed 3"),
             # Line2D([0], [0], marker='o', color='w', label='Seed 1',
             #        markerfacecolor='red', alpha=0.6, markersize=10),
             # Line2D([0], [0], marker='o', color='w', label='Seed 1',
@@ -8966,23 +9081,27 @@ def stochastic_pruning_against_deterministic_pruning_all_seeds_compare(cfg: omeg
             # Line2D([0], [0], marker='o', color='w', label='Seed 3',
             #        markerfacecolor='blue', alpha=0.6, markersize=10),
 
-            Line2D([0], [0], linestyle="-", color='red', label='Dense Det.'),
-            Line2D([0], [0], marker='s', color='w', label='Dense Sto.',
-                   markerfacecolor='red', markersize=10),
-            Line2D([0], [0], marker='o', color='w', label='SP',
-                   markerfacecolor='red', markersize=10),
-            Line2D([0], [0], linestyle=(0, (5, 5)), color='red', label='Mean SP'),
-            Line2D([0], [0], linestyle=":", color='red', label='DP'),
+            Line2D([0], [0], linestyle="--", color='k', label='Dense Det.'),
+            Line2D([0], [0], linestyle="none", marker='s', color='k', label='Dense Sto.',
+                   markerfacecolor='k', markersize=10),
+            Line2D([0], [0], linestyle="none", marker='o', color='k', label='SP',
+                   markerfacecolor='k', markersize=10),
+            Line2D([0], [0], linestyle=(0, (5, 5)), color='k', label='Mean SP'),
+            Line2D([0], [0], linestyle=":", color='k', label='DP'),
         ]
         # plt.legend(bbox_to_anchor=(1.005, 1), handles=handles, prop={"size": fs * legend_multiplier})
-        plt.legend(handles=handles,bbox_to_anchor=(1.005, 1), prop={"size": fs * cfg.legends_multiplier})
+        # plt.legend(handles=handles,bbox_to_anchor=(1.005, 1), prop={"size": fs * cfg.legends_multiplier})
         # plt.xlim(-0.5, 9.5)
-        plt.xlim(-0.5, 5.05)
+        plt.xlim(-0.5, 7)
+        # plt.xlim(-0.5, 5.05)
         # plt.legend([original_line, tuple(stochastic_models_points_pruned), tuple(stochastic_models_points_dense),
         #             deterministic_pruning_line],
         #            ['Original Performance', 'Pruned Stochastic', 'Dense Stochastic', "Deterministic Pruning"],
         #            scatterpoints=1,
         #            numpoints=1, handler_map={tuple: HandlerTuple(ndivide=1)})
+
+        plt.legend(handles=handles,prop={"size": fs * cfg.legends_multiplier})
+
     if cfg.amount > 0.8:
         plt.title(f"$\gamma={cfg.amount}$", fontsize=fs * cfg.labels_multiplier)
     else:
@@ -12701,9 +12820,9 @@ def LeMain(args):
     cfg.labels_multiplier = args["labels_multiplier"]
     cfg.ticks_mutiplier = args["ticks_multiplier"]
 
-    experiment_selector(cfg, args, number_experiment=args["experiment"])
+    # experiment_selector(cfg, args, number_experiment=args["experiment"])
 
-    # CDF_weights_analysis_stochastic_deterministic(cfg)
+    CDF_weights_analysis_stochastic_deterministic(cfg)
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
     # stochastic_soup_of_models(cfg, name="")
@@ -14793,7 +14912,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
     ax.tick_params(axis="y", colors="k", labelsize=fs * cfg.ticks_multiplier)
     ax.tick_params(axis="x", colors="red", labelsize=fs * cfg.ticks_multiplier)
     ax.set_xlabel("$\sigma$", color="red", fontsize=fs * cfg.labels_multiplier)
-    ax.set_ylabel("Accuracy", fontsize=fs * cfg.labels_multiplier)
+    ax.set_ylabel("Test Accuracy", fontsize=fs * cfg.labels_multiplier)
 
     twiny_ax = ax.twiny()
 
@@ -14861,7 +14980,7 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
     else:
 
         # lgd= plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, loc="upper left")
-        lgd= plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, bbox_to_anchor=(0.5,0.9))
+        lgd= plt.legend(handles=handles, prop={"size": fs * cfg.legends_multiplier}, bbox_to_anchor=(0.7,0.9), loc="upper right")
 
     plt.grid(ls='--', alpha=0.5)
     for handle_leg in lgd.legend_handles:
@@ -14874,7 +14993,52 @@ def plot_variable_pr_sigma_variance(cfg: omegaconf.DictConfig, name: str = "", e
 
 # def helper_function_plot_stochastic_graphics():
 
-def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fig89=True, fig10=True):
+def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fig89=True, fig10=True,fig11=True,fig12=True,fig13=True):
+    if fig12:
+        cfg = omegaconf.DictConfig({
+            # "architecture": "vgg19",
+            "population": 5,
+            "model": "resnet18",
+            "architecture": "resnet18",
+            "dataset": "cifar100",
+            "sigma": 0.003,
+            "noise": "gaussian",
+            "amount": 0.85,
+            "exclude_layers": ["conv1", "linear", "fc", "classifier"],
+            "model_type": "alternative",
+            "pruner": "global",
+            "batch_size": 512,
+            "lr": 0.001,
+            "momentum": 0.9,
+            "weight_decay": 1e-4,
+            "cyclic_lr": True,
+            "lr_peak_epoch": 5,
+            "optim": "adam",
+            # "solution": "trained_models/cifar10/resnet18_cifar10_traditional_train_valacc=95,370.pth",
+            "solution": "trained_models/cifar100/resnet18_cifar100_traditional_train.pth",
+            # "solution": "trained_models/cifar10/VGG19_cifar10_traditional_train_valacc=93,57.pth",
+            # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
+            # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
+            # "solution": "trained_models/cifar100/resnet50_cifar100.pth",
+            # "solution": "/home/luisaam/PychthisarmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+            "num_workers": 1,
+            "cosine_schedule": False,
+            "epochs": 24,
+            "pad": 0,
+            "input_resolution": 32,
+            "resize": 0,
+            "name": "",
+        })
+        solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
+        solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
+        cfg.labels_multiplier = 1.3
+        cfg.legends_multiplier = 0.8
+        cfg.ticks_multiplier = 1.3
+
+        counting_weights_that_change_between_sto_det(cfg)
+
+
+
     if fig1:
         cfg = omegaconf.DictConfig({
             # "architecture": "vgg19",
@@ -14901,7 +15065,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
             # "solution": "trained_models/cifar100/vgg19_cifar100_traditional_train.pth",
             # "solution": "trained_models/cifar10/resnet50_cifar10.pth",
             # "solution": "trained_models/cifar100/resnet50_cifar100.pth",
-            # "solution": "/home/luisaam/PycharmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
+            # "solution": "/home/luisaam/PychthisarmProjects/sparse_ensemble/trained_models/mnist/resnet18_MNIST_traditional_train.pth",
             "num_workers": 1,
             "cosine_schedule": False,
             "epochs": 24,
@@ -14913,9 +15077,9 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         })
         solution2 = "trained_models/cifar10/resnet18_cifar10_normal_seed_2.pth"
         solution3 = "trained_models/cifar10/resnet18_cifar10_normal_seed_3.pth"
-        cfg.labels_multiplier = 1.7
-        cfg.legends_multiplier = 1.3
-        cfg.ticks_multiplier = 1.6
+        cfg.labels_multiplier = 1.3
+        cfg.legends_multiplier = 0.8
+        cfg.ticks_multiplier = 1.3
         # args["legends_multiplier"] = 1.3
         # args["ticks_multiplier"] = 1.6
         # args["labels_multiplier"] = 1.7
@@ -14937,6 +15101,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         t1 = time.time()
         print(f"Time in seconds: {(t1 - t0)} s")
         print(f"Time in minutes: {(t1 - t0) / 60} min")
+
         # #
         # # print(f"Low pruning rate=0.7")
         # # cfg.amount = 0.7
@@ -14946,16 +15111,17 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         # #
         # # print(f"Time in seconds: {(t1 - t0)} s")
         # # print(f"Time in minutes: {(t1 - t0) / 60} min")
+
         optimal_params = {"cifar10": {"sigma": 0.005, "pr": 0.9}, "cifar100": {"sigma": 0.003, "pr": 0.9}}
         # datasets = ["cifar100"]
         # for dataset in datasets:
         # cfg.amount = optimal_params[dataset]["pr"]
         # cfg.sigma = optimal_params[dataset]["sigma"]
         # cfg.dataset = dataset
-        # stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
-        #                                                                             solution3=solution3,
-        #                                                                             pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
-        #                                                                                      0.7, 0.8,0.82,0.84,0.88, 0.9,0.91,0.92,0.93, 0.95, 0.99])
+        stochastic_pruning_against_deterministic_variable_pruning_all_seeds_compare(cfg, solution2=solution2,
+                                                                                    solution3=solution3,
+                                                                                    pr_list=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6,
+                                                                                             0.7, 0.8,0.82,0.84,0.88, 0.9,0.91,0.92,0.93, 0.95, 0.99])
 
         # stochastic_pruning_against_deterministic_variable_sigma_all_seeds_compare(cfg, solution2=solution2,
         #                                                                           solution3=solution3,
@@ -15534,6 +15700,7 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         file = f"{directory}scatter_all_models_all_datasets_V7.pdf"
         plt.savefig(file, bbox_inches="tight")
 
+
     if fig57:
 
         cfg = omegaconf.DictConfig({
@@ -15911,7 +16078,56 @@ def plot_stochastic_graphics(fig1=True, fig23=True, fig57=True, fig57_2=True, fi
         #     args["dataset"] = combination[1]
         #     args["sampler"] = combination[2]
         LeMain(args)
+    if fig11:
+        args = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
+                "log_sigma": True,
+                "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar100",
+                "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.003, "pruning_rate": 0.9,
+                "batch_size": 512, "name": "no_name",
+                "plot_folder": "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/pareto_fronts/"}
+        # args["architecture"] = args_out["architecture"]
+        # args["dataset"] = args_out["dataset"]
+        # args["sampler"] = args_out["sampler"]
+        # args["pruner"] = args_out["pruner"]
+        # #
+        models = ["resnet18", "resnet50", "vgg19"]
+
+        datasets = ["cifar10", "cifar100"]
+
+        sampler = ["nsga"]
+
+        # models = ["resnet18"]
+        # datasets = ["cifar10"]
+        # sampler = ["tpe"]
+        # global labels_multiplier, ticks_multiplier, legend_multiplier, fig_size
+        fig_size = (4, 2)
+        labels_multiplier = 1.4
+        ticks_multiplier = 0.8
+        legend_multiplier = 1.4
+
+        args["legends_multiplier"] = 1.1
+        args["ticks_multiplier"] = 1.5
+        args["labels_multiplier"] = 1.5
+
+        # for combination in itertools.product(models, datasets, sampler):
+        #     args["architecture"] = combination[0]
+        #     args["dataset"] = combination[1]
+        #     args["sampler"] = combination[2]
+        LeMain(args)
+        args["dataset"] = "cifar10"
+        args["sigma"] = 0.005
+        LeMain(args)
+    if fig13:
+        cfg = {"experiment": 20, "population": 10, "functions": 2, "trials": 150, "sampler": "nsga",
+                "log_sigma": True,
+                "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+                "modeltype": "alternative", "epochs": 1, "pruner": "global", "sigma": 0.003, "pruning_rate": 0.9,
+                "batch_size": 512, "name": "no_name",
+                "plot_folder": "/home/luisaam/Documents/PhD/MyPapers/PhD_Thesis_document/Chapter_stochastic_pruning/figures/pareto_fronts/"}
+        all_noisy_models = pd.to_csv(
+            f"variance_collapse/{cfg.model}_{cfg.dataset}_noisy_sto_pr_{cfg.amount}_{cfg.pruner}_sigma_{cfg.sigma}_var_mean.csv")
+
 
 
 if __name__ == '__main__':
-    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=0, fig57=1, fig89=0, fig10=0)
+    plot_stochastic_graphics(fig1=0, fig23=0, fig57_2=0, fig57=0, fig89=0, fig10=0,fig11=0,fig12=1)

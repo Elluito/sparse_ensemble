@@ -161,7 +161,7 @@ resize=0
 #solutions_folder="${SCRATCH}/second_order_checkpoints"
 
 save_folder="/home/luisaam/PycharmProjects/sparse_ensemble/filter_quality_results/cifar10"
-solutions_folder="/home/luisaam/Documents/PhD/data/second_order_models_for_filter_quality_lr_0.1_momentum_0.9"
+solutions_folder="/home/luisaam/Documents/PhD/data/second_order_models_for_flitier_quality_lr_0.1_momentum_0.9"
 
 name="lr_0.1_momentum_0.9_ekfac_200_res_32_gc_0"
 for model in "resnet50"; do

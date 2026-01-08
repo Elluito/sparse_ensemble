@@ -277,7 +277,7 @@ def strip_prefix(net_state_dict: dict):
 
 
 def load_model(net, path):
-    state_dict = torch.load(path)
+    state_dict = torch.load(path,map_location=device)
     if "net" in state_dict.keys():
         net.load_state_dict(strip_prefix(state_dict["net"]))
     else:
@@ -4604,7 +4604,7 @@ def number_of_0_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
 
 # TODO:this is the function that plot s the CDF
 def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = None, cfg2: omegaconf.DictConfig = None,
-                                                  config_list=[], range: tuple = None):
+                                                  config_list=[], range: tuple = None,normalized=False):
     if cfg2 is None:
         net = get_model(cfg)
         param_vector = torch.abs(parameters_to_vector(net.parameters()))
@@ -4633,12 +4633,12 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
         noisy_model = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
         param_vector_noisy = torch.abs(parameters_to_vector(noisy_model.parameters()))
 
-        sigma_per_layer = dict(zip(names, [0.001] * len(names)))
-        noisy_model2 = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
-        param_vector_noisy2 = torch.abs(parameters_to_vector(noisy_model2.parameters()))
+        # sigma_per_layer = dict(zip(names, [0.001] * len(names)))
+        # noisy_model2 = get_noisy_sample_sigma_per_layer(net, cfg, sigma_per_layer)
+        # param_vector_noisy2 = torch.abs(parameters_to_vector(noisy_model2.parameters()))
         # param_vector= param_vector/max(param_vector)
         # pruning_rates = [0.8,0.85,0.9,0.95]
-        pruning_rates = [0.9]
+        pruning_rates = []
         colors = ["m", "g", "r", "c"]
         dataset_string = cfg.dataset.upper()
         architecture_string = ""
@@ -4650,13 +4650,24 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
             architecture_string = "VGG19"
 
         # For net 1
-        if range is None:
-            count1, bin_counts1 = torch.histogram(param_vector, bins=len(param_vector))
+
+        if normalized:
+            vector1 = param_vector/torch.max(param_vector)
         else:
-            count1, bin_counts1 = torch.histogram(param_vector, bins=len(param_vector), range=range)
+            vector1 = param_vector
+        if range is None:
+            count1, bin_counts1 = torch.histogram(vector1, bins=len(vector1))
+        else:
+            count1, bin_counts1 = torch.histogram(vector1, bins=len(vector1), range=range)
+
         pdf1 = count1 / torch.sum(count1)
         cdf1 = torch.cumsum(pdf1, dim=0)
-        plt.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string}-Det.")
+        cdf_index_for_sigma =np.sum(bin_counts1[1:].detach().numpy()>=cfg.sigma/param_vector.detach().numpy().max())
+        cdf_for_sigma = cdf1[-cdf_index_for_sigma].item()
+        print(f"CDF for sigma of {cfg.sigma} is {cdf_for_sigma}")
+
+        fig, axs = plt.subplots(1, 1, figsize=(4, 4))
+        axs.plot(bin_counts1[1:].detach().numpy(), cdf1.detach().numpy(), label=f"{architecture_string}-Det.")
         names1, weights1 = zip(*get_layer_dict(net))
 
         for i, pr in enumerate(pruning_rates):
@@ -4665,31 +4676,50 @@ def CDF_weights_analysis_stochastic_deterministic(cfg: omegaconf.DictConfig = No
             plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="--", label=f"Threshold @ pr {pr} for Det.")
 
         # For net 2
-        if range is None:
-            count2, bin_counts2 = torch.histogram(param_vector_noisy, bins=len(param_vector_noisy))
-        else:
-            count2, bin_counts2 = torch.histogram(param_vector_noisy, bins=len(param_vector_noisy), range=range)
-        pdf2 = count2 / torch.sum(count2)
-        cdf2 = torch.cumsum(pdf2, dim=0)
-        plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(),
-                 label=f"{architecture_string}-Sto.@{cfg.sigma}")
+        # if normalized:
+        #     vector2 = param_vector_noisy/torch.max(param_vector_noisy)
+        # else:
+        #     vector2=param_vector_noisy
+        # if range is None:
+        #     count2, bin_counts2 = torch.histogram(vector2, bins=len(vector2))
+        # else:
+        #     count2, bin_counts2 = torch.histogram(vector2, bins=len(vector2), range=range)
+        #
+        # pdf2 = count2 / torch.sum(count2)
+        # cdf2 = torch.cumsum(pdf2, dim=0)
+        # plt.plot(bin_counts2[1:].detach().numpy(), cdf2.detach().numpy(),
+        #          label=f"{architecture_string}-Sto.@{cfg.sigma}")
+        #
+        # names2, weights2 = zip(*get_layer_dict(noisy_model))
+        #
+        # for i, pr in enumerate(pruning_rates):
+        #     threshold, index_threshold, full_vector = get_threshold_and_pruned_vector_from_pruning_rate(
+        #         list_of_layers=weights2, pruning_rate=pr)
+        #     plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
+        #                 label=f"Threshold @ pr {pr} for Sto.")
 
-        names2, weights2 = zip(*get_layer_dict(noisy_model))
+        # plt.title(f"Deterministic and Stochastic {architecture_string} model on {dataset_string}")
 
-        for i, pr in enumerate(pruning_rates):
-            threshold, index_threshold, full_vector = get_threshold_and_pruned_vector_from_pruning_rate(
-                list_of_layers=weights2, pruning_rate=pr)
-            plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
-                        label=f"Threshold @ pr {pr} for Sto.")
+        #  Now plot the vertical line for sigma
+        sigma_scaled = cfg.sigma/param_vector.detach().max()
+        axs.axvline(cfg.sigma/param_vector.detach().max(), linewidth=1, color="m", linestyle="dotted", label=r"$\sigma={}$".format(cfg.sigma))
 
-        plt.title(f"Deterministic and Stochastic {architecture_string} model on {dataset_string}")
-        plt.legend()
+        plt.legend(loc="upper left")
         if range is not None:
             plt.xscale("log")
             plt.savefig(
                 f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_{range[1]}_range.pdf")
         else:
-            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range.pdf")
+            axs.set_xlabel(r"$\frac{\lvert\omega\rvert}{\lvert\omega_{max}\rvert}$", fontsize=15)
+            axs.set_ylabel("CDF", fontsize=15)
+            # axs.xlabel(r"$\frac{\lvert\omega\rvert}{\lvert\omega_{max}\rvert}$")
+            plt.xscale("log")
+            plt.yscale("log")
+            axs.grid(ls="--")
+            plt.tight_layout()
+            axs.tick_params(axis='both', which='major', labelsize=12)
+            axs.text(sigma_scaled-0.008,cdf_for_sigma,f"{cdf_for_sigma:0.2f}")
+            plt.savefig(f"cdf_{cfg.architecture}_det_vs_sto_{cfg.dataset}_s{cfg.sigma}_{cfg.pruner}_full_range.pdf",bbox_inches="tight")
 
     if cfg2 is not None:
 
@@ -8308,7 +8338,7 @@ def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int 
         print("Began experiment 16")
         solution = "/nobackup/sclaam/trained_models/resnet18_imagenet.pth"
         exclude_layers = ["conv1", "fc"]
-        cfg2 = omegaconftDictConfig({
+        cfg2 = omegaconf.DictConfig({
             "population": 5,
             "generations": 10,
             "epochs": 100,
@@ -12502,13 +12532,13 @@ def LeMain(args):
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     # features_similarity_comparison_experiments(cfg.architecture)
 
-    experiment_selector(cfg, args, args["experiment"])
+    # experiment_selector(cfg, args, args["experiment"])
 
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # plot_histograms_predictions("normal_seed2")
     # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
-    # CDF_weights_analysis_stochastic_deterministic(cfg)
+    CDF_weights_analysis_stochastic_deterministic(cfg,normalized=True)
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
     # stochastic_soup_of_models(cfg, name="")
@@ -13107,7 +13137,8 @@ def get_features_only_until_block_layer(net, block=2, net_type=0):
     else:
         def features_only(self, x):
             x = F.relu(self.bn1(self.conv1(x)))
-            x = self.maxpool(x)
+            if self.maxpool:
+                x = self.maxpool(x)
             if block == 0: return x
             x = self.layer1(x)
             if block == 1: return x
@@ -14987,27 +15018,27 @@ if __name__ == '__main__':
     #                     help='Type of functions for MOO optim of sigma and pr', required=False)
     # args_out = vars(parser.parse_args())
     #
-    # args = {"experiment": 21, "population": 5, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
-    #         "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
-    #         "modeltype": "alternative", "epochs": 100, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
-    #         "batch_size": 512, "name": "fine_tuned"}
+    args = {"experiment": 21, "population": 5, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
+            "one_batch": False, "num_workers": 10, "architecture": "resnet18", "dataset": "cifar10",
+            "modeltype": "alternative", "epochs": 100, "pruner": "global", "sigma": 0.005, "pruning_rate": 0.9,
+            "batch_size": 512, "name": "fine_tuned"}
 
-    # # args["architecture"] = args_out["architecture"]
-    # # args["dataset"] = args_out["dataset"]
-    # # args["sampler"] = args_out["sampler"]
-    # # args["pruner"] = args_out["pruner"]
-    # # #
-    # models = ["resnet18", "resnet50", "vgg19"]
-    # datasets = ["cifar10", "cifar100"]
+    # args["architecture"] = args_out["architecture"]
+    # args["dataset"] = args_out["dataset"]
+    # args["sampler"] = args_out["sampler"]
+    # args["pruner"] = args_out["pruner"]
+    # #
+    models = ["resnet18", "resnet50", "vgg19"]
+    datasets = ["cifar10", "cifar100"]
     # sampler = ["nsga"]
     # models = ["resnet18"]
     # datasets = ["cifar10"]
     # sampler = ["tpe"]
-    # # for combination in itertools.product(models, datasets, sampler):
-    # #     args["architecture"] = combination[0]
-    # #     args["dataset"] = combination[1]
-    # #     args["sampler"] = combination[2]
-    # LeMain(args)
+    # for combination in itertools.product(models, datasets, sampler):
+    #     args["architecture"] = combination[0]
+    #     args["dataset"] = combination[1]
+    #     args["sampler"] = combination[2]
+    LeMain(args)
     ############# SP finetuning local experiment ##############################
 
     # args = {"experiment": 6, "population": 10, "functions": 3, "trials": 200, "sampler": "nsga", "log_sigma": True,
@@ -15021,7 +15052,7 @@ if __name__ == '__main__':
 
     ############# Unifying sigmas ##############################
 
-    run_unifying_of_sigmas()
+    # run_unifying_of_sigmas()
 
     # for j in range(len(names)):
 

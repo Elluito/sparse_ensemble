@@ -1301,8 +1301,8 @@ def similarity_plots():
     # plt.xticks(range(len(m7)),
     #  )
     # plt.yticks(range(len(m7)))
-    # fig.text(0.47, -0.019, 'In-Block Rep.', ha='center', size=fs * fig_multiplier)
-    # fig.text(0.25, 0.5, 'In-Block Rep.', va='center', rotation="vertical", size=fs * fig_multiplier)
+    fig.text(0.5, -0.05, 'In-Block Rep.', ha='center', size=fs *label_multiplier)
+    fig.text(0.2, 0.5, 'In-Block Rep.', va='center', rotation="vertical", size=fs *label_multiplier)
     plt.savefig("paper_plots/in_sim_plots2.pdf", bbox_inches="tight", pad_inches=0.05)
     plt.savefig("paper_plots/in_sim_plots2.eps", bbox_inches="tight", pad_inches=0.05)
 
@@ -1348,8 +1348,8 @@ def similarity_plots():
     # cb.ax.tick_params(axis='y', which='minor', labelsize=fs)
     # plt.xlabel("Outside Block representations",size=15)
     # plt.ylabel("Outside Block representations",size=15)
-    # fig.text(0.48, -0.018, 'Out-of-Block Rep.', ha='center', size=fs * fig_multiplier)
-    # fig.text(0.26, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs * fig_multiplier)
+    fig.text(0.5, -0.05, 'Out-of-Block Rep.', ha='center', size=fs *label_multiplier)
+    fig.text(0.2, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs *label_multiplier)
     plt.savefig("paper_plots/out_sim_plots2.pdf", bbox_inches="tight", pad_inches=0.05)
     plt.savefig("paper_plots/out_sim_plots2.eps", bbox_inches="tight", pad_inches=0.05)
 
@@ -1389,8 +1389,8 @@ def similarity_plots():
         # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(3))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-    # cb = plt.colorbar(im, ax=axes, shrink=0.6)
-    # cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * 0.6)
+    cb = plt.colorbar(im, ax=axes, shrink=0.8)
+    cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs * label_multiplier)
     # cb.ax.tick_params(axis='y', which='major', labelsize=fs * 0.5)
     # cb.ax.tick_params(axis='y', which='minor', labelsize=fs*0.5)
     # plt.xlabel("Outside Block representations",size=15)
@@ -1398,9 +1398,9 @@ def similarity_plots():
     # fig.text(0.5, 0.05, 'In-Block Rep.', ha='center', size=fs*label_multiplier)
     fig.text(0.5, 0.2, 'In-Block Rep.', ha='center', size=fs*label_multiplier)
     # fig.text(0.135, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs*label_multiplier)
-    fig.text(-0.027, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs*label_multiplier)
+    fig.text(-0.033, 0.5, 'Out-of-Block Rep.', va='center', rotation='vertical', size=fs*label_multiplier)
     plt.savefig("paper_plots/in_out_sim_plots2.pdf", bbox_inches="tight", pad_inches=0.05)
-    plt.savefig("paper_plots/in_out_sim_plots2.pdf", bbox_inches="tight", pad_inches=0.05, backend="pdf")
+    # plt.savefig("paper_plots/in_out_sim_plots2.pdf", bbox_inches="tight", pad_inches=0.05, backend="pdf")
     plt.savefig("paper_plots/in_out_sim_plots2.eps", bbox_inches="tight", pad_inches=0.05)
 
     ###################   VGG ##########################################################
@@ -1447,7 +1447,7 @@ def similarity_plots():
         # ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
         ax.yaxis.set_major_locator(ticker.MultipleLocator(3))
         # ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-    cb = plt.colorbar(im, ax=axes, shrink=0.6)
+    cb = plt.colorbar(im, ax=axes, shrink=0.9)
     cb.ax.tick_params(axis='y', which='major', labelsize=fs *tick_multiplier)
     cb.ax.tick_params(axis='y', which='minor', labelsize=fs *tick_multiplier)
     cb.ax.set_ylabel("Linear CKA (Similarity)", size=fs *label_multiplier)
