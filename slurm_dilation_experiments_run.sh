@@ -97,4 +97,4 @@ export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 #############################################################
 
 
-python train_CIFAR10.py --record_time --record_flops --batch_size 128  --save_folder "${SCRATCH}/dilation_experiments" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
+python train_CIFAR10.py --record_flops --batch_size 128  --save_folder "${SCRATCH}/dilation_experiments" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
