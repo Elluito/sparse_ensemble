@@ -152,7 +152,7 @@ else
 #./slurm_pruning_run.sh FFCV=0 NAME=recording_200_no_ffcv MODEL=resnet_small DATASET=small_imagenet NUMW=4 RFL=10 TYPE=normal FOLDER=$HOME/checkpoints PR=0.6 EXPERIMENT=1
 
     python prune_models.py --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" --pruning_rate "${PR}"  --experiment "${EXPERIMENT}" --data_folder "${DATA_FOLDER}" --save_folder "${SAVE_FOLDER}" --input_resolution "${INPUT_RES}" --resize "${RESIZE}" --epochs 10 --record 1
- slurm_pr fi
+  fi
 
 ###########################################################
 #   Soup Idea applied to stochastic pruning
