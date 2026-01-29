@@ -2583,7 +2583,7 @@ def main(args):
         current_directory = Path().cwd()
         data_path = "."
         if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/nobackup/sclaam/data"
+            data_path = "/mnt/scratch/sclaam/data2"
         elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
             data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
         elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
@@ -3809,7 +3809,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Output folder of the pruning results weights')
     parser.add_argument('--data_folder', default="/mnt/scratch/sclaam/data2", type=str,
-                        help='Location to save the models', required=True)
+                        help='Location of datasets', required=True)
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
     parser.add_argument('--record', default=1, type=int,
