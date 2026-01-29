@@ -3808,7 +3808,7 @@ if __name__ == '__main__':
                         help='Location where saved models are')
     parser.add_argument('--save_folder', default="/nobackup/sclaam/checkpoints", type=str,
                         help='Output folder of the pruning results weights')
-    parser.add_argument('--data_folder', default="/nobackup/sclaam/data", type=str,
+    parser.add_argument('--data_folder', default="/mnt/scratch/sclaam/data2", type=str,
                         help='Location to save the models', required=True)
     parser.add_argument('--resize', default=0, type=int,
                         help='Either resize the image to 32x32 and then back to input resolution')
