@@ -48,10 +48,9 @@ done
 # RESNET50
 
 resolution=32
-for lvl in 54 107 159; do    # iterate idxa from 0 to length
+for lvl in 107 655 907 1497; do    # iterate idxa from 0 to length
 for model in  "resnet50_dilation";do
 for dataset in "cifar10"; do
-
 
 #sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${model}_lvl_${lvl}_${dataset}.err" --gres=gpu:1 --output="${model}_lvl_${lvl}_${dataset}.out"  --job-name="${model}}_dilation_lvl_${lvl}_${dataset}" slurm_dilation_experiments_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_dilation_200_no_ffcv" 1 1 ${resolution}
 
@@ -61,7 +60,7 @@ done
 done
 
 resolution=64
-for lvl in 54 107 159; do    # iterate idxa from 0 to length
+for lvl in 655 907 1497; do    # iterate idxa from 0 to length
 for model in  "resnet50_dilation";do
 for dataset in "tiny_imagenet"; do
 
