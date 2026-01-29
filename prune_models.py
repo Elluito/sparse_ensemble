@@ -2572,26 +2572,30 @@ def main(args):
              "input_resolution": args.input_resolution,
              "pad": args.pad,
              })
-        if "cifar" in args.dataset:
-            trainloader, valloader, testloader = get_datasets(cfg1)
         # print("Normal data loaders loaded!!!!")
         # cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
         # cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         # stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
         # # Data
         print('==> Preparing data..')
-        current_directory = Path().cwd()
-        data_path = "."
-        if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-            data_path = "/mnt/scratch/sclaam/data2"
-        elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-            data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-        elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
-            data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
-        elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-            data_path = "/home/luisaam/Documents/PhD/data/"
-        print(data_path)
+        # if "cifar" in args.dataset:
+
+        trainloader, valloader, testloader = get_datasets(cfg1)
+
+        # current_directory = Path().cwd()
+        # data_path = "."
+        # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+        #     data_path = "/mnt/scratch/sclaam/data2"
+        # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+        #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+        # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+        #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+        # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+        #     data_path = "/home/luisaam/Documents/PhD/data/"
+        # print(data_path)
+
         batch_size = args.batch_size
+
         # if "32" in args.name:
         #     batch_size = 32
         # if "64" in args.name:
@@ -2629,26 +2633,30 @@ def main(args):
         #         root=data_path, train=False, download=True, transform=transform_test)
         #     testloader = torch.utils.data.DataLoader(
         #         testset, batch_size=100, shuffle=False, num_workers=args.num_workers)
-        #
-        if args.dataset == "tiny_imagenet":
-            from test_imagenet import load_tiny_imagenet
-            trainloader, valloader, testloader = load_tiny_imagenet(
-                {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-                 "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
-        if args.dataset == "small_imagenet":
-            if args.ffcv:
-                from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
-                trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
-                                                                                          args.ffcv_val,
-                                                                                          batch_size, args.num_workers,
-                                                                                          resolution=args.input_resolution)
-            else:
-                from test_imagenet import load_small_imagenet
-                trainloader, valloader, testloader = load_small_imagenet(
-                    {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-                     "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
-                     "resize": args.resize})
 
+
+
+
+
+        # if args.dataset == "tiny_imagenet":
+        #     from test_imagenet import load_tiny_imagenet
+        #     trainloader, valloader, testloader = load_tiny_imagenet(
+        #         {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+        #          "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution})
+        # if args.dataset == "small_imagenet":
+        #     if args.ffcv:
+        #         from ffcv_loaders import make_ffcv_small_imagenet_dataloaders
+        #         trainloader, valloader, testloader = make_ffcv_small_imagenet_dataloaders(args.ffcv_train,
+        #                                                                                   args.ffcv_val,
+        #                                                                                   batch_size, args.num_workers,
+        #                                                                                   resolution=args.input_resolution)
+        #     else:
+        #         from test_imagenet import load_small_imagenet
+        #         trainloader, valloader, testloader = load_small_imagenet(
+        #             {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+        #              "num_workers": args.num_workers, "batch_size": batch_size, "resolution": args.input_resolution,
+        #              "resize": args.resize})
+        #
     from torchvision.models import resnet18, resnet50
     net = get_model(args)
     # if args.model == "resnet18":
