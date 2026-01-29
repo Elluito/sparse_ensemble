@@ -225,7 +225,7 @@ for model in "resnet50_dilation" ; do
 for dataset in "tiny_imagenet"; do
 #for dataset in "small_imagenet"; do
 for pruning_rate in "0.9" ; do
-for rf_lvl in 54 107 159; do    # iterate idxa from 0 to length
+for rf_level in 54 107 159; do    # iterate idxa from 0 to length
 #for rf_level in "1"; do
 #for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
@@ -252,7 +252,7 @@ for model in "resnet50_dilation"; do
 for dataset in "cifar10"; do
 #for dataset in "small_imagenet"; do
 for pruning_rate in "0.9" ; do
-for rf_lvl in 54 107 159; do    # iterate idxa from 0 to length
+for rf_level in 54 107 159; do    # iterate idxa from 0 to length
 #for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do
