@@ -43,11 +43,11 @@ resize="${13}"
 if [ "${ffcv}" -gt 0 ]
   then
   echo "Use FFCV"
-sbatch --nodes=1 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate]}_pruning_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=8  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=11 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
+sbatch --nodes=1 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate]}_pruning_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_ffcv"   slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=8  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 FFCV_TRAIN="${ffcv_train}" FFCV_VAL="${ffcv_val}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
 
 else
  echo "Don't use FFCV"
- sbatch --nodes=1 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_SP_and_RF.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_SP_and_RF.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_SP_and_RF" slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=8  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=11 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
+ sbatch --nodes=1 --time=48:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk  --error="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_pruning_no_ffcv" slurm_pruning_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}"  NUMW=8  RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" EXPERIMENT=1 DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
   fi
 #done
 #done
@@ -225,7 +225,7 @@ for model in "resnet50_dilation" ; do
 for dataset in "tiny_imagenet"; do
 #for dataset in "small_imagenet"; do
 for pruning_rate in "0.9" ; do
-for rf_level in 54 107 159; do    # iterate idxa from 0 to length
+for rf_level in 54 107 159 407; do    # iterate idxa from 0 to length
 #for rf_level in "1"; do
 #for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
