@@ -150,36 +150,36 @@ else
 
 
 
-resolution=64
-resize=0
-#resolution=224
-#save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
-#save_folder="${HOME}/sparse_ensemble/pruning_level_0"
-#checkpoints_folder="${SCRATCH}/new_models_original_paper"
-#save_folder="${HOME}/sparse_ensemble/RF_and_SP_results"
-#checkpoints_folder="${SCRATCH}/original_paper_checkpoints"
-save_folder="${HOME}/sparse_ensemble/dilation_results"
-checkpoints_folder="${SCRATCH}/dilation_experiments_100"
-for model in "vgg19_dilation" ; do
-for dataset in "tiny_imagenet"; do
-#for dataset in "small_imagenet"; do
-for pruning_rate in "0.9" ; do
-for rf_level in 91 180 269; do
-#for rf_level in "1"; do
-#for rf_level in "5" "6" "7" "8" "10"; do
-#for rf_level in "11" "12" "13"; do
-#for rf_level in "1" "2" "3" "4"; do
-
-
-#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
-
-run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
-
-
-done
-done
-done
-done
+#resolution=64
+#resize=0
+##resolution=224
+##save_folder="${HOME}/sparse_ensemble/small_imagenet_resized_experiments_pruning"
+##save_folder="${HOME}/sparse_ensemble/pruning_level_0"
+##checkpoints_folder="${SCRATCH}/new_models_original_paper"
+##save_folder="${HOME}/sparse_ensemble/RF_and_SP_results"
+##checkpoints_folder="${SCRATCH}/original_paper_checkpoints"
+#save_folder="${HOME}/sparse_ensemble/dilation_results"
+#checkpoints_folder="${SCRATCH}/dilation_experiments_100"
+#for model in "vgg19_dilation" ; do
+#for dataset in "tiny_imagenet"; do
+##for dataset in "small_imagenet"; do
+#for pruning_rate in "0.9" ; do
+#for rf_level in 91 180 269; do
+##for rf_level in "1"; do
+##for rf_level in "5" "6" "7" "8" "10"; do
+##for rf_level in "11" "12" "13"; do
+##for rf_level in "1" "2" "3" "4"; do
+#
+#
+##run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+#
+#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+#
+#
+#done
+#done
+#done
+#done
 
 
 
@@ -246,31 +246,54 @@ done
 
 
 
-#resolution=32
-#resize=0
-#save_folder="${HOME}/sparse_ensemble/dilation_results"
-#checkpoints_folder="${SCRATCH}/dilation_experiments_100"
-#for model in "resnet50_dilation"; do
-#for dataset in "cifar10"; do
-##for dataset in "small_imagenet"; do
-#for pruning_rate in "0.9" ; do
-#for rf_level in 54 107 159; do    # iterate idxa from 0 to length
-##for rf_level in "5" "6" "7" "8" "10"; do
-##for rf_level in "11" "12" "13"; do
-##for rf_level in "1" "2" "3" "4"; do
-#
-#
-##run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
-#
-#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
-#
-#
-#done
-#done
-#done
-#done
-#
+resolution=32
+resize=0
+save_folder="${HOME}/sparse_ensemble/dilation_results"
+checkpoints_folder="${SCRATCH}/dilation_experiments_100"
+for model in "resnet50_dilation"; do
+for dataset in "cifar10"; do
+#for dataset in "small_imagenet"; do
+for pruning_rate in "0.9" ; do
+for rf_level in 107 655 907 1497; do    # iterate idxa from 0 to length
+#for rf_level in "5" "6" "7" "8" "10"; do
+#for rf_level in "11" "12" "13"; do
+#for rf_level in "1" "2" "3" "4"; do
 
+
+#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+
+done
+done
+done
+done
+
+
+resolution=64
+resize=0
+save_folder="${HOME}/sparse_ensemble/dilation_results"
+checkpoints_folder="${SCRATCH}/dilation_experiments_100"
+for model in "resnet50_dilation"; do
+for dataset in "tiny_imagenet"; do
+#for dataset in "small_imagenet"; do
+for pruning_rate in "0.9" ; do
+for rf_level in 655 907 1497; do    # iterate idxa from 0 to length
+#for rf_level in "5" "6" "7" "8" "10"; do
+#for rf_level in "11" "12" "13"; do
+#for rf_level in "1" "2" "3" "4"; do
+
+
+#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+
+done
+done
+done
+done
 
 
 
