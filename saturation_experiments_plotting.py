@@ -4749,7 +4749,7 @@ def saturation_resnet50_cifar50_batchnorm_all_optim():
     plt.close()
 
 
-def weight_inspection_resnet50_cifar10():
+def weight_inspection_resnet50_cifar10(save_folder):
     """# TODO: weight inspection of ResNet50"""
 
     from matplotlib import pyplot as plt
@@ -5188,7 +5188,7 @@ def weight_inspection_resnet50_cifar10():
     plt.xlabel("$|w|$")
     plt.ylabel("CDF")
     plt.xlim(0, 0.05)
-    plt.savefig(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/average_cdf_resnet_50_cifar10_level3.pdf")
+    plt.savefig(f"{save_folder}/average_cdf_resnet_50_cifar10_level3.pdf")
     plt.close()
 
     import matplotlib.pyplot as plt
@@ -5234,7 +5234,7 @@ def weight_inspection_resnet50_cifar10():
     plt.xlabel("$|w|$")
     plt.ylabel("CDF")
     plt.xlim(0, 0.05)
-    plt.savefig(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/average_cdf_resnet_50_cifar10_level4.pdf")
+    plt.savefig(f"{save_folder}/average_cdf_resnet_50_cifar10_level4.pdf")
     plt.close()
 
     """## histograms"""
@@ -5282,7 +5282,7 @@ def weight_inspection_resnet50_cifar10():
     plt.xlabel("Weight")
     plt.ylabel("Count")
     # plt.xlim(0,0.05)
-    plt.savefig(f"/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/average_histogram_resnet_50_cifar10_level1.pdf")
+    plt.savefig(f"{save_folder}/average_histogram_resnet_50_cifar10_level1.pdf")
     plt.close()
 
     np.diff(bin_count)
@@ -7916,7 +7916,13 @@ def weight_inspection_resnet50_cifar10_lr_truncated_50_and_all_sat_and_pruning_p
     # for i, threshold in enumerate(thresholds):
     #     pr = pruning_rates[i]
     #     plt.axvline(threshold, linewidth=1, color=colors[i], linestyle="dotted",
-    #                 label=f"threshold @ pr {pr}")
+    #                 label=f"threshold ceedings{
+    # hao2026did,
+    # title={3{DID}: Direct 3D Inverse Design for Aerodynamics with Physics-Aware Optimization},
+    # author={Yuze Hao and Linchao Zhu and Yi Yang},
+    # booktitle={The Thirty-ninth Annual Conference on Neural Information Processing Systems},
+    # year={2026},
+    # url={https://openrevu@ pr {pr}")
 
     plt.grid(ls="--")
     plt.legend()
@@ -18812,7 +18818,7 @@ def saturation_accuracy_vgg19_plots():
 
     plt.close()
 
-def probes_accuracy(save_folder):
+def probes_accuracy(save_folde):
     accuracy_ticks =range(0,110,10)
     """# TODO: Probes accuracy
     ## VGG X cifar10

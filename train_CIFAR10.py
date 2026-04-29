@@ -1,10 +1,8 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
-
-import torch
-
 from shrinkbench.metrics import flops
 import wandb
+from fpgm_pruner import fpgm_prune,mask_gradients
 import omegaconf
 import torch.optim as optim
 import torchvision
@@ -474,7 +472,7 @@ def get_model(args):
 
 # Training
 def train(epoch):
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune, norm_rate, dist_rate, layer_indices,pruning_interval
 
     print('\nEpoch: %d' % epoch)
     net.train()
@@ -504,7 +502,16 @@ def train(epoch):
         loss = criterion(outputs, targets)
         if batch_idx == 0:
             t0 = time.time()
+
         loss.backward()
+
+
+        if fpgm_prune:
+            if epoch % pruning_interval == 0 and epoch != 0:
+                masks = fpgm_prune(net, layer_indices, norm_rate=norm_rate, dist_rate=dist_rate)
+                mask_gradients(net, masks)  # keep pruned filters zeroed
+                
+
         if record_flops:
             backwardflops = 2 * batch_flops
             total_flops += batch_flops + backwardflops
@@ -512,6 +519,7 @@ def train(epoch):
         if batch_idx == 0:
             t1 = time.time()
             print("Time for backward pass {}".format(t1 - t0))
+
         optimizer.step()
 
         train_loss += loss.item()
@@ -1164,7 +1172,7 @@ def iterative_RF_experiments(args):
 def main(args):
     print(args)
 
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune, norm_rate, dist_rate, layer_indices,pruning_interval
     record_flops = args.record_flops
     use_ffcv = args.ffcv
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -1281,7 +1289,9 @@ def main(args):
     # net = VGG('VGG19')
     # net = ResNet50(num_class=100)
     net = get_model(args)
-
+    layer_indices = list(range(len(list(net.parameters()))))
+    layer_indices.pop(0)
+    layer_indices.pop(-1)
     # Training
     # # Model
     # print('==> Building model..')
@@ -1316,6 +1326,10 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
+    fpgm_prune = args.fpgm_pruner
+    norm_rate = args.norm_rate
+    dist_rate = args.dist_rate
+    pruning_interval = args.pruning_interval
     if args.resume:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
         # Load checkpoint.
@@ -1374,7 +1388,9 @@ def main(args):
 
         print(epoch)
         t0 = time.time()
+        # Train for one epoch
         train_acc = train(epoch)
+
         t1 = time.time()
         print("Epoch time:{}".format(t1 - t0))
         test_acc = test(epoch, solution_name, save_folder=args.save_folder, args=args)
@@ -1482,6 +1498,10 @@ if __name__ == '__main__':
                         help='Ratio of training to change RF first time')
     parser.add_argument('--ratio_second_change', default=0.66, type=float,
                         help='Ratio of training to change RF second time')
+    parser.add_argument('--fpgm_prune', default=0, type=int, help='Perform FPGM on the model while training')
+    parser.add_argument('--fpgm_norm_rate', default=0.9, type=float, help='The pruning rate (fraction removed) is 1 - (norm_rate - dist_rate). With the defaults 0.9 - 0.1 = 0.8, so 20% of filters are zeroed per targeted layer.')
+    parser.add_argument('--fpgm_dist_rate', default=0.1, type=float, help='The pruning rate (fraction removed) is 1 - (norm_rate - dist_rate). With the defaults 0.9 - 0.1 = 0.8, so 20% of filters are zeroed per targeted layer.')
+    parser.add_argument('--prune_interval', default=1, type=int, help='Interval of epochs to prune')
 
     args = parser.parse_args()
 
