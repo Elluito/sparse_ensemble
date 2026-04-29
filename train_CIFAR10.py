@@ -17,6 +17,7 @@ from pathlib import Path
 import pandas as pd
 from shrinkbench.metrics.flops import flops
 import math
+from sparse_ensemble_utils import sparsity
 from delve import SaturationTracker
 
 os.environ["LD_LIBRARY_PATH"] = ""
@@ -1439,6 +1440,9 @@ def main(args):
             # add saturations to the mix
             csv_tracker.add_saturations()
         scheduler.step()
+
+        if fpgm_prune:
+            print(f"Epoch:{epoch}, sparsity of the model: {sparsity(net)}")
 
     if args.record_saturation:
         csv_tracker.close()
