@@ -1327,7 +1327,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
-    fpgm_prune = args.fpgm_pruner
+    fpgm_prune = args.fpgm_prune
     norm_rate = args.norm_rate
     dist_rate = args.dist_rate
     pruning_interval = args.pruning_interval
