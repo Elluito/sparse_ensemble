@@ -1328,8 +1328,8 @@ def main(args):
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
     fpgm_prune = args.fpgm_prune
-    norm_rate = args.norm_rate
-    dist_rate = args.dist_rate
+    norm_rate = args.fpgm_norm_rate
+    dist_rate = args.fpgm_dist_rate
     pruning_interval = args.pruning_interval
     if args.resume:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
