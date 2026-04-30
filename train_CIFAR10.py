@@ -473,7 +473,7 @@ def get_model(args):
 
 # Training
 def train(epoch):
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune, norm_rate, dist_rate, layer_indices,pruning_interval
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune_, norm_rate, dist_rate, layer_indices, pruning_interval
 
     print('\nEpoch: %d' % epoch)
     net.train()
@@ -507,7 +507,7 @@ def train(epoch):
         loss.backward()
 
 
-        if fpgm_prune:
+        if fpgm_prune_:
             if epoch % pruning_interval == 0 and epoch != 0:
                 masks = fpgm_prune(net, layer_indices, norm_rate=norm_rate, dist_rate=dist_rate)
                 mask_gradients(net, masks)  # keep pruned filters zeroed
@@ -1173,7 +1173,7 @@ def iterative_RF_experiments(args):
 def main(args):
     print(args)
 
-    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune, norm_rate, dist_rate, layer_indices,pruning_interval
+    global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune_, norm_rate, dist_rate, layer_indices,pruning_interval
     record_flops = args.record_flops
     use_ffcv = args.ffcv
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -1327,7 +1327,7 @@ def main(args):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=5e-4)
-    fpgm_prune = args.fpgm_prune
+    fpgm_prune_ = args.fpgm_prune
     norm_rate = args.fpgm_norm_rate
     dist_rate = args.fpgm_dist_rate
     pruning_interval = args.prune_interval
