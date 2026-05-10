@@ -104,5 +104,5 @@ echo "${pruning_rate}"
 dist_rate=$(echo "${pruning_rate} - 0.1" | bc)
 echo "The dist_rate is:\n"
 echo "${dist_rate}"
-#python train_CIFAR10.py --fpgm_prune 1 --fpgm_norm_rate 0.9 --fpgm_dist_rate "${dist_rate}" --batch_size 128  --save_folder "${SCRATCH}/FPGM_experiments_200_pr_${pruning_rate}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
+python train_CIFAR10.py --fpgm_prune 1 --fpgm_norm_rate 0.9 --fpgm_dist_rate "${dist_rate}" --batch_size 128  --save_folder "${SCRATCH}/FPGM_experiments_200_pr_${pruning_rate}" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
 
