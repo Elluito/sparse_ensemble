@@ -90,8 +90,8 @@ for dataset in "tiny_imagenet"; do
 #sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_0.8" 1 1 ${resolution}
 
 
-#sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
-./slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+#./slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
 
 done
 done
