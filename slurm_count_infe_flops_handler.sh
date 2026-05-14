@@ -37,7 +37,7 @@ pruning_types=("fpmg" "normal")
               continue
             fi
 
-            sbatch --nodes=1 --time=00:15:00 --partition=small \
+            sbatch --nodes=1 --time=00:15:00 --partition=gpu\
               --mail-type=all --mail-user=sclaam@leeds.ac.uk \
               --error="infe_flops_${model}_lvl_${rf_level}_${dataset}.err" \
               --output="infe_flops_${model}_lvl_${rf_level}_${dataset}.out" \
@@ -49,7 +49,7 @@ pruning_types=("fpmg" "normal")
           fi
 
           if [ "${p_type}" == "normal" ]; then
-            sbatch --nodes=1 --time=00:15:00 --partition=small \
+            sbatch --nodes=1 --time=00:15:00 --partition=gpu\
               --mail-type=all --mail-user=sclaam@leeds.ac.uk \
               --error="infe_flops_${model}_lvl_${rf_level}_${dataset}.err" \
               --output="infe_flops_${model}_lvl_${rf_level}_${dataset}.out" \
