@@ -28,7 +28,7 @@ pruning_types=("fpmg" "normal")
   for i in "${!rf_lvls[@]}"; do
       rf_level="${rf_lvls[$i]}"
       checkpoint="${CHECKPOINT_BASE}/${seeds[$i]}"
-      for j in "${!prunng_types[@]}";do
+      for j in "${!pruning_types[@]}";do
         p_type="${pruning_types[$j]}"
 
           if [ "${p_type}" == "fpmg" ]; then
