@@ -8285,6 +8285,7 @@ def lamp_scenario_2_cheap_evaluation(cfg):
 
 
 def experiment_selector(cfg: omegaconf.DictConfig, args, number_experiment: int = 1):
+
     if number_experiment == 1:
         dynamic_sigma_per_layer_one_shot_pruning(cfg)
     if number_experiment == 2:

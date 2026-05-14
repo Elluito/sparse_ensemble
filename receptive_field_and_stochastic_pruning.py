@@ -25,6 +25,7 @@ def main(args):
     else:
         exclude_layers = ["conv1", "linear"]
 
+
     cfg = omegaconf.DictConfig(
         {"architecture": args.model,
          "model_type": "alternative",
