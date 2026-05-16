@@ -1,7 +1,7 @@
 '''Train CIFAR10/CIFAR100 with PyTorch.'''
 import argparse
 import os
-from optimizers import (KFACOptimizer, EKFACOptimizer)
+from .optimizers import (KFACOptimizer, EKFACOptimizer)
 import torch
 import torch.nn as nn
 import torch.optim as optim
