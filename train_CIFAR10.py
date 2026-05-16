@@ -668,13 +668,13 @@ def get_inference_flops_for_config(args) -> None:
         "pad":args.pad,
         "input_resolution":args.input_resolution,
         "batch_size": 128,
-        "num_workers": 8
+        "num_workers": 4
     })
 
     trainloader,valloader,testloader = get_datasets(cfg)
     net = get_model(args)
 
-    assert args.resume_solution, "args.resume_solution must point to a checkpoint file"
+    assert args.resume_solution!="", "args.resume_solution must point to a checkpoint file"
     load_model_from_checkpoint(net, args.resume_solution)
     net.to(device)
     net.eval()
