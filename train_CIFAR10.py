@@ -1,10 +1,8 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
-
 from shrinkbench.metrics import flops
 import wandb
 from fpgm_pruner import fpgm_prune,mask_gradients
-import omegaconf
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
@@ -667,6 +665,8 @@ def get_inference_flops_for_config(args) -> None:
         "exclude_layers": exclude_layers,  # layers to skip
         "use_wandb": False,  # only actively used when pruner == "manual"
         "dataset":args.dataset,
+        "pad":args.pad,
+        "input_resolution":args.input_resolution
     })
 
     trainloader,valloader,testloader = get_datasets(cfg)
