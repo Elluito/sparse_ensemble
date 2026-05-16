@@ -1,4 +1,4 @@
-from models.cifar import (alexnet, densenet, resnet,
+from ..models.cifar import (alexnet, densenet, resnet,
                           vgg16_bn, vgg19_bn,
                           wrn)
 
