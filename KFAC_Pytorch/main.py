@@ -9,8 +9,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from tqdm import tqdm
 from tensorboardX import SummaryWriter
-from utils.network_utils import get_network
-from utils.data_utils import get_dataloader
+from .utils.network_utils import get_network
+from .utils.data_utils import get_dataloader
 
 
 # fetch args
