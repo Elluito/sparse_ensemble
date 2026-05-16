@@ -1,5 +1,7 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
+
+from KFAC_Pytorch.main import trainloader
 from shrinkbench.metrics import flops
 import wandb
 from fpgm_pruner import fpgm_prune,mask_gradients
@@ -17,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 from shrinkbench.metrics.flops import flops
 import math
-from main import prune_function
+from main import prune_function, get_datasets
 from sparse_ensemble_utils import sparsity
 from delve import SaturationTracker
 import omegaconf
@@ -616,47 +618,59 @@ def get_inference_flops_for_config(args) -> None:
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-    cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-    stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
-
-    current_directory = Path().cwd()
-    data_path = "."
-    if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
-        data_path = "/nobackup/sclaam/data"
-    elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
-        data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
-    elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
-        data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
-    elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
-        data_path = "/home/luisaam/Documents/PhD/data/"
-
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(*stats_to_use),
-    ])
-
-    if args.dataset == "cifar10":
-        testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
-        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,
-                                                 num_workers=args.num_workers)
-    elif args.dataset == "cifar100":
-        testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
-        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,
-                                                 num_workers=args.num_workers)
-    elif args.dataset == "tiny_imagenet":
-        from test_imagenet import load_tiny_imagenet
-        _, _, testloader = load_tiny_imagenet(
-            {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
-             "num_workers": args.num_workers, "batch_size": args.batch_size})
-    elif args.dataset == "small_imagenet":
-        from test_imagenet import load_small_imagenet
-        _, _, testloader = load_small_imagenet(
-            {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
-             "num_workers": args.num_workers, "batch_size": args.batch_size})
+    # cifar10_stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    # cifar100_stats = ((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    # stats_to_use = cifar10_stats if args.dataset == "cifar10" else cifar100_stats
+    #
+    # current_directory = Path().cwd()
+    # data_path = "."
+    # if "sclaam" == current_directory.owner() or "sclaam" in current_directory.__str__():
+    #     data_path = "/nobackup/sclaam/data"
+    # elif "Luis Alfredo" == current_directory.owner() or "Luis Alfredo" in current_directory.__str__():
+    #     data_path = "C:/Users\Luis Alfredo\OneDrive - University of Leeds\PhD\Datasets\CIFAR10"
+    # elif 'lla98-mtc03' == current_directory.owner() or "lla98-mtc03" in current_directory.__str__():
+    #     data_path = "/jmain02/home/J2AD014/mtc03/lla98-mtc03/datasets"
+    # elif "luisaam" == current_directory.owner() or "luisaam" in current_directory.__str__():
+    #     data_path = "/home/luisaam/Documents/PhD/data/"
+    #
+    # transform_test = transforms.Compose([
+    #     transforms.ToTensor(),
+    #     transforms.Normalize(*stats_to_use),
+    # ])
+    #
+    # if args.dataset == "cifar10":
+    #     testset = torchvision.datasets.CIFAR10(root=data_path, train=False, download=True, transform=transform_test)
+    #     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,
+    #                                              num_workers=args.num_workers)
+    # elif args.dataset == "cifar100":
+    #     testset = torchvision.datasets.CIFAR100(root=data_path, train=False, download=True, transform=transform_test)
+    #     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False,
+    #                                              num_workers=args.num_workers)
+    # elif args.dataset == "tiny_imagenet":
+    #     from test_imagenet import load_tiny_imagenet
+    #     _, _, testloader = load_tiny_imagenet(
+    #         {"traindir": data_path + "/tiny_imagenet_200/train", "valdir": data_path + "/tiny_imagenet_200/val",
+    #          "num_workers": args.num_workers, "batch_size": args.batch_size})
+    # elif args.dataset == "small_imagenet":
+    #     from test_imagenet import load_small_imagenet
+    #     _, _, testloader = load_small_imagenet(
+    #         {"traindir": data_path + "/small_imagenet/train", "valdir": data_path + "/small_imagenet/val",
+    #          "num_workers": args.num_workers, "batch_size": args.batch_size})
+    # else:
+    #     raise ValueError(f"Unsupported dataset: {args.dataset}")
+    if args.model == "vgg19":
+        exclude_layers = ["features.0", "classifier"]
     else:
-        raise ValueError(f"Unsupported dataset: {args.dataset}")
+        exclude_layers = ["conv1", "linear"]
+    cfg = omegaconf.DictConfig({
+        "amount": 0.9,  # target sparsity, e.g. 90% weights removed
+        "pruner": "global",  # strategy: "global" | "lamp" | "erk" | "manual" | "random" | "grasp"
+        "exclude_layers": exclude_layers,  # layers to skip
+        "use_wandb": False,  # only actively used when pruner == "manual"
+        "dataset":args.dataset,
+    })
 
+    trainloader,valloader,testloader = get_datasets(cfg)
     net = get_model(args)
 
     assert args.resume_solution, "args.resume_solution must point to a checkpoint file"
@@ -669,20 +683,9 @@ def get_inference_flops_for_config(args) -> None:
 
     if args.pruning_type == "normal":
 
-        if args.model == "vgg19":
-            exclude_layers = ["features.0", "classifier"]
-        else:
-            exclude_layers = ["conv1", "linear"]
-        cfg = omegaconf.DictConfig({
-            "amount": 0.9,  # target sparsity, e.g. 90% weights removed
-            "pruner": "global",  # strategy: "global" | "lamp" | "erk" | "manual" | "random" | "grasp"
-            "exclude_layers": exclude_layers,  # layers to skip
-            "use_wandb": False,  # only actively used when pruner == "manual"
-        })
 
 
         prune_function(net,cfg)
-
 
 
 
