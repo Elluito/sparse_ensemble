@@ -666,7 +666,8 @@ def get_inference_flops_for_config(args) -> None:
         "use_wandb": False,  # only actively used when pruner == "manual"
         "dataset":args.dataset,
         "pad":args.pad,
-        "input_resolution":args.input_resolution
+        "input_resolution":args.input_resolution,
+        "batch_size": 128
     })
 
     trainloader,valloader,testloader = get_datasets(cfg)
