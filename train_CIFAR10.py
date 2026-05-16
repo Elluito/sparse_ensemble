@@ -667,7 +667,8 @@ def get_inference_flops_for_config(args) -> None:
         "dataset":args.dataset,
         "pad":args.pad,
         "input_resolution":args.input_resolution,
-        "batch_size": 128
+        "batch_size": 128,
+        "num_workers": 8
     })
 
     trainloader,valloader,testloader = get_datasets(cfg)
