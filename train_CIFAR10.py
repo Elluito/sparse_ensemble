@@ -1,7 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
 import copy
 
-from KFAC_Pytorch.main import trainloader
 from shrinkbench.metrics import flops
 import wandb
 from fpgm_pruner import fpgm_prune,mask_gradients
