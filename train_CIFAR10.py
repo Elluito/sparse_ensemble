@@ -1660,4 +1660,5 @@ if __name__ == '__main__':
         get_flops_for_config(args)
 
     if args.experiment == 4:
-        get_inference_flops_for_config(args)
+        print(args)
+        # get_inference_flops_for_config(args)
