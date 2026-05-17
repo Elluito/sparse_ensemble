@@ -44,6 +44,7 @@ export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 #  $8  input_resolution
 #  $9  resume_solution  (full path to .pth checkpoint)
 # $10  save_folder      (directory where the output CSV is written)
+if [ -z $9 ]; then
 
 python train_CIFAR10.py \
     --experiment 4 \
@@ -59,3 +60,19 @@ python train_CIFAR10.py \
     --save_folder "${10}" \
     --pruning_type "${11}" \
     --batch_size 128
+elif [[ $9 == "" ]]; then
+
+python train_CIFAR10.py \
+    --experiment 4 \
+    --model $1 \
+    --dataset $2 \
+    --num_workers $3 \
+    --RF_level $4 \
+    --type $5 \
+    --name $6 \
+    --width $7 \
+    --input_resolution $8 \
+    --save_folder "${10}" \
+    --pruning_type "${11}" \
+    --batch_size 128
+fi
