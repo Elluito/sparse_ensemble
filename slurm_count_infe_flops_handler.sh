@@ -36,7 +36,7 @@ pruning_types=("fpmg" "normal")
               echo "WARNING: no checkpoint found for ${checkpoint}, skipping."
               continue
             fi
-
+            echo "${rf_level}" "${p_type}""${model}" "${checkpoint}"
             sbatch --nodes=1 --time=00:15:00 --partition=gpu\
               --mail-type=all --mail-user=sclaam@leeds.ac.uk \
               --error="infe_flops_${model}_lvl_${rf_level}_${dataset}.err" \
@@ -49,6 +49,8 @@ pruning_types=("fpmg" "normal")
           fi
 
           if [ "${p_type}" == "normal" ]; then
+
+            echo "${rf_level}" "${p_type}""${model}" "${checkpoint}"
             sbatch --nodes=1 --time=00:15:00 --partition=gpu\
               --mail-type=all --mail-user=sclaam@leeds.ac.uk \
               --error="infe_flops_${model}_lvl_${rf_level}_${dataset}.err" \
