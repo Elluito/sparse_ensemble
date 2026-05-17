@@ -47,15 +47,15 @@ export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 
 python train_CIFAR10.py \
     --experiment 4 \
-    --model "$1" \
-    --dataset "$2" \
-    --num_workers "$3" \
-    --RF_level "$4" \
-    --type "$5" \
-    --name "$6" \
-    --width "$7" \
-    --input_resolution "$8" \
-    --resume_solution "$9" \
+    --model $1 \
+    --dataset $2 \
+    --num_workers $3 \
+    --RF_level $4 \
+    --type $5 \
+    --name $6 \
+    --width $7 \
+    --input_resolution $8 \
+    --resume_solution $9 \
     --save_folder "${10}" \
     --pruning_type "${11}" \
     --batch_size 128
