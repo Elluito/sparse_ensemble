@@ -674,7 +674,8 @@ def get_inference_flops_for_config(args) -> None:
     trainloader,valloader,testloader = get_datasets(cfg)
     net = get_model(args)
 
-    assert args.resume_solution!="", "args.resume_solution must point to a checkpoint file"
+
+    assert args.resume_solution!="" and args.pruning_type=="fpgm", "args.resume_solution must point to a checkpoint file if fpgm option is activated"
     load_model_from_checkpoint(net, args.resume_solution)
     net.to(device)
     net.eval()
