@@ -44,7 +44,7 @@ export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 #  $8  input_resolution
 #  $9  resume_solution  (full path to .pth checkpoint)
 # $10  save_folder      (directory where the output CSV is written)
-if [ -z $9 ]; then
+if [[ $9 != "" ]]; then
 
 python train_CIFAR10.py \
     --experiment 4 \
