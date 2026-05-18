@@ -620,7 +620,7 @@ def get_inference_flops_for_config(args) -> None:
     else:
         exclude_layers = ["conv1", "linear"]
     cfg = omegaconf.DictConfig({
-        "amount": 0.9,  # target sparsity, e.g. 90% weights removed
+        "amount": 0.8,  # target sparsity, e.g. 90% weights removed
         "pruner": "global",  # strategy: "global" | "lamp" | "erk" | "manual" | "random" | "grasp"
         "exclude_layers": exclude_layers,  # layers to skip
         "use_wandb": False,  # only actively used when pruner == "manual"
@@ -636,21 +636,19 @@ def get_inference_flops_for_config(args) -> None:
 
 
     # assert args.resume_solution=="" and args.pruning_type=="fpgm", "args.resume_solution must point to a checkpoint file if fpgm option is activated"
-    load_model_from_checkpoint(net, args.resume_solution)
+
+    if args.pruning_type == "normal":
+
+        prune_function(net,cfg)
+
+    else:
+        load_model_from_checkpoint(net, args.resume_solution)
+
     net.to(device)
     net.eval()
 
     x, _ = next(iter(testloader))
     x = x.to(device)
-
-    if args.pruning_type == "normal":
-
-
-
-        prune_function(net,cfg)
-
-
-
 
 
     with torch.no_grad():
