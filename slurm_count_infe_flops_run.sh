@@ -61,7 +61,7 @@ python train_CIFAR10.py \
     --pruning_type "${11}" \
     --batch_size 128
 elif [[ $9 == "" ]]; then
-
+echo "Just entered in the 'normal' purning type if"
 python train_CIFAR10.py \
     --experiment 4 \
     --model $1 \
