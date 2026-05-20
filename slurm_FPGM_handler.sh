@@ -47,20 +47,45 @@
 
 # RESNET50
 
-#resolution=32
-#pr="0.8"
-#for lvl in 1 2 3 4 9 11; do    # iterate idxa from 0 to length
-#for model in  "resnet50";do
-#for dataset in "cifar10"; do
-#
-#
-##sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${model}_lvl_${lvl}_${dataset}.err" --gres=gpu:1 --output="${model}_lvl_${lvl}_${dataset}.out"  --job-name="${model}}_dilation_lvl_${lvl}_${dataset}" slurm_dilation_experiments_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_dilation_200_no_ffcv" 1 1 ${resolution}
-#
+resolution=32
+pr="0.8"
+epochs=100
+for lvl in 1 2 3 4 9 11; do    # iterate idxa from 0 to length
+for model in  "resnet50";do
+for dataset in "cifar10"; do
+
+
+#sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${model}_lvl_${lvl}_${dataset}.err" --gres=gpu:1 --output="${model}_lvl_${lvl}_${dataset}.out"  --job-name="${model}}_dilation_lvl_${lvl}_${dataset}" slurm_dilation_experiments_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_dilation_200_no_ffcv" 1 1 ${resolution}
+
 #sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
-#
-#done
-#done
-#done
+sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" ${epochs} "recording_fpgm_${epochs}_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+
+done
+done
+done
+
+
+
+resolution=32
+pr="0.9"
+epochs=100
+for lvl in 1 2 3 4 9 11; do    # iterate idxa from 0 to length
+for model in  "resnet50";do
+for dataset in "cifar10"; do
+
+
+#sbatch --nodes=1 --time=47:00:00 --array=1-5 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="${model}_lvl_${lvl}_${dataset}.err" --gres=gpu:1 --output="${model}_lvl_${lvl}_${dataset}.out"  --job-name="${model}}_dilation_lvl_${lvl}_${dataset}" slurm_dilation_experiments_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_dilation_200_no_ffcv" 1 1 ${resolution}
+
+#sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" ${epochs} "recording_fpgm_${epochs}_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+
+done
+done
+done
+
+
+
+
 #
 #resolution=64
 #pr="0.8"
@@ -82,6 +107,7 @@
 
 resolution=64
 pr="0.4"
+epochs=100
 for lvl in 2 3 4 9 11; do    # iterate idxa from 0 to length
 for model in  "resnet50";do
 for dataset in "tiny_imagenet"; do
@@ -92,7 +118,7 @@ for dataset in "tiny_imagenet"; do
 #sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_0.8" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_0.8" 1 1 ${resolution}
 
 
-sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
+sbatch --nodes=1 --time=47:00:00 --array=1-3 --partition=gpu  --mail-type=all --mail-user=sclaam@leeds.ac.uk --error="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.err" --gres=gpu:1 --output="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}.out"  --job-name="fpgm_${model}_lvl_${lvl}_${dataset}_pr_${pr}" slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" ${epochs} "recording_fpgm_${epochs}_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
 #./slurm_FPGM_run.sh "${model}" "${dataset}" 8 ${lvl}  "normal" 200 "recording_fpgm_200_no_ffcv_pr_${pr}" 1 1 ${resolution} ${pr}
 
 done
