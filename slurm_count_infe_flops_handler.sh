@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Base folder where trained checkpoints live
-CHECKPOINT_BASE="${SCRATCH}/FPGM_experiments_200_pr_0.8"
+CHECKPOINT_BASE="${SCRATCH}/FPGM_experiments_100_pr_0.8"
 
 # Folder where inference-flops CSVs will be written
 RESULTS_FOLDER="${SCRATCH}/inference_flops_results"
@@ -16,12 +16,12 @@ model="resnet50"
 dataset="cifar10"
 rf_lvls=(1 2 3 4 9 11)
 seeds=(
-    "resnet50_normal_cifar10_1778425133.3852606_rf_level_1_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_84.86.pth"
-    "resnet50_normal_cifar10_1778425133.4304452_rf_level_2_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_83.07.pth"
-    "resnet50_normal_cifar10_1778432995.5555873_rf_level_3_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_80.99.pth"
-    "resnet50_normal_cifar10_1778440737.4754174_rf_level_4_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_77.12.pth"
-    "resnet50_normal_cifar10_1778453230.8064427_rf_level_9_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_60.77.pth"
-    "resnet50_normal_cifar10_1778595950.771914_rf_level_11_recording_fpgm_200_no_ffcv_pr_0.8_test_acc_43.32.pth"
+    "resnet50_normal_cifar10_1779275521.1275916_rf_level_1_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_92.67.pth"
+    "resnet50_normal_cifar10_1779275641.3394897_rf_level_2_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_90.24.pth"
+    "resnet50_normal_cifar10_1779289885.1293743_rf_level_3_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_87.85.pth"
+    "resnet50_normal_cifar10_1779292588.5808518_rf_level_4_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_85.82.pth"
+    "resnet50_normal_cifar10_1779295231.9311543_rf_level_9_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_68.19.pth"
+    "resnet50_normal_cifar10_1779438599.4507482_rf_level_11_recording_fpgm_100_no_ffcv_pr_0.8_test_acc_50.6.pth"
 )
 pruning_types=("fpmg" "normal")
 
