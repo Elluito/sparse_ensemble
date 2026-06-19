@@ -49,12 +49,10 @@ import torch.backends.cudnn as cudnn
 # import hydra
 import torchvision
 import torchvision.transforms as transforms
-import scipy
 import argparse
 import scipy.optimize as optimize
 # from torch.autograd import Variable
 import numpy as np
-import random
 import torch.nn.utils.prune as prune
 import platform
 from functools import partial
@@ -66,8 +64,6 @@ import ignite.metrics as igm
 from torchmetrics import Accuracy
 # import array as pyarr
 import matplotlib
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
@@ -6830,7 +6826,7 @@ def run_fine_tune_mask_transfer_experiment(cfg: omegaconf.DictConfig):
         print("Correct deterministic: {}".format(correct_det))
         print("Correct deterministic soft_max: {}".format(correct_soft_det))
         # remove_reparametrization(current_model, exclude_layer_list=cfg.exclude_layers)
-        return
+        # return
         if first_iter:
             _, unit_sparse_flops = flops(current_model, data)
             first_iter = 0
@@ -12533,13 +12529,13 @@ def LeMain(args):
     # record_features_cifar10_model(cfg.architecture,args["experiment"],cfg.model_type)
     # features_similarity_comparison_experiments(cfg.architecture)
 
-    # experiment_selector(cfg, args, args["experiment"])
+    experiment_selector(cfg, args, args["experiment"])
 
     # MDS_projection_plot(cfg)
     # bias_comparison_resnet18()
     # plot_histograms_predictions("normal_seed2")
     # stochastic_pruning_against_deterministic_pruning(cfg,name="normal_seed3")
-    CDF_weights_analysis_stochastic_deterministic(cfg,normalized=True)
+    # CDF_weights_analysis_stochastic_deterministic(cfg,normalized=True)
     # number_of_0_analysis_stochastic_deterministic(cfg)
 
     # stochastic_soup_of_models(cfg, name="")
@@ -14585,6 +14581,7 @@ if __name__ == '__main__':
     # datasets_list=["cifar10","cifar100"]*3
     # pr_list = [0.9,0.9,0.95,0.8,0.95,0.85]
     # sigma_list = [0.005,0.003,0.003,0.001,0.003,0.001]
+
     #######################################################
     ##  para plotear la imagen the det vs sto para varias semillas figure 1 paper
     #######################################################

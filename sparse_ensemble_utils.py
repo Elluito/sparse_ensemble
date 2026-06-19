@@ -19,7 +19,6 @@ from decimal import Decimal
 from flowandprune.imp_estimator import cal_grad
 from torch.nn.utils import vector_to_parameters, parameters_to_vector
 # from plot_stochastic_pruning import calculate_single_value_from_variance_df
-import os
 import sys
 
 # from accelerate import Accelerator
@@ -541,6 +540,7 @@ def unrestricted_fine_tune_measure_flops(pruned_model: nn.Module, dataLoader: to
     # msg_perormance = f"{performance:.2f}".replace(".", ",")
 
 
+# COMMENT: THIS IS FOR THE EXPERIMENTS OF FINE-TUNING RESTRICTED (0s remain 0s).
 def restricted_IMAGENET_fine_tune_ACCELERATOR_measure_flops(pruned_model: nn.Module,
                                                             dataLoader_p: torch.utils.data.DataLoader,
                                                             testLoader_p: torch.utils.data.DataLoader,
