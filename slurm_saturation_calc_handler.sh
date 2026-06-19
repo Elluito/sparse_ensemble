@@ -130,6 +130,7 @@ for model in "resnet50_dilation"; do
 for dataset in "tiny_imagenet"; do
 #for dataset in "small_imagenet"; do
 #for pruning_rate in "0.9" ; do
+for pruning_rate in "0" ;do
 for rf_level in "54" "107" "159" "655" "907" "1497"; do
 #for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
