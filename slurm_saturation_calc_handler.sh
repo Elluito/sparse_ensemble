@@ -37,21 +37,21 @@ else
 
 
 
-for model in "resnet_small"; do
-for dataset in "small_imagenet"; do
-for pruning_rate in "0" "0.9"; do
-for rf_level in "3" "4" "5" "6" "7" "8" "9" "10"; do
-
-
+#for model in "resnet_small"; do
+#for dataset in "small_imagenet"; do
+#for pruning_rate in "0" "0.9"; do
+#for rf_level in "3" "4" "5" "6" "7" "8" "9" "10"; do
+#
+#
+##run_saturation_calc "${model}" "${dataset}" "${HOME}/resnet_small_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/saturation_results/small_imagenet/resnet_small/SGD" "no_recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#
 #run_saturation_calc "${model}" "${dataset}" "${HOME}/resnet_small_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/saturation_results/small_imagenet/resnet_small/SGD" "no_recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-
-run_saturation_calc "${model}" "${dataset}" "${HOME}/resnet_small_saturation" "${HOME}/datasets" "${HOME}/sparse_ensemble/saturation_results/small_imagenet/resnet_small/SGD" "no_recording_200" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-done
-done
-done
-done
+#
+#done
+#done
+#done
+#done
 
 
 
@@ -120,29 +120,29 @@ done
 
 
 
-# ResNet50- Tiny ImageNet
-
-resolution=64
-resize=0
-save_folder="${HOME}/saturation_dilation_results/cifar10/resnet50"
-checkpoints_folder="${SCRATCH}/dilation_experiments_100"
-for model in "resnet50_dilation"; do
-for dataset in "tiny_imagenet"; do
-#for dataset in "small_imagenet"; do
-#for pruning_rate in "0.9" ; do
-for pruning_rate in "0" ;do
-for rf_level in "54" "107" "159" "655" "907" "1497"; do
-#for rf_level in "5" "6" "7" "8" "10"; do
-#for rf_level in "11" "12" "13"; do
-#for rf_level in "1" "2" "3" "4"; do
-
-
-run_saturation_calc "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
-
-
-
-done
-done
-done
-done
+## ResNet50- Tiny ImageNet
+#
+#resolution=64
+#resize=0
+#save_folder="${HOME}/saturation_dilation_results/tiny_imagenet/resnet50"
+#checkpoints_folder="${SCRATCH}/dilation_experiments_100"
+#for model in "resnet50_dilation"; do
+#for dataset in "tiny_imagenet"; do
+##for dataset in "small_imagenet"; do
+##for pruning_rate in "0.9" ; do
+#for pruning_rate in "0" ;do
+#for rf_level in "54" "107" "159" "655" "907" "1497"; do
+##for rf_level in "5" "6" "7" "8" "10"; do
+##for rf_level in "11" "12" "13"; do
+##for rf_level in "1" "2" "3" "4"; do
+#
+#
+#run_saturation_calc "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+#
+#
+#
+#done
+#done
+#done
+#done
 
