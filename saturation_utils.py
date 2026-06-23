@@ -4,7 +4,7 @@ from sparse_ensemble_utils import test
 
 
 def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_folder, file_name_sufix, seed, device):
-    # print("{}/{}_seed_{}".format(save_folder, file_name_sufix, seed))
+    print("{}/{}_seed_{}".format(save_folder, file_name_sufix, seed))
     csv_tracker = SaturationTracker("{}/{}_seed_{}".format(save_folder, file_name_sufix, seed), save_to="csv",
                                     modules=net,
                                     device=device, average_sat=True)
@@ -41,7 +41,7 @@ def calculate_train_eval_saturation_solution(net, trainloader, testloader, save_
             print(
                 'Loss: %.3f | Acc: %.3f%% (%d/%d)' % (
                     train_loss / (batch_idx + 1), 100. * correct / total, correct, total))
-
+        break
     #### Second one of the testing data
 
     test_accuracy = test(net, True if device == "cuda" else False, testloader, verbose=0)
