@@ -93,7 +93,7 @@ else
 resolution=32
 resize=0
 #save_folder="${HOME}/sparse_ensemble/dilation_results"
-save_folder="${HOME}/saturation_dilation_results/cifar10/resnet50"
+save_folder="${HOME}/sparse_ensemble/saturation_dilation_results/cifar10/resnet50"
 checkpoints_folder="${SCRATCH}/dilation_experiments_100"
 for model in "resnet50_dilation"; do
 for dataset in "cifar10"; do
@@ -118,6 +118,40 @@ done
 done
 done
 
+
+
+
+
+#VGG19 - CIFAR10
+
+resolution=32
+resize=0
+#save_folder="${HOME}/sparse_ensemble/dilation_results"
+save_folder="${HOME}/sparse_ensemble/saturation_dilation_results/cifar10/vgg19"
+checkpoints_folder="${SCRATCH}/dilation_experiments_100"
+for model in "vgg19_dilation"; do
+for dataset in "cifar10"; do
+#for dataset in "small_imagenet"; do
+#for pruning_rate in "0.1" "0.2" "0.3" "0.4" "0.5" "0.6" "0.7" "0.8"; do
+for pruning_rate in "0" ;do
+#for rf_level in 107 655 907 1497; do    # iterate idxa from 0 to length
+#for rf_level in 54 107 159 655 907 1497; do    # iterate idxa from 0 to length
+for rf_level in 91 180 269; do    # iterate idxa from 0 to length
+#for rf_level in "5" "6" "7" "8" "10"; do
+#for rf_level in "11" "12" "13"; do
+#for rf_level in "1" "2" "3" "4"; do
+
+
+#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_approx_200_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+#run_pruning "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}" "${resolution}" "${resize}"
+
+run_saturation_calc "${model}" "${dataset}" "${checkpoints_folder}" "${SCRATCH}/data2" "${save_folder}" "recording_dilation_100_no_ffcv" 0 "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/train_360_0.5_90.ffcv" "/jmain02/home/J2AD014/mtc03/lla98-mtc03/small_imagenet_ffcv/val_360_0.5_90.ffcv" "${pruning_rate}" "${rf_level}"
+
+done
+done
+done
+done
 
 
 ## ResNet50- Tiny ImageNet

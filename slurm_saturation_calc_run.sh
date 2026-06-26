@@ -81,6 +81,7 @@ echo "PR= $PR"
 echo "EXPERIMENT= $EXPERIMENT"
 echo "FFCV_TRAIN = $FFCV_TRAIN "
 echo "FFCV_VAL = $FFCV_VAL "
+echo "SAVE_FOLDER= $SAVE_FOLDER"
 
 #    python prune_models.py --name "${NAME}" --ffcv --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --folder $6 --pruning_rate $7 --experiment $8
 
