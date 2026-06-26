@@ -136,7 +136,7 @@ for dataset in "cifar10"; do
 for pruning_rate in "0" ;do
 #for rf_level in 107 655 907 1497; do    # iterate idxa from 0 to length
 #for rf_level in 54 107 159 655 907 1497; do    # iterate idxa from 0 to length
-for rf_level in 91 180 269; do    # iterate idxa from 0 to length
+for rf_level in 1; do    # iterate idxa from 0 to length
 #for rf_level in "5" "6" "7" "8" "10"; do
 #for rf_level in "11" "12" "13"; do
 #for rf_level in "1" "2" "3" "4"; do

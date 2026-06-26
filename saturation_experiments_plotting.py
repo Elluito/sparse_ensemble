@@ -123,7 +123,7 @@ vgg_rfs = [180, 181, 359, 537, 715]
 fs = 12
 # fig_size = (3, 2.5) # For the large_input_experiments_only_sgd_paper()
 # fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
-fig_size = (5 , 3) # For the resnet50_dilation_cifar10_saturation()
+fig_size = (7 , 3.5) # For the resnet50_dilation_cifar10_saturation()
 
 # fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
 legends_multiplier = 1.1
@@ -22235,6 +22235,171 @@ def numpy_ewma_vectorized_v2(data, window):
     out = offset + cumsums * scale_arr[::-1]
     return out
 
+def vgg19_cifar10_dilation_different_rf(data_folder,save_folder):
+
+    resnet_all_layers = ["conv1","layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
+                         "layer1.1.conv1", "layer1.1.conv2", "layer1.1.conv3", "layer1.2.conv1", "layer1.2.conv2",
+                         "layer1.2.conv3", "layer2.0.conv1", "layer2.0.conv2", "layer2.0.conv3",
+                         "layer2.0.shortcut.0", "layer2.1.conv1", "layer2.1.conv2", "layer2.1.conv3",
+                         "layer2.2.conv1", "layer2.2.conv2", "layer2.2.conv3", "layer2.3.conv1", "layer2.3.conv2",
+                         "layer2.3.conv3", "layer3.0.conv1", "layer3.0.conv2", "layer3.0.conv3",
+                         "layer3.0.shortcut.0", "layer3.1.conv1", "layer3.1.conv2", "layer3.1.conv3",
+                         "layer3.2.conv1", "layer3.2.conv2", "layer3.2.conv3", "layer3.3.conv1", "layer3.3.conv2",
+                         "layer3.3.conv3", "layer3.4.conv1", "layer3.4.conv2", "layer3.4.conv3", "layer3.5.conv1",
+                         "layer3.5.conv2", "layer3.5.conv3", "layer4.0.conv1", "layer4.0.conv2", "layer4.0.conv3",
+                         "layer4.0.shortcut.0", "layer4.1.conv1", "layer4.1.conv2", "layer4.1.conv3",
+                         "layer4.2.conv1", "layer4.2.conv2", "layer4.2.conv3","linear"]
+    in_block_layers_index = [resnet_all_layers.index(l) for l in resnet_all_layers if ".conv1" in l or ".conv2" in l]
+    out_of_block_layer_index = [resnet_all_layers.index(l) for l in resnet_all_layers if ".conv3" in l or ".shortcut" in l or "conv1"==l]
+
+    # resnets_rfs = [108, 110, 213, 318, 423, 1415, 1920, 3100]
+    # vgg_rfs =[ 1,54, 107, 159, 655, 907, 1497]
+    vgg_rfs =[91, 180, 269]
+    conversion_rf_dict={1:"180 (no dilation)",91:359,180:537,269:715}
+    all_dfs = []
+    for level in vgg_rfs:
+        search_string = "{}/vgg_dilation_{}_cifar10_recording_dilation_100_no_ffcv*saturation_trained*seed_0.csv".format(data_folder,
+                                                                                                                              level)
+        list_of_csvs = list(glob.glob(search_string))
+        # This should be only one file_name
+        for file_name in list_of_csvs:
+            temp_saturation_df = pd.read_csv(file_name,delimiter=";")
+            temp_saturation_df["RF"] = [level]*len(temp_saturation_df)
+            all_dfs.append(temp_saturation_df)
+    all_rf_df =pd.concat(all_dfs)
+
+    # fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    #
+    # unique_RF = all_rf_df["RF"].unique()
+    # num_colors = len(unique_RF)
+    # cm = mpl.cm.get_cmap(name='magma')
+    # currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
+    #
+    # # colors = ["blue","red","green","yellow"]
+    # colors = ["blue", "red", "green", "orange", "yellow"]
+    # # optimisers = ["SGD"]
+    #
+    # # for i, ax in enumerate(axs.flat):
+    # for i, color in enumerate(currentColors):
+    #     current_df = all_rf_df[all_rf_df["RF"] == unique_RF[i]]
+    #     current_df = current_df.mean(axis=0).to_frame().T
+    #
+    #     epoch_df_dense, pm = extract_layer_stat(current_df,
+    #                                             epoch=0,
+    #                                             primary_metric=None,
+    #                                             stat='saturation',
+    #                                             state_mode="train")
+    #
+    #     # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
+    #     #                 window=5,index_to_keep=in_block_layers_index)
+    #     ax.scatter(x=range(len(in_block_layers_index)), y=epoch_df_dense.values[0][in_block_layers_index], color=color, marker="o",label=f"{conversion_rf_dict[unique_RF[i]]}")
+    # # ax.set_title(f"{unique_RF[i]}")
+    # ax.grid(ls="--", alpha=0.5)
+    # # ax.set_xlabel("")
+    # # ax.set_ylabel("")
+    # ax.set_xticks(range(len(in_block_layers_index)), in_block_layers_index, color="k")
+    # ax.set_yticks([0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], [0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], color="k")
+    # # ax.set_yticks([-3, -2.5, -2, -1.5, -1], [-3, -2.5, -2, -1.5, -1], color="k")
+    # # ax.set_xticks([])
+    # ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
+    # ax.set_ylabel("Saturation",fontsize=fs*labels_multiplier)
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(5))
+    #
+    # ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    # # ax.tick_params(axis="x", labelcolor="w")
+    # ax.legend()
+    # plt.savefig(f"{save_folder}/resnet50_dilation_cifar10_saturation_inblock_v1.pdf",
+    #             bbox_inches="tight")
+    #
+    # plt.close()
+    # ##################################
+    # #       Out of block
+    # ##################################
+    # fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    # unique_RF = all_rf_df["RF"].unique()
+    # num_colors = len(unique_RF)
+    # cm = mpl.cm.get_cmap(name='magma')
+    # currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
+    #
+    # # colors = ["blue","red","green","yellow"]
+    # colors = ["blue", "red", "green", "orange", "yellow"]
+    # # optimisers = ["SGD"]
+    #
+    # # for i, ax in enumerate(axs.flat):
+    # for i, color in enumerate(currentColors):
+    #     current_df = all_rf_df[all_rf_df["RF"] == unique_RF[i]]
+    #     current_df = current_df.mean(axis=0).to_frame().T
+    #
+    #     epoch_df_dense, pm = extract_layer_stat(current_df,
+    #                                             epoch=0,
+    #                                             primary_metric=None,
+    #                                             stat='saturation',
+    #                                             state_mode="train")
+    #
+    #     # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
+    #     #                 window=5,index_to_keep=out_of_block_layer_index)
+    #     ax.scatter(x=range(len(out_of_block_layer_index)), y=epoch_df_dense.values[0][out_of_block_layer_index], color=color, marker="o",label=f"{conversion_rf_dict[unique_RF[i]]}")
+    # # ax.set_title(f"{unique_RF[i]}")
+    # ax.grid(ls="--", alpha=0.5)
+    # # ax.set_xlabel("")
+    # # ax.set_ylabel("")
+    # ax.set_xticks(range(len(out_of_block_layer_index)),out_of_block_layer_index, color="k")
+    # ax.set_yticks([0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], [0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], color="k")
+    # # ax.set_yticks([-3, -2.5, -2, -1.5, -1], [-3, -2.5, -2, -1.5, -1], color="k")
+    # ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
+    # ax.set_ylabel("Saturation",fontsize=fs*labels_multiplier)
+    # ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
+    # ax.xaxis.set_minor_locator(ticker.MultipleLocator(3))
+    # # ax.set_xticks([])
+    # ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    # ax.legend()
+    # # ax.tick_params(axis="x", labelcolor="w")
+    # plt.savefig(f"{save_folder}/resnet50_dilation_cifar10_saturation_outblock_v1.pdf",
+    #             bbox_inches="tight")
+    #
+    # plt.close()
+
+
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+
+    unique_RF = all_rf_df["RF"].unique()
+    num_colors = len(unique_RF)
+    cm = mpl.cm.get_cmap(name='magma')
+    currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
+
+    # colors = ["blue","red","green","yellow"]
+    colors = ["blue", "red", "green", "orange", "yellow"]
+    # optimisers = ["SGD"]
+
+    # for i, ax in enumerate(axs.flat):
+    for i, color in enumerate(currentColors):
+        current_df = all_rf_df[all_rf_df["RF"] == unique_RF[i]]
+        current_df = current_df.mean(axis=0).to_frame().T
+
+        epoch_df_dense, pm = extract_layer_stat(current_df,
+                                                epoch=0,
+                                                primary_metric=None,
+                                                stat='saturation',
+                                                state_mode="train")
+
+        # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
+        #                 window=5)
+        ax.scatter(x=range(len(epoch_df_dense.values[0])), y=epoch_df_dense.values[0], color=color, marker="o",label=f"{unique_RF[i]}")
+    # ax.set_title(f"{unique_RF[i]}")
+    ax.grid(ls="--", alpha=0.5)
+    ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
+    ax.set_ylabel("Saturation",fontsize=fs*labels_multiplier)
+    ax.set_xticks(range(len(epoch_df_dense.columns)), range(len(epoch_df_dense.columns)), color="k")
+    ax.set_yticks([0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], [0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], color="k")
+    ax.legend(loc="lower left",bbox_to_anchor=(0.5,0.5))
+    # ax.set_yticks([-3, -2.5, -2, -1.5, -1], [-3, -2.5, -2, -1.5, -1], color="k")
+    # ax.set_xticks([])
+    # ax.tick_params(axis="x",color="w")
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    fig.savefig(f"{save_folder}/vgg19_cifar10_saturation_v2.pdf", bbox_inches="tight")
+
 def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
 
     resnet_all_layers = ["conv1","layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
@@ -22253,8 +22418,8 @@ def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
     out_of_block_layer_index = [resnet_all_layers.index(l) for l in resnet_all_layers if ".conv3" in l or ".shortcut" in l or "conv1"==l]
 
     # resnets_rfs = [108, 110, 213, 318, 423, 1415, 1920, 3100]
-    resnets_rfs =[ 54, 107, 159, 655, 907, 1497]
-    conversion_rf_dict={54:213,107:318,159:423,655:1415,907:1920,1497:3100}
+    resnets_rfs =[ 1,54, 107, 159, 655, 907, 1497]
+    conversion_rf_dict={1:"107 (no dilation)",54:213,107:318,159:423,655:1415,907:1920,1497:3100}
     all_dfs = []
     for level in resnets_rfs:
         search_string = "{}/resnet50_dilation_{}_cifar10_recording_dilation_100_no_ffcv*saturation_trained*seed_0.csv".format(data_folder,
@@ -35341,5 +35506,7 @@ if __name__ == '__main__':
     # large_input_experiments_only_sgd_paper()
     # weights_resnet50_vgg19(folder)
     # variance_explosion_tables()
-    resnet50_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/resnet50","/home/luisaam/Pictures")
+    # resnet50_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/resnet50","/home/luisaam/Pictures")
+    vgg19_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/vgg19","/home/luisaam/Pictures")
+
 
