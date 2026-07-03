@@ -35,8 +35,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
 export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
 
 #############################################################
-#     Train  with FFCV
+#     Train  with out FFCV
 #############################################################
 
 
-python train_CIFAR10.py --batch_size 128  --save_folder "${SCRATCH}/FPGM_experiments_200" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"
+python train_CIFAR10.py --batch_size 128  --save_folder "${SCRATCH}/dilation_maxpool_100" --model $1 --dataset $2 --num_workers $3 --RF_level $4 --type $5 --epochs $6  --name $7 --width $8 --record $9 --input_resolution "${10}"

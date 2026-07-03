@@ -3,7 +3,7 @@
 # VGG19 dilation + maxpool
 
 resolution=32
-for lvl in 1; do    # iterate idxa from 0 to length
+for lvl in 1  91 180 269; do    # iterate idxa from 0 to length
 for model in  "vgg19_dilation_max_pool";do
 for dataset in "cifar10"; do
 
@@ -13,7 +13,7 @@ done
 done
 
 resolution=64
-for lvl in 1; do    # iterate idxa from 0 to length
+for lvl in 1 91 180 269 ; do    # iterate idxa from 0 to length
 for model in  "vgg19_dilation_max_pool";do
 for dataset in "tiny_imagenet"; do
 
@@ -27,7 +27,7 @@ done
 # RESNET50 dilation + maxpool
 
 resolution=32
-for lvl in 1; do    # iterate idxa from 0 to length
+for lvl in 1 54 107 159 407 655 907 1497 ; do    # iterate idxa from 0 to length
 for model in  "resnet50_dilation_max_pool";do
 for dataset in "cifar10"; do
 
@@ -37,7 +37,7 @@ done
 done
 
 resolution=64
-for lvl in 1; do    # iterate idxa from 0 to length
+for lvl in 1 54 107 159 407 655 907 1497; do    # iterate idxa from 0 to length
 for model in  "resnet50_dilation_max_pool";do
 for dataset in "tiny_imagenet"; do
 
