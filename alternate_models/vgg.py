@@ -1,6 +1,7 @@
 '''VGG11/13/16/19 in Pytorch.'''
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -299,6 +300,62 @@ class VGG_RF_dilation(nn.Module):
         if self.maxpool:
             layers.insert(1, self.maxpool)
         return nn.Sequential(*layers)
+
+
+class _DilatedMaxPool2d(nn.Module):
+    # Fixed 3x3 max pool whose receptive field is grown via dilation. Padding equal
+    # to the dilation keeps the feature map size unchanged, but nn.MaxPool2d caps its
+    # own padding at kernel_size // 2, so the padding is applied manually here (with
+    # -inf, so it can never win the max) before a zero-padded, dilated max pool.
+    def __init__(self, dilation):
+        super(_DilatedMaxPool2d, self).__init__()
+        self.padding = dilation
+        self.pool = nn.MaxPool2d(kernel_size=3, stride=1, padding=0, dilation=dilation)
+
+    def forward(self, x):
+        x = F.pad(x, [self.padding] * 4, mode='constant', value=float('-inf'))
+        return self.pool(x)
+
+
+class VGG_RF_dilation_maxpool(nn.Module):
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_dilation_maxpool, self).__init__()
+        self.rf_level = RF_level
+        self.config = cfg[vgg_name]
+
+        # Max-pooling layer after the first conv block, like VGG_RF, but the receptive
+        # field is grown through dilation instead of a larger kernel/stride, so the
+        # feature map size stays constant across RF levels (see _DilatedMaxPool2d).
+        self.maxpool = _DilatedMaxPool2d(self.rf_level) if self.rf_level else None
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
 
 def get_features_only_VGG(net):
     # ResNet block to compute receptive field for
