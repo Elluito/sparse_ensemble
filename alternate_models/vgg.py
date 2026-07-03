@@ -405,7 +405,9 @@ def test():
 
         # net = VGG_RF('VGG19_rf', RF_level=i)
 
-        net = VGG_RF_dilation('VGG19_rf', RF_level=i)
+        # net = VGG_RF_dilation('VGG19_rf', RF_level=i)
+        net =VGG_RF_dilation_maxpool('VGG19_rf', RF_level=i)
+
 
 
         get_features_only_until_block_layer_VGG(net, block=4, net_type=1)
@@ -435,7 +437,8 @@ def test():
 
 def test_cifar():
 
-    p = [1, 2, 3, 4]
+    # p = [1, 2, 3, 4]
+    p = [91,180,269]
 
     input_ =torch.rand(2,3,32,32)
 
@@ -445,8 +448,9 @@ def test_cifar():
 
         #net = VGG_RF_stride('VGG19_rf', RF_level=i)
 
-        net = VGG_RF_dilation('VGG19_rf', RF_level=i)
+        # net = VGG_RF_dilation('VGG19_rf', RF_level=i)
 
+        net =VGG_RF_dilation_maxpool('VGG19_rf', RF_level=i)
         output = net(input_)
 
         print("Output: {}".format(output))
@@ -455,5 +459,5 @@ def test_cifar():
 
 
 if __name__ == '__main__':
-    # test_cifar()
-    test()
+    test_cifar()
+    # test()
