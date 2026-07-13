@@ -98,7 +98,6 @@ name="recording_dilation_max_pool_100_no_ffcv"
 #save_folder="${HOME}/sparse_ensemble/saturation_dilation_results/cifar10/resnet50"
 save_folder="${HOME}/sparse_ensemble/saturation_dilation_maxpool/cifar10/resnet50"
 #checkpoints_folder="${SCRATCH}/dilation_experiments_100"
-#checkpoints_folder="${SCRATCH}/dilation_experiments_100"
 checkpoints_folder="${SCRATCH}/dilation_maxpool_100"
 for model in "resnet50_dilation_max_pool"; do
 for dataset in "cifar10"; do
