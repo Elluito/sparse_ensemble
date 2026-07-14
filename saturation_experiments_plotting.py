@@ -22235,7 +22235,7 @@ def numpy_ewma_vectorized_v2(data, window):
     out = offset + cumsums * scale_arr[::-1]
     return out
 
-def vgg19_cifar10_dilation_different_rf(data_folder,save_folder):
+def vgg19_cifar10_dilation_different_rf(data_folder,save_folder,model_type="",name="recording_dilation_100_no_ffcv"):
 
     resnet_all_layers = ["conv1","layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
                          "layer1.1.conv1", "layer1.1.conv2", "layer1.1.conv3", "layer1.2.conv1", "layer1.2.conv2",
@@ -22258,8 +22258,7 @@ def vgg19_cifar10_dilation_different_rf(data_folder,save_folder):
     conversion_rf_dict={1:"180 (no dilation)",91:359,180:537,269:715}
     all_dfs = []
     for level in vgg_rfs:
-        search_string = "{}/vgg19_dilation_{}_cifar10_recording_dilation_100_no_ffcv*saturation_trained*seed_0.csv".format(data_folder,
-                                                                                                                              level)
+        search_string = "{}/vgg19{}_{}_cifar10_{}*saturation_trained*seed_0.csv".format(data_folder,model_type,level,name)
         list_of_csvs = list(glob.glob(search_string))
         print(list_of_csvs)
         # This should be only one file_name
@@ -22306,10 +22305,10 @@ def vgg19_cifar10_dilation_different_rf(data_folder,save_folder):
     # ax.set_xticks([])
     # ax.tick_params(axis="x",color="w")
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
-    fig.savefig(f"{save_folder}/vgg19_dilation_cifar10_saturation_v2.pdf", bbox_inches="tight")
+    fig.savefig(f"{save_folder}/vgg19{model_type}_cifar10_saturation_v2.pdf", bbox_inches="tight")
     plt.close()
 
-def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
+def resnet50_cifar10_dilation_different_rf(data_folder,save_folder,model_type="_dilation",name="recording_dilation_100_no_ffcv"):
 
     resnet_all_layers = ["conv1","layer1.0.conv1", "layer1.0.conv2", "layer1.0.conv3", "layer1.0.shortcut.0",
                          "layer1.1.conv1", "layer1.1.conv2", "layer1.1.conv3", "layer1.2.conv1", "layer1.2.conv2",
@@ -22327,12 +22326,14 @@ def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
     out_of_block_layer_index = [resnet_all_layers.index(l) for l in resnet_all_layers if ".conv3" in l or ".shortcut" in l or "conv1"==l]
 
     # resnets_rfs = [108, 110, 213, 318, 423, 1415, 1920, 3100]
-    resnets_rfs =[ 1,54, 107, 159, 655, 907, 1497]
+    # resnets_rfs =[ 1,54, 107, 159, 655, 907, 1497]
+    resnets_rfs =[ 1,54, 107, 159]
     conversion_rf_dict={1:"107 (no dilation)",54:213,107:318,159:423,655:1415,907:1920,1497:3100}
     all_dfs = []
     for level in resnets_rfs:
-        search_string = "{}/resnet50_dilation_{}_cifar10_recording_dilation_100_no_ffcv*saturation_trained*seed_0.csv".format(data_folder,
-                                                                               level)
+        search_string = "{}/resnet50{}_{}_cifar10_{}*saturation_trained*seed_0.csv".format(data_folder,model_type,level,name,
+                                                                               )
+        print(search_string)
         list_of_csvs = list(glob.glob(search_string))
         # This should be only one file_name
         for file_name in list_of_csvs:
@@ -22382,7 +22383,7 @@ def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     # ax.tick_params(axis="x", labelcolor="w")
     ax.legend()
-    plt.savefig(f"{save_folder}/resnet50_dilation_cifar10_saturation_inblock_v1.pdf",
+    plt.savefig(f"{save_folder}/resnet50{model_type}_cifar10_saturation_inblock_v1.pdf",
                 bbox_inches="tight")
 
     plt.close()
@@ -22428,7 +22429,7 @@ def resnet50_cifar10_dilation_different_rf(data_folder,save_folder):
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.legend()
     # ax.tick_params(axis="x", labelcolor="w")
-    plt.savefig(f"{save_folder}/resnet50_dilation_cifar10_saturation_outblock_v1.pdf",
+    plt.savefig(f"{save_folder}/resnet50{model_type}_cifar10_saturation_outblock_v1.pdf",
                 bbox_inches="tight")
 
     plt.close()
@@ -35415,7 +35416,6 @@ if __name__ == '__main__':
     # large_input_experiments_only_sgd_paper()
     # weights_resnet50_vgg19(folder)
     # variance_explosion_tables()
-    resnet50_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/resnet50","/home/luisaam/Pictures")
-    vgg19_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/vgg19","/home/luisaam/Pictures")
-
+    resnet50_cifar10_dilation_different_rf("saturation_dilation_maxpool/cifar10/resnet50","/home/luisaam/Pictures","_dilation_max_pool","recording_dilation_max_pool_100_no_ffcv")
+    vgg19_cifar10_dilation_different_rf("saturation_dilation_maxpool/cifar10/vgg19","/home/luisaam/Pictures","_dilation_max_pool","recording_dilation_max_pool_100_no_ffcv")
 
