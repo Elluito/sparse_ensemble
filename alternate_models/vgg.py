@@ -2,6 +2,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from spectral_pooling import SpectralMaxPool2d
+from diverse_pooling import SoftPool2d, mixedPool, SimplifiedLIP
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -99,6 +101,310 @@ class VGG_RF(nn.Module):
         #         print("output shape of layer {}/{}: {}".format(i, len(self.features), x.size()))
         out = self.features(x)
         # out = x
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+
+class VGG_RF_spectral_pool(nn.Module):
+    """
+    Same architecture and rf_level -> (kernel_size, stride, padding) mapping as
+    VGG_RF, but the rf_level-dependent max-pool is replaced by
+    SpectralMaxPool2d, which reaches the same target feature-map size via a
+    Fourier-domain crop instead of a spatial max. The regular 'M' max-pools
+    from the VGG config are left untouched.
+    """
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_spectral_pool, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = SpectralMaxPool2d(kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = SpectralMaxPool2d(kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = SpectralMaxPool2d(kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = SpectralMaxPool2d(kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = SpectralMaxPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = SpectralMaxPool2d(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = SpectralMaxPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = SpectralMaxPool2d(kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = SpectralMaxPool2d(kernel_size=15, stride=14, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = SpectralMaxPool2d(kernel_size=20, stride=19, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = SpectralMaxPool2d(kernel_size=32, stride=31, padding=1)
+            self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+
+class VGG_RF_softpool(nn.Module):
+    """
+    Same architecture and rf_level -> (kernel_size, stride, padding) mapping as
+    VGG_RF, but the rf_level-dependent max-pool is replaced by SoftPool2d.
+    The regular 'M' max-pools from the VGG config are left untouched.
+    """
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_softpool, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = SoftPool2d(kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = SoftPool2d(kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = SoftPool2d(kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = SoftPool2d(kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = SoftPool2d(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = SoftPool2d(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = SoftPool2d(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = SoftPool2d(kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = SoftPool2d(kernel_size=15, stride=14, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = SoftPool2d(kernel_size=20, stride=19, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = SoftPool2d(kernel_size=32, stride=31, padding=1)
+            self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+
+class VGG_RF_mixedpool(nn.Module):
+    """
+    Same architecture and rf_level -> (kernel_size, stride, padding) mapping as
+    VGG_RF, but the rf_level-dependent max-pool is replaced by mixedPool, a
+    learned convex combination of max-pool and avg-pool. The regular 'M'
+    max-pools from the VGG config are left untouched.
+    """
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_mixedpool, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        if self.rf_level == 1:
+            self.maxpool = mixedPool(kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = mixedPool(kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = mixedPool(kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = mixedPool(kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = mixedPool(kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = mixedPool(kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = mixedPool(kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = mixedPool(kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = mixedPool(kernel_size=15, stride=14, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = mixedPool(kernel_size=20, stride=19, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = mixedPool(kernel_size=32, stride=31, padding=1)
+            self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = self.features(x)
+        out = self.avgpool(out)
+        out = out.view(out.size(0), -1)
+        out = self.classifier(out)
+        return out
+
+    def _make_layers(self, cfg):
+        layers = []
+        in_channels = 3
+        for x in cfg:
+            if x == 'M':
+                layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            else:
+                layers += [nn.Conv2d(in_channels, x, kernel_size=3, padding=1),
+                           nn.BatchNorm2d(x),
+                           nn.ReLU(inplace=True)]
+                in_channels = x
+
+        layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
+        if self.maxpool:
+            layers.insert(1, self.maxpool)
+        return nn.Sequential(*layers)
+
+
+class VGG_RF_lippool(nn.Module):
+    """
+    Same architecture and rf_level -> (kernel_size, stride, padding) mapping as
+    VGG_RF, but the rf_level-dependent max-pool is replaced by SimplifiedLIP
+    (Local Importance-based Pooling). Since it's inserted right after the
+    first Conv2d (before that layer's BatchNorm, mirroring VGG_RF's own
+    `layers.insert(1, self.maxpool)` placement), its channel count is fixed
+    by the VGG config's first entry. The regular 'M' max-pools from the VGG
+    config are left untouched.
+    """
+    def __init__(self, vgg_name, num_classes=10, RF_level=None):
+        super(VGG_RF_lippool, self).__init__()
+        self.rf_level = RF_level
+        self.maxpool = None
+        self.config = cfg[vgg_name]
+        stem_channels = self.config[0]
+        if self.rf_level == 1:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=2, stride=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 2:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=3, stride=2, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 3:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=4, stride=3, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 4:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=5, stride=4, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 5:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=6, stride=5, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 6:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=7, stride=6, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 7:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=8, stride=7, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 8:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=9, stride=8, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 9:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=15, stride=14, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 10:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=20, stride=19, padding=1)
+            self.config = cfg[vgg_name]
+        if self.rf_level == 11:
+            self.maxpool = SimplifiedLIP(stem_channels, kernel_size=32, stride=31, padding=1)
+            self.config = cfg[vgg_name]
+
+        self.features = self._make_layers(self.config)
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Linear(512, num_classes)
+
+    def forward(self, x):
+        out = self.features(x)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.classifier(out)

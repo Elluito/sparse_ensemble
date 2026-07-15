@@ -301,6 +301,50 @@ def get_model(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = ResNet50_rf_dilation_max_pool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
 
+    if args.model == "resnet50_spectral_pool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_spectral_pool(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_spectral_pool(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_spectral_pool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_spectral_pool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+
+    if args.model == "resnet50_softpool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_softpool(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_softpool(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_softpool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_softpool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+
+    if args.model == "resnet50_mixedpool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_mixedpool(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_mixedpool(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_mixedpool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_mixedpool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+
+    if args.model == "resnet50_lippool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = ResNet50_rf_lippool(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = ResNet50_rf_lippool(num_classes=100, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = ResNet50_rf_lippool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = ResNet50_rf_lippool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
+
     if args.model == "resnet24":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
@@ -364,6 +408,50 @@ def get_model(args):
             net = VGG_RF_dilation_maxpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = VGG_RF_dilation_maxpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    if args.model == "vgg19_spectral_pool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_spectral_pool("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_spectral_pool("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_spectral_pool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_spectral_pool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    if args.model == "vgg19_softpool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_softpool("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_softpool("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_softpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_softpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    if args.model == "vgg19_mixedpool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_mixedpool("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_mixedpool("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_mixedpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_mixedpool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+
+    if args.model == "vgg19_lippool":
+
+        if args.type == "normal" and args.dataset == "cifar10":
+            net = VGG_RF_lippool("VGG19_rf", num_classes=10, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "cifar100":
+            net = VGG_RF_lippool("VGG19_rf", num_classes=100, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "tiny_imagenet":
+            net = VGG_RF_lippool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
+        if args.type == "normal" and args.dataset == "small_imagenet":
+            net = VGG_RF_lippool("VGG19_rf", num_classes=200, RF_level=args.RF_level)
 
     if args.model == "resnet_small":
         if args.type == "normal" and args.dataset == "cifar10":
