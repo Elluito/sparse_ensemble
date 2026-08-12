@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_mixedpool_normal_cifar10_1784636581.5009916_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.69.pth,93.69,92.32
+vgg19_mixedpool_normal_cifar10_1784635183.5906754_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.38.pth,93.38,77.75
+vgg19_mixedpool_normal_cifar10_1784635458.1928606_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.53.pth,93.53,61.28

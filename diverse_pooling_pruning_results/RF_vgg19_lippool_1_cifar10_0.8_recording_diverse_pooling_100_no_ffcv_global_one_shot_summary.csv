@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_lippool_normal_cifar10_1784636630.2052417_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.11.pth,93.11,10.0
+vgg19_lippool_normal_cifar10_1784636746.0240648_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.06.pth,93.06,50.13
+vgg19_lippool_normal_cifar10_1784636909.461994_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_93.1.pth,93.1,45.56

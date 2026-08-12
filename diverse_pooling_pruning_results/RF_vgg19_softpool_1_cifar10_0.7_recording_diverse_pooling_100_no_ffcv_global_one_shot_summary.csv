@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_softpool_normal_cifar10_1784635161.6560163_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_92.61.pth,92.61,73.66
+vgg19_softpool_normal_cifar10_1784634601.2182202_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_92.18.pth,92.18,91.04
+vgg19_softpool_normal_cifar10_1784634335.4068856_rf_level_1_recording_diverse_pooling_100_no_ffcv_test_acc_92.52.pth,92.52,82.29

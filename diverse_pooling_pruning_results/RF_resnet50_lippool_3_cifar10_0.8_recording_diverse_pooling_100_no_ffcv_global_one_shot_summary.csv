@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_lippool_normal_cifar10_1784688070.5222235_rf_level_3_recording_diverse_pooling_100_no_ffcv_test_acc_92.5.pth,92.5,92.38
+resnet50_lippool_normal_cifar10_1784687948.5800734_rf_level_3_recording_diverse_pooling_100_no_ffcv_test_acc_92.13.pth,92.13,92.03
+resnet50_lippool_normal_cifar10_1784688254.4997098_rf_level_3_recording_diverse_pooling_100_no_ffcv_test_acc_92.33.pth,92.33,92.04
