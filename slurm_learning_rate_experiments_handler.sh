@@ -32,7 +32,7 @@ for model in "vgg19" "resnet50"; do
 
         name="lr_${lr}_recording_lr_sweep_no_ffcv"
 
-        sbatch --nodes=1 --time="${walltime}" --array=1-3 --partition=gpu --gres=gpu:1 --mail-type=all --mail-user=pznz720@leeds.ac.uk \
+        sbatch --nodes=1 --time="${walltime}" --array=1-3 --partition=gpu --gres=gpu:1 --mail-type=all --mail-user=l.avendanomunoz@leeds.ac.uk \
           --error="lr_sweep_${model}_${dataset}_rf${lvl}_lr${lr}.err" \
           --output="lr_sweep_${model}_${dataset}_rf${lvl}_lr${lr}.out" \
           --job-name="lr_sweep_${model}_${dataset}_rf${lvl}_lr${lr}" \
