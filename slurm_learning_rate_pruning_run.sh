@@ -55,8 +55,8 @@ echo "SAVE_FOLDER= $SAVE_FOLDER"
 echo "INPUT_RES= $INPUT_RES"
 
 export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
-export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/$USER/.conda/envs/work/lib"
+export PYTHONPATH="/users/$USER/.conda/envs/work/lib/python3.9/site-packages"
 
 #############################################################
 #     One-shot pruning (evaluation only, no fine-tuning) of the
