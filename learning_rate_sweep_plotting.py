@@ -7,6 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1A-hkExlVJX16NNC3MetqNTJ-IJdjQwzr
 """
 from seaborn import color_palette
+from matplotlib.colors import LogNorm
 
 """ 
 # Plot settings
@@ -1208,24 +1209,114 @@ def plotting_second_order_saturation_OS_accuracy(save_folder):
     plt.savefig(
         f"{save_folder}/vgg19_second_order_saturation_vs_pruned_accuracy.pdf",
         bbox_inches="tight")
+def plot_learning_rate_sweep_results(save_folder):
+    df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+    # df_09 = df[df["pruning_rate"] == 0.9]
+    # df_08 = df[df["pruning_rate"] == 0.8]
+    # df_07 = df[df["pruning_rate"] == 0.7]
+    df["Kernel Size"] = df["rf_level"]+1
+    # renamed_df = df.rename(columns={"rf_level":"Kernel Size"})
+    local_df = df[df["model"].str.contains("resnet50")]
+    # df_07 = df[df["pruning_rate"] == 0.7]
+    # color_palette = "crest"
+    color_palette = "magma"
+    hu_norm = LogNorm()
 
+
+
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_inblock_mean", y="delta", hue="lr",
+                    size="Kernel Size", palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.legend()
+    plt.savefig(
+        f"{save_folder}/resnet50_inblock_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
+        bbox_inches="tight")
+
+    ### Outblock layers
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_outblock_mean", y="delta", hue="lr",
+                    size="Kernel Size", palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.legend()
+    plt.savefig(
+        f"{save_folder}/resnet50_outblock_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
+        bbox_inches="tight")
+
+    ### All layers
+
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="lr", size="Kernel Size",
+                    palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
+                bbox_inches="tight")
+    ## For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="lr",size="Kernel Size",
+                    palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
+
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
+                bbox_inches="tight")
+
+def plot_lr_2(save_folder):
+    df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+    # df_09 = df[df["pruning_rate"] == 0.9]
+    # df_08 = df[df["pruning_rate"] == 0.8]
+    # df_07 = df[df["pruning_rate"] == 0.7]
+    df["Kernel Size"] = df["rf_level"]+1
+    # renamed_df = df.rename(columns={"rf_level":"Kernel Size"})
+    local_df = df[df["model"].str.contains("resnet50")]
+    # df_07 = df[df["pruning_rate"] == 0.7]
+    # color_palette = "crest"
+    color_palette = "magma"
+    hu_norm = LogNorm()
+    ### All layers
+
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="lr", y="scaled_saturation_mean", hue="Kernel Size", size="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_saturation.pdf",
+                bbox_inches="tight")
+    ## For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="lr", size="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+
+    ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_saturation.pdf",
+                bbox_inches="tight")
 
 if __name__ == '__main__':
-    # resnet50_cifar10_dilation_different_rf("saturation_dilation_maxpool/cifar10/resnet50", "/home/luisaam/Pictures",
-    #                                    "_dilation_max_pool", "recording_dilation_max_pool_100_no_ffcv")
 
     diverse_pooling_model_names = [
         "resnet50_spectral_pool", "resnet50_softpool", "resnet50_mixedpool", "resnet50_lippool",
         "vgg19_spectral_pool", "vgg19_softpool", "vgg19_mixedpool" "vgg19_lippool",
     ]
-    # diverse_pooling_saturation_summary("saturation_diverse_pooling", diverse_pooling_model_names)
     save_folder = "/home/luisaam/Pictures"
-    # plot_diverse_pooling_results(save_folder)
-    plot_saturation_relationships(save_folder)
-    # plot_saturation_relationships(save_folder)
-    # plotting_second_order_saturation_OS_accuracy(save_folder)
-
-    # analysis_pooling_methods()
-    # analysis_pooling_methods_fine_tuned()
-    # analysis_pooling_methods_one_shot()
-    # decide_type_of_model()
+    # plot_learning_rate_sweep_results(save_folder)
+    plot_lr_2(save_folder)
