@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+resnet50_normal_cifar10_1789182543.688615_rf_level_1_lr_0.07_recording_lr_sweep_no_ffcv_test_acc_94.54.pth,94.54,93.56
+resnet50_normal_cifar10_1789182724.963365_rf_level_1_lr_0.07_recording_lr_sweep_no_ffcv_test_acc_94.85.pth,94.85,94.03
+resnet50_normal_cifar10_1789182543.688598_rf_level_1_lr_0.07_recording_lr_sweep_no_ffcv_test_acc_95.03.pth,95.03,92.61
