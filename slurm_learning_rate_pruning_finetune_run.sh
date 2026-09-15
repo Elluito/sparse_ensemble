@@ -56,8 +56,8 @@ echo "INPUT_RES= $INPUT_RES"
 echo "RESIZE= $RESIZE"
 
 export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
-export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/${USER}/.conda/envs/work/lib"
+export PYTHONPATH="/users/${USER}/.conda/envs/work/lib/python3.9/site-packages"
 
 #############################################################
 #     Prune (experiment 1) / Prune + fine-tune 10 epochs (experiment 2)
