@@ -38,7 +38,7 @@ sbatch --nodes=1 --time=03:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --
 
 else
  echo "Don't use FFCV"
- sbatch --nodes=1 --time=03:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${rf_level}_${dataset}_${pruning_rate}_finetune_no_ffcv.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_finetune_no_ffcv.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_finetune_no_ffcv" slurm_learning_rate_pruning_finetune_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}" NUMW=8 RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" SOLUTION="${solution}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
+ sbatch --nodes=1 --time=03:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --mail-user=sclaam@leeds.ac.uk --error="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_finetune.err" --output="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_finetune.out" --job-name="${model}_${rf_level}_${dataset}_${pruning_rate}_${name}_finetune" slurm_learning_rate_pruning_finetune_run.sh FFCV="${ffcv}" NAME="${name}" MODEL="${model}" DATASET="${dataset}" NUMW=8 RFL="${rf_level}" TYPE="normal" FOLDER="${directory}" PR="${pruning_rate}" SOLUTION="${solution}" DATA_FOLDER="${data_folder}" SAVE_FOLDER="${save_folder}" INPUT_RES="${resolution}" RESIZE="${resize}"
   fi
 }
 

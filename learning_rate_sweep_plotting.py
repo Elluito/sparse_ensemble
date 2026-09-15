@@ -128,15 +128,15 @@ vgg_rfs = [180, 181, 359, 537, 715]
 fs = 12
 # fig_size = (3, 2.5) # For the large_input_experiments_only_sgd_paper()
 # fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
-fig_size = (7, 3.5)  # For the resnet50_dilation_cifar10_saturation()
+fig_size = (4, 3.5)  # For the resnet50_dilation_cifar10_saturation()
 
 # fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
-legends_multiplier = 1.1
+legends_multiplier = 1.5
 # labels_multiplier = 1 # For the large_input_experiments_only_sgd_paper()
 # ticks_multiplier = 0.8 # For the large_input_experiments_only_sgd_paper()
 
-labels_multiplier = 1.3  # For the vgg19_cifar10_saturation()
-ticks_multiplier = 1.2  # For the vgg19_cifar10_saturation()
+labels_multiplier = 1.7  # For the vgg19_cifar10_saturation()
+ticks_multiplier = 1.7  # For the vgg19_cifar10_saturation()
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
@@ -1180,6 +1180,8 @@ def decide_type_of_model():
 def plotting_second_order_saturation_OS_accuracy(save_folder):
 
     df = pd.read_csv("second_order_pruning_saturation_one_shot_combined.csv", sep=",")
+    df["Kernel Size"]=df["rf_level"] + 1
+    df["Optimiser"]=df["optimisation_method"]
     num_colors = 4
     cm = mpl.cm.get_cmap(name='magma')
     currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
@@ -1187,28 +1189,37 @@ def plotting_second_order_saturation_OS_accuracy(save_folder):
     ## For resnet50 model
     ### Inblock layers
     local_df = df[df["model"].str.contains("resnet50")]
+    color_palette = "magma"
+    hu_norm = LogNorm()
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="one_shot_acc", hue="rf_level",
-                    style="optimisation_method",palette="deep")
-    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="Kernel Size",size="Kernel Size",
+                    style="Optimiser",palette=color_palette, edgecolor="k")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("Pruned Accuracy", fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.legend()
+    ax.grid(ls="--",alpha=0.5)
+    plt.axvline(0.1,color="r",linestyle="--")
     plt.savefig(
-        f"{save_folder}/resnet50_second_order_saturation_vs_pruned_accuracy.pdf",
+        f"{save_folder}/resnet50_second_order_saturation_vs_delta.pdf",
         bbox_inches="tight")
 
     local_df = df[df["model"].str.contains("vgg19")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="one_shot_acc", hue="rf_level",
-                    style="optimisation_method",palette="deep")
-    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
+    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="Kernel Size",size="Kernel Size",
+                    style="Optimiser",palette=color_palette, edgecolor="k")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("Pruned Accuracy", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.legend()
+    plt.axvline(0.1,color="r",linestyle="--")
     plt.savefig(
-        f"{save_folder}/vgg19_second_order_saturation_vs_pruned_accuracy.pdf",
+        f"{save_folder}/vgg19_second_order_saturation_vs_delta.pdf",
         bbox_inches="tight")
+
 def plot_learning_rate_sweep_results(save_folder):
     df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
     # df_09 = df[df["pruning_rate"] == 0.9]
@@ -1274,8 +1285,8 @@ def plot_learning_rate_sweep_results(save_folder):
     plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
                 bbox_inches="tight")
 
-def plot_lr_2(save_folder):
-    df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+def plot_lr_2(save_folder,pr=0.9):
+    df = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
     # df_09 = df[df["pruning_rate"] == 0.9]
     # df_08 = df[df["pruning_rate"] == 0.8]
     # df_07 = df[df["pruning_rate"] == 0.7]
@@ -1295,7 +1306,9 @@ def plot_lr_2(save_folder):
     ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axhline(0.1,color="r",linestyle="--")
+    ax.grid(ls="--",alpha=0.5)
     # ax.legend()
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_saturation.pdf",
                 bbox_inches="tight")
@@ -1308,8 +1321,10 @@ def plot_lr_2(save_folder):
 
     ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axhline(0.1,color="r",linestyle="--")
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_saturation.pdf",
                 bbox_inches="tight")
 
@@ -1321,8 +1336,10 @@ def plot_lr_2(save_folder):
     ax.set_ylabel(r"$\Delta$ (Dense - Pruned)",
                   fontsize=fs * labels_multiplier)
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--",alpha=0.5)
     # ax.legend()
-    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_pr0.9_delta.pdf",
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_pr{pr}_delta.pdf",
                 bbox_inches="tight")
     ## For vgg19 model
 
@@ -1334,8 +1351,71 @@ def plot_lr_2(save_folder):
     ax.set_ylabel(r"$\Delta$ (Dense - Pruned)",
                   fontsize=fs * labels_multiplier)
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
-    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_pr0.9_delta.pdf",
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_pr{pr}_delta.pdf",
                 bbox_inches="tight")
+
+    ## LR VS dense accuracy
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="lr", y="dense_acc",hue="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    ax.set_ylabel(r"Dense Acc",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    # ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_dense_acc.pdf",
+                bbox_inches="tight")
+    ## For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="lr", y="dense_acc",hue="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+
+    ax.set_ylabel(r"Dense Acc.",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_dense_acc.pdf",
+                bbox_inches="tight")
+    ############################# saturation vs prunability mediated by lr and Kernel Size
+
+    ###################### ResNet50
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",size="Kernel Size",
+                    palette=color_palette, edgecolor="k")
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    plt.axvline(0.1,color="r",linestyle="--")
+    ax.grid(ls="--",alpha=0.5)
+    # ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_saturation_VS_pr{pr}_delta.pdf",
+                bbox_inches="tight")
+
+    #################################### For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",size="Kernel Size",
+                    palette=color_palette, edgecolor="k")
+
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    plt.axvline(0.1,color="r",linestyle="--")
+    ax.set_ylabel("$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_saturation_VS_pr{pr}_delta.pdf",
+                bbox_inches="tight")
+
 def statistical_analysis_lr():
     df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
 
@@ -1479,13 +1559,19 @@ def statistical_analysis_lr():
         model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
         model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
         model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+
 if __name__ == '__main__':
 
     diverse_pooling_model_names = [
         "resnet50_spectral_pool", "resnet50_softpool", "resnet50_mixedpool", "resnet50_lippool",
         "vgg19_spectral_pool", "vgg19_softpool", "vgg19_mixedpool" "vgg19_lippool",
     ]
-    save_folder = "/home/luisaam/Pictures"
+    # save_folder = "/home/luisaam/Pictures"
+    # save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
     # plot_learning_rate_sweep_results(save_folder)
-    plot_lr_2(save_folder)
+    # plot_lr_2(save_folder,0.6)
+    # save_folder = "/home/luisaam/Pictures"
+    # plot_lr_2(save_folder,0.6)
+    save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
+    plotting_second_order_saturation_OS_accuracy(save_folder)
     # statistical_analysis_lr()
