@@ -1,0 +1,4 @@
+Name,sharpness_obj,sharpness_err,train_loss,train_err,test_loss,test_err
+resnet50_normal_cifar10_1788748593.7011423_rf_level_4_lr_0.003_recording_lr_sweep_no_ffcv_test_acc_83.74.pth,609.7694257665426,0.8515625,0.1850983193397522,0.0623,0.875773420715332,0.2063
+resnet50_normal_cifar10_1788747796.701767_rf_level_4_lr_0.003_recording_lr_sweep_no_ffcv_test_acc_84.4.pth,609.7694257665426,0.8515625,0.09711594314575195,0.0329,0.8717189645767212,0.1844
+resnet50_normal_cifar10_1788748038.89654_rf_level_4_lr_0.003_recording_lr_sweep_no_ffcv_test_acc_83.4.pth,609.7694257665426,0.8515625,0.18103897504806518,0.0602,0.9497888832092285,0.2123
