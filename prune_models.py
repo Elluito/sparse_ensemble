@@ -855,8 +855,13 @@ def fine_tune_pruned_model_with_mask(pruned_model: nn.Module, dataLoader: torch.
     from main import get_mask
     from train_CIFAR10 import progress_bar
 
-    optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
-                                momentum=0.99, weight_decay=5e-4)
+    if any(isinstance(m, DiracConv2d) for m in pruned_model.modules()):
+        # DiracNets-v2: no weight decay on 1-D parameters (Dirac alpha / beta, BN, biases)
+        optimizer = torch.optim.SGD(diracnet_parameter_groups(pruned_model, weight_decay=5e-4), lr=0.0001,
+                                    momentum=0.99)
+    else:
+        optimizer = torch.optim.SGD(pruned_model.parameters(), lr=0.0001,
+                                    momentum=0.99, weight_decay=5e-4)
     # lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     # Assuming optimizer uses lr = 0.05 for all groups
     # lr = 0.05     if epoch < 30
@@ -1027,6 +1032,9 @@ def pruning_fine_tuning_experiment(args):
     dense_accuracy_list.append(state_dict_raw["acc"])
     print(state_dict_raw["acc"])
     net.load_state_dict(state_dict_raw["net"])
+    if "diracnet" in args.model:
+        # Prune and fine-tune the effective kernel alpha * delta + beta * normalize(W), not the free weight W
+        net = fold_dirac(net)
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
     pruned_accuracy_test = test(net, use_cuda=True, testloader=testloader, verbose=0)
@@ -2504,6 +2512,10 @@ def main(args):
         exclude_layers = ["conv1", "linear"]
     if "mobilenet" in args.model:
         exclude_layers = ["conv1", "linear"]
+    if "diracnet" in args.model:
+        # Stem conv and classifier excluded, as for the ResNets. Only W of each DiracConv2d is pruned: the Dirac
+        # identity (alpha * delta) is a buffer and stays dense.
+        exclude_layers = ["conv1", "linear"]
 
     cfg = omegaconf.DictConfig(
         {"architecture": args.model,
@@ -2803,7 +2815,13 @@ def main(args):
 
         state_dict_raw = torch.load(name, map_location=device)
 
+        if "diracnet" in args.model:
+            # The previous iteration folded (and pruned) net, so build a fresh DiracNet for this checkpoint
+            net = get_model(args)
         net.load_state_dict(state_dict_raw["net"])
+        if "diracnet" in args.model:
+            # Prune the effective kernel alpha * delta + beta * normalize(W), not the free weight W
+            net = fold_dirac(net)
 
         print("Dense accuracy:{}".format(state_dict_raw["acc"]))
 
@@ -3709,6 +3727,9 @@ def local_prune_fine_tune_function(args,net,valloader,testloader,cfg,file_name):
     # print(state_dict_raw["acc"])
     # net.load_state_dict(state_dict_raw["net"])
 
+    if "diracnet" in args.model:
+        # Prune and fine-tune the effective kernel alpha * delta + beta * normalize(W), not the free weight W
+        net = fold_dirac(net)
     prune_function(net, cfg)
     remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
     pruned_accuracy_test: float = test(net, use_cuda=True, testloader=testloader, verbose=0)
@@ -3798,6 +3819,8 @@ if __name__ == '__main__':
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--epochs', default=10, type=int, help='Epochs to train')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    parser.add_argument('--dirac_width', default=4, type=float,
+                        help='Width multiplier of DiracNet models; must match the value used in train_CIFAR10.py')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
     parser.add_argument('--pad', default=0, type=int,
                         help='Pad the image to the input size ')

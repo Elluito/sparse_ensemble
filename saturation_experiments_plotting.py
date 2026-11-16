@@ -123,15 +123,15 @@ vgg_rfs = [180, 181, 359, 537, 715]
 fs = 12
 # fig_size = (3, 2.5) # For the large_input_experiments_only_sgd_paper()
 # fig_size = (4 , 2.5) # For the vgg19_cifar10_saturation()
-fig_size = (7 , 3.5) # For the resnet50_dilation_cifar10_saturation()
+fig_size = (5 , 3.5) # For the resnet50_dilation_cifar10_saturation()
 
 # fig_size = (5 , 5) # For the vgg19_cifar10_saturation()
-legends_multiplier = 1.1
+legends_multiplier = 1.5
 # labels_multiplier = 1 # For the large_input_experiments_only_sgd_paper()
 # ticks_multiplier = 0.8 # For the large_input_experiments_only_sgd_paper()
 
-labels_multiplier = 1.3 # For the vgg19_cifar10_saturation()
-ticks_multiplier = 1.2 # For the vgg19_cifar10_saturation()
+labels_multiplier = 1.5 # For the vgg19_cifar10_saturation()
+ticks_multiplier = 1.5 # For the vgg19_cifar10_saturation()
 plt.rcParams.update({
     "axes.linewidth": 0.5,
     'axes.edgecolor': 'black',
@@ -18820,7 +18820,7 @@ def saturation_accuracy_vgg19_plots():
 
     plt.close()
 
-def probes_accuracy(save_folde):
+def probes_accuracy(save_folder):
     accuracy_ticks =range(0,110,10)
     """# TODO: Probes accuracy
     ## VGG X cifar10
@@ -18851,12 +18851,16 @@ def probes_accuracy(save_folde):
 
     l1 = pd.read_csv("probes_logs/vgg19_cifar10_32_1/probe_performances.csv", delimiter=";")
     l1["RF"] = [vgg_rfs[1]] * len(l1)
+    l1["Kernel Size"] = [2] * len(l1)
     l2 = pd.read_csv("probes_logs/vgg19_cifar10_32_2/probe_performances.csv", delimiter=";")
     l2["RF"] = [vgg_rfs[2]] * len(l2)
+    l2["Kernel Size"] = [3] * len(l2)
     l3 = pd.read_csv("probes_logs/vgg19_cifar10_32_3/probe_performances.csv", delimiter=";")
     l3["RF"] = [vgg_rfs[3]] * len(l3)
+    l3["Kernel Size"] = [4] * len(l3)
     l4 = pd.read_csv("probes_logs/vgg19_cifar10_32_4/probe_performances.csv", delimiter=";")
     l4["RF"] = [vgg_rfs[4]] * len(l4)
+    l4["Kernel Size"] = [5] * len(l4)
 
     change_and_sort_names(l1)
     change_and_sort_names(l2)
@@ -18870,13 +18874,14 @@ def probes_accuracy(save_folde):
     fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="compressed")
 
     unique_RF = l["RF"].unique()
+    unique_kr = l["Kernel Size"].unique()
     num_colors = len(unique_RF)
     cm = mpl.cm.get_cmap(name='magma')
     currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
 
     for i, color in enumerate(currentColors):
         current_df = l[l["RF"] == unique_RF[i]]
-        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_RF[i]}")
+        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_kr[i]}")
 
     axs.set_xlabel("Layer", size=fs * labels_multiplier)
     axs.set_ylabel("Accuracy", size=fs * labels_multiplier)
@@ -18939,20 +18944,27 @@ def probes_accuracy(save_folde):
 
     l1 = pd.read_csv("probes_logs/resnet50_cifar10_32_1/probe_performances.csv", delimiter=";")
     l1["RF"] = [resnets_rfs[1]] * len(l1)
+    l1["Kernel Size"] = [2] * len(l1)
     l2 = pd.read_csv("probes_logs/resnet50_cifar10_32_2/probe_performances.csv", delimiter=";")
     l2["RF"] = [resnets_rfs[2]] * len(l2)
+    l2["Kernel Size"] = [3] * len(l2)
     l3 = pd.read_csv("probes_logs/resnet50_cifar10_32_3/probe_performances.csv", delimiter=";")
     l3["RF"] = [resnets_rfs[3]] * len(l3)
+    l3["Kernel Size"] = [4] * len(l3)
     l4 = pd.read_csv("probes_logs/resnet50_cifar10_32_4/probe_performances.csv", delimiter=";")
     l4["RF"] = [resnets_rfs[4]] * len(l4)
+    l4["Kernel Size"] = [5] * len(l4)
 
     l9 = pd.read_csv("probes_logs/resnet50_cifar10_32_9/probe_performances.csv", delimiter=";")
     l9["RF"] = [resnets_rfs[9]] * len(l9)
+    l9["Kernel Size"] = [15] * len(l9)
 
     l10 = pd.read_csv("probes_logs/resnet50_cifar10_32_10/probe_performances.csv", delimiter=";")
     l10["RF"] = [resnets_rfs[10]] * len(l10)
+    l10["Kernel Size"] = [20] * len(l10)
     l11 = pd.read_csv("probes_logs/resnet50_cifar10_32_11/probe_performances.csv", delimiter=";")
     l11["RF"] = [resnets_rfs[11]] * len(l11)
+    l11["Kernel Size"] = [32] * len(l11)
 
     change_and_sort_names(l1)
     change_and_sort_names(l2)
@@ -18977,7 +18989,7 @@ def probes_accuracy(save_folde):
 
     for i, color in enumerate(currentColors):
         current_df = l[l["RF"] == unique_RF[i]]
-        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_RF[i]}")
+        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_kr[i]}")
 
     axs.set_xlabel("Layer", size=fs * labels_multiplier)
     axs.set_ylabel("Accuracy", size=fs * labels_multiplier)
@@ -19047,26 +19059,36 @@ def probes_accuracy(save_folde):
     l1 = pd.read_csv("probes_logs/resnet50_cifar10_32_1/probe_performances.csv", delimiter=";")
     l1["smooth_eval_acc"] = smooth_function(list(l1["eval_acc"]))
     l1["RF"] = [resnets_rfs[1]] * len(l1)
+    l1["Kernel Size"] = [2] * len(l1)
     l2 = pd.read_csv("probes_logs/resnet50_cifar10_32_2/probe_performances.csv", delimiter=";")
     l2["smooth_eval_acc"] = smooth_function(list(l2["eval_acc"]))
     l2["RF"] = [resnets_rfs[2]] * len(l2)
+    l2["Kernel Size"] = [3] * len(l1)
+
     l3 = pd.read_csv("probes_logs/resnet50_cifar10_32_3/probe_performances.csv", delimiter=";")
     l3["smooth_eval_acc"] = smooth_function(list(l3["eval_acc"]))
     l3["RF"] = [resnets_rfs[3]] * len(l3)
+    l3["Kernel Size"] = [4] * len(l1)
+
     l4 = pd.read_csv("probes_logs/resnet50_cifar10_32_4/probe_performances.csv", delimiter=";")
     l4["smooth_eval_acc"] = smooth_function(list(l4["eval_acc"]))
     l4["RF"] = [resnets_rfs[4]] * len(l4)
+    l4["Kernel Size"] = [5] * len(l1)
 
     l9 = pd.read_csv("probes_logs/resnet50_cifar10_32_9/probe_performances.csv", delimiter=";")
     l9["smooth_eval_acc"] = smooth_function(list(l9["eval_acc"]))
     l9["RF"] = [resnets_rfs[9]] * len(l9)
+    l9["Kernel Size"] = [15] * len(l9)
 
     l10 = pd.read_csv("probes_logs/resnet50_cifar10_32_10/probe_performances.csv", delimiter=";")
     l10["smooth_eval_acc"] = smooth_function(list(l10["eval_acc"]))
     l10["RF"] = [resnets_rfs[10]] * len(l10)
+    l10["Kernel Size"] = [20] * len(l10)
+
     l11 = pd.read_csv("probes_logs/resnet50_cifar10_32_11/probe_performances.csv", delimiter=";")
     l11["RF"] = [resnets_rfs[11]] * len(l11)
     l11["smooth_eval_acc"] = smooth_function(list(l11["eval_acc"]))
+    l11["Kernel Size"] = [32] * len(l11)
 
     change_and_sort_names(l1)
     change_and_sort_names(l2)
@@ -19094,7 +19116,7 @@ def probes_accuracy(save_folde):
 
     for i, color in enumerate(currentColors):
         current_df = l[l["RF"] == unique_RF[i]]
-        axs.plot(current_df["name"], current_df["smooth_eval_acc"], color=currentColors[i], label=f"{unique_RF[i]}")
+        axs.plot(current_df["name"], current_df["smooth_eval_acc"], color=currentColors[i], label=f"{unique_kr[i]}")
 
     axs.set_xticks(range(1, 54))
     axs.set_xticklabels(range(1, 54))
@@ -19152,20 +19174,28 @@ def probes_accuracy(save_folde):
 
     l1 = pd.read_csv("probes_logs/resnet50_cifar10_32_1/probe_performances.csv", delimiter=";")
     l1["RF"] = [resnets_rfs[1]] * len(l1)
+    l1["Kernel Size"] = [2] * len(l1)
     l2 = pd.read_csv("probes_logs/resnet50_cifar10_32_2/probe_performances.csv", delimiter=";")
     l2["RF"] = [resnets_rfs[2]] * len(l2)
+    l2["Kernel Size"] = [3] * len(l2)
     l3 = pd.read_csv("probes_logs/resnet50_cifar10_32_3/probe_performances.csv", delimiter=";")
     l3["RF"] = [resnets_rfs[3]] * len(l3)
+    l3["Kernel Size"] = [4] * len(l3)
     l4 = pd.read_csv("probes_logs/resnet50_cifar10_32_4/probe_performances.csv", delimiter=";")
     l4["RF"] = [resnets_rfs[4]] * len(l4)
+    l4["Kernel Size"] = [5] * len(l4)
 
     l9 = pd.read_csv("probes_logs/resnet50_cifar10_32_9/probe_performances.csv", delimiter=";")
     l9["RF"] = [resnets_rfs[9]] * len(l9)
+    l9["Kernel Size"] = [15] * len(l9)
 
     l10 = pd.read_csv("probes_logs/resnet50_cifar10_32_10/probe_performances.csv", delimiter=";")
     l10["RF"] = [resnets_rfs[10]] * len(l10)
+    l10["Kernel Size"] = [20] * len(l10)
+
     l11 = pd.read_csv("probes_logs/resnet50_cifar10_32_11/probe_performances.csv", delimiter=";")
     l11["RF"] = [resnets_rfs[11]] * len(l11)
+    l11["Kernel Size"] = [32] * len(l11)
 
     change_and_sort_names(l1)
     change_and_sort_names(l2)
@@ -19190,7 +19220,7 @@ def probes_accuracy(save_folde):
 
     for i, color in enumerate(currentColors):
         current_df = l[l["RF"] == unique_RF[i]]
-        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_RF[i]}")
+        axs.plot(current_df["name"], current_df["eval_acc"], color=currentColors[i], label=f"{unique_kr[i]}")
 
     axs.set_xlabel("Layer", size=fs * labels_multiplier)
     axs.set_ylabel("Accuracy", size=fs * labels_multiplier)
@@ -19399,7 +19429,7 @@ def probes_accuracy(save_folde):
     l12 = pd.read_csv("probes_logs/resnet25_small_small_imagenet_224_12/probe_performances.csv", delimiter=";")
     l12["RF"] = [resnets_rfs[12]] * len(l12)
 
-    l13 = pd.read_csv("probes_logs/resnet25_small_small_imagenet_224_12/probe_performances.csv", delimiter=";")
+    l13 = pd.read_csv("probes_logs/resnet25_small_small_imagenet_224_13/probe_performances.csv", delimiter=";")
     l13["RF"] = [resnets_rfs[13]] * len(l13)
 
     change_and_sort_names(l5)
@@ -21992,52 +22022,64 @@ def vgg19_cifar10_saturation(save_folder):
         "saturation_results/cifar10/vgg19/EKFAC/vgg19_normal_cifar10_rf_level_1_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_1["RF"] = [vgg_rfs[1]] * len(vgg_ekfac_saturation_df_1)
+    vgg_ekfac_saturation_df_1["ks"] = [2] * len(vgg_ekfac_saturation_df_1)
     vgg_ekfac_saturation_df_2 = pd.read_csv(
         "saturation_results/cifar10/vgg19/EKFAC/vgg19_normal_cifar10_rf_level_2_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_2["RF"] = [vgg_rfs[2]] * len(vgg_ekfac_saturation_df_2)
+    vgg_ekfac_saturation_df_2["ks"] = [3] * len(vgg_ekfac_saturation_df_2)
     vgg_ekfac_saturation_df_3 = pd.read_csv(
         "saturation_results/cifar10/vgg19/EKFAC/vgg19_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_3["RF"] = [vgg_rfs[3]] * len(vgg_ekfac_saturation_df_3)
+    vgg_ekfac_saturation_df_3["ks"] = [3] * len(vgg_ekfac_saturation_df_3)
     vgg_ekfac_saturation_df_4 = pd.read_csv(
         "saturation_results/cifar10/vgg19/EKFAC/vgg19_normal_cifar10_rf_level_4_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_4["RF"] = [vgg_rfs[4]] * len(vgg_ekfac_saturation_df_4)
+    vgg_ekfac_saturation_df_4["ks"] = [4] * len(vgg_ekfac_saturation_df_4)
 
     vgg_asam_saturation_df_1 = pd.read_csv(
         "saturation_results/cifar10/vgg19/ASAM/vgg19_normal_cifar10_rf_level_1_sam_optim_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_asam_saturation_df_1["RF"] = [vgg_rfs[1]] * len(vgg_asam_saturation_df_1)
+    vgg_asam_saturation_df_1["ks"] = [2] * len(vgg_asam_saturation_df_1)
     vgg_asam_saturation_df_2 = pd.read_csv(
         "saturation_results/cifar10/vgg19/ASAM/vgg19_normal_cifar10_rf_level_2_sam_optim_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_asam_saturation_df_2["RF"] = [vgg_rfs[2]] * len(vgg_asam_saturation_df_2)
+    vgg_asam_saturation_df_2["ks"] = [3] * len(vgg_asam_saturation_df_2)
     vgg_asam_saturation_df_3 = pd.read_csv(
         "saturation_results/cifar10/vgg19/ASAM/vgg19_normal_cifar10_rf_level_3_sam_optim_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_asam_saturation_df_3["RF"] = [vgg_rfs[3]] * len(vgg_asam_saturation_df_3)
+    vgg_asam_saturation_df_3["ks"] = [4] * len(vgg_asam_saturation_df_3)
     vgg_asam_saturation_df_4 = pd.read_csv(
         "saturation_results/cifar10/vgg19/ASAM/vgg19_normal_cifar10_rf_level_4_sam_optim_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_asam_saturation_df_4["RF"] = [vgg_rfs[4]] * len(vgg_asam_saturation_df_4)
+    vgg_asam_saturation_df_4["ks"] = [5] * len(vgg_asam_saturation_df_4)
 
     vgg_sgd_saturation_df_1 = pd.read_csv(
         "saturation_results/cifar10/vgg19/SGD/vgg19_normal_cifar10_1726772593.4515305_rf_level_1_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_1["RF"] = [vgg_rfs[1]] * len(vgg_sgd_saturation_df_1)
+    vgg_sgd_saturation_df_1["ks"] = [2] * len(vgg_sgd_saturation_df_1)
     vgg_sgd_saturation_df_2 = pd.read_csv(
         "saturation_results/cifar10/vgg19/SGD/vgg19_normal_cifar10_1726773380.2706754_rf_level_2_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_2["RF"] = [vgg_rfs[2]] * len(vgg_sgd_saturation_df_2)
+    vgg_sgd_saturation_df_2["ks"] = [3] * len(vgg_sgd_saturation_df_2)
     vgg_sgd_saturation_df_3 = pd.read_csv(
         "saturation_results/cifar10/vgg19/SGD/vgg19_normal_cifar10_1725639932.8630962_rf_level_3_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_3["RF"] = [vgg_rfs[3]] * len(vgg_sgd_saturation_df_3)
+    vgg_sgd_saturation_df_3["ks"] = [4] * len(vgg_sgd_saturation_df_3)
     vgg_sgd_saturation_df_4 = pd.read_csv(
         "saturation_results/cifar10/vgg19/SGD/vgg19_normal_cifar10_1725640015.7435527_rf_level_4_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_4["RF"] = [vgg_rfs[4]] * len(vgg_sgd_saturation_df_4)
+    vgg_sgd_saturation_df_4["ks"] = [5] * len(vgg_sgd_saturation_df_4)
 
     all_saturation_ekfac_df = pd.concat(
         [vgg_ekfac_saturation_df_1, vgg_ekfac_saturation_df_2, vgg_ekfac_saturation_df_3, vgg_ekfac_saturation_df_4])
@@ -22057,6 +22099,7 @@ def vgg19_cifar10_saturation(save_folder):
     fig, axs = plt.subplots(2, 2, figsize=fig_size, sharey=True, sharex=True, layout="tight")
 
     unique_RF = all_df["RF"].unique()
+    unique_ks = all_df["ks"].unique()
 
     # colors=["red","blue","green"]
     # optimisers=["SGD","ASAM","EKFAC"]
@@ -22105,6 +22148,7 @@ def vgg19_cifar10_saturation(save_folder):
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
 
     unique_RF = all_df["RF"].unique()
+    unique_ks = all_df["ks"].unique()
     num_colors = len(unique_RF)
     cm = mpl.cm.get_cmap(name='magma')
     currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
@@ -22112,22 +22156,23 @@ def vgg19_cifar10_saturation(save_folder):
     # colors = ["blue","red","green","yellow"]
     colors = ["blue", "red", "green", "orange", "yellow"]
     # optimisers = ["SGD"]
+    opt = "SGD"
 
     # for i, ax in enumerate(axs.flat):
     for i, color in enumerate(currentColors):
         current_df = all_df[all_df["RF"] == unique_RF[i]]
         current_df = current_df[current_df["optimiser"] == opt]
-        current_df = current_df.mean(axis=0).to_frame().T
+        # current_df = current_df.mean(axis=0).to_frame().T
 
         epoch_df_dense, pm = extract_layer_stat(current_df,
-                                                epoch=0,
+                                                epoch=199,
                                                 primary_metric=None,
                                                 stat='saturation',
                                                 state_mode="train")
 
         # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
         #                 window=5)
-        ax.scatter(x=range(len(epoch_df_dense.values[0])), y=epoch_df_dense.values[0], color=color, marker="o",label=f"{unique_RF[i]}")
+        ax.scatter(x=range(len(epoch_df_dense.values[0])), y=epoch_df_dense.values[0], color=color, marker="o",label=f"{unique_ks[i]}")
     # ax.set_title(f"{unique_RF[i]}")
     ax.grid(ls="--", alpha=0.5)
     ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
@@ -22139,7 +22184,7 @@ def vgg19_cifar10_saturation(save_folder):
     # ax.set_xticks([])
     # ax.tick_params(axis="x",color="w")
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
-    fig.savefig(f"{save_folder}/vgg19_cifar10_saturation_v2.pdf", bbox_inches="tight")
+    fig.savefig(f"{save_folder}/vgg19_cifar10_saturation_v3.pdf", bbox_inches="tight")
 
     """### Whole model SGD Only"""
 
@@ -22457,18 +22502,22 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
         "saturation_results/cifar10/resnet50/EKFAC/resnet50_normal_cifar10_rf_level_1_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_1["RF"] = [resnets_rfs[1]] * len(vgg_ekfac_saturation_df_1)
+    vgg_ekfac_saturation_df_1["ks"] = [1] * len(vgg_ekfac_saturation_df_1)
     vgg_ekfac_saturation_df_2 = pd.read_csv(
         "saturation_results/cifar10/resnet50/EKFAC/resnet50_normal_cifar10_rf_level_2_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_2["RF"] = [resnets_rfs[2]] * len(vgg_ekfac_saturation_df_2)
+    vgg_ekfac_saturation_df_2["ks"] = [2] * len(vgg_ekfac_saturation_df_2)
     vgg_ekfac_saturation_df_3 = pd.read_csv(
         "saturation_results/cifar10/resnet50/EKFAC/resnet50_normal_cifar10_rf_level_3_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_3["RF"] = [resnets_rfs[3]] * len(vgg_ekfac_saturation_df_3)
+    vgg_ekfac_saturation_df_3["ks"] = [3] * len(vgg_ekfac_saturation_df_3)
     vgg_ekfac_saturation_df_4 = pd.read_csv(
         "saturation_results/cifar10/resnet50/EKFAC/resnet50_normal_cifar10_rf_level_4_ekfac_optim_hyper_saturation_200_gc_0.csv",
         delimiter=";")
     vgg_ekfac_saturation_df_4["RF"] = [resnets_rfs[4]] * len(vgg_ekfac_saturation_df_4)
+    vgg_ekfac_saturation_df_4["ks"] = [4] * len(vgg_ekfac_saturation_df_4)
 
     vgg_asam_saturation_df_1 = pd.read_csv(
         "saturation_results/cifar10/resnet50/ASAM/resnet50_normal_cifar10_rf_level_1_sam_optim_saturation_200_gc_0.csv",
@@ -22491,18 +22540,22 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
         "saturation_results/cifar10/resnet50/SGD/resnet50_normal_cifar10_1726773378.6547081_rf_level_1_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_1["RF"] = [resnets_rfs[1]] * len(vgg_sgd_saturation_df_1)
+    vgg_sgd_saturation_df_1["ks"] = [2] * len(vgg_sgd_saturation_df_1)
     vgg_sgd_saturation_df_2 = pd.read_csv(
         "saturation_results/cifar10/resnet50/SGD/resnet50_normal_cifar10_1727020462.50258_rf_level_2_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_2["RF"] = [resnets_rfs[2]] * len(vgg_sgd_saturation_df_2)
+    vgg_sgd_saturation_df_2["ks"] = [3] * len(vgg_sgd_saturation_df_2)
     vgg_sgd_saturation_df_3 = pd.read_csv(
         "saturation_results/cifar10/resnet50/SGD/resnet50_normal_cifar10_1726248344.7113843_rf_level_3_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_3["RF"] = [resnets_rfs[3]] * len(vgg_sgd_saturation_df_3)
+    vgg_sgd_saturation_df_3["ks"] = [4] * len(vgg_sgd_saturation_df_3)
     vgg_sgd_saturation_df_4 = pd.read_csv(
         "saturation_results/cifar10/resnet50/SGD/resnet50_normal_cifar10_1726248344.4095678_rf_level_4_recording_200_no_ffcv.csv",
         delimiter=";")
     vgg_sgd_saturation_df_4["RF"] = [resnets_rfs[4]] * len(vgg_sgd_saturation_df_4)
+    vgg_sgd_saturation_df_4["ks"] = [5] * len(vgg_sgd_saturation_df_4)
 
     all_saturation_ekfac_df = pd.concat(
         [vgg_ekfac_saturation_df_1, vgg_ekfac_saturation_df_2, vgg_ekfac_saturation_df_3, vgg_ekfac_saturation_df_4])
@@ -22526,9 +22579,7 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
     fig, axs = plt.subplots(2, 2, figsize=fig_size, sharex=True, sharey=True, layout="compressed")
 
     unique_RF = all_df["RF"].unique()
-
-    # colors=["red","blue","green"]
-    # optimisers=["SGD","ASAM","EKFAC"]
+    unique_ks = all_df["ks"].unique()
 
     colors = ["blue"]
 
@@ -22548,18 +22599,13 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
                                                     state_mode="train")
 
             plot_saturation(epoch_df=epoch_df_dense, ax=ax, color=colors[j], label=opt)
-            # ax.set_xticks(range(len(epoch_df_dense.columns)),range(len(epoch_df_dense.columns)))
-            # ax.set_xticks([],[])
-            # ax.set_xlabel("")
+
         ax.set_title(f"{unique_RF[i]}")
         ax.grid(ls="--", alpha=0.5)
         ax.set_xlabel("")
-        ax.set_ylabel("")
+        # ax.set_ylabel("")
         ax.set_xticks(range(len(epoch_df_dense.columns)), range(len(epoch_df_dense.columns)), color="w")
-        # ax.set_xticks([])
-        # ax.tick_params(axis="x",color="w")
         ax.tick_params(axis="y", labelsize=fs * ticks_multiplier)
-        # ax.set_xticks([])
 
         ax.set_title(f"{unique_RF[i]}")
 
@@ -22568,21 +22614,10 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
     # X axis
     fig.text(0.5, -0.0, 'Layer', ha='center', size=fs * labels_multiplier)
 
-    # fig.text(-0.015, 0.5, 'Saturation', va='center', rotation="vertical", size=fs * labels_multiplier
-    #          )
-    #
-    # # X axis
-    # fig.text(0.5, -0.04, 'Layer', ha='center', size=fs * labels_multiplier)
-    # ax.legend(loc="upper right")
+
     plt.savefig(f"{save_folder}/resnet50_cifar10_saturation.pdf", bbox_inches="tight")
 
-    ##################################################################
-    ############################# Version 2 ##########################
-    ##################################################################
 
-    ##################################
-    #       Inside of block
-    ##################################
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
 
     unique_RF = all_df["RF"].unique()
@@ -22590,48 +22625,38 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
     cm = mpl.cm.get_cmap(name='magma')
     currentColors = [cm(1. * i / num_colors) for i in range(num_colors)]
 
-    # colors = ["blue","red","green","yellow"]
     colors = ["blue", "red", "green", "orange", "yellow"]
-    # optimisers = ["SGD"]
-
-    # for i, ax in enumerate(axs.flat):
+    unique_ks = all_df["ks"].unique()
+    optimisers = ["SGD"]
     for i, color in enumerate(currentColors):
         current_df = all_df[all_df["RF"] == unique_RF[i]]
-        current_df = current_df[current_df["optimiser"] == opt]
-        current_df = current_df.mean(axis=0).to_frame().T
+        for j, opt in enumerate(optimisers):
+            current_df = current_df[current_df["optimiser"] == opt]
+            print(current_df)
+            # current_df = current_df.mean(axis=0).to_frame().T
 
-        epoch_df_dense, pm = extract_layer_stat(current_df,
-                                                epoch=0,
-                                                primary_metric=None,
-                                                stat='saturation',
-                                                state_mode="train")
+            epoch_df_dense, pm = extract_layer_stat(current_df,
+                                                    epoch=199,
+                                                    primary_metric=None,
+                                                    stat='saturation',
+                                                    state_mode="train")
+            ax.scatter(x=range(len(in_block_layers_index)), y=epoch_df_dense.values[0][in_block_layers_index], color=color, marker="o",label=f"{unique_ks[i]}")
 
-        # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
-        #                 window=5,index_to_keep=in_block_layers_index)
-        ax.scatter(x=range(len(in_block_layers_index)), y=epoch_df_dense.values[0][in_block_layers_index], color=color, marker="o",label=f"{unique_RF[i]}")
-    # ax.set_title(f"{unique_RF[i]}")
     ax.grid(ls="--", alpha=0.5)
-    # ax.set_xlabel("")
-    # ax.set_ylabel("")
     ax.set_xticks(range(len(in_block_layers_index)), in_block_layers_index, color="k")
     ax.set_yticks([0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], [0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], color="k")
-    # ax.set_yticks([-3, -2.5, -2, -1.5, -1], [-3, -2.5, -2, -1.5, -1], color="k")
-    # ax.set_xticks([])
     ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
     ax.set_ylabel("Saturation",fontsize=fs*labels_multiplier)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(5))
 
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
-    # ax.tick_params(axis="x", labelcolor="w")
     ax.legend()
-    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_inblock_v2.pdf",
+    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_inblock_v3.pdf",
                 bbox_inches="tight")
 
     plt.close()
-    ##################################
-    #       Out of block
-    ##################################
+
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     unique_RF = all_df["RF"].unique()
     num_colors = len(unique_RF)
@@ -22640,39 +22665,31 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
 
     # colors = ["blue","red","green","yellow"]
     colors = ["blue", "red", "green", "orange", "yellow"]
-    # optimisers = ["SGD"]
 
-    # for i, ax in enumerate(axs.flat):
+    unique_ks = all_df["ks"].unique()
     for i, color in enumerate(currentColors):
         current_df = all_df[all_df["RF"] == unique_RF[i]]
         current_df = current_df[current_df["optimiser"] == opt]
-        current_df = current_df.mean(axis=0).to_frame().T
+        # current_df = current_df.mean(axis=0).to_frame().T
 
         epoch_df_dense, pm = extract_layer_stat(current_df,
-                                                epoch=0,
+                                                epoch=199,
                                                 primary_metric=None,
                                                 stat='saturation',
                                                 state_mode="train")
 
-        # plot_saturation(epoch_df=epoch_df_dense, ax=ax, log=False, color=color, label=f"{unique_RF[i]}", ewma=False,
-        #                 window=5,index_to_keep=out_of_block_layer_index)
-        ax.scatter(x=range(len(out_of_block_layer_index)), y=epoch_df_dense.values[0][out_of_block_layer_index], color=color, marker="o",label=f"{unique_RF[i]}")
-    # ax.set_title(f"{unique_RF[i]}")
+        ax.scatter(x=range(len(out_of_block_layer_index)), y=epoch_df_dense.values[0][out_of_block_layer_index], color=color, marker="o",label=f"{unique_ks[i]}")
     ax.grid(ls="--", alpha=0.5)
-    # ax.set_xlabel("")
-    # ax.set_ylabel("")
+
     ax.set_xticks(range(len(out_of_block_layer_index)),out_of_block_layer_index, color="k")
     ax.set_yticks([0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], [0,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], color="k")
-    # ax.set_yticks([-3, -2.5, -2, -1.5, -1], [-3, -2.5, -2, -1.5, -1], color="k")
     ax.set_xlabel("Layer",fontsize=fs*labels_multiplier)
     ax.set_ylabel("Saturation",fontsize=fs*labels_multiplier)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(3))
-    # ax.set_xticks([])
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.legend()
-    # ax.tick_params(axis="x", labelcolor="w")
-    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_outblock_v2.pdf",
+    plt.savefig(f"{save_folder}/resnet50_cifar10_saturation_outblock_v3.pdf",
                 bbox_inches="tight")
 
     plt.close()
@@ -22762,7 +22779,7 @@ def resnet50_cifar10_saturation_different_rf(save_folder):
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     # ax.set_ylabel('Entropy Variance (Filter Diversity)')
     ax.set_ylabel('Saturation', fontsize=fs * labels_multiplier)
-    plt.savefig(f"{save_folder}/resne50_cifar10_saturation_whole_model.pdf")
+    plt.savefig(f"{save_folder}/resne50_cifar10_saturation_whole_model_v3.pdf")
     plt.close()
 
 
@@ -35397,7 +35414,7 @@ def plot_pareto(df, title: str):
 
 
 if __name__ == '__main__':
-    folder = "/home/luisaam/Pictures"
+    # folder = "/home/luisaam/Pictures"
     # vgg19_cifar10_saturation(folder)
     # resnet50_cifar10_saturation_different_rf(folder)
     # resnet25_small_imagenet_saturation()
@@ -35416,6 +35433,10 @@ if __name__ == '__main__':
     # large_input_experiments_only_sgd_paper()
     # weights_resnet50_vgg19(folder)
     # variance_explosion_tables()
-    resnet50_cifar10_dilation_different_rf("saturation_dilation_maxpool/cifar10/resnet50","/home/luisaam/Pictures","_dilation_max_pool","recording_dilation_max_pool_100_no_ffcv")
-    vgg19_cifar10_dilation_different_rf("saturation_dilation_maxpool/cifar10/vgg19","/home/luisaam/Pictures","_dilation_max_pool","recording_dilation_max_pool_100_no_ffcv")
-
+    save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
+    resnet50_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/resnet50",save_folder,"_dilation","recording_dilation_100_no_ffcv")
+    vgg19_cifar10_dilation_different_rf("saturation_dilation_results/cifar10/vgg19",save_folder,"_dilation","recording_dilation_100_no_ffcv")
+    # probes_accuracy(save_folder)
+    # resnet50_cifar10_saturation_different_rf(save_folder)
+    # vgg19_cifar10_saturation(save_folder)
+    # resnet50_cifar10_dilation_different_rf()

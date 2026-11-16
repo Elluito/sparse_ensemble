@@ -24,8 +24,8 @@ import seaborn as sns
 import re
 import matplotlib.ticker as ticker
 import matplotlib as mpl
-import omegaconf
-from matplotlib.ticker import PercentFormatter, FormatStrFormatter
+import statsmodels.api as sm
+import itertools
 import glob
 import statsmodels.formula.api as smf
 
@@ -429,22 +429,27 @@ def resnet50_cifar10_dilation_different_rf(data_folder, save_folder, model_type=
 
 
 def plot_saturation_relationships(save_folder):
-    df = pd.read_csv("diverse_pooling_pruning_saturation_in-out_block_layers_combined.csv",sep= ",")
+    # df = pd.read_csv("diverse_pooling_pruning_saturation_in-out_block_layers_combined.csv",sep= ",")
+    df = pd.read_csv("diverse_pooling_pruning_saturation_per_seed_combined.csv",sep= ",")
     df_09 = df[df["pruning_rate"] == 0.9]
-    df_09["Pooling kernel Size"] = df_09["rf_level"]+1 # local_df = df_09[df_09["model"].str.contains("resnet50")]
+    df_09["Pooling Kernel Size"] = df_09["rf_level"]+1 # local_df = df_09[df_09["model"].str.contains("resnet50")]
     # fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     # Rename columns directly in your data presentation step
     renamed_df = df_09.rename(columns={
         "saturation_depth_scaled_mean": r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
+        "avg_depth_scaled_train_saturation": r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
         "rf_level": "Size of Level",
         "delta_mean": r"$\Delta (Dense - Pruned)$",
+        "delta": r"$\Delta (Dense - Pruned)$",
         "pooling": "Pooling method"
     })
+
+    ################# BAR PLOTS ########################################################
 
     # g=sns.pairplot(df_09,x_vars=["saturation_depth_scaled_mean","rf_level"],y_vars="delta_mean",hue="pooling",palette="deep")
     g = sns.pairplot(renamed_df,
                      x_vars=[r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", "Pooling method"],
-                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling kernel Size", palette="deep")
+                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling Kernel Size", palette="deep")
     # g.set_axis_labels(x_var_names=["$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$","RF Level"], y_var_names=["$\Delta (Dense - Pruned)$"])
     # ax.set_xlabel( r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",fontsize=fs*labels_multiplier)
     # ax.set_ylabel("$\Delta (Dense - Pruned)$",fontsize=fs*labels_multiplier)
@@ -453,43 +458,107 @@ def plot_saturation_relationships(save_folder):
                 bbox_inches="tight")
 
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.barplot(renamed_df, ax=ax, x="Pooling kernel Size",
-                y=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", hue="Pooling method")
+    sns.barplot(renamed_df, ax=ax, x="Pooling Kernel Size",
+                y=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",ci="sd", hue="Pooling method")
+    # ax.set_yticks([0.05,0.1,0.15,0.2])
+    plt.axhline(0.1,color="r",ls="--")
+    plt.grid(ls="--",alpha=0.5)
     # ax.legend()
     plt.savefig(f"{save_folder}/comparisons_BAR_diverse_pooling_cifar10_depth_scaled_saturation_pr_0.9.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
+
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.barplot(renamed_df, ax=ax, x="Pooling kernel Size", y=r"$\Delta (Dense - Pruned)$", hue="Pooling method")
+    sns.barplot(renamed_df, ax=ax, x="Pooling Kernel Size", y=r"$\Delta (Dense - Pruned)$",ci="sd", hue="Pooling method")
+    ax.set_ylabel(r"$\Delta_{OS}$",fontsize=fs*labels_multiplier)
     # ax.legend()
+    plt.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/comparisons_BAR_diverse_pooling_cifar10_delta_accuracy_pr_0.9.pdf",
                 bbox_inches="tight")
-    ## resnet50
+    plt.close(fig)
+    ################# BAR PLOTS  by models ########################################################
+
+    ########### resnet50
+    local_df = renamed_df[renamed_df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.barplot(local_df, ax=ax, x="Pooling Kernel Size", y=r"$\Delta (Dense - Pruned)$",ci="sd", hue="Pooling method")
+    ax.set_ylabel(r"$\Delta_{OS}$",fontsize=fs*labels_multiplier)
+    plt.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/comparisons_BAR_resnet50_diverse_pooling_cifar10_delta_accuracy_pr_0.9.pdf",
+                bbox_inches="tight")
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.barplot(local_df, ax=ax, x="Pooling Kernel Size",
+                y=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",ci="sd", hue="Pooling method")
+    plt.axhline(0.1,color="r",ls="--")
+    plt.grid(ls="--",alpha=0.5)
+    # ax.set_yticks([0.05,0.1,0.15,0.2])
+    plt.savefig(f"{save_folder}/comparisons_BAR_resnet50_diverse_pooling_cifar10_depth_scaled_saturation_pr_0.9.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+
+
+
+    ########### vgg19
+    local_df = renamed_df[renamed_df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.barplot(local_df, ax=ax, x="Pooling Kernel Size", y=r"$\Delta (Dense - Pruned)$",ci="sd", hue="Pooling method")
+    ax.set_ylabel(r"$\Delta_{OS}$",fontsize=fs*labels_multiplier)
+    # ax.legend()
+    plt.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/comparisons_BAR_vgg19_diverse_pooling_cifar10_delta_accuracy_pr_0.9.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.barplot(local_df, ax=ax, x="Pooling Kernel Size",
+                y=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",ci="sd", hue="Pooling method")
+    ax.axhline(0.1,color="r",ls="--")
+    plt.grid(ls="--",alpha=0.5)
+    # ax.set_yticks([0.05,0.1,0.15,0.2])
+    plt.savefig(f"{save_folder}/comparisons_BAR_vgg19_diverse_pooling_cifar10_depth_scaled_saturation_pr_0.9.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+
+    ########### resnet50
     df = renamed_df[renamed_df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     g = sns.pairplot(df,
                      x_vars=[r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", "Pooling method"],
-                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling kernel Size", palette="deep")
+                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling Kernel Size", palette="deep")
+    plt.grid(ls="--",alpha=0.5)
     plt.savefig(
         f"{save_folder}/resnet50_comparisons_diverse_pooling_cifar10_depth_scaled_saturation_VS_pr_0.9_accuracy.pdf",
         bbox_inches="tight")
+    plt.close(fig)
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     g = sns.pairplot(df, x_vars=["Pooling method"],
-                     y_vars=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", hue="Pooling kernel Size",
+                     y_vars=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", hue="Pooling Kernel Size",
                      palette="deep")
+    plt.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/resnet50_comparisons_diverse_pooling_cifar10_depth_scaled_saturation_pr_0.9.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
     ## VGG19
     df = renamed_df[renamed_df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     g = sns.pairplot(df,
                      x_vars=[r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", "Pooling method"],
-                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling kernel Size", palette="deep")
+                     y_vars=r"$\Delta (Dense - Pruned)$", hue="Pooling Kernel Size", palette="deep")
+    plt.grid(ls="--",alpha=0.5)
     plt.savefig(
         f"{save_folder}/vgg19_comparisons_diverse_pooling_cifar10_depth_scaled_saturation_VS_pr_0.9_accuracy.pdf",
         bbox_inches="tight")
+    plt.close(fig)
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     g = sns.pairplot(df, x_vars=["Pooling method"],
-                     y_vars=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", hue="Pooling kernel Size",
+                     y_vars=r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$", hue="Pooling Kernel Size",
                      palette="deep")
+    plt.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/vgg19_comparisons_diverse_pooling_cifar10_depth_scaled_saturation_VS_pr_0.9.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
 
 def plot_diverse_pooling_results(save_folder, ):
@@ -1196,8 +1265,10 @@ def plotting_second_order_saturation_OS_accuracy(save_folder):
                     style="Optimiser",palette=color_palette, edgecolor="k")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\Delta_{OS}$", fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    # ax.set_xticks([0,0.5,0.1,0.15,0.2,0.25,0.3,0.35])
+    ax.set_xticks([0.05,0.1,0.15,0.2,0.25])
     ax.legend()
     ax.grid(ls="--",alpha=0.5)
     plt.axvline(0.1,color="r",linestyle="--")
@@ -1211,9 +1282,10 @@ def plotting_second_order_saturation_OS_accuracy(save_folder):
                     style="Optimiser",palette=color_palette, edgecolor="k")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
     ax.grid(ls="--",alpha=0.5)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.set_xticks([0.05,0.1,0.15,0.2,0.25])
     ax.legend()
     plt.axvline(0.1,color="r",linestyle="--")
     plt.savefig(
@@ -1241,7 +1313,7 @@ def plot_learning_rate_sweep_results(save_folder):
                     size="Kernel Size", palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
     ax.legend()
     plt.savefig(
         f"{save_folder}/resnet50_inblock_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
@@ -1254,7 +1326,7 @@ def plot_learning_rate_sweep_results(save_folder):
                     size="Kernel Size", palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max_i \text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
     ax.legend()
     plt.savefig(
         f"{save_folder}/resnet50_outblock_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
@@ -1268,7 +1340,7 @@ def plot_learning_rate_sweep_results(save_folder):
                     palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
     ax.legend()
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
                 bbox_inches="tight")
@@ -1276,13 +1348,13 @@ def plot_learning_rate_sweep_results(save_folder):
 
     local_df = df[df["model"].str.contains("vgg19")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.scatterplot(local_df, ax=ax, x="scaled_saturation_mean", y="delta", hue="lr",size="Kernel Size",
+    sns.scatterplot(local_df, ax=ax, x="", y="delta", hue="lr",size="Kernel Size",
                     palette=color_palette,legend="full", hue_norm=hu_norm,edgecolor="b")
 
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel("$\Delta (Dense - Pruned)$", fontsize=fs * labels_multiplier)
-    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_0.9_delta.pdf",
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_depth_scaled_saturation_VS_pr_{pr}_delta.pdf",
                 bbox_inches="tight")
 
 def plot_lr_2(save_folder,pr=0.9):
@@ -1300,75 +1372,93 @@ def plot_lr_2(save_folder,pr=0.9):
     ### All layers
 
     local_df = df[df["model"].str.contains("resnet50")]
+
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     sns.scatterplot(local_df, ax=ax, x="lr", y="scaled_saturation_mean",hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
-    ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
+    ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axhline(0.1,color="r",linestyle="--")
     ax.grid(ls="--",alpha=0.5)
     # ax.legend()
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_saturation.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
     ## For vgg19 model
 
     local_df = df[df["model"].str.contains("vgg19")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     sns.scatterplot(local_df, ax=ax, x="lr", y="scaled_saturation_mean", hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
-
     ax.set_ylabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axhline(0.1,color="r",linestyle="--")
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_saturation.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
 #     Now is learning rate vs delta
     local_df = df[df["model"].str.contains("resnet50")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     sns.scatterplot(local_df, ax=ax, x="lr", y="delta",hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
-    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)",
+    ax.set_ylabel(r"$\Delta_{OS}$",
                   fontsize=fs * labels_multiplier)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.grid(ls="--",alpha=0.5)
     # ax.legend()
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_pr{pr}_delta.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
     ## For vgg19 model
 
     local_df = df[df["model"].str.contains("vgg19")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     sns.scatterplot(local_df, ax=ax, x="lr", y="delta",hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
-
-    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)",
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    ax.set_ylabel(r"$\Delta_{OS}$",
                   fontsize=fs * labels_multiplier)
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     ax.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_pr{pr}_delta.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
     ## LR VS dense accuracy
     local_df = df[df["model"].str.contains("resnet50")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
     sns.scatterplot(local_df, ax=ax, x="lr", y="dense_acc",hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
-    ax.set_ylabel(r"Dense Acc",
+    ax.set_ylabel(r"$A_{\text{Dense}}$",
                   fontsize=fs * labels_multiplier)
     ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.set_xticks([0.00005,0.001,0.01,0.1,0.25])
+    ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.grid(ls="--",alpha=0.5)
+    # ax.set_yscale("log")
+    ax.set_xscale("log")
     # ax.legend()
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_dense_acc.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
     ## For vgg19 model
 
     local_df = df[df["model"].str.contains("vgg19")]
@@ -1376,70 +1466,178 @@ def plot_lr_2(save_folder,pr=0.9):
     sns.scatterplot(local_df, ax=ax, x="lr", y="dense_acc",hue="Kernel Size",
                     palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
 
-    ax.set_ylabel(r"Dense Acc.",
+    ax.set_ylabel(r"$A_{\text{Dense}}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    # ax.set_yscale("log")
+    ax.set_xticks([0.00005,0.001,0.01,0.1,0.25])
+    ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.set_xscale("log")
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
     ax.grid(ls="--",alpha=0.5)
     plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_dense_acc.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
+
     ############################# saturation vs prunability mediated by lr and Kernel Size
 
     ###################### ResNet50
     local_df = df[df["model"].str.contains("resnet50")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",size="Kernel Size",
+    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
                     palette=color_palette, edgecolor="k")
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
-    ax.set_ylabel(r"$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    ax.set_ylabel(r"$\Delta_{OS}$", fontsize=fs * labels_multiplier)
+    ax.set_xticks([0,0.1,0.2,0.3,0.4,0.5])
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axvline(0.1,color="r",linestyle="--")
     ax.grid(ls="--",alpha=0.5)
     # ax.legend()
     plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_saturation_VS_pr{pr}_delta.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
     #################################### For vgg19 model
 
     local_df = df[df["model"].str.contains("vgg19")]
     fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
-    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",size="Kernel Size",
+    sns.scatterplot(local_df, ax=ax, y="delta", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
                     palette=color_palette, edgecolor="k")
 
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.set_xticks([0,0.1,0.2,0.3,0.4,0.5])
+    plt.axvline(0.1,color="r",linestyle="--")
+    ax.set_ylabel("$\Delta_{OS}$", fontsize=fs * labels_multiplier)
+    ax.grid(ls="--",alpha=0.5)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_saturation_VS_pr{pr}_delta.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+    ############################# saturation vs fine-tuned prunability mediated by lr and Kernel Size
+
+    df = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+
+    df["Kernel Size"] = df["rf_level"]+1
+
+    ###################### ResNet50
+    local_df = df[df["model"].str.contains("resnet50")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, y="fine_tuned_delta", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
+                    palette=color_palette, edgecolor="k")
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max \text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_ylabel(r"$\Delta_{FT}$", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.set_xticks([0,0.1,0.2,0.3,0.4,0.5])
+    plt.axvline(0.1,color="r",linestyle="--")
+    ax.grid(ls="--",alpha=0.5)
+    # ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_saturation_VS_pr{pr}_fine_tuned_delta.pdf",
+                bbox_inches="tight")
+
+    #################################### For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, y="fine_tuned_delta", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
+                    palette=color_palette, edgecolor="k")
+
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
     ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
                   fontsize=fs * labels_multiplier)
     ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
     plt.axvline(0.1,color="r",linestyle="--")
-    ax.set_ylabel("$\Delta$ (Dense - Pruned)", fontsize=fs * labels_multiplier)
+    ax.set_ylabel("$\Delta_{FT}$", fontsize=fs * labels_multiplier)
     ax.grid(ls="--",alpha=0.5)
-    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_saturation_VS_pr{pr}_delta.pdf",
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_saturation_VS_pr{pr}_fine_tuned_delta.pdf",
                 bbox_inches="tight")
+    plt.close(fig)
 
-def statistical_analysis_lr():
-    df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+    #     Now is learning rate vs fine tuned delta (only 0.9 for now)
 
-    df["Kernel_Size"] = df["rf_level"]+1
-    df["Kernel_Size"] = df["Kernel_Size"].astype(float)
-    # renamed_df = df.rename(columns={"rf_level":"Kernel Size"})
     local_df = df[df["model"].str.contains("resnet50")]
-    # df_07 = df[df["pruning_rate"] == 0.7]
-    df = df.rename(columns={
-        "scaled_saturation_mean": r"saturation_mean",
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="lr", y="fine_tuned_delta", hue="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    ax.set_ylabel(r"$\Delta_{FT}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+    # ax.legend()
+    plt.savefig(f"{save_folder}/resnet50_lr_sweep_cifar10_lr_VS_pr{pr}_fine_tuned_delta.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+    ## For vgg19 model
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+    sns.scatterplot(local_df, ax=ax, x="lr", y="delta", hue="Kernel Size",
+                    palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    ax.set_ylabel(r"$\Delta_{FT}$",
+                  fontsize=fs * labels_multiplier)
+    ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+    plt.savefig(f"{save_folder}/vgg19_lr_sweep_cifar10_lr_VS_pr{pr}_fine_tuned_delta.pdf",
+                bbox_inches="tight")
+    plt.close(fig)
+
+def statistical_analysis_lr(pr=0.9):
+    # df = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+    #
+    # df["Kernel_Size"] = df["rf_level"]+1
+    # df["Kernel_Size"] = df["Kernel_Size"].astype(float)
+    # # renamed_df = df.rename(columns={"rf_level":"Kernel Size"})
+    # local_df = df[df["model"].str.contains("resnet50")]
+    # # df_07 = df[df["pruning_rate"] == 0.7]
+    # df = df.rename(columns={
+    #     "scaled_saturation_mean": r"saturation_mean",
+    #     # "rf_level": "RF Level",
+    #     # "delta_mean":r"$\Delta (Dense - Pruned)$",
+    #     # "pooling":"Pooling method"
+    # })
+    #
+    #
+    # # 1. Ensure RF is numeric/ordinal (e.g., 1, 2, 3, 4 or actual pixel sizes)
+    #
+    # df['RF_ordinal'] = df['rf_level'].astype(float)
+
+
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
         # "rf_level": "RF Level",
         # "delta_mean":r"$\Delta (Dense - Pruned)$",
         # "pooling":"Pooling method"
     })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
 
 
-    # 1. Ensure RF is numeric/ordinal (e.g., 1, 2, 3, 4 or actual pixel sizes)
 
-    df['RF_ordinal'] = df['rf_level'].astype(float)
 
     # 2. Model 1: Mediator Equation (a-paths)
     # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
     model_mediator = smf.ols(
-        'saturation_mean ~  Kernel_Size + lr +Kernel_Size*lr',
+        'scaled_saturation ~  Kernel_Size + lr +Kernel_Size*lr',
         data=df
     ).fit()
 
@@ -1452,7 +1650,7 @@ def statistical_analysis_lr():
     # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
     # WHEN CONTROLLING FOR Saturation
     model_outcome = smf.ols(
-        'delta~ saturation_mean + Kernel_Size + lr ',
+        'scaled_delta~ scaled_saturation + Kernel_Size + lr ',
         data=df
     ).fit()
 
@@ -1462,7 +1660,7 @@ def statistical_analysis_lr():
     print(model_outcome.summary())
 
     # Export all summary tables into an Excel workbook with multiple sheets
-    with pd.ExcelWriter('full_model_lr_all_models_pr0.9.xlsx') as writer:
+    with pd.ExcelWriter(f'full_model_lr_all_models_pr{pr}_scaled_columns_scaled_delta.xlsx') as writer:
         model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
         model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
         model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
@@ -1484,7 +1682,7 @@ def statistical_analysis_lr():
     # 2. Model 1: Mediator Equation (a-paths)
     # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
     model_mediator = smf.ols(
-        'saturation_mean ~  Kernel_Size + lr +Kernel_Size*lr',
+        'scaled_saturation ~  Kernel_Size + lr +Kernel_Size*lr',
         data=df
     ).fit()
 
@@ -1498,7 +1696,7 @@ def statistical_analysis_lr():
     # WHEN CONTROLLING FOR Saturation
 
     model_outcome = smf.ols(
-        'delta~ saturation_mean + Kernel_Size + lr ',
+        'scaled_delta~ scaled_saturation + Kernel_Size + lr ',
         data=df
     ).fit()
     print("\n==================================================")
@@ -1507,7 +1705,7 @@ def statistical_analysis_lr():
     print(model_outcome.summary())
 
     # Export all summary tables into an Excel workbook with multiple sheets
-    with pd.ExcelWriter('full_model_lr_resnet50_pr0.9.xlsx') as writer:
+    with pd.ExcelWriter(f'full_model_lr_resnet50_pr{pr}_scaled_columns_scaled_delta.xlsx') as writer:
         model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
         model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
         model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
@@ -1526,7 +1724,871 @@ def statistical_analysis_lr():
     # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
 
     model_mediator = smf.ols(
-        'saturation_mean ~  Kernel_Size + lr +Kernel_Size*lr',
+        'scaled_saturation ~  Kernel_Size + lr +Kernel_Size*lr',
+        data=df
+    ).fit()
+    print("==================================================")
+    print("  MODEL 1: MEDIATOR EQUATION (Saturation ~ X * M)")
+    print("==================================================")
+    print(model_mediator.summary())
+
+    # 3. Model 2: Direct Effect Outcome Equation (c'-paths & b-path)
+    # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
+    # WHEN CONTROLLING FOR Saturation
+
+    model_outcome = smf.ols(
+        'scaled_delta~ scaled_saturation + Kernel_Size + lr ',
+        data=df
+    ).fit()
+
+    print("\n==================================================")
+    print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    print("==================================================")
+    print(model_outcome.summary())
+
+    # Export all summary tables into an Excel workbook with multiple sheets
+
+    with pd.ExcelWriter(f'full_model_lr_vgg19_pr{pr}_scaled_columns_scaled_delta.xlsx') as writer:
+        model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+        model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+        model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+
+        # now the outcome one
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+
+
+def analysis_pooling_methods_mediator(pr=0.9):
+
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+
+
+
+
+    print("==================================================")
+    print("  Separating by model and pruning rates")
+    print("==================================================")
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+
+    local_df = df[df["model"].str.contains("resnet50")]
+
+
+
+    print("\n==================================================")
+    print(f" PR{pr}")
+    print("==================================================")
+
+    # current_df = local_df[local_df["pruning_rate"] == pr]
+
+    # 2. Model 1: Mediator Equation (a-paths)
+    # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+    model_mediator = smf.ols(
+        'scaled_saturation ~  Kernel_Size + lr +Kernel_Size*lr',
+        data=local_df
+    ).fit()
+    print("\n==================================================")
+    print("  MODEL 1: MEDIATIOR EQUATION (Saturation ~ X * Y + Y + X)")
+    print("==================================================")
+    print(model_mediator.summary())
+
+    if pr == 0.9:
+        with pd.ExcelWriter(f'model_mediatior_lrs_scaled_delta_resnet50_scaled_columns.xlsx') as writer:
+            model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+            model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+            model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+
+
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("vgg19")]
+
+
+    print("\n==================================================")
+    print(f" PR  {pr}")
+    print("==================================================")
+
+    model_mediator = smf.ols(
+        'scaled_saturation ~  Kernel_Size + lr +Kernel_Size*lr',
+        data=local_df
+    ).fit()
+
+    print("\n==================================================")
+    print("  MODEL 1: MEDIATIOR EQUATION (Saturation ~ X * Y + Y + X)")
+    print("==================================================")
+    print(model_mediator.summary())
+    if pr == 0.9:
+        with pd.ExcelWriter(f'model_mediatior_lrs_scaled_delta_vgg19_scaled_columns.xlsx') as writer:
+
+            model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+            model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+            model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+
+def analysis_pooling_methods_mediator_no_lr(pr=0.9):
+
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+
+
+
+
+    print("==================================================")
+    print("  Separating by model and pruning rates")
+    print("==================================================")
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+
+    local_df = df[df["model"].str.contains("resnet50")]
+
+
+
+    print("\n==================================================")
+    print(f" PR{pr}")
+    print("==================================================")
+
+    # current_df = local_df[local_df["pruning_rate"] == pr]
+
+    # 2. Model 1: Mediator Equation (a-paths)
+    # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+    model_mediator = smf.ols(
+        'scaled_saturation ~  Kernel_Size ',
+        data=local_df
+    ).fit()
+    print("\n==================================================")
+    print("  MODEL 1: MEDIATIOR EQUATION (Saturation ~ X * Y + Y + X)")
+    print("==================================================")
+    print(model_mediator.summary())
+
+    if pr == 0.9:
+        with pd.ExcelWriter(f'model_mediatior_no_lr_scaled_delta_resnet50_scaled_columns.xlsx') as writer:
+            model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+            model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+            model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+
+
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("vgg19")]
+
+
+    print("\n==================================================")
+    print(f" PR  {pr}")
+    print("==================================================")
+
+    model_mediator = smf.ols(
+        'scaled_saturation ~  Kernel_Size',
+        data=local_df
+    ).fit()
+
+    print("\n==================================================")
+    print("  MODEL 1: MEDIATIOR EQUATION (Saturation ~ X * Y + Y + X)")
+    print("==================================================")
+    print(model_mediator.summary())
+    if pr == 0.9:
+        with pd.ExcelWriter(f'model_mediatior_no_lr_scaled_delta_vgg19_scaled_columns.xlsx') as writer:
+
+            model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+            model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+            model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+
+############################ Mediation analysis: kernel size -> saturation -> Δ (lr sweep) ############################
+# lr is deliberately NOT a predictor: it only generates variation in saturation at a fixed kernel size.
+LR_MEDIATION_MEDIATOR_FORMULA = "scaled_saturation ~ Kernel_Size"
+LR_MEDIATION_OUTCOME_MODELS = {
+    "additive": "scaled_delta ~ scaled_saturation + Kernel_Size",
+    "interaction": "scaled_delta ~ scaled_saturation*Kernel_Size",
+    "interaction + x^2": "scaled_delta ~ scaled_saturation*Kernel_Size + I(scaled_saturation**2)",
+}
+
+
+def load_lr_mediation_df(pr=0.9):
+    """Preprocessing used for the lr-sweep OLS models (standardization over BOTH networks, before subsetting)."""
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+    df_large = df_large.rename(columns={"scaled_saturation_mean": r"scaled_saturation"})
+    df_large["scaled_delta"] = df_large["delta"] / df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"] + 1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"] - df_large["lr"].mean()) / df_large["lr"].std()
+    df = df_large
+    df["Kernel_Size"] = (df["Kernel_Size"] - df["Kernel_Size"].mean()) / df["Kernel_Size"].std()
+    df["scaled_saturation"] = (df["scaled_saturation"] - df["scaled_saturation"].mean()) / df[
+        "scaled_saturation"].std()
+    return df
+
+
+def lr_ols_table(fitted_model):
+    table = pd.DataFrame({"coef": fitted_model.params, "se": fitted_model.bse, "t": fitted_model.tvalues,
+                          "p": fitted_model.pvalues})
+    ci = fitted_model.conf_int()
+    table["ci_low"], table["ci_high"] = ci[0], ci[1]
+    return table
+
+
+def lr_mediation_effects(d, outcome_formula, y0, y1):
+    """NDE / NIE / TE (VanderWeele) for Kernel_Size y0 -> y1, plus the share of TE carried by saturation."""
+    m = smf.ols(LR_MEDIATION_MEDIATOR_FORMULA, d).fit()
+    o = smf.ols(outcome_formula, d).fit()
+    x0 = float(m.predict(pd.DataFrame({"Kernel_Size": [y0]}))[0])
+    x1 = float(m.predict(pd.DataFrame({"Kernel_Size": [y1]}))[0])
+    f = lambda y, x: float(o.predict(pd.DataFrame({"Kernel_Size": [y], "scaled_saturation": [x]}))[0])
+    nde = f(y1, x0) - f(y0, x0)
+    nie = f(y1, x1) - f(y1, x0)
+    te = f(y1, x1) - f(y0, x0)
+    return {"NDE": nde, "NIE": nie, "TE": te, "NIE / TE": nie / te}
+
+
+def lr_mediation_bootstrap(d, outcome_formula, n_boot=2000, seed=0):
+    """Bootstrap stratified by kernel size; contrast = smallest -> largest observed kernel size."""
+    y0, y1 = sorted(d["Kernel_Size"].unique())[0], sorted(d["Kernel_Size"].unique())[-1]
+    rng = np.random.default_rng(seed)
+    point = lr_mediation_effects(d, outcome_formula, y0, y1)
+    boot = pd.DataFrame([
+        lr_mediation_effects(d.groupby("Kernel_Size", group_keys=False)
+                             .sample(frac=1, replace=True, random_state=int(rng.integers(10 ** 9))),
+                             outcome_formula, y0, y1)
+        for _ in range(n_boot)])
+    rows = []
+    for effect in boot.columns:
+        values = boot[effect]
+        rows.append({"effect": effect, "estimate": point[effect], "median": values.median(),
+                     "ci_low": values.quantile(0.025), "ci_high": values.quantile(0.975),
+                     "p_boot (two-sided)": (np.nan if effect == "NIE / TE" else
+                                            min(1.0, 2 * min((values <= 0).mean(), (values >= 0).mean())))})
+    table = pd.DataFrame(rows)
+    table.insert(0, "Kernel_Size y0 -> y1", f"{y0:.3f} -> {y1:.3f}")
+    return table
+
+
+def lr_variance_decomposition(d):
+    """
+    Is saturation the main driver of Δ? R² of each predictor alone, its unique contribution (partial F-test /
+    ΔR² over the other), general dominance (two predictors: average of alone and added-last R²) and within-subset
+    standardized coefficients of the additive model.
+    """
+    r2 = lambda formula: smf.ols(formula, d).fit().rsquared
+    r2_x, r2_y = r2("scaled_delta ~ scaled_saturation"), r2("scaled_delta ~ Kernel_Size")
+    both = smf.ols("scaled_delta ~ scaled_saturation + Kernel_Size", d).fit()
+    rows = []
+    for name, alone, other in [("scaled_saturation", r2_x, "Kernel_Size"), ("Kernel_Size", r2_y, "scaled_saturation")]:
+        restricted = smf.ols(f"scaled_delta ~ {other}", d).fit()
+        f_value, p_value, _ = both.compare_f_test(restricted)
+        unique = both.rsquared - restricted.rsquared
+        rows.append({"predictor": name, "R2 alone": alone, "unique R2 (added last)": unique,
+                     "partial R2": unique / (1 - restricted.rsquared), "F added last": f_value, "p added last": p_value,
+                     "general dominance": (alone + unique) / 2,
+                     "general dominance % of R2": 100 * (alone + unique) / 2 / both.rsquared,
+                     "standardized beta (within subset)": both.params[name] * d[name].std() / d["scaled_delta"].std()})
+    table = pd.DataFrame(rows).set_index("predictor")
+    table["R2 both"] = both.rsquared
+    table["shared R2"] = r2_x + r2_y - both.rsquared
+    return table
+
+
+def lr_within_kernel_slopes(d):
+    """Slope of saturation on Δ separately inside each kernel size (variation in saturation comes only from lr)."""
+    rows = []
+    for ks, local in d.groupby("Kernel_Size"):
+        fitted_model = smf.ols("scaled_delta ~ scaled_saturation", local).fit()
+        ci = fitted_model.conf_int().loc["scaled_saturation"]
+        rows.append({"rf_level": int(local["rf_level"].iloc[0]), "Kernel_Size": ks, "n": len(local),
+                     "saturation SD": local["scaled_saturation"].std(),
+                     "slope": fitted_model.params["scaled_saturation"], "se": fitted_model.bse["scaled_saturation"],
+                     "p": fitted_model.pvalues["scaled_saturation"], "ci_low": ci[0], "ci_high": ci[1],
+                     "R2": fitted_model.rsquared})
+    return pd.DataFrame(rows)
+
+
+def lr_mediation_plots(d, bootstrap_table, save_path_prefix):
+    # (a) Δ vs saturation by kernel size with the interaction model
+    outcome = smf.ols(LR_MEDIATION_OUTCOME_MODELS["interaction"], d).fit()
+    fig, ax = plt.subplots(1, 1, figsize=(6, 4.5), layout="tight")
+    for color, (ks, local) in zip(sns.color_palette("viridis", d["Kernel_Size"].nunique()), d.groupby("Kernel_Size")):
+        label = f"RF level {int(local['rf_level'].iloc[0])}"
+        ax.scatter(local["scaled_saturation"], local["scaled_delta"], color=color, s=18, label=label)
+        x_grid = np.linspace(local["scaled_saturation"].min(), local["scaled_saturation"].max(), 100)
+        ax.plot(x_grid, outcome.predict(pd.DataFrame({"scaled_saturation": x_grid, "Kernel_Size": ks})), color=color)
+    ax.set_xlabel("Scaled saturation (standardized)")
+    ax.set_ylabel(r"$\Delta$ / dense accuracy")
+    ax.legend()
+    plt.savefig(f"{save_path_prefix}_delta_vs_saturation_by_kernel_size.pdf", bbox_inches="tight")
+    plt.close(fig)
+
+    # (b) NDE / NIE / TE with bootstrap CIs for each outcome model
+    fig, ax = plt.subplots(1, 1, figsize=(6, 4.5), layout="tight")
+    table = bootstrap_table[bootstrap_table["effect"] != "NIE / TE"]
+    model_labels = list(dict.fromkeys(table["model"]))
+    for i, (effect, color) in enumerate({"NDE": "tab:blue", "NIE": "tab:orange", "TE": "tab:green"}.items()):
+        local = table[table["effect"] == effect].set_index("model").loc[model_labels]
+        xs = np.arange(len(model_labels)) + (i - 1) * 0.25
+        ax.errorbar(xs, local["median"], yerr=[local["median"] - local["ci_low"], local["ci_high"] - local["median"]],
+                    fmt="o", color=color, capsize=3, label=effect)
+    ax.axhline(0, color="k", linewidth=0.8)
+    ax.set_xticks(range(len(model_labels)), [label.replace("x^2", "$x^2$") for label in model_labels])
+    ax.set_ylabel(r"Effect of kernel size on $\Delta$ / dense accuracy")
+    ax.legend()
+    plt.savefig(f"{save_path_prefix}_NDE_NIE_TE_bootstrap.pdf", bbox_inches="tight")
+    plt.close(fig)
+
+
+def mediation_analysis_lr_sweep(pr=0.9, n_boot=2000, save_folder="/home/luisaam/Pictures"):
+    """
+    Mediation of kernel size on Δ through saturation, using the lr-sweep data (lr NOT included as a predictor).
+    One Excel file per network: mediation_analysis_lr_sweep_<model>_pr_<pr>.xlsx.
+    """
+    df = load_lr_mediation_df(pr)
+    results = {}
+    for model in ["resnet50", "vgg19"]:
+        d = df[df["model"].str.contains(model)].reset_index(drop=True)
+
+        checks = pd.DataFrame(
+            [("n", len(d))] +
+            [(f"n rf_level={k}", v) for k, v in d["rf_level"].value_counts().sort_index().items()] +
+            [("Kernel_Size levels", ", ".join(f"{v:.4f}" for v in sorted(d["Kernel_Size"].unique()))),
+             ("n distinct lr", d["lr"].nunique())] +
+            [(f"{stat} {col}", getattr(d[col], stat)()) for col in ["Kernel_Size", "scaled_saturation", "scaled_delta"]
+             for stat in ["mean", "std"]],
+            columns=["check", "value"]).set_index("check")
+
+        mediator = smf.ols(LR_MEDIATION_MEDIATOR_FORMULA, d).fit()
+        total = smf.ols("scaled_delta ~ Kernel_Size", d).fit()
+        outcomes = {name: smf.ols(formula, d).fit() for name, formula in LR_MEDIATION_OUTCOME_MODELS.items()}
+        outcomes_hc3 = {name: smf.ols(formula, d).fit(cov_type="HC3")
+                        for name, formula in LR_MEDIATION_OUTCOME_MODELS.items()}
+        fit_table = pd.DataFrame([{"model": name, "formula": LR_MEDIATION_OUTCOME_MODELS[name], "R2": m.rsquared,
+                                   "adj R2": m.rsquared_adj, "AIC": m.aic, "BIC": m.bic}
+                                  for name, m in outcomes.items()] +
+                                 [{"model": "total (no saturation)", "formula": "scaled_delta ~ Kernel_Size",
+                                   "R2": total.rsquared, "adj R2": total.rsquared_adj, "AIC": total.aic,
+                                   "BIC": total.bic},
+                                  {"model": "mediator", "formula": LR_MEDIATION_MEDIATOR_FORMULA,
+                                   "R2": mediator.rsquared, "adj R2": mediator.rsquared_adj, "AIC": mediator.aic,
+                                   "BIC": mediator.bic}]).set_index("model")
+
+        bootstrap_tables = []
+        for name, formula in LR_MEDIATION_OUTCOME_MODELS.items():
+            table = lr_mediation_bootstrap(d, formula, n_boot)
+            table.insert(0, "model", name)
+            bootstrap_tables.append(table)
+        bootstrap_table = pd.concat(bootstrap_tables, ignore_index=True)
+
+        decomposition = lr_variance_decomposition(d)
+        within_slopes = lr_within_kernel_slopes(d)
+
+        print("==================================================")
+        print(f"  MEDIATION (lr sweep, no lr predictor) {model} PR {pr}")
+        print("==================================================")
+        print(checks.to_string())
+        print(fit_table.drop(columns="formula").to_string())
+        for name, m in outcomes.items():
+            print(f"\n--- outcome {name} ---")
+            print(lr_ols_table(m).to_string())
+        print("\n--- mediator ---")
+        print(lr_ols_table(mediator).to_string())
+        print("\n--- Bootstrap ---")
+        print(bootstrap_table.to_string())
+        print("\n--- Variance decomposition ---")
+        print(decomposition.to_string())
+        print("\n--- Within-kernel-size saturation slopes ---")
+        print(within_slopes.to_string())
+
+        with pd.ExcelWriter(f"mediation_analysis_lr_sweep_{model}_pr_{pr}.xlsx") as writer:
+            checks.to_excel(writer, sheet_name="Data checks")
+            fit_table.to_excel(writer, sheet_name="Model fit")
+            lr_ols_table(mediator).to_excel(writer, sheet_name="Mediator")
+            lr_ols_table(total).to_excel(writer, sheet_name="Total effect")
+            for name, m in outcomes.items():
+                lr_ols_table(m).to_excel(writer, sheet_name=f"Outcome {name}"[:31])
+                lr_ols_table(outcomes_hc3[name]).to_excel(writer, sheet_name=f"Outcome {name} HC3"[:31])
+            bootstrap_table.to_excel(writer, sheet_name="Bootstrap NDE NIE TE", index=False)
+            decomposition.to_excel(writer, sheet_name="Variance decomposition")
+            within_slopes.to_excel(writer, sheet_name="Within-KS slopes", index=False)
+
+        lr_mediation_plots(d, bootstrap_table, f"{save_folder}/mediation_lr_sweep_{model}_pr_{pr}")
+        results[model] = {"bootstrap": bootstrap_table, "decomposition": decomposition,
+                          "within_slopes": within_slopes, "fit": fit_table}
+    return results
+
+
+def  analysis_pooling_methods_model_3(pr=0.9):
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+
+    local_df = df[df["model"].str.contains("resnet50")]
+
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + lr +'
+        'scaled_saturation*Kernel_Size +  scaled_saturation *lr +  lr*Kernel_Size',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_lrs_scaled_delta_resnet50_scaled_columns.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+    print("\n==================================================")
+    print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    print("==================================================")
+    print(model_outcome.summary())
+
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("vgg19")]
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + lr +'
+        'scaled_saturation*Kernel_Size +  scaled_saturation *lr + lr*Kernel_Size',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_lrs_scaled_delta_vgg19_scaled_columns.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+def  analysis_model_3_no_lr(pr=0.9):
+
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+
+    local_df = df[df["model"].str.contains("resnet50")]
+
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_resnet50_scaled_columns.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+    # print("\n==================================================")
+    # print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    # print("==================================================")
+    # print(model_outcome.summary())
+
+    print("==================================================")
+    print(" Model using the  ks^2 and saturation^2")
+    print("==================================================")
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size + I(Kernel_Size**2) + I(scaled_saturation**2)',
+        data=local_df
+    ).fit()
+
+
+    print(model_outcome.summary())
+
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_resnet50_scaled_columns_no_Kernel_size_squared.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
+
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("vgg19")]
+
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size ',
+        data=local_df ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_vgg19_scaled_columns_no_Kernel_size.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
+    print("==================================================")
+    print(" Model using the ks^2 and saturation^2")
+    print("==================================================")
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size +I(Kernel_Size**2) + I(scaled_saturation**2)',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_vgg19_scaled_columns_no_Kernel_size_squared.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
+def  dominance_analysis_lr(pr=0.9):
+    """
+    This function is to analyze statistically the effect of different parts in prunability and saturation
+    """
+
+    # = pd.read_csv("diverse_pooling_pruning_saturation_per_seed_combined.csv", sep=",")
+
+    df_large = pd.read_csv(f"learning_rate_sweep_pruning_saturation_combined_pr_{pr}.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "scaled_saturation_mean": r"scaled_saturation",
+        # "rf_level": "rf level",
+        # "delta_mean":r"$\delta (dense - pruned)$",
+        # "pooling":"pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel Size"] = df_large["rf_level"]+1
+    df_large["Kernel Size"] = df_large["Kernel Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+
+
+    df["Kernel Size"] =(df["Kernel Size"]-df["Kernel Size"].mean())/df["Kernel Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+    # df_prep1 = pd.get_dummies(df["pooling"],prefix="pool_", drop_first=True).astype(int)
+    # dummy_cols = [col for col in df_prep1.columns if "pool_" in col]
+    # df_prep2 = df[["Kernel Size","lr","scaled_saturation","scaled_delta","delta","model",""]]
+    # df = pd.concat([df_prep1,df_prep2],axis=1)
+
+    # predictors = {"Kernel Size":["Kernel Size"],"pooling":dummy_cols,"scaled_saturation":["scaled_saturation"]}
+    predictors = {"Kernel Size":["Kernel Size"],"lr":["lr"],"scaled_saturation":["scaled_saturation"]}
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+    # prs = [0.7,0.8,0.9]
+
+
+    local_df = df[df["model"].str.contains("resnet50")]
+
+    # for pr in prs:
+    dominance_df = calculate_block_dominance(local_df,"scaled_delta",predictors)
+    print("############################")
+    print(f"      PR = {pr} Scaled Delta                      ")
+    print("############################")
+    print(dominance_df)
+    dominance_df = calculate_block_dominance(local_df,"delta",predictors)
+    print("############################")
+    print(f"      PR = {pr} Delta                      ")
+    print("############################")
+    print(dominance_df)
+
+        # # 2. Model 1: Mediator Equation (a-paths)
+        # # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+        # model_mediator = smf.ols(
+        #     'scaled_saturation ~  RF_ordinal + C(pooling) + RF_ordinal * C(pooling)',
+        #
+        #     data=current_df
+        # ).fit()
+        #
+        # print("==================================================")
+        # print(f"  PR {pr}")
+        # print("==================================================")
+        # print("==================================================")
+        # print("  MODEL 1: MEDIATOR EQUATION (Saturation ~ X * M)")
+        # print("==================================================")
+        # print(model_mediator.summary())
+        #
+        # # 3. Model 2: Direct Effect Outcome Equation (c'-paths & b-path)
+        # # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
+        # # WHEN CONTROLLING FOR Saturation
+        # model_outcome = smf.ols(
+        #     'scaled_delta~ scaled_saturation + RF_ordinal',
+        #     data=current_df
+        # ).fit()
+        #
+        # print("\n==================================================")
+        # print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+        # print("==================================================")
+        # print(model_outcome.summary())
+
+    #     with pd.ExcelWriter(f'full_model_diverse_pooling_scaled_delta_resnet50_pr_{pr}_scaled_columns_.xlsx') as writer:
+    #         model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+    #         model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+    #         model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+    #
+    #         # now the outcome one
+    #
+    #         model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
+    #         model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
+    #         model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+    #
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("vgg19")]
+
+    dominance_df = calculate_block_dominance(local_df,"scaled_delta",predictors)
+    print("############################")
+    print(f"      PR = {pr} Scaled Delta                      ")
+    print("############################")
+    print(dominance_df)
+    dominance_df = calculate_block_dominance(local_df,"delta",predictors)
+    print("############################")
+    print(f"      PR = {pr} Delta                      ")
+    print("############################")
+    print(dominance_df)
+    #
+    #     # 2. Model 1: Mediator Equation (a-paths)
+    #     # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+    #     model_mediator = smf.ols(
+    #         'scaled_saturation ~  RF_ordinal + C(pooling) + RF_ordinal * C(pooling)',
+    #         data=current_df
+    #     ).fit()
+    #
+    #     print("==================================================")
+    #     print(f"\t\t\t  PR {pr}")
+    #     print("==================================================")
+    #
+    #     print("==================================================")
+    #     print("  MODEL 1: MEDIATOR EQUATION (Saturation ~ X * M)")
+    #     print("==================================================")
+    #     print(model_mediator.summary())
+    #
+    #     # 3. Model 2: Direct Effect Outcome Equation (c'-paths & b-path)
+    #     # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
+    #     # WHEN CONTROLLING FOR Saturation
+    #     model_outcome = smf.ols(
+    #         'scaled_delta ~ scaled_saturation + RF_ordinal',
+    #         data=current_df
+    #     ).fit()
+    #
+    #     print("\n==================================================")
+    #     print("  MODEL 2: OUTCOME EQUATION (Scaled Delta ~ Saturation + RF_ordinal + C(pooling)")
+    #     print("==================================================")
+    #     print(model_outcome.summary())
+    #
+    #     with pd.ExcelWriter(f'full_model_diverse_pooling_scaled_delta_vgg19_pr_{pr}_scaled_columns.xlsx') as writer:
+    #         model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+    #         model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+    #         model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+    #
+    #         # now the outcome one
+    #
+    #         model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
+    #         model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
+    #         model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+
+def statistical_analysis_lr_01():
+    df_base = pd.read_csv("learning_rate_sweep_pruning_saturation_combined_pr_0.9.csv", sep=",")
+
+    df_base["Kernel_Size"] = df_base["rf_level"]+1
+    df_base["Kernel_Size"] = df_base["Kernel_Size"].astype(float)
+    df_base["Kernel_Size"] = (df_base["Kernel_Size"]-df_base["Kernel_Size"].mean())/df_base["Kernel_Size"].std()
+    # renamed_df = df.rename(columns={"rf_level":"Kernel Size"})
+    # df_07 = df[df["pruning_rate"] == 0.7]
+    df_base = df_base.rename(columns={
+        "scaled_saturation_mean": r"saturation_mean",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+
+    df_base["saturation_mean"] = (df_base["saturation_mean"]-df_base["saturation_mean"].mean())/df_base["saturation_mean"].std()
+
+    # df_base['RF_ordinal'] = df_base['rf_level'].astype(float)
+    df_base["scaled_delta"] = df_base["delta"]/df_base["dense_acc"]
+    # local_df = df_base[df_base["model"].str.contains("resnet50")]
+
+    df =df_base[df_base["lr"]==0.1]
+
+    # 1. Ensure RF is numeric/ordinal (e.g., 1, 2, 3, 4 or actual pixel sizes)
+
+
+    # 2. Model 1: Mediator Equation (a-paths)
+    # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+    model_mediator = smf.ols(
+        'saturation_mean ~  Kernel_Size + C(model) + C(model)*Kernel_Size',
+        data=df
+    ).fit()
+
+    print("==================================================")
+    print("  MODEL 1: MEDIATOR EQUATION (Saturation ~ X * M)")
+    print("==================================================")
+    print(model_mediator.summary())
+
+    # 3. Model 2: Direct Effect Outcome Equation (c'-paths & b-path)
+    # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
+    # WHEN CONTROLLING FOR Saturation
+    model_outcome = smf.ols(
+        'scaled_delta ~ saturation_mean + Kernel_Size + C(model)  ',
+        data=df
+    ).fit()
+
+    print("\n==================================================")
+    print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    print("==================================================")
+    print(model_outcome.summary())
+
+    # Export all summary tables into an Excel workbook with multiple sheets
+    with pd.ExcelWriter('full_model_lr_01_all_models_pr0.9_scaled_variables.xlsx') as writer:
+        model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+        model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+        model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+        # now the outcome one
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+
+    print("==================================================")
+    print("  Separating by model not Pruning rate")
+    print("==================================================")
+
+    print("==================================================")
+    print("                    RESNET50")
+    print("==================================================")
+
+    current_df = df[df["model"].str.contains("resnet50")]
+
+    # 2. Model 1: Mediator Equation (a-paths)
+    # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+    model_mediator = smf.ols(
+        'saturation_mean ~  Kernel_Size',
+        data=df
+    ).fit()
+
+    print("==================================================")
+    print("  MODEL 1: MEDIATOR EQUATION (Saturation ~ X * M)")
+    print("==================================================")
+    print(model_mediator.summary())
+
+    # 3. Model 2: Direct Effect Outcome Equation (c'-paths & b-path)
+    # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
+    # WHEN CONTROLLING FOR Saturation
+
+    model_outcome = smf.ols(
+        'scaled_delta~ saturation_mean + Kernel_Size',
+        data=df
+    ).fit()
+    print("\n==================================================")
+    print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    print("==================================================")
+    print(model_outcome.summary())
+
+    # Export all summary tables into an Excel workbook with multiple sheets
+    with pd.ExcelWriter('full_model_lr_01_resnet50_pr0.9_scaled_variables.xlsx') as writer:
+        model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
+        model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
+        model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
+        # now the outcome one
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Outcome')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
+
+    print("==================================================")
+    print("               VGG19")
+    print("==================================================")
+
+    current_df = df[df["model"].str.contains("vgg19")]
+
+    # 2. Model 1: Mediator Equation (a-paths)
+    # Tests if RF, Pooling (4 levels), and their interaction influence Saturation
+
+    model_mediator = smf.ols(
+        'saturation_mean ~  Kernel_Size',
         data=df
     ).fit()
     print("==================================================")
@@ -1538,7 +2600,7 @@ def statistical_analysis_lr():
     # Tests if RF, Pooling, and RF*Pooling directly influence Prunability
     # WHEN CONTROLLING FOR Saturation
     model_outcome = smf.ols(
-        'delta~ saturation_mean + Kernel_Size + lr ',
+        'scaled_delta ~ saturation_mean + Kernel_Size',
         data=df
     ).fit()
 
@@ -1549,7 +2611,7 @@ def statistical_analysis_lr():
 
     # Export all summary tables into an Excel workbook with multiple sheets
 
-    with pd.ExcelWriter('full_model_lr_vgg19_pr0.9.xlsx') as writer:
+    with pd.ExcelWriter('full_model_lr_01_vgg19_pr0.9_scaled_variables.xlsx') as writer:
         model_mediator.summary2().tables[0].to_excel(writer, sheet_name='Model Specs Mediator')
         model_mediator.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Mediator')
         model_mediator.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Mediator')
@@ -1560,6 +2622,558 @@ def statistical_analysis_lr():
         model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients Outcome')
         model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics Outcome')
 
+def sharpness_lr_plots(save_directory,pr):
+
+    df = pd.read_csv("sharpness_pruning_saturation_combined.csv")
+    # sharpness_df = df.filter(items=["sharpness_obj", "RF", "optimiser"])
+    color_palette = "magma"
+    hu_norm = LogNorm()
+    sharpness_df= df[df["model"].str.contains("resnet50")]
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$" })
+    sharpness_df["Kernel Size"] = sharpness_df["rf_level"] + 1
+    local_df =sharpness_df[sharpness_df["pruning_rate"]==pr]
+    # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+
+    sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+                    palette=color_palette, hue_norm=hu_norm, edgecolor="k")
+
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #                 palette=color_palette)
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    # ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    ax.set_xticks([1,2,3,4,5,6])
+    ax.set_ylabel(r"$l_{\infty}$-Worst case Sharpness",
+                  fontsize=fs * labels_multiplier)
+    # ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+    # sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #                 palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+    plt.savefig(f"{save_directory}/resnet50_cifar10_lr_vs_worst_sharpness.pdf")
+    plt.close(fig)
+    ################################## Now for VGG19
+
+    sharpness_df= df[df["model"].str.contains("vgg19")]
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$" })
+    sharpness_df["Kernel Size"] = sharpness_df["rf_level"] + 1
+    local_df =sharpness_df[sharpness_df["pruning_rate"]==pr]
+    # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+
+    sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+                    palette=color_palette, hue_norm=hu_norm, edgecolor="k")
+
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #             palette=color_palette)
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #             palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    # ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    ax.set_xticks([1,2,3,4,5,6])
+    ax.set_ylabel(r"$l_{\infty}$-Worst case Sharpness",
+                  fontsize=fs * labels_multiplier)
+    # ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+    plt.savefig(f"{save_directory}/vgg19_cifar10_lr_vs_worst_sharpness.pdf")
+
+    plt.close(fig)
+
+    #################### Now I plot worst_sharpness_vs_saturation with kernel size
+
+    sharpness_df= df[df["model"].str.contains("resnet50")]
+
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$" })
+    sharpness_df["Kernel Size"] = sharpness_df["rf_level"] + 1
+    local_df =sharpness_df[sharpness_df["pruning_rate"]==pr]
+    # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+
+    sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
+                    palette=color_palette, hue_norm=hu_norm, edgecolor="k")
+
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #                 palette=color_palette)
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    # ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    # ax.set_xticks([1,2,3,4,5,6])
+
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    # ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+    # sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #                 palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+
+    plt.savefig(f"{save_directory}/resnet50_cifar10_worst_sharpness_vs_saturation.pdf")
+    plt.close(fig)
+
+    ################################## Now for VGG19
+
+    sharpness_df= df[df["model"].str.contains("vgg19")]
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$" })
+    sharpness_df["Kernel Size"] = sharpness_df["rf_level"] + 1
+    local_df =sharpness_df[sharpness_df["pruning_rate"]==pr]
+    # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, sharey=True, sharex=True, layout="tight")
+
+    sns.scatterplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="scaled_saturation_mean",hue="lr",style="Kernel Size",
+                    palette=color_palette,hue_norm=hu_norm, edgecolor="k")
+
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #             palette=color_palette)
+    # sns.boxplot(sharpness_df, ax=ax, y="$l_{\infty}$-Worst case Sharpness", x="Kernel Size", hue="lr",
+    #             palette=color_palette, legend="full", hue_norm=hu_norm, edgecolor="k")
+    # sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+    # ax.set_xticks([0,0.1,0.2,0.3,0.4,0.45])
+    # ax.set_xticks([1,2,3,4,5,6])
+
+    ax.set_xlabel(r"$\frac{\text{Depth}_i}{\max\text{Depth}_i}\cdot\text{Saturation}$",
+                  fontsize=fs * labels_multiplier)
+    # ax.set_xlabel("Learning Rate", fontsize=fs * labels_multiplier)
+    ax.tick_params(axis="both", labelsize=fs * ticks_multiplier)
+    ax.grid(ls="--", alpha=0.5)
+
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+
+    plt.savefig(f"{save_directory}/vgg19_cifar10_worst_sharpness_vs_saturation.pdf")
+
+    plt.close(fig)
+
+def sharpness_plots(save_directory):
+
+    ## Resnet50 x CIFAR10
+    """
+    resnets_rfs_values = [108, 110, 213, 318, 423, 538, 645, 752, 859, 1415, 1920, 3100]
+
+    resnet_rfs_keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+    resnets_rfs = dict(zip(resnet_rfs_keys, resnets_rfs_values))
+
+    vgg_ekfac_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/resnet50_1_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv",
+        delimiter=",")
+    # vgg_ekfac_sharpness_df_1["RF"] = [resnets_rfs[1]] * len(vgg_ekfac_sharpness_df_1)
+    vgg_ekfac_sharpness_df_1["RF"] = [1] * len(vgg_ekfac_sharpness_df_1)
+    vgg_ekfac_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/resnet50_2_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv",
+        delimiter=",")
+    vgg_ekfac_sharpness_df_2["RF"] = [2] * len(vgg_ekfac_sharpness_df_2)
+    vgg_ekfac_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/resnet50_3_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv",
+        delimiter=",")
+    vgg_ekfac_sharpness_df_3["RF"] = [3] * len(vgg_ekfac_sharpness_df_3)
+    vgg_ekfac_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/resnet50_4_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv",
+        delimiter=",")
+    vgg_ekfac_sharpness_df_4["RF"] = [4] * len(vgg_ekfac_sharpness_df_4)
+
+    vgg_asam_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/resnet50_1_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_asam_sharpness_df_1["RF"] = [1] * len(vgg_asam_sharpness_df_1)
+    vgg_asam_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/resnet50_2_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_asam_sharpness_df_2["RF"] = [2] * len(vgg_asam_sharpness_df_2)
+    vgg_asam_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/resnet50_3_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_asam_sharpness_df_3["RF"] = [3] * len(vgg_asam_sharpness_df_3)
+    vgg_asam_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/resnet50_4_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_asam_sharpness_df_4["RF"] = [4] * len(vgg_asam_sharpness_df_4)
+
+    vgg_sgd_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/resnet50_1_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    vgg_sgd_sharpness_df_1["RF"] = [1] * len(vgg_sgd_sharpness_df_1)
+    vgg_sgd_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/resnet50_2_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    vgg_sgd_sharpness_df_2["RF"] = [2] * len(vgg_sgd_sharpness_df_2)
+    vgg_sgd_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/resnet50_3_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    vgg_sgd_sharpness_df_3["RF"] = [3] * len(vgg_sgd_sharpness_df_3)
+    vgg_sgd_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/resnet50_4_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    vgg_sgd_sharpness_df_4["RF"] = [4] * len(vgg_sgd_sharpness_df_4)
+
+    all_saturation_ekfac_df = pd.concat(
+        [vgg_ekfac_sharpness_df_1, vgg_ekfac_sharpness_df_2, vgg_ekfac_sharpness_df_3, vgg_ekfac_sharpness_df_4])
+    all_saturation_ekfac_df["optimiser"] = ["EKFAC"] * len(all_saturation_ekfac_df)
+    all_saturation_sam_df = pd.concat(
+        [vgg_asam_sharpness_df_1, vgg_asam_sharpness_df_2, vgg_asam_sharpness_df_3, vgg_asam_sharpness_df_4])
+    all_saturation_sam_df["optimiser"] = ["ASAM"] * len(all_saturation_sam_df)
+    all_saturation_sgd_df = pd.concat(
+        [vgg_sgd_sharpness_df_1, vgg_sgd_sharpness_df_2, vgg_sgd_sharpness_df_3, vgg_sgd_sharpness_df_4])
+    all_saturation_sgd_df["optimiser"] = ["SGD"] * len(all_saturation_sgd_df)
+
+    all_df = pd.concat([all_saturation_ekfac_df, all_saturation_sam_df, all_saturation_sgd_df])
+
+    fig, axs = plt.subplots(2, 2, figsize=fig_size, layout="compressed")
+
+    unique_RF = all_df["RF"].unique()
+
+    colors = ["red", "blue", "green"]
+    optimisers = ["SGD", "ASAM", "EKFAC"]
+
+    # for i, ax in  enumerate(axs.flat):
+
+    #   sharpness_df_rf = all_df[all_df["RF"]==unique_RF[i]]
+
+    #   for j, opt in enumerate(optimisers):
+
+    #     current_df=sharpness_df_rf[sharpness_df_rf["optimiser"]==opt]
+
+    #     epoch_df_dense, pm = extract_layer_stat(current_df,
+    #                        epoch=0,
+    #                        primary_metric=None,
+    #                        stat='saturation',
+    #                        state_mode="train")
+
+    #     plot_saturation(epoch_df=epoch_df_dense,ax=ax,color=colors[j],label=opt)
+    #     # ax.set_xticks(range(len(epoch_df_dense.columns)),range(len(epoch_df_dense.columns)))
+    #     ax.set_xticks([],[])
+    #     ax.set_xlabel("")
+
+    #   ax.set_title(f"RF={unique_RF[i]}")
+
+    # ax.legend(loc="upper right")
+    # plt.savefig("/home/luisaam/Documents/PhD/AA_ICCV_RF_2/figures/resnet50__cifar10_adaptative_sharpness_optim_saturation.pdf")
+    plt.close()
+
+    # fig,ax = sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
+    # fig.tight_layout()
+    # plt.savefig(f"{save_directory}/resnet50_cifar10_adaptative_sharpness_optim_full.pdf",bbox_inches="tight")
+    # plt.close()
+
+    sharpness_df = all_df.filter(items=["sharpness_obj", "sharpness_err", "RF", "optimiser"])
+
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+
+    # sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+    # plt.savefig(f"{save_directory}/resnet50__cifar10_adaptative_sharpness_optim_short.pdf")
+    # plt.close()
+
+    sharpness_df["Kernel Size"] = sharpness_df["RF"] +1
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
+    sns.scatterplot(data=sharpness_df, x="Kernel Size", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser",s=100)
+    axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
+
+    axs.set_xticks([1,2,3,4,5,6])
+
+    # axs.set_ylabel("
+    # secay.tick_params(axis='x',labelrotation=90)
+
+    axs.set_xlabel("Kernel Size", fontsize=fs*labels_multiplier)
+    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=fs*labels_multiplier*0.8)
+
+    # axs.legend(prop={"size": fs*1.7})
+    # axs.legend(prop={"size": fs * legends_multiplier}, bbox_to_anchor=(0.78, 0.7), loc='left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, loc='center left')
+    # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+
+    fig.tight_layout()
+    axs.grid(ls="--")
+    plt.savefig(
+        f"{save_directory}/resnet50_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf",bbox_inches="tight")
+    plt.close(fig)
+
+    print("\nResNet50\n")
+    print(sharpness_df)
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
+    sns.scatterplot(data=sharpness_df, x="RF", y="$\sigma_{l_{\infty}}$", hue="Optimiser")
+    # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+    plt.savefig(
+        f"{save_directory}/resnet50_cifar10_worst_case_sharpness_err_vs_RF_optim.pdf")
+    plt.close(fig)
+
+    """## VGG19 x CIFAR10"""
+
+    vgg_ekfac_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/vgg19_1_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_ekfac_sharpness_df_1["RF"] = [1] * len(vgg_ekfac_sharpness_df_1)
+    vgg_ekfac_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/vgg19_2_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_ekfac_sharpness_df_2["RF"] = [2] * len(vgg_ekfac_sharpness_df_2)
+    vgg_ekfac_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/vgg19_3_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    vgg_ekfac_sharpness_df_3["RF"] = [3] * len(vgg_ekfac_sharpness_df_3)
+    vgg_ekfac_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/vgg19_4_cifar10_ekfac_optim_hyper_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    # vgg_ekfac_sharpness_df_4["RF"] = [4] * len(vgg_ekfac_sharpness_df_4)
+    vgg_ekfac_sharpness_df_4["RF"] = [4] * len(vgg_ekfac_sharpness_df_4)
+
+    vgg_asam_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/vgg19_1_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    # vgg_asam_sharpness_df_1["RF"] = [vgg_rfs[1]] * len(vgg_asam_sharpness_df_1)
+    vgg_asam_sharpness_df_1["RF"] = [1] * len(vgg_asam_sharpness_df_1)
+    vgg_asam_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/vgg19_2_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    # vgg_asam_sharpness_df_2["RF"] = [vgg_rfs[2]] * len(vgg_asam_sharpness_df_2)
+    vgg_asam_sharpness_df_2["RF"] = [2] * len(vgg_asam_sharpness_df_2)
+    vgg_asam_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/vgg19_3_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    # vgg_asam_sharpness_df_3["RF"] = [vgg_rfs[3]] * len(vgg_asam_sharpness_df_3)
+    vgg_asam_sharpness_df_3["RF"] = [3] * len(vgg_asam_sharpness_df_3)
+    vgg_asam_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/vgg19_4_cifar10_sam_optim_saturation_200_gc_0_sharpness_summary.csv", delimiter=",")
+    # vgg_asam_sharpness_df_4["RF"] = [vgg_rfs[4]] * len(vgg_asam_sharpness_df_4)
+    vgg_asam_sharpness_df_4["RF"] = [4] * len(vgg_asam_sharpness_df_4)
+
+    vgg_sgd_sharpness_df_1 = pd.read_csv(
+        "sharpness_results/vgg19_1_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    # vgg_sgd_sharpness_df_1["RF"] = [vgg_rfs[1]] * len(vgg_sgd_sharpness_df_1)
+    vgg_sgd_sharpness_df_1["RF"] = [1] * len(vgg_sgd_sharpness_df_1)
+    vgg_sgd_sharpness_df_2 = pd.read_csv(
+        "sharpness_results/vgg19_2_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    # vgg_sgd_sharpness_df_2["RF"] = [vgg_rfs[2]] * len(vgg_sgd_sharpness_df_2)
+    vgg_sgd_sharpness_df_2["RF"] = [2] * len(vgg_sgd_sharpness_df_2)
+
+    vgg_sgd_sharpness_df_3 = pd.read_csv(
+        "sharpness_results/vgg19_3_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    # vgg_sgd_sharpness_df_3["RF"] = [vgg_rfs[3]] * len(vgg_sgd_sharpness_df_3)
+    vgg_sgd_sharpness_df_3["RF"] = [3] * len(vgg_sgd_sharpness_df_3)
+    vgg_sgd_sharpness_df_4 = pd.read_csv(
+        "sharpness_results/vgg19_4_cifar10_recording_200_no_ffcv_sharpness_summary.csv", delimiter=",")
+    # vgg_sgd_sharpness_df_4["RF"] = [vgg_rfs[4]] * len(vgg_sgd_sharpness_df_4)
+    vgg_sgd_sharpness_df_4["RF"] = [4] * len(vgg_sgd_sharpness_df_4)
+
+    all_saturation_ekfac_df = pd.concat(
+        [vgg_ekfac_sharpness_df_1, vgg_ekfac_sharpness_df_2, vgg_ekfac_sharpness_df_3, vgg_ekfac_sharpness_df_4])
+    all_saturation_ekfac_df["optimiser"] = ["EKFAC"] * len(all_saturation_ekfac_df)
+    all_saturation_sam_df = pd.concat(
+        [vgg_asam_sharpness_df_1, vgg_asam_sharpness_df_2, vgg_asam_sharpness_df_3, vgg_asam_sharpness_df_4])
+    all_saturation_sam_df["optimiser"] = ["ASAM"] * len(all_saturation_sam_df)
+    all_saturation_sgd_df = pd.concat(
+        [vgg_sgd_sharpness_df_1, vgg_sgd_sharpness_df_2, vgg_sgd_sharpness_df_3, vgg_sgd_sharpness_df_4])
+    all_saturation_sgd_df["optimiser"] = ["SGD"] * len(all_saturation_sgd_df)
+
+    all_df = pd.concat([all_saturation_ekfac_df, all_saturation_sam_df, all_saturation_sgd_df])
+
+    # fig,axs=plt.subplots(2,2,figsize=(10,10),layout="compressed")
+
+    unique_RF = all_df["RF"].unique()
+
+    colors = ["red", "blue", "green"]
+    optimisers = ["SGD", "ASAM", "EKFAC"]
+
+    # for i, ax in  enumerate(axs.flat):
+
+    #   sharpness_df_rf = all_df[all_df["RF"]==unique_RF[i]]
+
+    #   for j, opt in enumerate(optimisers):
+
+    #     current_df=sharpness_df_rf[sharpness_df_rf["optimiser"]==opt]
+
+    #     epoch_df_dense, pm = extract_layer_stat(current_df,
+    #                        epoch=0,
+    #                        primary_metric=None,
+    #                        stat='saturation',
+    #                        state_mode="train")
+
+    #     plot_saturation(epoch_df=epoch_df_dense,ax=ax,color=colors[j],label=opt)
+    #     # ax.set_xticks(range(len(epoch_df_dense.columns)),range(len(epoch_df_dense.columns)))
+    #     ax.set_xticks([],[])
+    #     ax.set_xlabel("")
+
+    #   ax.set_title(f"RF={unique_RF[i]}")
+
+    # ax.legend(loc="upper right")
+    # plt.savefig(f"{save_directory}/vgg19__cifar10_adaptative_sharpness_optim_saturation.pdf")
+    plt.close()
+
+    # sns.pairplot(all_df, hue="optimiser", markers=["o", "s", "D"])
+    # plt.savefig(f"{save_directory}/vgg19_cifar10_adaptative_sharpness_optim_full.pdf")
+    # plt.close()
+
+    sharpness_df = all_df.filter(items=["sharpness_obj", "RF", "optimiser"])
+
+    sharpness_df["Kernel Size"] = sharpness_df["RF"] +1
+    # sharpness_df = sharpness_df.rename(columns={"sharpness_obj":"$l_{\infty}$-Sharpness","sharpness_err":"$\sigma_{l_{\infty}}$","optimiser":"Optimiser"})
+    sharpness_df = sharpness_df.rename(
+        columns={"sharpness_obj": "$l_{\infty}$-Worst case Sharpness", "sharpness_err": "$\sigma_{l_{\infty}}$",
+                 "optimiser": "Optimiser"})
+    sns.pairplot(sharpness_df, hue="Optimiser", markers=["o", "s", "D"])
+    plt.savefig(f"{save_directory}/vgg19_cifar10_adaptative_sharpness_optim_short.pdf")
+    plt.close()
+
+    # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+
+    fig, axs = plt.subplots(1, 1, figsize=fig_size, layout="tight")
+    print("\nVGG19\n")
+    print(sharpness_df)
+    # sharpness_df["Kernel Size"] =
+    sns.scatterplot(data=sharpness_df, x="Kernel Size", y="$l_{\infty}$-Worst case Sharpness", hue="Optimiser",s=100)
+    axs.tick_params(axis='both', which='major', labelsize=fs * ticks_multiplier)
+    # axs.set_ylabel("
+    # secay.tick_params(axis='x',labelrotation=90)
+
+    axs.set_xlabel("Kernel Size", fontsize=fs*labels_multiplier)
+    axs.set_ylabel("$l_{\infty}$-Worst case Sharpness", fontsize=fs*labels_multiplier*0.8)
+    axs.set_xticks([1,2,3,4,5,6])
+    axs.grid(ls="--")
+
+    # axs.legend(prop={"size": fs*1.7})
+    # axs.legend(prop={"size": fs * legends_multiplier}, bbox_to_anchor=(0.78, 0.7), loc='upper left', borderaxespad=0.1)
+    # axs.legend(prop={"size": fs * legends_multiplier}, loc='centerr')
+    # plt.legend(bbox_to_anchor=(1.005, 1), loc='upper left', borderaxespad=0.1)
+    fig.tight_layout()
+    plt.savefig(
+        f"{save_directory}/vgg19_cifar10_worst_case_l_infty_sharpness_vs_RF_optim.pdf",bbox_inches="tight")
+
+    plt.close(fig)
+
+
+def calculate_dominance(df_scaled,target, predictors):
+
+    """Calculates the relative R-squared contribution of highly correlated predictors."""
+    # Ensure variables are standardized to remove scale differences
+    # df_scaled = df[[target] + predictors].apply(
+    #     lambda x: (x - x.mean()) / x.std()
+    # )
+
+    r2_dict = {}
+    n_features = len(predictors)
+
+    # 1. Calculate R-squared for every possible combination of features
+    for k in range(1, n_features + 1):
+        for combo in itertools.combinations(predictors, k):
+            X = sm.add_constant(df_scaled[list(combo)])
+            y = df_scaled[target]
+            model = sm.OLS(y, X).fit()
+            r2_dict[combo] = model.rsquared
+
+    # 2. Calculate the average marginal contribution for each feature
+    marginal_contributions = {p: [] for p in predictors}
+
+    for p in predictors:
+        # Contribution when added to an empty model
+        marginal_contributions[p].append(r2_dict[(p,)])
+
+        # Contribution when added to existing combinations
+        for k in range(1, n_features):
+            other_combos = [
+                c for c in r2_dict if len(c) == k and p not in c
+            ]
+            for combo in other_combos:
+                with_p = tuple(sorted(combo + (p,)))
+                marginal_contribution = r2_dict[with_p] - r2_dict[combo]
+                marginal_contributions[p].append(marginal_contribution)
+
+    # 3. Average the contributions
+    relative_importance = {
+        p: np.mean(marginal_contributions[p]) for p in predictors
+    }
+
+    # Normalize to sum to 100% of the overall model R-squared
+    total_r2 = r2_dict[tuple(sorted(predictors))]
+    normalized_importance = {
+        p: (val / total_r2) * 100 for p, val in relative_importance.items()
+    }
+
+    return pd.DataFrame(
+        {
+            "Raw R2 Contribution": relative_importance,
+            "Percentage of Model R2": normalized_importance,
+        }
+    )
+    # --- How to run it ---
+    # Assuming 'df' is your DataFrame, 'Y' is your target, and ['X1', 'X2'] are your correlated variables:
+    # importance_df = calculate_dominance(df, 'Y', ['X1', 'X2'])
+    # print(importance_df)
+
+
+def calculate_block_dominance(df, target, feature_blocks):
+    """Calcula el análisis de dominancia cuando los predictores pueden ser
+
+    bloques de variables (útil para variables categóricas/dummies).
+
+    Parameters:
+    - df: DataFrame con los datos (ya estandarizados y con dummies creadas).
+    - target: Str. Nombre de la variable dependiente (Y).
+    - feature_blocks: Dict. Nombre del bloque -> Lista de columnas en el
+    DataFrame.
+    """
+    block_names = list(feature_blocks.keys())
+    n_blocks = len(block_names)
+    r2_dict = {}
+
+    # 1. Modelo vacío (solo constante) para el punto de partida
+    X_empty = np.ones((len(df), 1))
+    r2_dict[()] = sm.OLS(df[target], X_empty).fit().rsquared
+
+    # 2. Calcular R-cuadrado para cada combinación posible de bloques
+    for k in range(1, n_blocks + 1):
+        for combo in itertools.combinations(block_names, k):
+            # Reunir todas las columnas que pertenecen a los bloques de esta combinación
+            columns_to_include = []
+            for block in combo:
+                columns_to_include.extend(feature_blocks[block])
+
+            X = sm.add_constant(df[columns_to_include])
+            model = sm.OLS(df[target], X).fit()
+            r2_dict[combo] = model.rsquared
+
+    # 3. Calcular la contribución marginal promedio de cada bloque
+    marginal_contributions = {b: [] for b in block_names}
+
+    for b in block_names:
+        # Contribución al añadirlo al modelo vacío
+        marginal_contributions[b].append(r2_dict[(b,)] - r2_dict[()])
+
+        # Contribución al añadirlo a combinaciones existentes de otros bloques
+        for k in range(1, n_blocks):
+            other_combos = [
+                c for c in r2_dict if len(c) == k and b not in c and c != ()
+            ]
+            for combo in other_combos:
+                with_b = tuple(sorted(combo + (b,)))
+                # Forzar que el combo original esté ordenado para buscarlo en el dict
+                sorted_combo = tuple(sorted(combo))
+                marginal_contribution = r2_dict[with_b] - r2_dict[sorted_combo]
+                marginal_contributions[b].append(marginal_contribution)
+
+    # 4. Promediar las contribuciones marginales
+    relative_importance = {
+        b: np.mean(marginal_contributions[b]) for b in block_names
+    }
+
+    # 5. Normalizar para que sumen el 100% del R2 del modelo completo
+    total_r2 = r2_dict[tuple(sorted(block_names))]
+    normalized_importance = {
+        b: (val / total_r2) * 100 for b, val in relative_importance.items()
+    }
+
+    return pd.DataFrame(
+        {
+            "Contribución R2 Total": relative_importance,
+            "Porcentaje del R2 del Modelo (%)": normalized_importance,
+        }
+    )
 if __name__ == '__main__':
 
     diverse_pooling_model_names = [
@@ -1571,7 +3185,23 @@ if __name__ == '__main__':
     # plot_learning_rate_sweep_results(save_folder)
     # plot_lr_2(save_folder,0.6)
     # save_folder = "/home/luisaam/Pictures"
-    # plot_lr_2(save_folder,0.6)
     save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
-    plotting_second_order_saturation_OS_accuracy(save_folder)
+    # plot_saturation_relationships(save_folder)
+    # plotting_second_order_saturation_OS_accuracy(save_folder)
+    # sharpness_plots(save_folder)
+    # plot_lr_2(save_folder,0.9)
+    # sharpness_lr_plots(save_folder,0.9)
+    # plot_lr_2(save_folder,0.8)
+    # plot_lr_2(save_folder,0.7)
+    # plot_lr_2(save_folder,0.6)
+    # plot_lr_2(save_folder,0.5)
     # statistical_analysis_lr()
+    # dominance_analysis_lr(pr=0.9)
+    # dominance_analysis_lr(pr=0.8)
+    # dominance_analysis_lr(pr=0.7)
+    # model_mediator(0.9)
+    # analysis_pooling_methods_mediator_no_lr(0.9)
+
+    analysis_model_3_no_lr(0.9)
+
+    # statistical_analysis_lr_01()

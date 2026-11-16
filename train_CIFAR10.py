@@ -345,6 +345,17 @@ def get_model(args):
         if args.type == "normal" and args.dataset == "small_imagenet":
             net = ResNet50_rf_lippool(num_classes=200, rf_level=args.RF_level, multiplier=args.width)
 
+    if args.model == "diracnet50":
+        # 50-layer DiracNet-v2 with the RF max-pool after the stem (rf_level 1-4), see alternate_models/diracnet.py
+        num_classes = {"cifar10": 10, "cifar100": 100, "tiny_imagenet": 200, "small_imagenet": 200}
+        if args.type == "normal" and args.dataset in num_classes:
+            net = DiracNet50_rf(num_classes=num_classes[args.dataset], rf_level=args.RF_level,
+                                width=args.dirac_width)
+        else:
+            raise NotImplementedError(
+                " There is no implementation for this combination {}, {} {} ".format(args.model, args.type,
+                                                                                     args.dataset))
+
     if args.model == "resnet24":
         if args.type == "normal" and args.dataset == "cifar10":
             net = ResNet24_rf(num_classes=10, rf_level=args.RF_level, multiplier=args.width)
@@ -1519,8 +1530,12 @@ def main(args):
     #     cudnn.benchmark = True
     solution_name = ""
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                          momentum=0.9, weight_decay=5e-4)
+    if args.model.startswith("diracnet"):
+        # DiracNets-v2 (diracnets/train.py): no weight decay on 1-D parameters (alpha, beta, BN, biases)
+        optimizer = optim.SGD(diracnet_parameter_groups(net, weight_decay=5e-4), lr=args.lr, momentum=0.9)
+    else:
+        optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                              momentum=0.9, weight_decay=5e-4)
     fpgm_prune_ = args.fpgm_prune
     norm_rate = args.fpgm_norm_rate
     dist_rate = args.fpgm_dist_rate
@@ -1677,6 +1692,8 @@ if __name__ == '__main__':
     parser.add_argument('--name', default="", type=str, help='Unique Identifier')
     parser.add_argument('--use_wandb', default=0, type=int, help='Use Weight and Biases')
     parser.add_argument('--width', default=1, type=int, help='Width of the Network')
+    parser.add_argument('--dirac_width', default=4, type=float,
+                        help='Width multiplier of DiracNet models (channels 16/32/64 x dirac_width; 4 -> 64/128/256)')
     parser.add_argument('--record', default=0, type=int, help='To record the training data or not')
     parser.add_argument('--record_time', action='store_true', help="Record the training time")
     parser.add_argument('--record_flops', action='store_true', help="Record the training time")

@@ -11,6 +11,7 @@ from .resnet import *
 from .small_models import *
 from .densenet_corin import *
 from .mobilenetv2 import *
+from .diracnet import *
 # from .resnext import *
 # from .preact_resnet import *
 # from .mobilenet import *
