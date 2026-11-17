@@ -23,7 +23,7 @@
 #SBATCH --mail-type=ALL
 
 # send mail to this address
-#SBATCH --mail-user=pznz720@leeds.ac.uk
+#SBATCH --mail-user=l.avendanomunoz@leeds.ac.uk
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 
