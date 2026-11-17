@@ -31,8 +31,8 @@
 #SBATCH --mail-user=sclaam@leeds.ac.uk
 
 export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
-export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/pznz720/.conda/envs/work/lib"
+export PYTHONPATH="/users/pznz720/.conda/envs/work/lib/python3.9/site-packages"
 
 #############################################################
 #     Train  with out FFCV

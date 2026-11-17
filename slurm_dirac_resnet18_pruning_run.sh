@@ -23,9 +23,10 @@
 #SBATCH --mail-type=ALL
 
 # send mail to this address
-#SBATCH --mail-user=sclaam@leeds.ac.uk
+#SBATCH --mail-user=pznz720@leeds.ac.uk
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
+
 
 module load miniforge/
 conda activate work
@@ -55,8 +56,8 @@ echo "DATA_FOLDER= $DATA_FOLDER"
 echo "SAVE_FOLDER= $SAVE_FOLDER"
 # Library variables
 export LD_LIBRARY_PATH=""
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/sclaam/.conda/envs/work/lib"
-export PYTHONPATH="/users/sclaam/.conda/envs/work/lib/python3.9/site-packages"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/users/pznz720/.conda/envs/work/lib"
+export PYTHONPATH="/users/pznz720/.conda/envs/work/lib/python3.9/site-packages"
 #############################################################
 #     Prune (experiment 1) / Prune + fine-tune 10 epochs (experiment 2), without FFCV
 #     diracnet50 checkpoints are folded (fold_dirac) inside prune_models.py before pruning;
