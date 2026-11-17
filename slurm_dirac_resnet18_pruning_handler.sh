@@ -47,8 +47,8 @@ sbatch --nodes=1 --time=03:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --
 
 # model | checkpoints folder (training output) | pruning results folder | run name used for training
 configs=(
-"diracnet50|${SCRATCH}/dirac_models_experiments|${HOME}/sparse_ensemble/dirac_models_pruning_results|recording_dirac_100_no_ffcv"
-"resnet18|${SCRATCH}/resnet18_models_experiments|${HOME}/sparse_ensemble/resnet18_models_pruning_results|recording_resnet18_100_no_ffcv"
+"diracnet50|${SCRATCH}/dirac_models_experiments|${HOME}/sparse_ensemble/dirac_pruning_results|recording_dirac_100_no_ffcv"
+"resnet18|${SCRATCH}/resnet18_models_experiments|${HOME}/sparse_ensemble/resnet18_pruning_results|recording_resnet18_100_no_ffcv"
 )
 
 for config in "${configs[@]}"; do
