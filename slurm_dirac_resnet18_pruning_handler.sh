@@ -12,7 +12,7 @@
 # Set RUN_ONE_SHOT / RUN_FINETUNE to 0 to skip either experiment.
 
 RUN_ONE_SHOT=1
-RUN_FINETUNE=1
+RUN_FINETUNE=0
 
 resolution=32
 resize=0
