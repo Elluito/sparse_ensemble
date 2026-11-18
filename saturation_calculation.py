@@ -10,6 +10,7 @@ import omegaconf
 from main import prune_function, remove_reparametrization
 from train_CIFAR10 import get_model
 from saturation_utils import calculate_train_eval_saturation_solution
+from alternate_models.diracnet import fold_dirac
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -25,6 +26,8 @@ def calculate_saturation_models(args):
     if "resnet" in args.model:
         exclude_layers = ["conv1", "linear"]
     if "mobilenet" in args.model:
+        exclude_layers = ["conv1", "linear"]
+    if "diracnet" in args.model:
         exclude_layers = ["conv1", "linear"]
 
     cfg = omegaconf.DictConfig(
@@ -125,7 +128,13 @@ def calculate_saturation_models(args):
             glob.glob(search_string)):
         state_dict_raw = torch.load(name, map_location=device)
 
+        if "diracnet" in args.model:
+            # fold_dirac replaces the DiracConv2d modules, so a fresh net is needed for every checkpoint
+            net = get_model(args)
         net.load_state_dict(state_dict_raw["net"])
+        if "diracnet" in args.model:
+            # prune / measure the effective kernels alpha*delta + beta*W (same as prune_models.py)
+            net = fold_dirac(net).to(device)
         if args.pruning_rate != 0:
             prune_function(net, cfg)
             remove_reparametrization(net, exclude_layer_list=cfg.exclude_layers)
@@ -153,6 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--name', default="", type=str, help='Name of the file', required=False)
     parser.add_argument('--pruning_rate', default=0.9, type=float, help='Pruning rate')
     parser.add_argument('--width', default=1, type=int, help='Width of the model')
+    parser.add_argument('--dirac_width', default=4, type=float, help='Width multiplier of diracnet models')
     parser.add_argument('--batch_size', default=128, type=int, help='Batch Size for training')
     parser.add_argument('--input_resolution', default=224, type=int,
                         help='Input Resolution for small ImageNet')
