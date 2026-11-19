@@ -1,6 +1,6 @@
 #!/bin/bash
 # Learning-rate sweep for the DiracNet-50 / ResNet-18 controls (cifar10), same design as the ResNet-50 / VGG-19
-# sweep (slurm_learning_rate_experiments_handler.sh): rf_levels 1 and 4, every lr used in that sweep, 3 seeds
+# sweep (slurm_learning_rate_experiments_handler.sh): rf_levels 2 and 3, every lr used in that sweep, 3 seeds
 # (array tasks) per (model, rf_level, lr), 100 epochs, saturation recorded every epoch.
 #
 # Purpose: lr moves saturation at a FIXED kernel size, which the 10-seed lr=0.1 runs cannot do (saturation and
@@ -11,7 +11,7 @@
 # the ResNet-50 / VGG-19 runs (file names start with the model, so the globs do not mix them).
 # Each array task gets its own seed name (time stamp) from train_CIFAR10.py; logs are per seed (%a).
 
-rf_levels=(1 4)
+rf_levels=(2 3)
 learning_rates=(0.0001 0.001 0.003 0.005 0.007 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.15 0.2)
 
 dataset="cifar10"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Pruning of the DiracNet-50 / ResNet-18 learning-rate-sweep checkpoints (cifar10, rf_levels 1 and 4, every lr),
+# Pruning of the DiracNet-50 / ResNet-18 learning-rate-sweep checkpoints (cifar10, rf_levels 2 and 3, every lr),
 # for pruning_rates [0.5, 0.6, 0.7, 0.8, 0.9]. Same design as slurm_learning_rate_pruning_handler.sh.
 #
 # Each job runs slurm_dirac_resnet18_lr_sweep_pruning_run.sh, which:
@@ -13,7 +13,7 @@
 
 learning_rates=(0.0001 0.001 0.003 0.005 0.007 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.15 0.2)
 pruning_rates=(0.5 0.6 0.7 0.8 0.9)
-rf_levels=(1 4)
+rf_levels=(2 3)
 
 resolution=32
 checkpoints_folder="${SCRATCH}/learning_rate_experiments"
