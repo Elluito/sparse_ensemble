@@ -1,7 +1,7 @@
 #!/bin/bash
-# Learning-rate sweep: SGD training of vgg19 and resnet50 on cifar10 and
-# tiny_imagenet, across rf_levels 1 and 4, for lr in
-# [0.0001, 0.001, 0.003, 0.005, 0.007, 0.1, 0.2].
+# Learning-rate sweep: SGD training of vgg19 and resnet50 on cifar10,
+# across rf_levels 2 and 3, for all 17 learning rates of the sweep
+# (0.0001 ... 0.2).
 #
 # Each (model, dataset, rf_level, lr) combination is submitted as one
 # --array=1-3 job (3 seeds per combination/array-task). Results (accuracy,
@@ -9,11 +9,11 @@
 # lr value is baked into the run "name" so it shows up in every output
 # filename produced by train_CIFAR10.py.
 
-rf_levels=(1 4)
-learning_rates=( 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.01 0.15)
+rf_levels=(2 3)
+learning_rates=(0.0001 0.001 0.003 0.005 0.007 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.15 0.2)
 
 for model in "vgg19" "resnet50"; do
-  for dataset in "cifar10" "tiny_imagenet"; do
+  for dataset in "cifar10"; do
 
     if [ "${dataset}" == "cifar10" ]; then
       resolution=32
