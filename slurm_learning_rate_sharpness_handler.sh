@@ -1,6 +1,6 @@
 #!/bin/bash
 # Sharpness (m_apgd_linf) handler for the learning-rate-sweep checkpoints
-# (vgg19, resnet50 on cifar10, rf_levels 1 and 4, all 17 learning rates from
+# (vgg19, resnet50 on cifar10, rf_levels 2 and 3, all 17 learning rates from
 # the sweep), mirroring slurm_sharpness_calc_handler.sh's run_sharpness.
 #
 # Checkpoints are read from "${SCRATCH}/learning_rate_experiments" (matched via
@@ -31,7 +31,7 @@ sbatch --nodes=1 --time=03:00:00 --partition=gpu --gres=gpu:1 --mail-type=ALL --
 }
 
 learning_rates=(0.0001 0.001 0.003 0.005 0.007 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08 0.09 0.1 0.15 0.2)
-rf_levels=(1 4)
+rf_levels=(2 3)
 
 checkpoints_folder="${SCRATCH}/learning_rate_experiments"
 save_folder="${HOME}/sparse_ensemble/sharpness_lr_sweep_results"
