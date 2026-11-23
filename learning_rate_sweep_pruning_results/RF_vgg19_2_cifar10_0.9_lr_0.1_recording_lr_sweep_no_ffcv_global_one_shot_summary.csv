@@ -1,0 +1,4 @@
+Name,Dense Accuracy,Pruned Accuracy
+vgg19_normal_cifar10_1795223220.8583155_rf_level_2_lr_0.1_recording_lr_sweep_no_ffcv_test_acc_90.39.pth,90.39,38.21
+vgg19_normal_cifar10_1795223199.2545748_rf_level_2_lr_0.1_recording_lr_sweep_no_ffcv_test_acc_90.61.pth,90.61,13.91
+vgg19_normal_cifar10_1795223638.1925106_rf_level_2_lr_0.1_recording_lr_sweep_no_ffcv_test_acc_90.54.pth,90.54,9.99
