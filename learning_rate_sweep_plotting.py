@@ -1943,6 +1943,8 @@ LR_MEDIATION_OUTCOME_MODELS = {
     "additive": "scaled_delta ~ scaled_saturation + Kernel_Size",
     "interaction": "scaled_delta ~ scaled_saturation*Kernel_Size",
     "interaction + x^2": "scaled_delta ~ scaled_saturation*Kernel_Size + I(scaled_saturation**2)",
+    "x^2": "scaled_delta ~ I(scaled_saturation**2)",
+    "additive + x^2": "scaled_delta ~ I(scaled_saturation**2)",
 }
 
 
@@ -3174,6 +3176,109 @@ def calculate_block_dominance(df, target, feature_blocks):
             "Porcentaje del R2 del Modelo (%)": normalized_importance,
         }
     )
+def analysis_dirac_resnet18_model_3(pr=0.9):
+    df_large = pd.read_csv(f"dirac_resnet18_pruning_saturation_per_seed_combined.csv", sep=",")
+
+    df_large = df_large.rename(columns={
+        "avg_depth_scaled_train_saturation": r"scaled_saturation",
+        # "rf_level": "RF Level",
+        # "delta_mean":r"$\Delta (Dense - Pruned)$",
+        # "pooling":"Pooling method"
+    })
+    df_large["scaled_delta"] = df_large["delta"]/df_large["dense_acc"]
+    df_large["Kernel_Size"] = df_large["rf_level"]+1
+    df_large["Kernel_Size"] = df_large["Kernel_Size"].astype(float)
+    df_large["lr"] = (df_large["lr"]-df_large["lr"].mean())/df_large["lr"].std()
+
+    df = df_large
+    # df =df_large[["RF_ordinal","scaled_delta, scaled_saturation"]]
+    df["Kernel_Size"] =(df["Kernel_Size"]-df["Kernel_Size"].mean())/df["Kernel_Size"].std()
+    df["scaled_saturation"] =(df["scaled_saturation"]-df["scaled_saturation"].mean())/df["scaled_saturation"].std()
+
+
+    print("==================================================")
+    print("                    DIRACNET50")
+    print("==================================================")
+
+
+    local_df = df[df["model"].str.contains("diracnet50")]
+    local_df = local_df[local_df["pruning_rate"] == pr]
+
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_diracnet50_scaled_columns_pr_{pr}.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+    # print("\n==================================================")
+    # print("  MODEL 2: OUTCOME EQUATION (Prunability ~ X * M + Saturation)")
+    # print("==================================================")
+    # print(model_outcome.summary())
+
+    print("==================================================")
+    print(" Model using the  ks^2 and saturation^2")
+    print("==================================================")
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size + I(Kernel_Size**2) + I(scaled_saturation**2)',
+        data=local_df
+    ).fit()
+
+
+    print(model_outcome.summary())
+
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_resnet50_scaled_columns_no_Kernel_size_squared_pr_{pr}.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
+
+    print("==================================================")
+    print("                   ResNet18")
+    print("==================================================")
+
+    local_df = df[df["model"].str.contains("resnet18")]
+    local_df = local_df[local_df["pruning_rate"] == pr]
+
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size ',
+        data=local_df ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_resnet18_scaled_columns_no_Kernel_size_pr_{pr}.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
+    print("==================================================")
+    print(" Model using the ks^2 and saturation^2")
+    print("==================================================")
+    model_outcome = smf.ols(
+        'scaled_delta ~ scaled_saturation + Kernel_Size + scaled_saturation*Kernel_Size +I(Kernel_Size**2) + I(scaled_saturation**2)',
+        data=local_df
+    ).fit()
+
+    print(model_outcome.summary())
+
+    with pd.ExcelWriter(f'model_3_no_lr_scaled_delta_vgg19_scaled_columns_no_Kernel_size_squared_pr_{pr}.xlsx') as writer:
+
+        model_outcome.summary2().tables[0].to_excel(writer, sheet_name='Model outcome Specs')
+        model_outcome.summary2().tables[1].to_excel(writer, sheet_name='Coefficients outcome')
+        model_outcome.summary2().tables[2].to_excel(writer, sheet_name='Residuals & Diagnostics outcome')
+
+
 if __name__ == '__main__':
 
     diverse_pooling_model_names = [
@@ -3185,7 +3290,7 @@ if __name__ == '__main__':
     # plot_learning_rate_sweep_results(save_folder)
     # plot_lr_2(save_folder,0.6)
     # save_folder = "/home/luisaam/Pictures"
-    save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
+    # save_folder ="/home/luisaam/Documents/PhD/MyPapers/TNNLS_Restructure/figures"
     # plot_saturation_relationships(save_folder)
     # plotting_second_order_saturation_OS_accuracy(save_folder)
     # sharpness_plots(save_folder)

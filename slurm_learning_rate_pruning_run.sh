@@ -72,6 +72,8 @@ export PYTHONPATH="/users/$USER/.conda/envs/work/lib/python3.9/site-packages"
 #     Both write their csv output into SAVE_FOLDER.
 #############################################################
 
+mkdir -p "${SAVE_FOLDER}"
+
 python prune_models.py --experiment 1 --name "${NAME}" --model "${MODEL}" --dataset "${DATASET}" \
   --num_workers "${NUMW}" --RF_level "${RFL}" --type "${TYPE}" --folder "${FOLDER}" \
   --pruning_rate "${PR}" --data_folder "${DATA_FOLDER}" --save_folder "${SAVE_FOLDER}" \
