@@ -1375,7 +1375,13 @@ def iterative_RF_experiments(args):
         wandb.finish()
 
 
-def main(args):
+def main(args, target_acc=None):
+    """
+    Standard training run. With target_acc (test accuracy in %), training stops at the end of the first epoch whose
+    test accuracy is >= target_acc (see train_until_accuracy); the schedule is still the cosine schedule over
+    args.epochs, so a run that stops at epoch k has followed exactly the lr trajectory of a full run up to epoch k.
+    Returns a dict with the stopping information.
+    """
     print(args)
 
     global best_acc, testloader, device, criterion, trainloader, optimizer, net, use_ffcv, total_flops, batch_flops, record_flops, fpgm_prune_, norm_rate, dist_rate, layer_indices,pruning_interval
@@ -1594,6 +1600,9 @@ def main(args):
     if args.record_saturation:
         csv_tracker = SaturationTracker("{}/{}".format(args.save_folder, solution_name), save_to="csv", modules=net,
                                         device=device)
+    stop_info = {"solution_name": solution_name, "target_acc": target_acc, "reached": False, "stop_epoch": None,
+                 "stop_test_acc": None}
+    test_acc = None
     for epoch in range(start_epoch, start_epoch + args.epochs):
 
         print(epoch)
@@ -1653,10 +1662,58 @@ def main(args):
         if fpgm_prune:
             print(f"Epoch:{epoch}, sparsity of the model: {sparsity(net)}")
 
+        if target_acc is not None and test_acc >= target_acc:
+            # test() has just saved this epoch's checkpoint: it is the first one at or above the target, so it is
+            # also the best so far
+            stop_info.update(reached=True, stop_epoch=epoch, stop_test_acc=test_acc)
+            print("Target accuracy {:.2f}% reached at epoch {} (test accuracy {:.2f}%), stopping".format(
+                target_acc, epoch, test_acc))
+            break
+
+    if not stop_info["reached"]:
+        stop_info.update(stop_epoch=epoch, stop_test_acc=test_acc)
+    stop_info["best_acc"] = best_acc
     if args.record_saturation:
         csv_tracker.close()
     if args.use_wandb:
         wandb.finish()
+    return stop_info
+
+
+def lookup_target_accuracy(csv_path, model, rf_level):
+    """Target dense accuracy (%) for (model, rf_level) from a csv with columns model, rf_level, lr, dense_acc."""
+    table = pd.read_csv(csv_path)
+    row = table[(table["model"] == model) & (table["rf_level"].astype(str) == str(rf_level))]
+    if len(row) != 1:
+        raise ValueError("expected one row for model={} rf_level={} in {}, found {}".format(model, rf_level, csv_path,
+                                                                                          len(row)))
+    return float(row["dense_acc"].iloc[0])
+
+
+def train_until_accuracy(args):
+    """
+    Fixed-accuracy training: train with args.lr until the test accuracy first reaches a target, then stop.
+
+    The target is args.target_acc if it is > 0, otherwise the dense accuracy for (args.model, args.RF_level) in
+    args.target_acc_csv (dense_acc_lr_0003.csv: mean dense accuracy of the lr = 0.003 sweep runs). Accuracy is
+    checked once per epoch, so the stopping accuracy can overshoot the target by up to one epoch's improvement.
+    args.epochs is the maximum number of epochs and also sets the cosine schedule (T_max), as in the lr sweep.
+
+    The checkpoint saved is the stopping epoch's ({solution}_test_acc_{acc}.pth). If the target is never reached, the
+    best checkpoint is kept and the summary has reached = False. The summary is written to
+    {save_folder}/{solution}_fixed_accuracy_summary.csv.
+    """
+    target = args.target_acc if args.target_acc > 0 else lookup_target_accuracy(args.target_acc_csv, args.model,
+                                                                                 args.RF_level)
+    print("Fixed-accuracy training: model {} RF level {} lr {} target accuracy {:.4f}%".format(
+        args.model, args.RF_level, args.lr, target))
+    info = main(args, target_acc=target)
+    summary = {"model": args.model, "dataset": args.dataset, "rf_level": args.RF_level, "lr": args.lr,
+               "seed_name": args.seed_name, "name": args.name, "max_epochs": args.epochs, **info}
+    pd.DataFrame([summary]).to_csv("{}/{}_fixed_accuracy_summary.csv".format(args.save_folder, info["solution_name"]),
+                                   index=False)
+    print(summary)
+    return summary
 
 
 if __name__ == '__main__':
@@ -1719,6 +1776,10 @@ if __name__ == '__main__':
     parser.add_argument('--prune_interval', default=1, type=int, help='Interval of epochs to prune')
 
     parser.add_argument('--pruning_type', default="normal", type=str, help='Type of pruning to do [normal,fpgm]')
+    parser.add_argument('--target_acc', default=-1, type=float,
+                        help='Experiment 5: stop training once the test accuracy (%%) reaches this value (<= 0: look it up in --target_acc_csv)')
+    parser.add_argument('--target_acc_csv', default="dense_acc_lr_0003.csv", type=str,
+                        help='Experiment 5: csv with columns model, rf_level, lr, dense_acc giving the target accuracy per model and RF level')
     args = parser.parse_args()
 
     try:
@@ -1747,3 +1808,6 @@ if __name__ == '__main__':
     if args.experiment == 4:
         # print(args)
         get_inference_flops_for_config(args)
+
+    if args.experiment == 5:
+        train_until_accuracy(args)
